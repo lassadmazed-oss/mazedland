@@ -36,7 +36,7 @@ const NotificationBell = dynamic(
  *   - Left: logo (→ home) + primary links with a soft active pill.
  *   - Center: an always-visible search that lands on the unified
  *     /properties explore surface.
- *   - Right: notification bell, account, and a saturated "Vendre" CTA.
+ *   - Right: notification bell, account, and a saturated "Publier une annonce" CTA.
  *
  * Height is pinned to --desktop-nav-h; the shell's top padding switches
  * to the same value at lg (see .mazed-shell-main in globals.css).
@@ -226,7 +226,10 @@ export function DesktopNav() {
             className="mazed-gold-fill inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-bold shadow-[var(--shadow-gold)] transition active:scale-[0.98]"
           >
             <Plus className="size-4" strokeWidth={2.5} />
-            {t("sell")}
+            {/* « Publier une annonce » / « انشر إعلانك » — not « Vendre »: the
+                button also publishes a rental, and the owner asked for it
+                (2026-10-31). The phone's centre tab keeps a short « Publier ». */}
+            {t("publishCta")}
           </Link>
         </div>
       </div>
