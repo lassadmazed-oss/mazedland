@@ -12,6 +12,7 @@ import { addDays, dayLabel, nextDays } from "@/lib/dayChips";
 import { BUYER_PHRASES, freePart, partTaken, suggestSlot, VISIT_MESSAGE_MAX } from "@/lib/visitChoices";
 import { hasPhrase, togglePhrase } from "@/lib/phrases";
 import { chipClass } from "@/lib/chips";
+import { track } from "@/lib/analytics/ga";
 
 /**
  * « Demander une visite » (0174): a few half-days (how many and how far ahead
@@ -150,6 +151,8 @@ export function VisitRequest({
         return;
       }
       toast(t("sentToast"), "success");
+      // GA: which annonce and how many half-days offered — not the name or number typed.
+      track("visit_request", { listing_id: listingId, slots: slots.length });
       setSent({ status: "requested", when: null });
     } catch {
       toast(t("failed"), "error");

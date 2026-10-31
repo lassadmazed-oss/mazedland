@@ -14,6 +14,7 @@ import { speechLang } from "@/components/search/speech";
 import { appliesTo } from "@/lib/listings/deal";
 import { governorateLabel } from "@/lib/tunisia";
 import { formatTND, cn } from "@/lib/utils";
+import { track } from "@/lib/analytics/ga";
 import { CHAT_MAX_MESSAGE_CHARS, CHAT_MAX_TURN_CHARS, type ChatTurn, type ListingDraft } from "@/lib/ai/listing";
 import { SELLER_ATTESTATION_VERSION, typedAttributes, type AttributeDef } from "../PublishWizard";
 
@@ -263,6 +264,7 @@ export function ChatPublisher({
         return;
       }
       setSheetOpen(false);
+      track("publish_listing", { method: "chat", mode: "new", status: j.status ?? "pending_review" });
       setDone({ status: j.status ?? "pending_review", id, paidWith: j.paidWith, remaining: j.remaining, freeLeft: j.freeLeft });
     } catch {
       toast(t("offline"), "error");

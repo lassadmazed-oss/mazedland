@@ -6,6 +6,7 @@ import { Check, Copy, Facebook, MessageCircle, Share2 } from "lucide-react";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { useToast } from "@/components/ui/Toast";
 import { shareLinks } from "@/lib/share";
+import { track } from "@/lib/analytics/ga";
 import { cn } from "@/lib/utils";
 
 /**
@@ -64,6 +65,9 @@ export function ShareButton({
 
   const link = () => `${window.location.origin}${href ?? window.location.pathname}`;
   const words = text ?? title;
+  // GA's « share »: how, and which annonce (the last part of its path).
+  const shared = (method: "native" | "whatsapp" | "facebook" | "copy") =>
+    track("share", { method, content_type: "listing", item_id: (href ?? window.location.pathname).split("/").filter(Boolean).pop() });
 
   async function share() {
     const url = link();
@@ -71,6 +75,7 @@ export function ShareButton({
     if (touch && typeof navigator.share === "function") {
       try {
         await navigator.share({ title, text: words, url });
+        shared("native");
         return;
       } catch (e) {
         // The person closed the sheet: nothing to say. Anything else: the menu.
@@ -83,6 +88,7 @@ export function ShareButton({
   async function copy() {
     try {
       await navigator.clipboard.writeText(link());
+      shared("copy");
       setCopied(true);
       toast(t("copied"), "success");
       setTimeout(() => setCopied(false), 2000);
@@ -116,7 +122,10 @@ export function ShareButton({
             href={shareLinks(words, link()).whatsapp}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              shared("whatsapp");
+              setOpen(false);
+            }}
             className={item}
           >
             <MessageCircle className="size-4 text-[#25D366]" /> WhatsApp
@@ -126,7 +135,10 @@ export function ShareButton({
             href={shareLinks(words, link()).facebook}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              shared("facebook");
+              setOpen(false);
+            }}
             className={item}
           >
             <Facebook className="size-4 text-[#1877F2]" /> Facebook

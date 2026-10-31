@@ -20,7 +20,8 @@ export type SettingGroup =
   | "payment"
   | "company"
   | "limits"
-  | "privacy";
+  | "privacy"
+  | "analytics";
 
 export type SettingUnit = "days" | "hours" | "seconds" | "tnd" | "percent" | "photos" | "per_hour" | "per_day";
 
@@ -51,7 +52,17 @@ export type SettingDef =
   | (Common & { type: "bool"; default: boolean })
   | (Common & { type: "int" } & Num)
   | (Common & { type: "number" } & Num)
-  | (Common & { type: "text"; default: string; max: number; multiline?: boolean; ltr?: boolean })
+  | (Common & {
+      type: "text";
+      default: string;
+      max: number;
+      multiline?: boolean;
+      ltr?: boolean;
+      /** Stored in capitals, however it was typed. */
+      upper?: boolean;
+      /** The shape a non-empty value must have (an identifier pasted from elsewhere). */
+      pattern?: RegExp;
+    })
   | (Common & { type: "list"; default: readonly string[]; maxItems: number; maxLen: number; lower?: boolean });
 
 /** What a definition reads as. */
@@ -86,7 +97,7 @@ function cloneDefault(def: SettingDef): unknown {
   return def.type === "list" ? [...def.default] : def.default;
 }
 
-export type SettingError = "invalid_bool" | "invalid_number" | "out_of_range" | "invalid_text" | "too_long" | "invalid_list";
+export type SettingError = "invalid_bool" | "invalid_number" | "out_of_range" | "invalid_text" | "too_long" | "invalid_format" | "invalid_list";
 export type Checked = { ok: true; value: unknown } | { ok: false; error: SettingError };
 
 /**
@@ -112,8 +123,10 @@ export function checkSetting(def: SettingDef, raw: unknown): Checked {
     }
     case "text": {
       if (typeof raw !== "string") return { ok: false, error: "invalid_text" };
-      const s = raw.trim();
+      const s = def.upper ? raw.trim().toUpperCase() : raw.trim();
       if (s.length > def.max) return { ok: false, error: "too_long" };
+      // Empty stays allowed: it is how a value is cleared.
+      if (s && def.pattern && !def.pattern.test(s)) return { ok: false, error: "invalid_format" };
       return { ok: true, value: s };
     }
     case "list": {

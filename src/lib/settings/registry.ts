@@ -12,6 +12,7 @@
  * applies, limits a form enforces before sending). Never on a secret.
  */
 import type { SettingDef, ValueOf } from "./define";
+import { GA_ID_PATTERN } from "@/lib/analytics/ga";
 
 export const SETTINGS = {
   // ── Features: each one switched off disappears from the site and its API
@@ -158,6 +159,16 @@ export const SETTINGS = {
   // receipts of a payment never made. Swept nightly once older than this; the
   // delay keeps an upload still in flight out of the sweep.
   uploads_prune_days: { group: "privacy", type: "int", default: 2, min: 1, max: 30, unit: "days", choices: [1, 2, 3, 7, 14, 30] },
+
+  // ── Google Analytics 4 (src/components/analytics/GoogleAnalytics.tsx), on
+  //    top of the site's own page-view log. Nothing from Google loads while
+  //    the switch is off or the ID empty, nor on the console.
+  analytics_ga_enabled: { group: "analytics", type: "bool", default: true, client: true },
+  // The property's measurement ID, as GA4 shows it: « G-XXXXXXXXXX ».
+  analytics_ga_id: { group: "analytics", type: "text", default: "", max: 20, ltr: true, upper: true, pattern: GA_ID_PATTERN, client: true },
+  // On: Google loads only once the visitor said yes to the bar (and never
+  // after a no). Off: it loads for everyone, with advertising signals denied.
+  analytics_ask_consent: { group: "analytics", type: "bool", default: true, client: true },
 } as const satisfies Record<string, SettingDef>;
 
 export type SettingKey = keyof typeof SETTINGS;
@@ -169,7 +180,7 @@ export type ClientSettings = Pick<Settings, ClientSettingKey>;
 
 /** The console's tabs, in order. */
 export const SETTING_GROUPS = [
-  "features", "home", "moderation", "publication", "buyers", "contact", "social", "payment", "company", "limits", "privacy",
+  "features", "home", "moderation", "publication", "buyers", "contact", "social", "payment", "company", "limits", "privacy", "analytics",
 ] as const;
 
 export function isSettingKey(k: string): k is SettingKey {

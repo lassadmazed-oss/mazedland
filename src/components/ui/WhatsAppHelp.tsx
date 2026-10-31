@@ -5,6 +5,7 @@ import { MessageCircle } from "lucide-react";
 import { whatsappHref } from "@/lib/contact";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { Ltr } from "@/components/ui/Ltr";
+import { track } from "@/lib/analytics/ga";
 
 /**
  * « Une question ? Écrivez-nous sur WhatsApp » — one line, opening a chat
@@ -25,6 +26,7 @@ export function WhatsAppHelp({ topic, className = "" }: { topic?: "payment" | "p
       href={whatsappHref(number, opening)}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={() => track("whatsapp_help", { topic: topic ?? "general" })}
       className={`inline-flex items-center gap-2 text-[12.5px] text-muted transition hover:text-foreground ${className}`}
     >
       <MessageCircle className="size-4 shrink-0 text-[#25D366]" strokeWidth={2.2} />

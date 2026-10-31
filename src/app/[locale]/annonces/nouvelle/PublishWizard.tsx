@@ -11,6 +11,7 @@ import { Ltr } from "@/components/ui/Ltr";
 import { Modal } from "@/components/ui/Modal";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { formatTND, formatDate, formatNumber, cn } from "@/lib/utils";
+import { track } from "@/lib/analytics/ga";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { canonicalDelegation, delegationLabel, delegationsOf } from "@/lib/delegations";
 import {
@@ -1118,6 +1119,7 @@ export function PublishWizard({
         toast(apiError(j, t("submitFailed")), "error");
         return;
       }
+      track("publish_listing", { method: "form", mode: editing ? "edit" : "new", status: j.status ?? "pending_review" });
       setDone({
         paidWith: j.paidWith ?? "free_quota",
         remaining: j.remaining,
