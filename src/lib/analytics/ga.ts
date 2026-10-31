@@ -43,24 +43,44 @@ export function isConsolePath(pathname: string): boolean {
  * switch, `window['ga-disable-<ID>']`, is read before every hit, so this sets
  * it from the new address inside the same pushState call — before gtag.js,
  * which wraps around this later, looks at the change. `__mazedGaOff` is a
- * « no » given after Google loaded, which a navigation must not undo.
+ * « no » given after Google loaded, which a navigation must not undo;
+ * `__mazedGaSync` lets the loader apply one.
+ *
+ * Leaving the console is the other way in: GA4 sends the next page with the
+ * previous address as its referrer, and ignores any override on those
+ * history page views (checked on www.mazed.immo) — so an admin's
+ * `/admin/vendeurs?q=<a seller's number>` would reach Google that way. The
+ * page is loaded afresh instead, Google staying off until it goes.
+ *
+ * The first page view is the one Google lets us correct: when its address
+ * or referrer holds the console, a phone-like number or an e-mail, the
+ * config sends a cleaned copy (same masks as cleanSearchTerm).
  * Same test of the path as isConsolePath.
  */
 export function gaInitScript(id: string): string {
   const ID = JSON.stringify(id);
-  return `window.dataLayer=window.dataLayer||[];
+  return String.raw`window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
 window.gtag=gtag;
+gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'granted'});
+gtag('js',new Date());
 (function(){
 var off='ga-disable-'+${ID};
-function sync(){var p=location.pathname.toLowerCase().split('/').filter(Boolean);window[off]=window.__mazedGaOff===true||p[0]==='admin'||p[1]==='admin';}
+function adm(path){var p=String(path).toLowerCase().split('/').filter(Boolean);return p[0]==='admin'||p[1]==='admin';}
+function mask(v){return v.replace(/[^\s@]+@[^\s@]+/g,'[email]').replace(/\+?\d[\d\s.-]{6,}\d/g,function(m){return m.replace(/\D/g,'').length>=8?'[phone]':m;});}
+function clean(href){try{var u=new URL(href,location.href);if(u.origin!==location.origin)return '';if(adm(u.pathname))return u.origin+'/';var changed=false,out=[];u.searchParams.forEach(function(v,k){var m=mask(v);if(m!==v)changed=true;out.push(encodeURIComponent(k)+'='+encodeURIComponent(m));});return changed?u.origin+u.pathname+'?'+out.join('&'):'';}catch(e){return '';}}
+var here=location.pathname,leaving=false;
+function apply(){if(!leaving)window[off]=window.__mazedGaOff===true||adm(location.pathname);}
+function sync(){if(leaving)return;var now=location.pathname;if(adm(here)&&!adm(now)){leaving=true;window[off]=true;location.reload();return;}here=now;apply();}
+window.__mazedGaSync=apply;
 ['pushState','replaceState'].forEach(function(m){var o=history[m];history[m]=function(){var r=o.apply(this,arguments);sync();return r;};});
 addEventListener('popstate',sync,true);
 sync();
-})();
-gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'granted'});
-gtag('js',new Date());
-gtag('config',${ID},{allow_google_signals:false,allow_ad_personalization_signals:false});`;
+var cfg={allow_google_signals:false,allow_ad_personalization_signals:false};
+var l=clean(location.href);if(l)cfg.page_location=l;
+var r=document.referrer&&clean(document.referrer);if(r)cfg.page_referrer=r;
+gtag('config',${ID},cfg);
+})();`;
 }
 
 // ── The visitor's answer ─────────────────────────────────────────────────────
