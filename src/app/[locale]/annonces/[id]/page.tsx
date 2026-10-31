@@ -25,6 +25,8 @@ import { getSettings } from "@/lib/settings/server";
 import { FavoriteButton } from "@/components/property/FavoriteButton";
 import { ShareButton } from "@/components/listing/ShareButton";
 import { CreditSimulator } from "@/components/listing/CreditSimulator";
+import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
+import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 import { shareText } from "@/lib/share";
 import { RelatedListings } from "@/components/listing/RelatedListings";
 import { ViewTracker } from "@/components/listing/ViewTracker";
@@ -452,6 +454,11 @@ export default async function AnnoncePage({
   // unless an admin has switched editing off.
   const settings = await getSettings();
   const editOn = settings.feature_listing_edit;
+  // « Agence réactive »: the agence of this annonce answers its visit requests fast.
+  const reactivity =
+    shop && admin && l.shop_id && settings.feature_agency_reactive
+      ? (await loadReactivity(admin, [l.shop_id as string], reactiveRules(settings))).get(l.shop_id as string)
+      : undefined;
   // « Simulez votre crédit »: a sale with a price, above the minimum worth a loan.
   const creditOn =
     settings.feature_credit_simulator &&
@@ -496,6 +503,7 @@ export default async function AnnoncePage({
             {shop.verified_at && <BadgeCheck className="size-4 shrink-0 text-gold" strokeWidth={2.4} aria-label={t("verifiedShop")} />}
           </div>
           {l.contact_name && <div dir="auto" className="truncate text-[12px] text-muted">{l.contact_name}</div>}
+          {reactivity?.reactive && <div className="mt-1"><ReactiveBadge reactivity={reactivity} /></div>}
         </div>
         <FavoriteButton listingId={l.id} initialSaved={saved} loggedIn={user !== null} />
       </div>
