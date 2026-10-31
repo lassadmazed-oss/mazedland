@@ -107,6 +107,8 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
                         · {t(paidBy.get(s.id) === "captured" ? "paidChip" : "receiptChip")}
                       </span>
                     )}
+                    {/* Sent back « à corriger »: the owner's turn, not the console's. */}
+                    {s.status === "pending" && s.rejection_reason && <span className="ms-1 font-bold text-muted">· {t("fixChip")}</span>}
                   </span>
                 </span>
               </Link>
@@ -126,7 +128,7 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
       planUsage(admin!, shop.id),
       admin!.from("shop_members").select("user_id", { count: "exact", head: true }).eq("shop_id", shop.id),
       // The plan it chose: paid, its receipt waiting, or chosen with no receipt yet.
-      admin!.from("payments").select("id, status, amount, metadata").eq("kind", "subscription").in("status", ["pending", "pending_review", "captured"]).contains("metadata", { shop_id: shop.id }).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      admin!.from("payments").select("id, status, amount, metadata, provider, receipt_urls, receipt_url, receipt_uploaded_at").eq("kind", "subscription").in("status", ["pending", "pending_review", "captured"]).contains("metadata", { shop_id: shop.id }).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       // What « Offrir une période » can offer: the plans on sale.
       admin!.from("products").select("id, name_fr, listing_quota").eq("kind", "subscription").eq("is_active", true).order("price", { ascending: true }),
       getSettings(),
@@ -135,11 +137,29 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
       id: p.id,
       label: t("offerPlanOption", { name: p.name_fr, quota: p.listing_quota }),
     }));
-    const pay = payRow as { id: string; status: string; amount: number | string; metadata: { product_id?: string } | null } | null;
+    const pay = payRow as {
+      id: string; status: string; amount: number | string; metadata: { product_id?: string } | null;
+      provider: string | null; receipt_urls: string[] | null; receipt_url: string | null; receipt_uploaded_at: string | null;
+    } | null;
     const { data: payPlan } = pay?.metadata?.product_id
       ? await admin!.from("products").select("name_fr").eq("id", pay.metadata.product_id).maybeSingle()
       : { data: null };
     const payPlanName = (payPlan as { name_fr: string } | null)?.name_fr ?? "";
+    // The agence request (2026-10-31): a waiting agence with its plan's
+    // receipt in is one decision — who asks, for what, paid how — with the
+    // receipt to look at right here. Its own ten-minute links, as the papers.
+    const request = shop.status === "pending" && pay?.status === "pending_review" ? pay : null;
+    const receiptLinks = request
+      ? await Promise.all(
+          (request.receipt_urls?.length ? request.receipt_urls : request.receipt_url ? [request.receipt_url] : []).map(async (p) => {
+            const { data } = await admin!.storage.from("receipts").createSignedUrl(p, 600);
+            return data?.signedUrl ?? null;
+          }),
+        )
+      : [];
+    const amountText = request ? formatTND(Number(request.amount), locale) : "";
+    // Sent back « à corriger »: the motif waits for the owner's correction.
+    const fixAsked = shop.status === "pending" && shop.rejection_reason ? shop.rejection_reason : null;
     // The papers are private: ten-minute links, made for this page view only.
     const links = await Promise.all(
       ((docs ?? []) as { id: string; kind: string; storage_path: string; file_name: string | null; created_at: string }[]).map(async (d) => {
@@ -169,7 +189,37 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
             </Link>
           )}
         </div>
-        {shop.rejection_reason && <p className="mt-3 border-s-2 border-[var(--tone-bad)] ps-3 text-[12.5px] text-[var(--tone-bad)]" dir="auto">{shop.rejection_reason}</p>}
+        {shop.rejection_reason && !fixAsked && <p className="mt-3 border-s-2 border-[var(--tone-bad)] ps-3 text-[12.5px] text-[var(--tone-bad)]" dir="auto">{shop.rejection_reason}</p>}
+        {request && (
+          <div className="mt-3 rounded-xl bg-gold-faint p-3 ring-1 ring-gold-soft">
+            <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-[var(--gold)]">{t("requestEyebrow")}</p>
+            <p className="mt-1 text-[13.5px] font-bold leading-snug text-foreground" dir="auto">
+              {t("requestLine", { owner: owner?.full_name?.trim() || "—", name: shop.name, plan: payPlanName, amount: amountText })}
+            </p>
+            <p className="mt-0.5 text-[12px] text-muted">
+              {t("requestPaid", {
+                method: request.provider === "d17" ? "D17" : t("bankTransfer"),
+                date: request.receipt_uploaded_at ? formatDate(request.receipt_uploaded_at, locale, "medium") : "—",
+              })}
+            </p>
+            {receiptLinks.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {receiptLinks.map((url, i) =>
+                  url ? (
+                    <a key={i} href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-surface px-2.5 py-1 text-[12px] font-bold text-foreground ring-1 ring-border hover:ring-[var(--gold-soft)]">
+                      <FileText className="size-3.5 text-muted" /> {t("receiptN", { n: i + 1 })}
+                    </a>
+                  ) : null,
+                )}
+                <Link href={`/admin/paiements?status=pending&a=${request.id}` as never} className="inline-flex items-center px-1 text-[12px] font-semibold text-muted hover:text-foreground">
+                  {t("requestInPayments")}
+                </Link>
+              </div>
+            )}
+            {fixAsked && <p className="mt-2 border-s-2 border-[var(--tone-warn)] ps-2.5 text-[12px] font-semibold text-foreground" dir="auto">{t("requestFixAsked", { reason: fixAsked })}</p>}
+          </div>
+        )}
+        {!request && fixAsked && <p className="mt-3 border-s-2 border-[var(--tone-warn)] ps-3 text-[12.5px] text-foreground" dir="auto">{t("requestFixAsked", { reason: fixAsked })}</p>}
         <dl className="mt-3">
           {row(t("owner"), <>{owner?.full_name ?? "—"} {owner?.phone && <Ltr className="text-muted">{owner.phone}</Ltr>}</>)}
           {row(t("kind"), tKinds(shop.kind))}
@@ -217,6 +267,7 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
             verified={!!shop.verified_at}
             plans={offerPlans}
             offerMonths={settings.founding_offer_months}
+            request={request ? { plan: payPlanName, amount: amountText } : null}
           />
         </div>
       </section>

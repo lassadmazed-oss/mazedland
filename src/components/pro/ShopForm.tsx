@@ -53,6 +53,10 @@ const chip = (on: boolean) =>
  * the address follows the name. What only some shops have (website, hours,
  * legal details) waits under « Plus d'informations ». What is sent is the
  * same object as before; the choices only fill its fields.
+ *
+ * The fields themselves are `ShopFields`: the agence request
+ * (src/components/pro/AgenceRequest.tsx) opens on them too, then asks for
+ * the plan and its receipt before the one « Envoyer ».
  */
 export function ShopForm({
   initial,
@@ -65,24 +69,92 @@ export function ShopForm({
   suggestedName?: string;
 }) {
   const t = useTranslations("pro.form");
-  const tKinds = useTranslations("pro.kinds");
-  const locale = useLocale();
   const router = useRouter();
   const { toast } = useToast();
   const apiError = useApiError();
-  const moreId = useId();
-  // A délégation typed in another spelling (« la marsa ») opens on the list's.
-  const [v, setV] = useState<ShopFormValues>(() => ({
-    ...initial,
-    city: canonicalDelegation(initial.governorate, initial.city) ?? initial.city,
-  }));
+  const [v, setV] = useState<ShopFormValues>(() => shopFormStart(initial));
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState<null | "logo_path" | "cover_path">(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const res = await fetch(mode === "create" ? "/api/pro/shops" : `/api/pro/shops/${initial.id}`, {
+        method: mode === "create" ? "POST" : "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(v),
+      });
+      const j = (await res.json().catch(() => ({}))) as { id?: string; reverify?: boolean };
+      if (!res.ok) {
+        toast(apiError(j, t("saveFailed")), "error");
+        return;
+      }
+      // A verified agence that changed its name or legal identity loses the
+      // badge until an admin looks again: said here, not discovered later.
+      toast(t(mode === "create" ? "created" : j.reverify ? "savedReverify" : "saved"), "success");
+      if (mode === "create") router.push(`/pro/dashboard?shop=${j.id}` as never);
+      else router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-5">
+      <ShopFields v={v} setV={setV} mode={mode} suggestedName={suggestedName} onUploading={setUploading} />
+      <button
+        type="submit"
+        disabled={busy || uploading}
+        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 text-[14px] disabled:opacity-60 sm:w-auto sm:px-8"
+      >
+        {busy && <Loader2 className="size-4 animate-spin" />}
+        {t(mode === "create" ? "submitCreate" : "submitSave")}
+      </button>
+    </form>
+  );
+}
+
+/** The values the form opens on: a délégation typed in another spelling (« la marsa ») opens on the list's. */
+export function shopFormStart(initial: ShopFormValues): ShopFormValues {
+  return { ...initial, city: canonicalDelegation(initial.governorate, initial.city) ?? initial.city };
+}
+
+/**
+ * The shop's fields — images, name and address, kind, place, contacts,
+ * presentation, « Plus d'informations » — for whoever holds the values.
+ * `onUploading` says while a logo or cover is on its way, so the form's
+ * button can wait for it.
+ */
+export function ShopFields({
+  v,
+  setV,
+  mode,
+  suggestedName,
+  onUploading,
+}: {
+  v: ShopFormValues;
+  setV: React.Dispatch<React.SetStateAction<ShopFormValues>>;
+  mode: "create" | "edit";
+  suggestedName?: string;
+  onUploading?: (busy: boolean) => void;
+}) {
+  const t = useTranslations("pro.form");
+  const tKinds = useTranslations("pro.kinds");
+  const locale = useLocale();
+  const { toast } = useToast();
+  const apiError = useApiError();
+  const moreId = useId();
+  const [uploading, setUploadingField] = useState<null | "logo_path" | "cover_path">(null);
+  const setUploading = (f: null | "logo_path" | "cover_path") => {
+    setUploadingField(f);
+    onUploading?.(f !== null);
+  };
   // A city that is not one of the governorate's délégations was typed: it
   // opens in the text field rather than being lost.
-  const [cityTyped, setCityTyped] = useState(() => Boolean(initial.city.trim()) && !canonicalDelegation(initial.governorate, initial.city));
+  const [cityTyped, setCityTyped] = useState(() => Boolean(v.city.trim()) && !canonicalDelegation(v.governorate, v.city));
   // Open when the shop already has one of these filled in, so it is in sight.
-  const [more, setMore] = useState(() => Boolean(initial.website || initial.hours || initial.legal_name || initial.legal_id));
+  const [more, setMore] = useState(() => Boolean(v.website || v.hours || v.legal_name || v.legal_id));
   const [editingSlug, setEditingSlug] = useState(false);
   // The last text « Écrire pour moi » wrote: writing again over it needs no
   // question, writing over the owner's own words does.
@@ -129,30 +201,6 @@ export function ShopForm({
       set(field, target.path);
     } finally {
       setUploading(null);
-    }
-  }
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      const res = await fetch(mode === "create" ? "/api/pro/shops" : `/api/pro/shops/${initial.id}`, {
-        method: mode === "create" ? "POST" : "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(v),
-      });
-      const j = (await res.json().catch(() => ({}))) as { id?: string; reverify?: boolean };
-      if (!res.ok) {
-        toast(apiError(j, t("saveFailed")), "error");
-        return;
-      }
-      // A verified agence that changed its name or legal identity loses the
-      // badge until an admin looks again: said here, not discovered later.
-      toast(t(mode === "create" ? "created" : j.reverify ? "savedReverify" : "saved"), "success");
-      if (mode === "create") router.push(`/pro/dashboard?shop=${j.id}` as never);
-      else router.refresh();
-    } finally {
-      setBusy(false);
     }
   }
 
@@ -208,7 +256,7 @@ export function ShopForm({
   );
 
   return (
-    <form onSubmit={submit} className="space-y-5">
+    <div className="space-y-5">
       <section className="space-y-3">
         {imageSlot("cover_path", true)}
         <div className="flex items-end gap-3">
@@ -416,15 +464,6 @@ export function ShopForm({
           </div>
         )}
       </section>
-
-      <button
-        type="submit"
-        disabled={busy || uploading !== null}
-        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 text-[14px] disabled:opacity-60 sm:w-auto sm:px-8"
-      >
-        {busy && <Loader2 className="size-4 animate-spin" />}
-        {t(mode === "create" ? "submitCreate" : "submitSave")}
-      </button>
-    </form>
+    </div>
   );
 }

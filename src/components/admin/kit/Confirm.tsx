@@ -16,6 +16,10 @@ import { AdminButton, adminBtn, type AdminButtonVariant } from "../AdminButton";
  * `reason` turns it into the reject flow: a required motif, captured and
  * handed back to the caller, because "Refusée" with no reason is a support
  * ticket a week later.
+ *
+ * `choice` and `reason` together (refusing an agence request: what happens
+ * to its payment, then why): the choice comes first, and confirm hands back
+ * the value picked, then the motif.
  */
 export function Confirm({
   open,
@@ -38,9 +42,10 @@ export function Confirm({
   pending?: boolean;
   /** Ask for a written motif. `required` blocks confirm until it's filled. */
   reason?: { label: string; placeholder?: string; required?: boolean };
-  /** Pick one of these instead of writing: confirm hands back its value. */
-  choice?: { label: string; options: { value: string; label: string }[] };
-  onConfirm: (reason: string) => void;
+  /** Pick one of these instead of writing: confirm hands back its value. A `hint` says what it does. */
+  choice?: { label: string; options: { value: string; label: string; hint?: string }[] };
+  /** The motif, or the value picked when there is a choice — then the motif second. */
+  onConfirm: (reason: string, motif: string) => void;
   onCancel: () => void;
 }) {
   const t = useTranslations("admin");
@@ -93,23 +98,6 @@ export function Confirm({
           </div>
         </div>
 
-        {reason && (
-          <label className="mt-4 block">
-            <span className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-subtle">
-              {reason.label}
-              {reason.required && <span className="ms-1 text-[var(--tone-bad)]">*</span>}
-            </span>
-            <textarea
-              ref={inputRef}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              rows={3}
-              placeholder={reason.placeholder}
-              className="mt-1.5 w-full resize-y rounded-lg border border-border bg-surface-2 px-3 py-2 text-[13px] text-foreground placeholder:text-subtle focus:border-gold focus:outline-none"
-            />
-          </label>
-        )}
-
         {choice && (
           <fieldset className="mt-4">
             <legend className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-subtle">
@@ -132,11 +120,31 @@ export function Confirm({
                     onChange={() => setPicked(o.value)}
                     className="accent-[var(--gold)]"
                   />
-                  {o.label}
+                  <span className="min-w-0">
+                    {o.label}
+                    {o.hint && <span className="mt-0.5 block text-[11.5px] leading-snug text-muted">{o.hint}</span>}
+                  </span>
                 </label>
               ))}
             </div>
           </fieldset>
+        )}
+
+        {reason && (
+          <label className="mt-4 block">
+            <span className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-subtle">
+              {reason.label}
+              {reason.required && <span className="ms-1 text-[var(--tone-bad)]">*</span>}
+            </span>
+            <textarea
+              ref={inputRef}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              rows={3}
+              placeholder={reason.placeholder}
+              className="mt-1.5 w-full resize-y rounded-lg border border-border bg-surface-2 px-3 py-2 text-[13px] text-foreground placeholder:text-subtle focus:border-gold focus:outline-none"
+            />
+          </label>
         )}
 
         <div className="mt-5 flex justify-end gap-2">
@@ -152,7 +160,7 @@ export function Confirm({
             pending={pending}
             disabled={blocked}
             disabledReason={blocked ? t("reasonRequired") : undefined}
-            onClick={() => onConfirm(choice ? picked : text.trim())}
+            onClick={() => onConfirm(choice ? picked : text.trim(), text.trim())}
           >
             {confirmLabel ?? t("confirm")}
           </AdminButton>

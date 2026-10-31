@@ -84,7 +84,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
   );
   const href = (k: TabKey) => `/pro/dashboard?shop=${shop.id}&tab=${k}`;
 
-  const [plan, used, { data: listingRows }, { count: visitsWaiting }] = await Promise.all([
+  const [plan, used, { data: listingRows }, { count: visitsWaiting }, { data: requestRow }] = await Promise.all([
     activePlan(admin, shop.id),
     // The agence's annonces and its owner's own: the plan's places (src/lib/places).
     planUsage(admin, shop.id),
@@ -95,7 +95,30 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
       .order("created_at", { ascending: false })
       .limit(100),
     admin.from("visit_requests").select("id", { count: "exact", head: true }).eq("shop_id", shop.id).eq("status", "requested"),
+    // A waiting agence's request (2026-10-31): its plan's payment, the last one.
+    shop.status === "pending"
+      ? admin
+          .from("payments")
+          .select("id, status, amount, reviewer_id, admin_notes, metadata")
+          .eq("kind", "subscription")
+          .in("status", ["pending", "pending_review", "failed"])
+          .contains("metadata", { shop_id: shop.id })
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
+  // What the request waits on: the console (receipt in), a new receipt (an
+  // admin refused it — not a choice the owner replaced), or nothing yet.
+  const req = requestRow as { id: string; status: string; amount: number | string; reviewer_id: string | null; admin_notes: string | null; metadata: { product_id?: string } | null } | null;
+  const requestSent = req?.status === "pending_review" ? req : null;
+  const receiptRefused = req?.status === "failed" && req.reviewer_id ? req : null;
+  const { data: requestPlan } = requestSent?.metadata?.product_id
+    ? await admin.from("products").select("name_fr, name_ar").eq("id", requestSent.metadata.product_id).maybeSingle()
+    : { data: null };
+  const requestPlanName = requestPlan ? (locale === "ar" && requestPlan.name_ar ? requestPlan.name_ar : requestPlan.name_fr) : "";
+  // The console sent it back « à corriger »: the motif, while it still waits.
+  const fixAsked = shop.status === "pending" && shop.rejection_reason ? shop.rejection_reason : null;
   const listings = (listingRows ?? []) as {
     id: string; seller_id: string; title: string; status: string; price: number | null; price_on_request: boolean; deal_type: string | null;
     view_count: number; contact_reveal_count: number; expires_at: string | null;
@@ -140,9 +163,34 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
         </div>
       </header>
 
-      {shop.status !== "approved" && (
+      {shop.status === "pending" && (fixAsked || receiptRefused) ? (
+        // The owner's turn: what to correct, or a receipt to send again — and the way there.
+        <div className="mazed-tone-warn mt-4 rounded-2xl px-4 py-3 text-[12.5px] leading-relaxed">
+          <p>{tStatus(fixAsked ? "hint.fix" : "hint.receiptRefused")}</p>
+          <p className="mt-1 font-semibold" dir="auto">{fixAsked ?? receiptRefused?.admin_notes ?? ""}</p>
+          {fixAsked && requestSent && <p className="mt-1">{tStatus("hint.fixPaid")}</p>}
+          <div className="mt-2.5">
+            {fixAsked ? (
+              can(role, "edit_shop") && (
+                <Link href={href("agence") as never} className="mazed-btn-luxe tap-target inline-flex h-10 items-center px-4 text-[13px]">
+                  {t("fixCta")}
+                </Link>
+              )
+            ) : (
+              receiptRefused && can(role, "subscribe") && (
+                <a href={`/${locale}/payment/checkout?payment=${receiptRefused.id}`} className="mazed-btn-luxe tap-target inline-flex h-10 items-center px-4 text-[13px]">
+                  {t("resendReceipt")}
+                </a>
+              )
+            )}
+          </div>
+        </div>
+      ) : shop.status !== "approved" && (
         <p className={`mt-4 rounded-2xl px-4 py-3 text-[12.5px] leading-relaxed ${shop.status === "pending" ? "mazed-tone-warn" : "mazed-tone-bad"}`}>
-          {tStatus(`hint.${shop.status}`)}
+          {/* A request in: it says what was sent, not « choose your plan ». */}
+          {shop.status === "pending" && requestSent
+            ? tStatus("hint.request", { plan: requestPlanName, amount: formatTND(Number(requestSent.amount), locale) })
+            : tStatus(`hint.${shop.status}`)}
           {shop.rejection_reason && <span className="mt-1 block font-semibold" dir="auto">{shop.rejection_reason}</span>}
         </p>
       )}
@@ -179,7 +227,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
                   <Plus className="size-4" /> {t("publishForShop")}
                 </Link>
               )}
-              {!plan && can(role, "subscribe") && (shop.status === "approved" || shop.status === "pending") && (
+              {!plan && !requestSent && can(role, "subscribe") && (shop.status === "approved" || shop.status === "pending") && (
                 <Link href={href("abonnement") as never} className="tap-target inline-flex h-10 items-center rounded-xl border border-border px-4 text-[13px] font-bold">
                   {t("choosePlan")}
                 </Link>
@@ -253,7 +301,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
 
       {tab === "equipe" && <TeamTab shopId={shop.id} role={role} />}
 
-      {tab === "abonnement" && <PlanTab shopId={shop.id} role={role} status={shop.status} current={plan} />}
+      {tab === "abonnement" && <PlanTab shopId={shop.id} role={role} status={shop.status} current={plan} requestWaiting={requestSent ? requestPlanName : null} />}
 
       {tab === "agence" && can(role, "edit_shop") && (
         <section className="mt-5">
@@ -466,7 +514,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
     );
   }
 
-  async function PlanTab({ shopId, role: actor, status, current: running }: { shopId: string; role: ShopRole; status: string; current: Awaited<ReturnType<typeof activePlan>> }) {
+  async function PlanTab({ shopId, role: actor, status, current: running, requestWaiting }: { shopId: string; role: ShopRole; status: string; current: Awaited<ReturnType<typeof activePlan>>; requestWaiting: string | null }) {
     const [{ data: planRows }, { data: periods }, open, ahead] = await Promise.all([
       admin!.from("products").select("slug, name_fr, name_ar, price, listing_quota, duration_days").eq("kind", "subscription").eq("is_active", true).order("price"),
       // Cancelled periods were moved into an upgrade (carryOver): not history.
@@ -496,7 +544,8 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
     // then said « indisponible ». The tab says it first, in place of the buttons.
     // An agence waiting to be opened chooses and pays here too (2026-10-28):
     // the admin opens it on the receipt. A refused or suspended one cannot.
-    const mayBuy = can(actor, "subscribe") && (status === "approved" || status === "pending");
+    // A request already sent with its receipt waits for the console: no second choice beside it.
+    const mayBuy = can(actor, "subscribe") && (status === "approved" || status === "pending") && requestWaiting === null;
     return (
       <section className="mt-5 space-y-5">
         <p className="rounded-2xl bg-surface-2 px-4 py-3 text-[12.5px] leading-relaxed text-foreground ring-1 ring-border">
@@ -574,7 +623,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
             );
           })}
         </div>
-        {status === "pending" && <p className="rounded-2xl bg-gold-faint px-4 py-3 text-[12.5px] font-semibold leading-relaxed text-foreground">{t("planPayFirst")}</p>}
+        {status === "pending" && <p className="rounded-2xl bg-gold-faint px-4 py-3 text-[12.5px] font-semibold leading-relaxed text-foreground">{requestWaiting !== null ? t("planRequestWaiting", { plan: requestWaiting }) : t("planPayFirst")}</p>}
         {status !== "pending" && status !== "approved" && <p className="text-[12px] text-muted">{t("planAfterApproval")}</p>}
         <p className="text-[11.5px] leading-snug text-muted">{t("planHow")}</p>
         {(periods ?? []).length > 0 && (

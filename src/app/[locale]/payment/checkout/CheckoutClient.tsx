@@ -5,9 +5,6 @@ import Image from "next/image";
 import { useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
-  Building2,
-  Smartphone,
-  Copy,
   Check,
   Upload,
   Loader2,
@@ -17,32 +14,15 @@ import {
   X,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { Ltr } from "@/components/ui/Ltr";
 import { useApiError } from "@/lib/useApiError";
 import { formatTND, cn } from "@/lib/utils";
-import { getBrowserSupabase } from "@/lib/supabase/client";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
-import { compressImage } from "@/lib/imageCompress";
 import type { ProviderInstructions } from "@/lib/payments";
-import { clipboardText } from "@/lib/payments/clipboard";
 import type { PaymentProvider } from "@/lib/payments/types";
+import { MAX_RECEIPTS, MAX_RECEIPT_MB, RECEIPT_TYPES, receiptProblem } from "@/lib/payments/receipts";
+import { removeReceipts, uploadReceipts } from "@/lib/payments/receiptUpload";
+import { PayeeFields, PayMethodPicker } from "@/components/payments/PayeeInstructions";
 import { pickedBeforeReady } from "@/lib/pickedBeforeReady";
-
-/**
- * A call that never answers is a spinner forever. On 2026-10-28 a receipt
- * stayed « sending » until a reload: the Supabase client had deadlocked on its
- * own lock (AccountMenu). After `ms` the call fails like a lost connection:
- * the toast says so and the button lets the client try again.
- */
-function withTimeout<P extends PromiseLike<unknown>>(p: P, ms: number): Promise<Awaited<P>> {
-  return new Promise<Awaited<P>>((resolve, reject) => {
-    const id = setTimeout(() => reject(new Error("timeout")), ms);
-    Promise.resolve(p).then(
-      (v) => { clearTimeout(id); resolve(v as Awaited<P>); },
-      (e) => { clearTimeout(id); reject(e); },
-    );
-  });
-}
 
 interface Props {
   paymentId: string;
@@ -74,26 +54,6 @@ interface Props {
  * `checkout.feeLabel` / `checkout.feeBody`.
  */
 
-const PROVIDER_ICONS: Record<PaymentProvider, typeof Building2> = {
-  bank_transfer: Building2,
-  d17: Smartphone,
-};
-
-// 25 MB raw → modern iPhone photos can be 12-20 MB before compression.
-// Images get compressed client-side before upload (final upload typically
-// 200-600 KB). PDFs pass through unchanged and the limit is the cap.
-const MAX_FILE_MB = 25;
-const ACCEPTED_TYPES = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/heic",
-  "image/heif",
-  "application/pdf",
-];
-
 export function CheckoutClient({
   paymentId,
   amount,
@@ -113,9 +73,7 @@ export function CheckoutClient({
   const [provider, setProvider] = useState<PaymentProvider>(
     instructions[0]?.value ?? "bank_transfer",
   );
-  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
-  const MAX_RECEIPTS = 3;
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   // Sent from this page, then « Envoyer un autre reçu »: the payment now
@@ -156,16 +114,6 @@ export function CheckoutClient({
     [provider, instructions],
   );
 
-  async function copyValue(label: string, value: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedField(label);
-      setTimeout(() => setCopiedField(null), 1400);
-    } catch {
-      toast(t("copyFailed"), "warning");
-    }
-  }
-
   function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(e.target.files ?? []);
     if (picked.length === 0) return;
@@ -180,19 +128,13 @@ export function CheckoutClient({
         toast(t("maxImagesExtra", { max: MAX_RECEIPTS }), "warning");
         break;
       }
-      // Some mobile pickers report empty `type` for HEIC files — fall back to
-      // extension matching so we don't reject a legitimate photo.
-      const ext = f.name.split(".").pop()?.toLowerCase() ?? "";
-      const looksImage =
-        f.type.startsWith("image/") ||
-        ["jpg", "jpeg", "png", "webp", "avif", "heic", "heif"].includes(ext);
-      const looksPdf = f.type === "application/pdf" || ext === "pdf";
-      if (!looksImage && !looksPdf && !ACCEPTED_TYPES.includes(f.type)) {
+      const problem = receiptProblem(f);
+      if (problem === "format") {
         toast(t("badFormat", { name: f.name }), "error");
         continue;
       }
-      if (f.size > MAX_FILE_MB * 1024 * 1024) {
-        toast(t("tooLarge", { name: f.name, maxMb: MAX_FILE_MB }), "error");
+      if (problem === "size") {
+        toast(t("tooLarge", { name: f.name, maxMb: MAX_RECEIPT_MB }), "error");
         continue;
       }
       accepted.push(f);
@@ -212,65 +154,23 @@ export function CheckoutClient({
   async function submit(list: File[] = files) {
     if (list.length === 0 || submitting) return;
     setSubmitting(true);
-    // Track every object we put in the bucket this attempt so we can clean them
-    // ALL up if a later upload or the attach call fails (no orphans).
-    const uploadedPaths: string[] = [];
-    const supabase = getBrowserSupabase();
+    // Every object put in the bucket this attempt is taken back if a later
+    // upload or the attach call fails (no orphans).
+    const up = await uploadReceipts(list, paymentId);
+    if (!up.ok) {
+      toast(t(up.reason === "session" ? "sessionExpired" : up.reason === "upload" ? "uploadFailed" : "networkError"), "error");
+      setSubmitting(false);
+      return;
+    }
     try {
-      const { data: auth } = await withTimeout(supabase.auth.getUser(), 10_000);
-      if (!auth.user) {
-        toast(t("sessionExpired"), "error");
-        setSubmitting(false);
-        return;
-      }
-      const safePid = paymentId.replace(/[^a-z0-9-]/gi, "");
-
-      for (let i = 0; i < list.length; i++) {
-        const original = list[i];
-        // Compress image receipts before upload (review-only → document-tier
-        // WebP, ~250-500 KB, text stays crisp). compressImage also converts
-        // HEIC→webp even when the picker reports an empty mime; PDFs pass
-        // through untouched.
-        let toUpload = original;
-        const ext0 = original.name.split(".").pop()?.toLowerCase() ?? "";
-        const isPdf = original.type === "application/pdf" || ext0 === "pdf";
-        if (!isPdf) {
-          try {
-            toUpload = await compressImage(original, { maxEdge: 2000, quality: 0.86, format: "webp" });
-          } catch {
-            toUpload = original;
-          }
-        }
-        // Owner-scoped path per RLS (0023); index suffix keeps the 3 distinct.
-        const ext = toUpload.name.split(".").pop()?.toLowerCase() ?? "bin";
-        const path = `${auth.user.id}/${safePid}-${Date.now()}-${i}.${ext}`;
-        // A receipt is a few hundred KB after compression; a slow phone line
-        // gets 90 s before it is told the send failed.
-        const { error: upErr } = await withTimeout(
-          supabase.storage
-            .from("receipts")
-            .upload(path, toUpload, { cacheControl: "3600", upsert: false, contentType: toUpload.type }),
-          90_000,
-        );
-        if (upErr) {
-          if (uploadedPaths.length) void supabase.storage.from("receipts").remove(uploadedPaths);
-          // upErr.message is the storage API's English text.
-          toast(t("uploadFailed"), "error");
-          setSubmitting(false);
-          return;
-        }
-        uploadedPaths.push(path);
-      }
-
       const res = await fetch(`/api/payments/${paymentId}/receipt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ receipt_paths: uploadedPaths, provider }),
+        body: JSON.stringify({ receipt_paths: up.paths, provider }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        // Couldn't attach — clean up every uploaded object so we don't orphan.
-        void supabase.storage.from("receipts").remove(uploadedPaths);
+        removeReceipts(up.paths);
         toast(apiError(data, t("submitFailed")), "error");
         setSubmitting(false);
         return;
@@ -278,8 +178,7 @@ export function CheckoutClient({
       setSubmitted(true);
       setSentHere(true);
     } catch {
-      // A send that gave up halfway leaves nothing behind in the bucket.
-      if (uploadedPaths.length) void supabase.storage.from("receipts").remove(uploadedPaths);
+      removeReceipts(up.paths);
       toast(t("networkError"), "error");
       setSubmitting(false);
     }
@@ -493,87 +392,13 @@ export function CheckoutClient({
         <div className="mt-4 space-y-4 lg:mt-0">
         {/* ── STEP 1: choose method (big toggles) ── */}
         <Step n={1} title={t("stepMethod")} />
-        <div className="grid grid-cols-2 gap-2.5">
-          {instructions.map((p) => {
-            const Icon = PROVIDER_ICONS[p.value];
-            const isActive = provider === p.value;
-            return (
-              <button
-                key={p.value}
-                type="button"
-                onClick={() => setProvider(p.value)}
-                aria-pressed={isActive}
-                className={cn(
-                  "relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition",
-                  isActive
-                    ? "border-[var(--gold)] bg-[var(--gold-faint)]"
-                    : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--gold-soft)]",
-                )}
-              >
-                {isActive && (
-                  <span className="absolute end-2 top-2 inline-flex size-5 items-center justify-center rounded-full bg-[var(--gold)] text-white">
-                    <Check className="size-3" strokeWidth={3} />
-                  </span>
-                )}
-                <span
-                  className={cn(
-                    "inline-flex size-11 items-center justify-center rounded-xl",
-                    isActive ? "bg-[var(--gold)] text-white" : "bg-[var(--surface-2)] text-[var(--foreground-muted)]",
-                  )}
-                >
-                  <Icon className="size-5" strokeWidth={2} />
-                </span>
-                <span className="text-[13px] font-bold text-foreground">
-                  {p.value === "bank_transfer" ? t("providerBank") : t("providerD17")}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <PayMethodPicker instructions={instructions} provider={provider} onProvider={setProvider} />
 
         {/* ── STEP 2: pay — copyable bank details ── */}
         {active && (
           <>
             <Step n={2} title={t("stepPay")} />
-            <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
-              {active.fields.map((field, i) => (
-                <div
-                  key={field.label}
-                  className={cn(
-                    "flex items-center justify-between gap-3 px-4 py-3",
-                    i > 0 && "border-t border-[var(--border)]",
-                  )}
-                >
-                  <div className="min-w-0">
-                    <div className="text-[10px] uppercase tracking-[0.14em] font-bold text-[var(--foreground-muted)]">
-                      {field.label}
-                    </div>
-                    <div className={cn("mt-0.5 text-[14px] font-bold text-foreground break-words", field.mono && "mazed-tabular")}>
-                      {field.ltr ? <Ltr>{field.value}</Ltr> : field.value}
-                    </div>
-                  </div>
-                  {field.copyable && (
-                    <button
-                      type="button"
-                      // In the shape the bank or D17 app takes: « 15.00 », not « 15.00 TND ».
-                      onClick={() => copyValue(field.label, clipboardText(field.value))}
-                      className={cn(
-                        "shrink-0 inline-flex min-h-10 items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-bold transition",
-                        copiedField === field.label
-                          ? "bg-[var(--gold)] text-white"
-                          : "bg-[var(--surface-2)] text-foreground hover:bg-[var(--gold-faint)] hover:text-[var(--gold)]",
-                      )}
-                    >
-                      {copiedField === field.label ? (
-                        <><Check className="size-3.5" strokeWidth={2.5} /> {t("copied")}</>
-                      ) : (
-                        <><Copy className="size-3.5" strokeWidth={2} /> {t("copy")}</>
-                      )}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+            <PayeeFields active={active} />
           </>
         )}
 
@@ -612,7 +437,7 @@ export function CheckoutClient({
                 {files.length === 0 ? t("chooseFile") : t("addAnother")}
               </span>
               <span className="text-[11px] text-[var(--foreground-muted)]">
-                {t("uploadHint", { maxMb: MAX_FILE_MB, max: MAX_RECEIPTS, used: files.length })}
+                {t("uploadHint", { maxMb: MAX_RECEIPT_MB, max: MAX_RECEIPTS, used: files.length })}
               </span>
               <input
                 ref={(el) => {
@@ -621,7 +446,7 @@ export function CheckoutClient({
                   pickedBeforeReady(el);
                 }}
                 type="file"
-                accept={ACCEPTED_TYPES.join(",")}
+                accept={RECEIPT_TYPES.join(",")}
                 multiple
                 onChange={onPickFile}
                 className="sr-only"

@@ -45,6 +45,8 @@ export type PaymentDetailData = {
   creditNote: { id: string; number: string; reason: string | null } | null;
   /** What the amount is made of — the plan's price, what an upgrade took off (invoiceLines.ts). */
   lines: InvoiceLine[];
+  /** The plan of an agence still waiting to be opened: decided whole from Agences (the agence request). */
+  agenceRequest: { shopId: string; name: string } | null;
 };
 
 /** Providers with a label in messages: adminPayments.providers.<provider>. */
@@ -111,6 +113,16 @@ export function PaymentDetail({
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+        {/* Accepted here, the agence still has to be opened there: one
+            decision there does both. */}
+        {open && p.agenceRequest && (
+          <p className="mb-3 border-s-2 border-[var(--gold)] ps-3 text-[12.5px] text-foreground">
+            {t("detail.agenceRequest", { name: p.agenceRequest.name })}{" "}
+            <Link href={`/admin/agences?id=${p.agenceRequest.shopId}` as never} className="font-semibold underline">
+              {t("detail.agenceRequestLink")}
+            </Link>
+          </p>
+        )}
         {p.receipts.length > 0 ? (
           <div className="space-y-3">
             {p.receipts.map((r, i) => (
