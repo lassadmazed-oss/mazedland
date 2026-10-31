@@ -50,8 +50,8 @@ const PRIVACY_SECTIONS = [
  */
 export const LEGAL_UPDATED_AT = {
   terms: "2026-10-06",
-  // « Qui voit une demande » was rewritten on 2026-10-26 (417bce7).
-  privacy: "2026-10-26",
+  // « Cookies » names Google Analytics since 2026-10-31.
+  privacy: "2026-10-31",
 } as const;
 
 /**

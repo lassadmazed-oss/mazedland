@@ -26,6 +26,8 @@ import { VoiceSearchButton } from "@/components/search/VoiceSearchButton";
 import { jsonLdSafe } from "@/lib/jsonld";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { breadcrumbLd, catalogueIndexing, itemListLd, pageAlternates } from "@/lib/seo";
+import { TrackEvent } from "@/components/analytics/TrackEvent";
+import { cleanSearchTerm } from "@/lib/analytics/ga";
 
 export const dynamic = "force-dynamic";
 
@@ -499,6 +501,15 @@ export default async function AnnoncesPage({
           and the first row of results are the heading. The h1 stays for
           assistive tech and search engines. */}
       <h1 className="sr-only">{t("heading")}</h1>
+      {/* GA's « search », from whichever box sent it (header, home, this page,
+          the microphone): the words as typed — before a natural search turned
+          them into filters — with what looks like a phone or an e-mail taken out. */}
+      {(sp.nlq || sp.q) && (
+        <TrackEvent
+          name="search"
+          params={{ search_term: cleanSearchTerm(sp.nlq || sp.q), deal: deal ?? undefined, cat: sp.cat, gov: sp.gov, results: total }}
+        />
+      )}
 
       {/* Keyword search for phones. The header search is desktop-only, so a
           phone could reach the catalogue but never search it. A plain GET form:

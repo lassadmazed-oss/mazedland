@@ -9,6 +9,7 @@ import { BottomTabBar } from "./BottomTabBar";
 import { ScrollToTop } from "./ScrollToTop";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { LegalUpdateBanner } from "@/components/account/LegalUpdateBanner";
+import { AnalyticsConsentBar } from "@/components/analytics/AnalyticsConsent";
 
 /**
  * Mobile-app shell — top bar, scrollable main, bottom tab bar.
@@ -87,6 +88,8 @@ export function MobileShell({ children }: { children: React.ReactNode }) {
         </main>
       </PullToRefresh>
       <BottomTabBar />
+      {/* Google Analytics' « Accepter / Refuser », when an admin asks for it. */}
+      <AnalyticsConsentBar />
       {/* The KYC nudge stood here. It pushed the visitor towards identity
           verification, which existed so a bidder could be held to a bid.
           Nothing in the classifieds product asks for an identity. */}

@@ -1941,7 +1941,7 @@
         },
         "cookies": {
           "title": "7. Cookies",
-          "body": "Nous utilisons des cookies essentiels au fonctionnement du site (session, préférences) et une mesure d'audience anonyme."
+          "body": "Nous utilisons des cookies essentiels au fonctionnement du site (session, préférences). Pour comprendre comment le site est utilisé, nous utilisons aussi Google Analytics (Google) : pages vues, recherches, clics sur « Afficher le numéro » ou WhatsApp, partages. Votre nom, votre téléphone et votre e-mail ne lui sont jamais envoyés, et rien ne sert à la publicité. Quand le site vous demande votre accord, Google ne se charge qu'après « Accepter » ; vous pouvez changer d'avis à tout moment sur la page Politique de confidentialité."
         }
       }
     }
@@ -4799,6 +4799,10 @@
       "privacy": {
         "title": "Données personnelles",
         "hint": "La version des CGU et de la politique de confidentialité que chacun accepte, et combien de temps chaque trace est gardée avant que le site l'efface, chaque nuit. Les paiements, les factures et le journal des admins ne sont jamais effacés."
+      },
+      "analytics": {
+        "title": "Statistiques",
+        "hint": "Google Analytics 4 : d'où viennent les visiteurs et ce qu'ils font sur le site (recherches, numéros affichés, WhatsApp, partages, visites demandées, annonces publiées). Le journal d'activité du site continue de compter les pages vues de son côté. La console n'est jamais mesurée."
       }
     },
     "feature_visits": {
@@ -5050,7 +5054,8 @@
       "out_of_range": "Entre {min} et {max}.",
       "invalid_text": "Entrez un texte.",
       "too_long": "{max} caractères au plus.",
-      "invalid_list": "Un élément par ligne."
+      "invalid_list": "Un élément par ligne.",
+      "invalid_format": "Format non reconnu."
     },
     "feature_ads": {
       "label": "Espaces publicitaires",
@@ -5199,6 +5204,18 @@
     "plan_renew_days": {
       "label": "Renouveler un abonnement d'agence",
       "hint": "Combien de jours avant sa fin une agence peut racheter le même abonnement. Avant, la page lui dit qu'elle l'a déjà jusqu'à telle date."
+    },
+    "analytics_ga_enabled": {
+      "label": "Google Analytics",
+      "hint": "En marche, le site charge Google Analytics avec l'identifiant ci-dessous. Coupé, ou sans identifiant : rien de Google ne se charge."
+    },
+    "analytics_ga_id": {
+      "label": "Identifiant de mesure",
+      "hint": "Dans Google Analytics : Administration → Flux de données → votre site → « ID de mesure ». Il commence par G- (par exemple ⁦G-AB12CD34EF⁩) ; collez-le tel quel. Vide : rien de Google ne se charge."
+    },
+    "analytics_ask_consent": {
+      "label": "Demander l'accord des visiteurs",
+      "hint": "En marche, une barre demande « Accepter / Refuser » et Google ne se charge qu'après « Accepter » : moins de visiteurs comptés, mais rien sans accord. Coupé, Google se charge pour tous ; un visiteur peut toujours refuser depuis la page Confidentialité. La publicité reste refusée dans les deux cas."
     }
   },
   "ads": {
@@ -5542,5 +5559,18 @@
     "installed": "App installée",
     "iosHint": "Sur iPhone ou iPad : touchez Partager, puis « Sur l'écran d'accueil ».",
     "manualHint": "Dans Chrome ou Edge : menu ⋮, puis « Installer Mazed Immo » (ou « Ajouter à l'écran d'accueil » sur Android). Sur Safari (Mac) : Fichier, puis « Ajouter au Dock »."
+  },
+  "analyticsConsent": {
+    "label": "Mesure d'audience",
+    "body": "Nous aimerions mesurer comment le site est utilisé avec Google Analytics (pages vues, recherches, clics), sans votre nom, votre téléphone ni votre e-mail. <privacy>En savoir plus</privacy>",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "choiceTitle": "Votre choix pour Google Analytics",
+    "choiceGranted": "Vous avez accepté la mesure d'audience.",
+    "choiceDenied": "Vous avez refusé la mesure d'audience : Google ne se charge pas.",
+    "choiceNone": "Vous n'avez pas encore répondu : Google ne se charge pas.",
+    "choiceDefault": "La mesure d'audience est active. Vous pouvez la refuser.",
+    "withdraw": "Refuser la mesure",
+    "grant": "Accepter la mesure"
   }
 }

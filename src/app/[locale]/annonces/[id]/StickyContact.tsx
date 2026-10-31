@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { Loader2, MessageCircle, Phone } from "lucide-react";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { useCompare } from "@/components/compare/compareStore";
-import { contactLinks, useContactReveal } from "./ContactReveal";
+import { contactLinks, trackContact, useContactReveal } from "./ContactReveal";
 
 /**
  * The seller's number within reach on a phone.
@@ -72,6 +72,7 @@ export function StickyContact({
           <>
             <a
               href={links.tel}
+              onClick={() => trackContact(listingId, "call")}
               className="mazed-btn-luxe tap-target inline-flex h-11 shrink-0 items-center gap-1.5 px-4 text-[14px]"
             >
               <Phone className="size-4" strokeWidth={2.5} />
@@ -81,6 +82,7 @@ export function StickyContact({
               href={links.whatsapp}
               target="_blank"
               rel="noreferrer"
+              onClick={() => trackContact(listingId, "whatsapp")}
               aria-label="WhatsApp"
               className="tap-target grid size-11 shrink-0 place-items-center rounded-full border border-border bg-surface text-foreground transition hover:border-gold-soft"
             >

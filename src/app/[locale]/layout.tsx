@@ -21,6 +21,7 @@ import { ClientLogger } from "@/components/dev/ClientLogger";
 import { ClientErrorReporter } from "@/components/observability/ClientErrorReporter";
 import type { Metadata } from "next";
 import { SettingsProvider } from "@/components/settings/SettingsProvider";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { NoNegativeNumbers } from "@/components/ui/NoNegativeNumbers";
 import { LocalizedValidation } from "@/components/ui/LocalizedValidation";
 import { clientSettings, getSettings } from "@/lib/settings/server";
@@ -148,6 +149,10 @@ export default async function LocaleLayout({
         </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SettingsProvider value={settings}>
+          {/* Google Analytics 4 (Réglages → Statistiques): nothing on the
+              console, nothing without an ID or, when asked, consent. Before
+              the page, so it is ready when the page's first event fires. */}
+          <GoogleAnalytics />
           <ToastProvider>
             <NetworkStatus />
             <FavoritesSync />

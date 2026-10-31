@@ -191,11 +191,15 @@ const nextConfig: NextConfig = {
       // directive that turns a markup injection into arbitrary code.
       // va.vercel-scripts.com serves Vercel Analytics / Speed Insights on
       // preview deployments (production proxies them same-origin).
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
+      // googletagmanager.com serves gtag.js for Google Analytics 4
+      // (src/components/analytics/GoogleAnalytics.tsx), which then sends its
+      // hits to google-analytics.com — the hosts Google lists for GA4 without
+      // Google Signals (switched off in its config, so no doubleclick.net).
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com https://*.googletagmanager.com`,
       "style-src 'self' 'unsafe-inline'",
       // Listing photos go through /_next/image (same origin); receipts and
       // signed storage URLs come straight from Supabase.
-      "img-src 'self' data: blob: https://*.supabase.co",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com",
       "font-src 'self' data:",
       [
         "connect-src 'self'",
@@ -203,6 +207,9 @@ const nextConfig: NextConfig = {
         supabaseWs,
         "https://va.vercel-scripts.com",
         "https://vitals.vercel-insights.com",
+        "https://*.google-analytics.com",
+        "https://*.analytics.google.com",
+        "https://*.googletagmanager.com",
       ]
         .filter(Boolean)
         .join(" "),

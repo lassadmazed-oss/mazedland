@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { LEGAL_UPDATED_AT, PrivacyContent } from "@/components/legal/LegalContent";
 import { formatDate } from "@/lib/utils";
+import { AnalyticsChoice } from "@/components/analytics/AnalyticsConsent";
 
 export async function generateMetadata({
   params,
@@ -31,6 +32,8 @@ export default async function PrivacyPage({
   return (
     <LegalPage eyebrow={t("eyebrow")} title={t("privacy.title")} updated={formatDate(LEGAL_UPDATED_AT.privacy, locale, "long")}>
       <PrivacyContent />
+      {/* Section 7 says the answer can be changed here. */}
+      <AnalyticsChoice />
     </LegalPage>
   );
 }

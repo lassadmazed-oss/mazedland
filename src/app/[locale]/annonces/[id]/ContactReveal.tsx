@@ -7,6 +7,7 @@ import { useApiError } from "@/lib/useApiError";
 import { Ltr } from "@/components/ui/Ltr";
 import { Phone, MessageCircle, Loader2 } from "lucide-react";
 import { recordSocialContact, recordSocialVisit } from "@/lib/social/visit";
+import { track } from "@/lib/analytics/ga";
 
 export type RevealedContact = { phone: string; whatsapp: string | null };
 
@@ -65,6 +66,7 @@ export function useContactReveal(listingId: string) {
       if (!revealed.has(listingId)) {
         revealed.set(listingId, { phone: j.phone, whatsapp: j.whatsapp ?? null });
         recordSocialContact(listingId);
+        track("phone_reveal", { listing_id: listingId });
         for (const fn of listeners) fn();
       }
     } catch {
@@ -76,6 +78,11 @@ export function useContactReveal(listingId: string) {
   }
 
   return { contact, busy, reveal };
+}
+
+/** A tap on « Appeler » or WhatsApp once the number shows (GA; the number itself is never sent). */
+export function trackContact(listingId: string, via: "call" | "whatsapp") {
+  track(via === "call" ? "contact_call" : "contact_whatsapp", { listing_id: listingId });
 }
 
 /** The links a revealed number opens: tel: and wa.me. */
@@ -125,6 +132,7 @@ export function ContactReveal({
       <div className="space-y-2">
         <a
           href={links.tel}
+          onClick={() => trackContact(listingId, "call")}
           className="mazed-btn-luxe tap-target flex w-full items-center justify-center gap-2 px-5 py-3.5 text-[15px]"
         >
           <Phone className="size-4" strokeWidth={2.5} />
@@ -134,6 +142,7 @@ export function ContactReveal({
           href={links.whatsapp}
           target="_blank"
           rel="noreferrer"
+          onClick={() => trackContact(listingId, "whatsapp")}
           className="tap-target flex w-full items-center justify-center gap-2 rounded-full border border-border bg-surface px-5 py-3 text-[13.5px] font-bold text-foreground transition hover:border-gold-soft"
         >
           <MessageCircle className="size-4" strokeWidth={2.2} />
