@@ -158,7 +158,9 @@ export function DesktopNav() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 hidden h-[var(--desktop-nav-h)] items-center border-b border-border bg-white lg:flex">
-      <div className="mx-auto flex h-full w-full max-w-[var(--max-w-wide)] items-center gap-6 px-8">
+      {/* Tighter at lg (1024–1279px), where four links, the search and the
+          button share 960px; the search keeps a floor so it never collapses. */}
+      <div className="mx-auto flex h-full w-full max-w-[var(--max-w-wide)] items-center gap-4 px-6 xl:gap-6 xl:px-8">
         {/* ── Left zone: brand + primary links ── */}
         <div className="flex h-full shrink-0 items-center gap-6">
           {/* Mark + name, matching the mobile TopBar. The logo file is a
@@ -189,7 +191,7 @@ export function DesktopNav() {
                   key={l.key}
                   href={l.href as never}
                   aria-current={active ? "page" : undefined}
-                  className={`inline-flex items-center border-b-2 px-3 pt-0.5 text-[13.5px] font-semibold transition-colors ${
+                  className={`inline-flex items-center whitespace-nowrap border-b-2 px-2.5 pt-0.5 text-[13.5px] font-semibold transition-colors xl:px-3 ${
                     active
                       ? "border-foreground text-foreground"
                       : "border-transparent text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
@@ -207,7 +209,7 @@ export function DesktopNav() {
           <QueryFromUrl onQuery={onUrlState} />
         </Suspense>
         <form onSubmit={submitSearch} className="flex flex-1 justify-center" role="search">
-          <div className="relative flex w-full max-w-md items-center">
+          <div className="relative flex w-full min-w-[180px] max-w-md items-center">
             <Search
               className="pointer-events-none absolute size-4 text-muted ltr:left-4 rtl:right-4"
               strokeWidth={2}
@@ -239,8 +241,10 @@ export function DesktopNav() {
             <Plus className="size-4" strokeWidth={2.5} />
             {/* « Publier une annonce » / « انشر إعلانك » — not « Vendre »: the
                 button also publishes a rental, and the owner asked for it
-                (2026-10-31). The phone's centre tab keeps a short « Publier ». */}
-            {t("publishCta")}
+                (2026-10-31). Below xl the bar has no room for the whole
+                phrase, and the phone's own « Publier » stands in. */}
+            <span className="hidden xl:inline">{t("publishCta")}</span>
+            <span className="xl:hidden">{t("sell")}</span>
           </Link>
         </div>
       </div>
