@@ -17,6 +17,7 @@ import { ProClients, type ClientRow } from "./ProClients";
 import { SuggestListing } from "./SuggestListing";
 import { ProjectsTab } from "./ProjectsTab";
 import { ReportsTab } from "./ReportsTab";
+import { ImportListings } from "./ImportListings";
 import { parsePeriod } from "@/lib/pro/reports";
 import { MAX_SUGGESTIONS_PER_REQUEST, rankForRequest } from "@/lib/pro/suggest";
 import { toMatchable } from "@/lib/requests/server";
@@ -249,6 +250,8 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
 
       {tab === "annonces" && (
         <section className="mt-5">
+          {/* A file saved from Excel becomes drafts (the agencies' bulk import). */}
+          {settings.feature_listing_import && shop.status === "approved" && can(role, "publish") && <ImportListings shopId={shop.id} />}
           {listings.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-[13px] text-muted">{t("noListings")}</p>
           ) : (
@@ -269,6 +272,8 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
                     {/* The edit form is its author's (0172). */}
                     {settings.feature_listing_edit && l.status === "published" && l.seller_id === user!.id && <Link href={`/annonces/nouvelle?edit=${l.id}` as never} className="text-foreground hover:underline">{t("edit")}</Link>}
                     {l.status === "published" && <Link href={`/annonces/${l.id}` as never} className="text-gold hover:underline">{t("view")}</Link>}
+                    {/* A draft is resumed in the form: the photos and the attestation are what it lacks (an imported one has all the rest). */}
+                    {l.status === "draft" && l.seller_id === user!.id && <Link href={`/annonces/nouvelle?draft=${l.id}` as never} className="text-gold hover:underline">{t("continueDraft")}</Link>}
                     {/* The agence pushes its annonce into its groups from here (the owner, 2026-10-28). */}
                     {l.status === "published" && <ShareButton variant="text" href={`/${locale}/annonces/${l.id}`} title={l.title} />}
                   </div>

@@ -63,6 +63,9 @@ export const SETTINGS = {
   // running plan is big enough (agency_strip_min_quota), in an order that turns
   // each day (src/lib/pro/featured.ts).
   feature_agency_strip: { group: "features", type: "bool", default: true, href: "/admin/agences" },
+  // « Importer plusieurs annonces » in the agence's dashboard: a CSV (or lines
+  // pasted from Excel) becomes drafts (src/lib/listings/importRows.ts).
+  feature_listing_import: { group: "features", type: "bool", default: true },
   // « Simulez votre crédit » on an annonce for sale (src/lib/credit.ts).
   feature_credit_simulator: { group: "features", type: "bool", default: true },
   // The admins hear of a crash in production the first time it happens (0185).
@@ -103,6 +106,8 @@ export const SETTINGS = {
   projects_max_units: { group: "publication", type: "int", default: 300, min: 10, max: 2000 },
   // The same agence plan can be renewed only this many days before it ends (planChange.ts).
   plan_renew_days: { group: "publication", type: "int", default: 5, min: 1, max: 30, unit: "days", choices: [3, 5, 7, 15] },
+  // The most lines one imported file may hold.
+  import_max_rows: { group: "publication", type: "int", default: 60, min: 5, max: 300, choices: [30, 60, 120, 300] },
   // « Offrir une période » in the agences console: how long the offered plan runs (src/lib/pro/offer.ts).
   founding_offer_months: { group: "publication", type: "int", default: 3, min: 1, max: 12, unit: "months", choices: [1, 2, 3, 6, 12] },
   // « Envoyer sans payer » under the agence request: the agence comes alone,
