@@ -15,6 +15,7 @@ import { routing } from "@/i18n/routing";
 import { Ltr } from "@/components/ui/Ltr";
 import { PhotoCarousel } from "@/components/listing/PhotoCarousel";
 import { GalleryMosaic } from "@/components/listing/GalleryMosaic";
+import { LG_UP } from "@/components/ui/HiddenAt";
 import { ContactReveal } from "./ContactReveal";
 import { StickyContact } from "./StickyContact";
 import { ReportListing } from "./ReportListing";
@@ -677,7 +678,7 @@ export default async function AnnoncePage({
       {photos.length > 0 && (
         <div className="lg:mt-4">
           <div className="lg:hidden">
-            <PhotoCarousel photos={photos} alt={l.title} autoplay={false} counter />
+            <PhotoCarousel photos={photos} alt={l.title} autoplay={false} counter hiddenAt={LG_UP} />
           </div>
           <GalleryMosaic photos={photos} alt={l.title} />
         </div>

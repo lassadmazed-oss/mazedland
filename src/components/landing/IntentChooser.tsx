@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,9 @@ export function IntentChooser({ layout = "row" }: { layout?: "compact" | "hero" 
   const t = useTranslations("home");
   const [rentOpen, setRentOpen] = useState(false);
   const hero = layout === "hero";
+  // The home renders this twice (the phone tree and the desktop tree), so the
+  // panel the button controls needs an id of its own in each.
+  const panelId = `intent-rent-${useId()}`;
 
   if (layout === "row") {
     const pill =
@@ -45,7 +48,7 @@ export function IntentChooser({ layout = "row" }: { layout?: "compact" | "hero" 
           <button
             type="button"
             aria-expanded={rentOpen}
-            aria-controls="intent-rent"
+            aria-controls={panelId}
             onClick={() => setRentOpen((v) => !v)}
             className={cn(pill, rentOpen && "bg-foreground text-[var(--background)] ring-foreground")}
           >
@@ -56,7 +59,7 @@ export function IntentChooser({ layout = "row" }: { layout?: "compact" | "hero" 
 
         {/* « Je loue » means two things; ask which, right where it was tapped. */}
         {rentOpen && (
-          <div id="intent-rent" className="mt-2.5 rounded-2xl bg-surface p-3 ring-1 ring-border">
+          <div id={panelId} className="mt-2.5 rounded-2xl bg-surface p-3 ring-1 ring-border">
             <p className="text-[12.5px] font-bold text-foreground">{t("intentRentQuestion")}</p>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <Link
@@ -132,7 +135,7 @@ export function IntentChooser({ layout = "row" }: { layout?: "compact" | "hero" 
         <button
           type="button"
           aria-expanded={rentOpen}
-          aria-controls="intent-rent"
+          aria-controls={panelId}
           onClick={() => setRentOpen((v) => !v)}
           className={cn(tile, rentOpen ? "bg-gold-faint ring-2 ring-gold" : quiet)}
         >
@@ -150,7 +153,7 @@ export function IntentChooser({ layout = "row" }: { layout?: "compact" | "hero" 
 
       {/* « Je loue » means two things; ask which, right where it was tapped. */}
       {rentOpen && (
-        <div id="intent-rent" className="mt-2 rounded-2xl bg-surface p-3 ring-1 ring-gold-soft">
+        <div id={panelId} className="mt-2 rounded-2xl bg-surface p-3 ring-1 ring-gold-soft">
           <p className="text-[12.5px] font-bold text-foreground">{t("intentRentQuestion")}</p>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             <Link

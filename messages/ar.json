@@ -641,7 +641,6 @@
     "sellBandTitle": "عندك عقار للبيع ولا للكراء؟",
     "sellBandBody": "انشر إعلانك في دقائق: تصاورك وسومك. يتثبّت قبل ما يتنشر.",
     "sellBandCta": "انشر إعلاني",
-    "quickLinksTitle": "اختصارات",
     "endingSoonEyebrow": "فرصة",
     "browseByType": "تصفّح حسب النوع",
     "browseByPrice": "تصفّح حسب السوم",
@@ -850,8 +849,6 @@
   },
   "catalogue": {
     "sortBy": "ترتيب",
-    "filtersCount": "{count, plural, zero {حتى فلتر} one {فلتر واحد مفعّل} two {فلترين مفعّلين} few {# فلاتر مفعّلة} many {# فلتر مفعّل} other {# فلتر مفعّل}}",
-    "resultsIn": "{count, plural, zero {لا توجد عقارات} one {عقار واحد} two {عقاران} few {# عقارات} many {# عقارًا} other {# عقار}} · {place}",
     "metaTitleDefault": "إعلانات عقارية",
     "metaTitleIn": "{what} في {governorate} — Mazed Immo",
     "metaTitleTunisia": "{what} في تونس — Mazed Immo",
@@ -960,8 +957,6 @@
       "photos": "{count, plural, zero {بلا تصاور} one {تصويرة وحدة} two {زوز تصاور} few {# تصاور} many {# تصويرة} other {# تصويرة}}",
       "close": "سكّر"
     },
-    "factsTitle": "الأساسي",
-    "breadcrumbHome": "الرئيسية",
     "metaNotFound": "الإعلان غير موجود — Mazed Immo",
     "metaDescriptionFallback": "{title} في {governorate}.",
     "priceOnRequest": "السعر عند الطلب",

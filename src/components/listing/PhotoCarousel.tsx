@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { IMAGE_BLUR_MAP } from "@/lib/imageBlurMap";
 import { isRtl } from "@/lib/i18n";
+import { HiddenAt } from "@/components/ui/HiddenAt";
 
 type Photo = {
   id: string;
@@ -50,6 +51,7 @@ export function PhotoCarousel({
   counter = false,
   startIndex = 0,
   variant = "page",
+  hiddenAt,
 }: {
   photos: Photo[];
   alt: string;
@@ -58,6 +60,8 @@ export function PhotoCarousel({
   counter?: boolean;
   startIndex?: number;
   variant?: "page" | "modal";
+  /** The media query at which CSS hides this carousel: its eager first photo is not downloaded there. */
+  hiddenAt?: string;
 }) {
   const t = useTranslations();
   // Right-to-left, the flex track lays the slides out leftwards from the right
@@ -177,17 +181,31 @@ export function PhotoCarousel({
                     key={`${p.id}-${i}`}
                     className="relative h-full w-full shrink-0"
                   >
-                    <Image
-                      src={src}
-                      alt={alt}
-                      fill
-                      loading={i === 0 ? "eager" : "lazy"}
-                      fetchPriority={i === 0 ? "high" : undefined}
-                      sizes={modal ? "100vw" : "(min-width: 1024px) 1100px, 100vw"}
-                      placeholder={blur ? "blur" : "empty"}
-                      blurDataURL={blur}
-                      className={modal ? "object-contain" : "object-cover"}
-                    />
+                    {(() => {
+                      const img = (
+                        <Image
+                          src={src}
+                          alt={alt}
+                          fill
+                          loading={i === 0 ? "eager" : "lazy"}
+                          fetchPriority={i === 0 ? "high" : undefined}
+                          sizes={modal ? "100vw" : "(min-width: 1024px) 1100px, 100vw"}
+                          placeholder={blur ? "blur" : "empty"}
+                          blurDataURL={blur}
+                          className={modal ? "object-contain" : "object-cover"}
+                        />
+                      );
+                      // The first photo loads eagerly, and display:none does not
+                      // stop that: where CSS hides this carousel, an empty GIF
+                      // takes its place (see HiddenAt).
+                      return i === 0 && hiddenAt ? (
+                        <HiddenAt media={hiddenAt} className="absolute inset-0">
+                          {img}
+                        </HiddenAt>
+                      ) : (
+                        img
+                      );
+                    })()}
                   </div>
                 );
               })}

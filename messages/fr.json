@@ -641,7 +641,6 @@
     "sellBandTitle": "Vous vendez ou louez un bien ?",
     "sellBandBody": "Publiez votre annonce en quelques minutes : vos photos, votre prix. Elle est vérifiée avant publication.",
     "sellBandCta": "Publier mon annonce",
-    "quickLinksTitle": "Raccourcis",
     "endingSoonEyebrow": "À saisir",
     "browseByType": "Parcourir par type",
     "browseByPrice": "Parcourir par prix",
@@ -850,8 +849,6 @@
   },
   "catalogue": {
     "sortBy": "Trier",
-    "filtersCount": "{count, plural, one {# filtre actif} other {# filtres actifs}}",
-    "resultsIn": "{count, plural, one {# bien} other {# biens}} · {place}",
     "metaTitleDefault": "Annonces immobilières",
     "metaTitleIn": "{what} à {governorate} — Mazed Immo",
     "metaTitleTunisia": "{what} en Tunisie — Mazed Immo",
@@ -960,8 +957,6 @@
       "photos": "{count, plural, one {# photo} other {# photos}}",
       "close": "Fermer"
     },
-    "factsTitle": "L'essentiel",
-    "breadcrumbHome": "Accueil",
     "metaNotFound": "Annonce introuvable — Mazed Immo",
     "metaDescriptionFallback": "{title} à {governorate}.",
     "priceOnRequest": "Prix sur demande",

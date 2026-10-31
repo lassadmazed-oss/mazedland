@@ -119,13 +119,33 @@ export function HomeSearch({
     return (
       <form onSubmit={submit} className="mazed-float p-2.5 text-start sm:p-3" role="search">
         {/* Buy or rent first: the one question that changes every other filter. */}
-        <div role="tablist" aria-label={t("catalogue.dealAria")} className="mazed-segment w-full sm:w-auto">
+        <div
+          role="tablist"
+          aria-label={t("catalogue.dealAria")}
+          className="mazed-segment w-full sm:w-auto"
+          // The tabs pattern: the arrows move between the three, Home and End
+          // jump to the ends; only the chosen tab is in the Tab order.
+          onKeyDown={(e) => {
+            const i = DEALS.indexOf(deal);
+            const next =
+              e.key === "ArrowRight" || e.key === "ArrowDown" ? (i + 1) % DEALS.length
+              : e.key === "ArrowLeft" || e.key === "ArrowUp" ? (i - 1 + DEALS.length) % DEALS.length
+              : e.key === "Home" ? 0
+              : e.key === "End" ? DEALS.length - 1
+              : -1;
+            if (next < 0) return;
+            e.preventDefault();
+            setDeal(DEALS[next]);
+            (e.currentTarget.children[next] as HTMLElement | undefined)?.focus();
+          }}
+        >
           {DEALS.map((k) => (
             <button
               key={k}
               type="button"
               role="tab"
               aria-selected={deal === k}
+              tabIndex={deal === k ? 0 : -1}
               onClick={() => setDeal(k)}
               className="tap-target"
             >

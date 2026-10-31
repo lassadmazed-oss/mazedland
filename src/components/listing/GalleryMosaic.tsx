@@ -21,6 +21,7 @@ type Photo = { id: string; storage_path: string };
  */
 export function GalleryMosaic({ photos, alt }: { photos: Photo[]; alt: string }) {
   const t = useTranslations("listing.gallery");
+  const tg = useTranslations("gallery");
   const [openAt, setOpenAt] = useState<number | null>(null);
   const n = photos.length;
   if (n === 0) return null;
@@ -33,12 +34,13 @@ export function GalleryMosaic({ photos, alt }: { photos: Photo[]; alt: string })
   return (
     <div className="hidden lg:block">
       <div className={`relative grid h-[480px] ${cols} grid-rows-2 gap-2 overflow-hidden rounded-[var(--radius-3xl)] bg-surface-2`}>
-        <Tile photo={photos[0]} alt={alt} className={bigSpan} first onOpen={() => setOpenAt(0)} sizes="760px" />
+        <Tile photo={photos[0]} alt={alt} label={tg("goToPhoto", { n: 1 })} className={bigSpan} first onOpen={() => setOpenAt(0)} sizes="760px" />
         {small.map((p, i) => (
           <Tile
             key={p.id}
             photo={p}
             alt=""
+            label={tg("goToPhoto", { n: i + 2 })}
             className={n === 2 ? "row-span-2" : ""}
             onOpen={() => setOpenAt(i + 1)}
             sizes="380px"
@@ -66,6 +68,7 @@ export function GalleryMosaic({ photos, alt }: { photos: Photo[]; alt: string })
 function Tile({
   photo,
   alt,
+  label,
   className,
   first = false,
   onOpen,
@@ -73,6 +76,8 @@ function Tile({
 }: {
   photo: Photo;
   alt: string;
+  /** What the button does — « Aller à la photo 3 » — since the small tiles' photos carry no alt. */
+  label: string;
   className: string;
   first?: boolean;
   onOpen: () => void;
@@ -97,7 +102,7 @@ function Tile({
     <button
       type="button"
       onClick={onOpen}
-      aria-label={alt || undefined}
+      aria-label={label}
       className={`group relative block min-h-0 overflow-hidden bg-surface-2 ${className}`}
     >
       {first ? (

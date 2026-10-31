@@ -2,7 +2,7 @@ import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { formatNumber, formatTND } from "@/lib/utils";
-import { BedDouble, Camera, Home, MapPin, Ruler, Store } from "lucide-react";
+import { Bath, BedDouble, Camera, Home, MapPin, Ruler, Store } from "lucide-react";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { IMAGE_BLUR_MAP } from "@/lib/imageBlurMap";
 import { coverPhoto } from "@/lib/listingCover";
@@ -94,6 +94,7 @@ export async function AnnonceCard({
   const attrs = (listing.attributes ?? {}) as Record<string, unknown>;
   const area = Number(attrs.area_sqm);
   const rooms = Number(attrs.rooms);
+  const baths = Number(attrs.bathrooms);
   const where = shownDelegation(listing.governorate, listing.delegation, locale) ?? governorateLabel(listing.governorate, locale);
   const rent = asDealType(listing.deal_type) === "rent";
   const promoted = Boolean(listing.promo_home_featured || listing.promo_banner || listing.promo_top_listed);
@@ -196,6 +197,12 @@ export async function AnnonceCard({
               {/* Tunisian shorthand, written in Latin in both languages.
                   Isolated so RTL does not turn "S+3" into "3+S". */}
               <Ltr>S+{rooms}</Ltr>
+            </span>
+          )}
+          {Number.isFinite(baths) && baths > 0 && (
+            <span className="mazed-tabular inline-flex items-center gap-1">
+              <Bath className="size-3" strokeWidth={2} aria-hidden />
+              {t("catalogue.specBathrooms", { count: baths })}
             </span>
           )}
         </p>
