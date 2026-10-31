@@ -4,14 +4,20 @@ import { requireAdmin } from "@/lib/admin/guard";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
-import { apiTranslator } from "@/lib/i18n/server";
-import { activePlan } from "@/lib/pro/shops";
+import { apiTranslator, requestLocale } from "@/lib/i18n/server";
+import { activePlan, offerPlanPeriod } from "@/lib/pro/shops";
+import { audit } from "@/lib/admin/audit";
+import { getSettings } from "@/lib/settings/server";
+import { formatDate } from "@/lib/utils";
 
 /**
  * POST /api/admin/boutiques/:id — the console's decisions on a shop (0173).
  *   approve | reject (reason) | suspend (reason) | reinstate
  *   verify | unverify — separate from opening it: « vérifié » means an admin
  *   checked who they are, and paying never sets it.
+ *   offer_plan (product_id) — « Offrir une période »: the founding agencies'
+ *   free months, `founding_offer_months` of the plan chosen, once per agence.
+ *   An offered plan is a plan: « Ouvrir » then accepts the agence on it.
  *
  * Each decision starts from a known status, tested in the same statement as
  * the write. A second click, or a second moderator, used to go through again:
@@ -46,7 +52,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   const t = await apiTranslator(req, "proApi");
 
-  const body = (await jsonObject(req)) as { action?: unknown; reason?: unknown };
+  const body = (await jsonObject(req)) as { action?: unknown; reason?: unknown; product_id?: unknown };
   const action = typeof body.action === "string" ? body.action : "";
   const reason = typeof body.reason === "string" ? body.reason.trim().slice(0, 500) : "";
 
@@ -60,6 +66,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (from && !from.includes(shop.status)) {
     const why = refusal(action, shop.status);
     return NextResponse.json({ error: why.error, detail: t(`errors.${why.key}`) }, { status: 409 });
+  }
+
+  if (action === "offer_plan") {
+    // A closed agence (refused, suspended) is not offered anything: it has to be reopened first.
+    if (shop.status !== "pending" && shop.status !== "approved") {
+      return NextResponse.json({ error: "wrong_status", detail: t("errors.offerClosed") }, { status: 409 });
+    }
+    const productId = typeof body.product_id === "string" ? body.product_id : "";
+    const { data: product } = /^[0-9a-f-]{36}$/i.test(productId)
+      ? await admin.from("products").select("id, name_fr, listing_quota").eq("id", productId).eq("kind", "subscription").eq("is_active", true).maybeSingle()
+      : { data: null };
+    const quota = Number(product?.listing_quota);
+    if (!product || !(Number.isFinite(quota) && quota > 0)) {
+      return NextResponse.json({ error: "invalid", detail: t("errors.plan") }, { status: 400 });
+    }
+    const { founding_offer_months: months } = await getSettings();
+    const period = await offerPlanPeriod(admin, { shopId: id, productId: product.id, quota, months, grantedBy: by });
+    if ("error" in period) return fail("shop_offer_failed", 500, period.error);
+    if ("already" in period) {
+      const date = formatDate(period.already.toISOString(), requestLocale(req), "medium");
+      return NextResponse.json({ error: "already_offered", detail: t("errors.offerAlready", { date }) }, { status: 409 });
+    }
+    logAction(req, gate.user, "admin.shop.offer_plan", { id, product_id: product.id, months });
+    await audit(admin, by, {
+      action: "shop.offer_plan", targetType: "shop", targetId: id,
+      after: { name_fr: product.name_fr, quota, months, ends_at: period.endsAt.toISOString().slice(0, 10) },
+    });
+    return NextResponse.json({ ok: true, plan: product.name_fr, months, until: period.endsAt.toISOString() });
   }
 
   let update: Record<string, unknown>;

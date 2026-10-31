@@ -593,6 +593,8 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
                         <a href={`/${locale}/factures/${inv.id}`} className="font-bold text-foreground underline">{t("periodInvoice", { number: inv.number })}</a>
                       </>
                     )}
+                    {/* No payment behind it: the console offered it (« Offrir une période »). */}
+                    {!p.payment_id && <> · <span className="font-bold text-foreground">{t("periodOffered")}</span></>}
                   </li>
                 );
               })}

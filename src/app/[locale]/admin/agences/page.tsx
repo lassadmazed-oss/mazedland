@@ -10,6 +10,7 @@ import { governorateLabel } from "@/lib/tunisia";
 import { formatDate, formatTND } from "@/lib/utils";
 import { activePlan, SHOP_COLUMNS, type ShopRow } from "@/lib/pro/shops";
 import { planUsage } from "@/lib/places/server";
+import { getSettings } from "@/lib/settings/server";
 import { BadgeCheck, ExternalLink, FileText, Store } from "lucide-react";
 import { BoutiqueActions } from "./BoutiqueActions";
 
@@ -118,7 +119,7 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
   );
 
   async function Detail({ shop }: { shop: ShopRow }) {
-    const [{ data: owner }, { data: docs }, plan, live, { count: members }, { data: payRow }] = await Promise.all([
+    const [{ data: owner }, { data: docs }, plan, live, { count: members }, { data: payRow }, { data: planRows }, settings] = await Promise.all([
       admin!.from("profiles").select("full_name, phone").eq("id", shop.owner_id).maybeSingle(),
       admin!.from("shop_documents").select("id, kind, storage_path, file_name, created_at").eq("shop_id", shop.id).order("created_at", { ascending: false }),
       activePlan(admin!, shop.id),
@@ -126,7 +127,14 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
       admin!.from("shop_members").select("user_id", { count: "exact", head: true }).eq("shop_id", shop.id),
       // The plan it chose: paid, its receipt waiting, or chosen with no receipt yet.
       admin!.from("payments").select("id, status, amount, metadata").eq("kind", "subscription").in("status", ["pending", "pending_review", "captured"]).contains("metadata", { shop_id: shop.id }).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      // What « Offrir une période » can offer: the plans on sale.
+      admin!.from("products").select("id, name_fr, listing_quota").eq("kind", "subscription").eq("is_active", true).order("price", { ascending: true }),
+      getSettings(),
     ]);
+    const offerPlans = ((planRows ?? []) as { id: string; name_fr: string; listing_quota: number }[]).map((p) => ({
+      id: p.id,
+      label: t("offerPlanOption", { name: p.name_fr, quota: p.listing_quota }),
+    }));
     const pay = payRow as { id: string; status: string; amount: number | string; metadata: { product_id?: string } | null } | null;
     const { data: payPlan } = pay?.metadata?.product_id
       ? await admin!.from("products").select("name_fr").eq("id", pay.metadata.product_id).maybeSingle()
@@ -203,7 +211,13 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
           )}
         </div>
         <div className="mt-4 border-t border-border pt-3">
-          <BoutiqueActions shopId={shop.id} status={shop.status} verified={!!shop.verified_at} />
+          <BoutiqueActions
+            shopId={shop.id}
+            status={shop.status}
+            verified={!!shop.verified_at}
+            plans={offerPlans}
+            offerMonths={settings.founding_offer_months}
+          />
         </div>
       </section>
     );
