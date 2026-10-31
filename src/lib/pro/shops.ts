@@ -9,6 +9,7 @@
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { addMonths, monthsOf, quotePlanChange, type PlanPeriod, type PlanQuote } from "./planChange";
 import { TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
+import { offeredPeriod } from "./offer";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -409,4 +410,52 @@ export async function grantPlanPeriod(
     if (e) return { error: e };
   }
   return { startsAt: starts, endsAt: ends, carriedDays: Math.round(carry.carriedMs / 86_400_000) };
+}
+
+/**
+ * « Offrir une période »: one period of a plan with no payment behind it (the
+ * founding agencies' free months). An agence is offered once — a second click,
+ * or a second admin, answers `already` with the period it has — and the period
+ * starts after whatever the agence already has (offeredPeriod).
+ */
+export async function offerPlanPeriod(
+  admin: Admin,
+  g: { shopId: string; productId: string; quota: number; months: number; grantedBy: string },
+  now: Date = new Date(),
+): Promise<{ startsAt: Date; endsAt: Date } | { already: Date } | { error: unknown }> {
+  const { data: given, error: givenErr } = await admin
+    .from("shop_subscriptions")
+    .select("ends_at")
+    .eq("shop_id", g.shopId)
+    .is("payment_id", null)
+    .neq("status", "cancelled")
+    .order("ends_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (givenErr) return { error: givenErr };
+  if (given) return { already: new Date(given.ends_at as string) };
+
+  const { data: running, error: runningErr } = await admin
+    .from("shop_subscriptions")
+    .select("ends_at")
+    .eq("shop_id", g.shopId)
+    .eq("status", "active")
+    .gt("ends_at", now.toISOString());
+  if (runningErr) return { error: runningErr };
+  const period = offeredPeriod({
+    now,
+    months: g.months,
+    endsOfActive: (running ?? []).map((r) => new Date(r.ends_at as string)),
+  });
+  const { error } = await admin.from("shop_subscriptions").insert({
+    shop_id: g.shopId,
+    product_id: g.productId,
+    payment_id: null,
+    listing_quota: g.quota,
+    starts_at: period.startsAt.toISOString(),
+    ends_at: period.endsAt.toISOString(),
+    granted_by: g.grantedBy,
+  });
+  if (error) return { error };
+  return period;
 }

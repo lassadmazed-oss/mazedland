@@ -3320,7 +3320,8 @@
     "project_units_create": "Lots ajoutés à un projet",
     "project_units_update": "Lots d'un projet modifiés",
     "project_units_delete": "Lots d'un projet supprimés",
-    "admin_payment_credit_note": "Avoir émis"
+    "admin_payment_credit_note": "Avoir émis",
+    "admin_shop_offer_plan": "Période offerte à une agence"
   },
   "adminApi": {
     "bulk": {
@@ -4152,7 +4153,8 @@
       "chooseFor": "Choisir — {amount}",
       "planPayFirst": "Choisissez votre abonnement et envoyez le reçu dès maintenant : votre agence est ouverte dès que le reçu est validé.",
       "periodInvoice": "Facture {number}",
-      "allPayments": "Tous mes paiements et factures"
+      "allPayments": "Tous mes paiements et factures",
+      "periodOffered": "Offerte par Mazed Immo"
     },
     "clients": {
       "open": "En cours",
@@ -4401,7 +4403,9 @@
       "reinstateOnlySuspended": "Seule une agence suspendue se rouvre ici : une agence en attente s'ouvre avec « Ouvrir », une fois son abonnement réglé.",
       "wrongStatus": "Cette décision ne s'applique pas à l'état actuel de l'agence : rechargez la page.",
       "choiceInFlight": "Un autre choix d'abonnement vient d'être enregistré pour cette agence. Rechargez la page.",
-      "planPending": "Un autre choix d'abonnement est en cours : rechargez la page."
+      "planPending": "Un autre choix d'abonnement est en cours : rechargez la page.",
+      "offerClosed": "Une agence refusée ou suspendue ne reçoit rien : rouvrez-la d'abord.",
+      "offerAlready": "Une période a déjà été offerte à cette agence (jusqu'au {date})."
     },
     "leadErrors": {
       "name": "Indiquez un nom (2 lettres au moins).",
@@ -4518,7 +4522,13 @@
     "subscriptionReceipt": "{plan} · reçu envoyé, à valider",
     "subscriptionChosen": "{plan} · choisi, reçu pas encore envoyé",
     "paidChip": "abonnement payé",
-    "receiptChip": "reçu à valider"
+    "receiptChip": "reçu à valider",
+    "offerPlan": "Offrir une période",
+    "offerTitle": "Offrir une période à cette agence ?",
+    "offerBody": "{months, plural, one {# mois offert} other {# mois offerts}}, sans paiement ni facture. Une seule fois par agence. Elle peut ensuite être ouverte comme si elle avait payé.",
+    "offerChoice": "Abonnement à offrir",
+    "offerPlanOption": "{name} · {quota} annonces",
+    "offered": "Période offerte."
   },
   "visits": {
     "parts": {
@@ -5026,7 +5036,8 @@
       "per_hour": "par heure",
       "per_day": "par jour",
       "seconds": "secondes",
-      "hours": "heures"
+      "hours": "heures",
+      "months": "mois"
     },
     "ui": {
       "tabsLabel": "Parties des réglages",
@@ -5217,6 +5228,10 @@
     "analytics_ask_consent": {
       "label": "Demander l'accord des visiteurs",
       "hint": "En marche, une barre demande « Accepter / Refuser » et Google ne se charge qu'après « Accepter » : moins de visiteurs comptés, mais rien sans accord. Coupé, Google se charge pour tous ; un visiteur peut toujours refuser depuis la page Confidentialité. La publicité reste refusée dans les deux cas."
+    },
+    "founding_offer_months": {
+      "label": "Mois offerts à une agence fondatrice",
+      "hint": "Durée de l'abonnement que la console offre avec « Offrir une période » (fiche d'une agence). Une seule fois par agence, sans paiement ni facture."
     }
   },
   "ads": {
@@ -5481,7 +5496,8 @@
         "product_update": "Offre modifiée",
         "product_deactivate": "Offre désactivée",
         "settings_update": "Réglages modifiés",
-        "invoice_credit_note": "Avoir émis"
+        "invoice_credit_note": "Avoir émis",
+        "shop_offer_plan": "Période offerte à une agence"
       },
       "fields": {
         "role": "Rôle",
@@ -5502,7 +5518,9 @@
         "product_id": "Offre",
         "granted": "Accordé",
         "revoked": "Retiré",
-        "slug": "Identifiant"
+        "slug": "Identifiant",
+        "months": "Mois",
+        "ends_at": "Fin"
       },
       "values": {
         "pending_review": "En attente de vérification",

@@ -93,6 +93,8 @@ export const SETTINGS = {
   projects_max_units: { group: "publication", type: "int", default: 300, min: 10, max: 2000 },
   // The same agence plan can be renewed only this many days before it ends (planChange.ts).
   plan_renew_days: { group: "publication", type: "int", default: 5, min: 1, max: 30, unit: "days", choices: [3, 5, 7, 15] },
+  // « Offrir une période » in the agences console: how long the offered plan runs (src/lib/pro/offer.ts).
+  founding_offer_months: { group: "publication", type: "int", default: 3, min: 1, max: 12, unit: "months", choices: [1, 2, 3, 6, 12] },
 
   // ── Buyers: visits, compare, demandes.
   visits_max_slots: { group: "buyers", type: "int", default: 3, min: 1, max: 5, client: true },
