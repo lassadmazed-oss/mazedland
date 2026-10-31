@@ -38,7 +38,7 @@ export function useAnalytics() {
 }
 
 type Gtag = (...args: unknown[]) => void;
-type GaWindow = Window & { gtag?: Gtag; __mazedGaOff?: boolean } & Record<string, unknown>;
+type GaWindow = Window & { gtag?: Gtag; __mazedGaOff?: boolean; __mazedGaSync?: () => void } & Record<string, unknown>;
 
 /** GA's own cookies, gone when a visitor says no after accepting. */
 function clearGaCookies() {
@@ -70,7 +70,10 @@ export function GoogleAnalytics() {
     if (!id) return;
     const w = window as unknown as GaWindow;
     w.__mazedGaOff = !allowed;
-    w[`ga-disable-${id}`] = onConsole || !allowed;
+    // Once loaded, the inline script owns Google's off switch — it keeps it on
+    // while a page leaving the console reloads, which this must not undo.
+    if (typeof w.__mazedGaSync === "function") w.__mazedGaSync();
+    else w[`ga-disable-${id}`] = onConsole || !allowed;
     // Only once gtag.js is on the page: a no given after a yes, or a yes again.
     if (typeof w.gtag === "function") {
       w.gtag("consent", "update", { analytics_storage: allowed ? "granted" : "denied" });

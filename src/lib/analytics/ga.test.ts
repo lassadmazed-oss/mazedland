@@ -61,57 +61,97 @@ describe("the console", () => {
   });
 });
 
-/** Runs the inline script against a stand-in window, history and location. */
-function runInit(start: string) {
-  const location = { pathname: start };
+const ORIGIN = "https://www.mazed.immo";
+
+/** Runs the inline script against a stand-in window, history, location and document. */
+function runInit(start: string, referrer = "") {
+  const reload = vi.fn();
+  const location = {
+    origin: ORIGIN,
+    href: ORIGIN + start,
+    pathname: new URL(ORIGIN + start).pathname,
+    reload,
+  };
+  const go = (url: string) => {
+    const u = new URL(url, location.href);
+    location.href = u.href;
+    location.pathname = u.pathname;
+  };
   const win: Record<string, unknown> = { dataLayer: [] as unknown[] };
   const listeners: Record<string, () => void> = {};
   const history = {
     pushState(_s: unknown, _t: string, url: string) {
-      location.pathname = url;
+      go(url);
     },
     replaceState(_s: unknown, _t: string, url: string) {
-      location.pathname = url;
+      go(url);
     },
   };
   const addEventListener = (type: string, fn: () => void) => {
     listeners[type] = fn;
   };
-  new Function("window", "location", "history", "addEventListener", "dataLayer", gaInitScript("G-TEST1234"))(
+  new Function("window", "location", "history", "addEventListener", "dataLayer", "document", gaInitScript("G-TEST1234"))(
     win,
     location,
     history,
     addEventListener,
     win.dataLayer,
+    { referrer },
   );
   const off = () => win["ga-disable-G-TEST1234"];
-  return { win, location, history, listeners, off };
+  const config = () => (win.dataLayer as IArguments[]).map((a) => Array.from(a)).find((c) => c[0] === "config")?.[2];
+  return { win, location, history, listeners, off, reload, go, config };
 }
 
 describe("the script before gtag.js", () => {
   it("refuses advertising and Google Signals", () => {
-    const { win } = runInit("/fr");
+    const { win, config } = runInit("/fr");
     const calls = (win.dataLayer as IArguments[]).map((a) => Array.from(a));
     expect(calls[0]).toEqual([
       "consent",
       "default",
       { ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied", analytics_storage: "granted" },
     ]);
-    expect(calls.at(-1)).toEqual(["config", "G-TEST1234", { allow_google_signals: false, allow_ad_personalization_signals: false }]);
+    expect(calls.at(-1)?.[0]).toBe("config");
+    // A clean address and no referrer: nothing overridden.
+    expect(config()).toEqual({ allow_google_signals: false, allow_ad_personalization_signals: false });
   });
 
-  it("switches Google off inside the navigation into the console, and back on outside it", () => {
-    const { history, listeners, location, off } = runInit("/fr/annonces");
+  it("switches Google off inside the navigation into the console", () => {
+    const { history, off, reload } = runInit("/fr/annonces");
+    expect(off()).toBe(false);
+    history.pushState(null, "", "/ar/annonces/abc?q=villa");
     expect(off()).toBe(false);
     history.pushState(null, "", "/fr/admin/settings");
     expect(off()).toBe(true);
     history.replaceState(null, "", "/fr/admin/annonces");
     expect(off()).toBe(true);
-    history.pushState(null, "", "/ar/annonces/abc");
-    expect(off()).toBe(false);
+    expect(reload).not.toHaveBeenCalled();
+
     // Back button into the console.
-    location.pathname = "/fr/admin";
+    const back = runInit("/fr/annonces");
+    back.go("/fr/admin");
+    back.listeners.popstate();
+    expect(back.off()).toBe(true);
+  });
+
+  it("reloads a page leaving the console, Google staying off until it goes", () => {
+    const { win, history, off, reload } = runInit("/fr");
+    history.pushState(null, "", "/fr/admin/vendeurs?q=20123456");
+    history.pushState(null, "", "/fr/annonces");
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(off()).toBe(true);
+    // The loader re-applying its state must not switch it back on.
+    (win.__mazedGaSync as () => void)();
+    expect(off()).toBe(true);
+  });
+
+  it("reloads on the back button out of the console too", () => {
+    const { history, listeners, go, off, reload } = runInit("/fr");
+    history.pushState(null, "", "/fr/admin");
+    go("/fr");
     listeners.popstate();
+    expect(reload).toHaveBeenCalledTimes(1);
     expect(off()).toBe(true);
   });
 
@@ -120,6 +160,22 @@ describe("the script before gtag.js", () => {
     win.__mazedGaOff = true;
     history.pushState(null, "", "/fr/annonces");
     expect(off()).toBe(true);
+  });
+
+  it("sends the first page cleaned of the console, phone numbers and e-mails", () => {
+    expect(runInit("/fr/annonces?q=villa%2020%20123%20456&cat=villas").config()).toMatchObject({
+      page_location: `${ORIGIN}/fr/annonces?q=villa%20%5Bphone%5D&cat=villas`,
+    });
+    expect(runInit("/fr", `${ORIGIN}/fr/admin/vendeurs?q=20123456`).config()).toMatchObject({ page_referrer: `${ORIGIN}/` });
+    expect(runInit("/fr", `${ORIGIN}/fr/annonces?q=ali%40gmail.com`).config()).toMatchObject({
+      page_referrer: `${ORIGIN}/fr/annonces?q=%5Bemail%5D`,
+    });
+    // Another site's address, or a clean one of ours, is left to Google.
+    expect(runInit("/fr", "https://www.facebook.com/").config()).not.toHaveProperty("page_referrer");
+    expect(runInit("/fr/annonces?q=villa", `${ORIGIN}/fr`).config()).toEqual({
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
+    });
   });
 });
 
