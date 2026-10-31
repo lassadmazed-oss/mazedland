@@ -4203,7 +4203,13 @@
       "fixCta": "Corriger l'agence",
       "resendReceipt": "Envoyer un nouveau reçu",
       "planRequestWaiting": "Votre demande avec l'abonnement {plan} attend l'équipe : rien d'autre à choisir pour l'instant.",
-      "continueDraft": "Ajouter les photos et envoyer"
+      "continueDraft": "Ajouter les photos et envoyer",
+      "reactive": {
+        "title": "Votre réactivité",
+        "earned": "vous avez le badge « Agence réactive » : {fast, plural, one {# demande de visite} other {# demandes de visite}} sur {total} traitées en moins de {hours} h ces {days} derniers jours. Il se voit sur vos annonces et sur votre page, et vous passe devant dans le bandeau des agences recommandées.",
+        "tooFew": "le badge « Agence réactive » demande au moins {min} demandes de visite traitées sur {days} jours ; vous en avez {total}. Confirmer ou décliner dans les {hours} h suffit.",
+        "below": "{fast, plural, =0 {Aucune demande de visite} one {# demande de visite} other {# demandes de visite}} sur {total} traitées en moins de {hours} h ({rate} %). Le badge « Agence réactive » demande {minRate} % : confirmez ou déclinez les prochaines plus vite."
+      }
     },
     "clients": {
       "open": "En cours",
@@ -4631,7 +4637,10 @@
       "onRequest": "Prix sur demande"
     },
     "featuredTitle": "Agences recommandées",
-    "featuredAll": "Toutes les agences"
+    "featuredAll": "Toutes les agences",
+    "reactiveBadge": "Agence réactive",
+    "reactiveShort": "Réactive",
+    "reactiveProof": "Répond vite : {fast} sur {total} demandes de visite traitées en moins de {hours} h (sur {days} jours)."
   },
   "adminShops": {
     "unavailable": "Service indisponible.",
@@ -5471,6 +5480,30 @@
     "import_max_rows": {
       "label": "Lignes par fichier importé",
       "hint": "Le nombre maximal d'annonces qu'un fichier peut contenir. Les brouillons restent limités par les places du plan de l'agence."
+    },
+    "feature_agency_reactive": {
+      "label": "Badge « Agence réactive »",
+      "hint": "Une agence qui répond vite à ses demandes de visite gagne un badge, affiché sur ses annonces, sur sa page et dans le bandeau des agences recommandées. Il se calcule seul : personne ne l'attribue."
+    },
+    "reactive_hours": {
+      "label": "Délai de réponse du badge",
+      "hint": "Une demande de visite doit recevoir une réponse (confirmée ou déclinée) dans ce délai pour compter comme rapide."
+    },
+    "reactive_min_rate": {
+      "label": "Part de réponses rapides",
+      "hint": "Le pourcentage de demandes traitées dans le délai qu'il faut pour avoir le badge."
+    },
+    "reactive_min_requests": {
+      "label": "Demandes minimum pour le badge",
+      "hint": "Un badge ne se calcule pas sur une ou deux demandes : il faut au moins ce nombre de demandes jugées sur la période."
+    },
+    "reactive_days": {
+      "label": "Période du badge",
+      "hint": "Les demandes de ces derniers jours comptent, les plus anciennes sont oubliées : le badge se gagne et se perd."
+    },
+    "agency_strip_reactive_first": {
+      "label": "Agences réactives en premier",
+      "hint": "Dans le bandeau des agences recommandées, celles qui ont le badge passent devant ; l'ordre tourne chaque jour dans chaque groupe."
     }
   },
   "ads": {

@@ -1,4 +1,5 @@
 import type { getServiceSupabase } from "@/lib/supabase/admin";
+import { loadReactivity, reactiveFirst, type ReactiveRules } from "./reactivity";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -8,7 +9,9 @@ type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
  * agences: an agence is in it while its plan runs and is big enough
  * (`agency_strip_min_quota`), whether it paid for it or the console offered
  * it, and while it has an annonce online. The order turns each day, so the
- * first place goes round instead of staying with the same agence.
+ * first place goes round instead of staying with the same agence — except
+ * that the agences with the « réactive » badge (src/lib/pro/reactivity.ts)
+ * come first when asked: answering buyers is what earns the front.
  */
 export type FeaturedShop = {
   id: string;
@@ -19,6 +22,8 @@ export type FeaturedShop = {
   city: string | null;
   governorate: string;
   listings: number;
+  /** Earned the « réactive » badge (false when the badge is off). */
+  reactive: boolean;
 };
 
 /** A small stable hash (FNV-1a): the same text always gives the same number. */
@@ -44,7 +49,14 @@ export const dayKey = (now: Date) => now.toISOString().slice(0, 10);
 
 export async function loadFeaturedShops(
   admin: Admin,
-  opts: { minQuota: number; max: number; governorate?: string | null; now?: Date },
+  opts: {
+    minQuota: number;
+    max: number;
+    governorate?: string | null;
+    now?: Date;
+    /** The badge's rules, and whether its agences go first; null with the badge off. */
+    reactive?: { rules: ReactiveRules; first: boolean } | null;
+  },
 ): Promise<FeaturedShop[]> {
   const now = opts.now ?? new Date();
   const iso = now.toISOString();
@@ -91,8 +103,13 @@ export async function loadFeaturedShops(
         city: s.city,
         governorate: s.governorate,
         listings: counts.get(s.id) ?? 0,
+        reactive: false,
       }));
-    return orderFeatured(shown, `${dayKey(now)}:${opts.governorate ?? ""}`).slice(0, Math.max(1, opts.max));
+    const badges = opts.reactive ? await loadReactivity(admin, shown.map((s) => s.id), opts.reactive.rules, now) : new Map();
+    for (const s of shown) s.reactive = badges.get(s.id)?.reactive ?? false;
+    const turned = orderFeatured(shown, `${dayKey(now)}:${opts.governorate ?? ""}`);
+    const ordered = opts.reactive?.first ? reactiveFirst(turned, new Set(shown.filter((s) => s.reactive).map((s) => s.id))) : turned;
+    return ordered.slice(0, Math.max(1, opts.max));
   } catch {
     return [];
   }

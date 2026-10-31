@@ -63,6 +63,9 @@ export const SETTINGS = {
   // running plan is big enough (agency_strip_min_quota), in an order that turns
   // each day (src/lib/pro/featured.ts).
   feature_agency_strip: { group: "features", type: "bool", default: true, href: "/admin/agences" },
+  // « Agence réactive »: the badge an agence earns by answering its visit
+  // requests fast (src/lib/pro/reactivity.ts). Off: no badge anywhere.
+  feature_agency_reactive: { group: "features", type: "bool", default: true, href: "/admin/agences" },
   // « Importer plusieurs annonces » in the agence's dashboard: a CSV (or lines
   // pasted from Excel) becomes drafts (src/lib/listings/importRows.ts).
   feature_listing_import: { group: "features", type: "bool", default: true },
@@ -123,6 +126,14 @@ export const SETTINGS = {
   // The strip's size, and the smallest plan that earns a place in it: the plan's
   // annonces (10 Starter and up, 40 Pro and up, 120 Business only).
   agency_strip_max: { group: "buyers", type: "int", default: 6, min: 2, max: 12, choices: [4, 6, 8, 12] },
+  // The badge's rule: at least `min_rate` percent of the visit requests judged over
+  // the last `days` days answered within `hours` hours, and at least
+  // `min_requests` of them. The strip puts the reactive agences first.
+  reactive_hours: { group: "buyers", type: "int", default: 24, min: 1, max: 168, unit: "hours", choices: [2, 6, 12, 24, 48] },
+  reactive_min_rate: { group: "buyers", type: "int", default: 80, min: 50, max: 100, unit: "percent", choices: [60, 70, 80, 90] },
+  reactive_min_requests: { group: "buyers", type: "int", default: 3, min: 1, max: 50, choices: [2, 3, 5, 10] },
+  reactive_days: { group: "buyers", type: "int", default: 90, min: 7, max: 365, unit: "days", choices: [30, 60, 90, 180] },
+  agency_strip_reactive_first: { group: "buyers", type: "bool", default: true },
   // What the credit simulator opens on. The rate is indicative: the bank sets the real one.
   credit_rate_percent: { group: "buyers", type: "number", default: 10, min: 1, max: 30, step: 0.5, unit: "percent" },
   credit_years: { group: "buyers", type: "int", default: 20, min: 5, max: 30, unit: "years", choices: [10, 15, 20, 25] },

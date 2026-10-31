@@ -17,6 +17,8 @@ import { getSettings } from "@/lib/settings/server";
 import { pageNumber } from "@/lib/paging";
 import { BadgeCheck, Building2, ChevronLeft, ChevronRight, Clock, Globe, Mail, MapPin, Phone, Store } from "lucide-react";
 import { listingDescription } from "@/lib/seo";
+import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
+import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +118,11 @@ export default async function ShopPage({ params, searchParams }: { params: Promi
   const supabase = await getServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // « Agence réactive »: earned by answering visit requests fast, read from what it did.
+  const reactivity = settings.feature_agency_reactive
+    ? (await loadReactivity(admin, [shop.id], reactiveRules(settings))).get(shop.id)
+    : undefined;
+
   const tp = await getTranslations("pro.projects");
   const tShopProjects = await getTranslations("shops.projects");
   // The promoter's projects (0179), when they may show (src/lib/pro/projectsServer.ts).
@@ -196,6 +203,7 @@ export default async function ShopPage({ params, searchParams }: { params: Promi
               )}
             </h1>
             <p className="text-[13px] text-muted">{tKinds(shop.kind)} · {place}</p>
+            {reactivity?.reactive && <div className="mt-1.5"><ReactiveBadge reactivity={reactivity} variant="line" /></div>}
           </div>
         </header>
 
