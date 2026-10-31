@@ -1,4 +1,17 @@
 {
+  "footer": {
+    "explore": "تصفّح",
+    "buy": "اشري",
+    "rent": "اكري",
+    "agencies": "الوكالات",
+    "publish": "انشر إعلان",
+    "company": "Mazed Immo",
+    "pro": "الفضاء المهني",
+    "info": "معلومات",
+    "language": "اللغة",
+    "rights": "© {year} {name}. جميع الحقوق محفوظة.",
+    "country": "تونس"
+  },
   "brand": {
     "name": "Mazed Immo",
     "titleSuffix": "إعلانات العقارات في تونس",
@@ -30,6 +43,10 @@
     "back": "رجوع",
     "skipToContent": "انتقل إلى المحتوى",
     "tabs": {
+      "buy": "اشري",
+      "rent": "اكري",
+      "agencies": "الوكالات",
+      "pro": "للمحترفين",
       "home": "الرئيسية",
       "browse": "تصفّح",
       "sell": "انشر",
@@ -39,6 +56,8 @@
       "publishCta": "انشر إعلانك"
     },
     "pageTitles": {
+      "agences": "الوكالات",
+      "pro": "Mazed Immo Pro",
       "annonces": "إعلان",
       "annoncesNew": "نشر إعلان",
       "properties": "العقارات",
@@ -618,6 +637,11 @@
     }
   },
   "home": {
+    "heroKicker": "العقار في تونس",
+    "sellBandTitle": "عندك عقار للبيع ولا للكراء؟",
+    "sellBandBody": "انشر إعلانك في دقائق: تصاورك وسومك. يتثبّت قبل ما يتنشر.",
+    "sellBandCta": "انشر إعلاني",
+    "quickLinksTitle": "اختصارات",
     "endingSoonEyebrow": "فرصة",
     "browseByType": "تصفّح حسب النوع",
     "browseByPrice": "تصفّح حسب السوم",
@@ -825,6 +849,9 @@
     }
   },
   "catalogue": {
+    "sortBy": "ترتيب",
+    "filtersCount": "{count, plural, zero {حتى فلتر} one {فلتر واحد مفعّل} two {فلترين مفعّلين} few {# فلاتر مفعّلة} many {# فلتر مفعّل} other {# فلتر مفعّل}}",
+    "resultsIn": "{count, plural, zero {لا توجد عقارات} one {عقار واحد} two {عقاران} few {# عقارات} many {# عقارًا} other {# عقار}} · {place}",
     "metaTitleDefault": "إعلانات عقارية",
     "metaTitleIn": "{what} في {governorate} — Mazed Immo",
     "metaTitleTunisia": "{what} في تونس — Mazed Immo",
@@ -927,6 +954,14 @@
     "metaDescriptionAny": "{title}. الأسوام ظاهرة والبايع تتصل بيه مباشرة، بالعربي وبالفرنسي."
   },
   "listing": {
+    "gallery": {
+      "counter": "{n} / {total}",
+      "all": "كل التصاور",
+      "photos": "{count, plural, zero {بلا تصاور} one {تصويرة وحدة} two {زوز تصاور} few {# تصاور} many {# تصويرة} other {# تصويرة}}",
+      "close": "سكّر"
+    },
+    "factsTitle": "الأساسي",
+    "breadcrumbHome": "الرئيسية",
     "metaNotFound": "الإعلان غير موجود — Mazed Immo",
     "metaDescriptionFallback": "{title} في {governorate}.",
     "priceOnRequest": "السعر عند الطلب",
@@ -4002,6 +4037,8 @@
       "other": "وثيقة أخرى"
     },
     "landing": {
+      "popular": "الأكثر اختيارًا",
+      "planCta": "ابدأ بهذا الاشتراك",
       "metaTitle": "مزاد إيمو برو — الوكالة العقارية متاعك",
       "metaDescription": "وكالات، باعثين ومقسّمين: صفحة باسمك، إعلاناتك في كاتالوغ مزاد إيمو، وفريق ينشر معاك.",
       "title": "وكالتك عندها فيترينتها على مزاد إيمو",
@@ -4541,6 +4578,14 @@
     }
   },
   "shops": {
+    "contactTitle": "اتصل بالوكالة",
+    "actions": {
+      "call": "عيّط",
+      "whatsapp": "واتساب",
+      "email": "إيمايل",
+      "website": "الموقع"
+    },
+    "memberSince": "على Mazed Immo من {year}",
     "metaTitle": "وكالات وباعثين عقاريين في تونس",
     "metaDescription": "الوكالات العقارية في مزاد إيمو، بما فيهم الباعثين العقاريين والمقسّمين، بإعلاناتهم للبيع وللكراء.",
     "unavailable": "الخدمة مش متوفّرة توّا.",
@@ -4899,6 +4944,10 @@
     }
   },
   "settingsRegistry": {
+    "catalogue_phone_columns": {
+      "label": "عدد الأعمدة في الكاتالوغ على التليفون",
+      "hint": "عمود واحد: تصاور كبار كيما Idealista. زوز: إعلانات أكثر في الشاشة كيما Tayara."
+    },
     "groups": {
       "features": {
         "title": "الميزات",

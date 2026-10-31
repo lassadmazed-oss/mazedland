@@ -3,17 +3,27 @@ import { Fragment } from "react";
 import { Link } from "@/i18n/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
-import { coverPhoto } from "@/lib/listingCover";
-import { ListingImage } from "@/components/media/ListingImage";
+import { AnnonceCard } from "@/components/listing/AnnonceCard";
 import { formatNumber, formatTND } from "@/lib/utils";
 import { searchTokens } from "@/lib/search";
 import { PRICE_BUCKETS, RENT_BUCKETS, TYPE_TO_CATEGORY, findCategory } from "@/lib/catalog/browse";
 import { categoryLabel } from "@/lib/i18n";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
-import { canonicalDelegation, delegationLabel, shownDelegation } from "@/lib/delegations";
-import { BellRing, ChevronDown, ChevronLeft, ChevronRight, Home, ImageOff, MapPin, Ruler, Search, SearchX, SlidersHorizontal, Wallet, X } from "lucide-react";
+import { canonicalDelegation, delegationLabel } from "@/lib/delegations";
+import {
+  ArrowUpDown,
+  BellRing,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  SearchX,
+  SlidersHorizontal,
+  Wallet,
+  X,
+} from "lucide-react";
 import { FURNISHED, isoDay, type Furnished } from "@/lib/listings/deal";
-import { CompareToggle } from "@/components/compare/CompareToggle";
 import { redirect } from "next/navigation";
 import { catalogueRedirect, pastEndRedirect } from "@/lib/catalog/redirects";
 import { pageNumber } from "@/lib/paging";
@@ -47,6 +57,14 @@ export const dynamic = "force-dynamic";
  * Harmless at a dozen annonces, and two bugs the day there are sixty-one: the
  * count under-reports, and everything past the 60th is unreachable because
  * nothing links to it.
+ *
+ * THE LOOK (2026-10-31 redesign). One toolbar — buy or rent, the types, the
+ * places, and three menus for the budget, the other filters and the order —
+ * over a grid of the same card the home page uses. On a phone the toolbar
+ * folds behind one row that says what is set, and the grid is one column of
+ * big photos (or two: `catalogue_phone_columns` in the console). Every menu
+ * is a <details> with a GET form or plain links inside: it opens, applies and
+ * clears before any JavaScript has run.
  */
 
 /**
@@ -93,6 +111,7 @@ type Row = {
   deal_type: string | null;
   availability: string | null;
   available_from: string | null;
+  shop_id?: string | null;
   promo_top_listed?: boolean | null;
   category:
     | { label_fr: string; label_ar: string | null; kind: string }
@@ -110,8 +129,6 @@ type Cat = {
   parent_id: string | null;
 };
 
-const one = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
-
 /** Sort keys; the chip text is `catalogue.sort.<key>`. */
 // « popular »: the most seen first — where the home page's « Les plus vus » leads.
 const SORTS = ["recent", "popular", "cheap", "value", "dear", "big"] as const;
@@ -123,17 +140,21 @@ function surfaceOf(a: Record<string, unknown> | null): number | null {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-type CatalogueT = Awaited<ReturnType<typeof getTranslations<"catalogue">>>;
-
-function specLine(r: Row, t: CatalogueT, locale: string): string[] {
-  const a = (r.attributes ?? {}) as Record<string, unknown>;
-  const out: string[] = [];
-  const m2 = surfaceOf(r.attributes);
-  if (m2) out.push(t("specArea", { area: formatNumber(m2, locale) }));
-  if (Number(a.rooms) > 0) out.push(t("specRooms", { count: Number(a.rooms) }));
-  if (Number(a.bathrooms) > 0) out.push(t("specBathrooms", { count: Number(a.bathrooms) }));
-  return out;
+/** A filter chip: ink when it is the one set, a quiet ring otherwise. */
+function chip(on: boolean, size: "md" | "sm" = "md"): string {
+  return (
+    `inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-bold transition ${
+      size === "md" ? "h-9 px-3.5 text-[12.5px]" : "h-8 px-3 text-[12px]"
+    } ` +
+    (on
+      ? "bg-foreground text-[var(--background)]"
+      : "bg-surface text-muted ring-1 ring-border hover:text-foreground hover:ring-foreground/40")
+  );
 }
+
+/** A toolbar menu's button (the <summary> of a <details>). */
+const MENU_BUTTON =
+  "tap-target inline-flex h-10 cursor-pointer list-none items-center gap-1.5 whitespace-nowrap rounded-full bg-surface px-3.5 text-[12.5px] font-bold text-foreground ring-1 ring-border transition hover:ring-foreground/40 [&::-webkit-details-marker]:hidden";
 
 // The tab title follows the filters. Every catalogue view used to carry the
 // site's home title, so "Terrains à Sfax" and the unfiltered page were the
@@ -239,6 +260,8 @@ export default async function AnnoncesPage({
   const del = sp.gov ? canonicalDelegation(sp.gov, sp.del) : null;
   // Annonces per page (/admin/settings → Publication).
   const pageSize = settings.catalogue_page_size;
+  // One column of big photos on a phone, or two (the console's choice).
+  const phoneCols = settings.catalogue_phone_columns === 2 ? "grid-cols-2" : "grid-cols-1";
 
   const sort = (SORTS.find((s) => s === sp.sort) ?? "recent") as string;
   const deal = dealOf(sp.deal);
@@ -317,7 +340,7 @@ export default async function AnnoncesPage({
     .from("listings")
     .select(
       `id, title, price, price_on_request, negotiable, governorate, delegation, attributes, published_at,
-       deal_type, availability, available_from,
+       deal_type, availability, available_from, shop_id,
        category:categories (label_fr, label_ar, kind),
        promo_top_listed,
        photos:listing_photos (storage_path, sort_order)`,
@@ -432,7 +455,7 @@ export default async function AnnoncesPage({
     dels.push(...[...found].sort((a, b) => delegationLabel(a, locale).localeCompare(delegationLabel(b, locale), locale)));
   }
 
-  // What the Budget row reads when it is closed — the whole state of the
+  // What the Budget menu reads when it is closed — the whole state of the
   // filter in one line, so it does not have to be opened to be understood.
   const priceLabel =
     min && max
@@ -462,7 +485,6 @@ export default async function AnnoncesPage({
     del ? delegationLabel(del, locale) : null,
     priceLabel,
     ...moreChips,
-    sort !== "recent" ? t(`sort.${sort}`) : null,
   ].filter((x): x is string => Boolean(x));
 
   const qs = (next: Record<string, string | undefined>) => {
@@ -498,8 +520,292 @@ export default async function AnnoncesPage({
         : []),
   ];
 
+  // The filters every GET form carries along, so applying one keeps the others.
+  const carried = (omit: string[] = []) => {
+    const all: [string, string | undefined][] = [
+      ["deal", deal ?? undefined], ["cat", sp.cat], ["gov", sp.gov],
+      ["cats", multiCats.length ? multiCats.map((c) => c.slug).join(",") : undefined],
+      ["govs", multiGovs.length ? multiGovs.join(",") : undefined],
+      ["del", del ?? undefined], ["sort", sp.sort], ["q", sp.q],
+      ["min", min ? String(min) : undefined], ["max", max ? String(max) : undefined],
+      ["surface", surface ? String(surface) : undefined], ["rooms", roomsMin ? String(roomsMin) : undefined],
+      ["furnished", furnished ?? undefined], ["avail", availBy ?? undefined],
+    ];
+    return all
+      .filter(([k, v]) => v && !omit.includes(k))
+      .map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />);
+  };
+
+  // ── The three menus. Each is written once and placed twice: as a popover
+  //    in the desktop toolbar, as an accordion in the phone's folded panel. ──
+  const sortMenu = (where: "phone" | "desktop") => (
+    <details key={`sort-${where}-${sort}`} className="relative">
+      <summary className={MENU_BUTTON} aria-label={t("sortBy")}>
+        <ArrowUpDown className="size-4 text-muted" strokeWidth={2} aria-hidden />
+        <span className="hidden sm:inline">{t("sortBy")} ·</span> {t(`sort.${sort}`)}
+        <ChevronDown className="size-3.5 text-muted" strokeWidth={2.4} aria-hidden />
+      </summary>
+      <ul className="absolute end-0 z-30 mt-2 w-56 rounded-2xl bg-surface p-1.5 shadow-[var(--shadow-float)] ring-1 ring-border">
+        {SORTS.map((s) => (
+          <li key={s}>
+            <Link
+              href={qs({ sort: s === "recent" ? undefined : s }) as never}
+              aria-current={sort === s ? "true" : undefined}
+              className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-[13px] font-semibold transition hover:bg-surface-2 ${
+                sort === s ? "text-foreground" : "text-muted"
+              }`}
+            >
+              {t(`sort.${s}`)}
+              {sort === s && <Check className="size-4" strokeWidth={2.5} aria-hidden />}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+
+  const budgetBody = (
+    <>
+      <div className="flex flex-wrap gap-1.5">
+        {buckets.map((b) => {
+          const on = (b.min ?? 0) === (min ?? 0) && (b.max ?? 0) === (max ?? 0);
+          return (
+            <Link
+              key={b.key}
+              href={qs({
+                min: b.min ? String(b.min) : undefined,
+                max: b.max ? String(b.max) : undefined,
+              }) as never}
+              className={chip(on, "sm")}
+            >
+              {t(deal === "rent" ? `rentBuckets.${b.key}` : `priceBuckets.${b.key}`)}
+            </Link>
+          );
+        })}
+        {(min || max || priceInverted) && (
+          <Link
+            href={qs({ min: undefined, max: undefined }) as never}
+            className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-full px-3 text-[12px] font-semibold text-muted transition hover:text-foreground"
+          >
+            <X className="size-3" strokeWidth={2.5} aria-hidden /> {t("allPrices")}
+          </Link>
+        )}
+      </div>
+
+      {/* An exact bracket, for someone whose budget is not one of four. */}
+      <form
+        action={`/${locale}/annonces`}
+        method="get"
+        className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3"
+      >
+        {carried(["min", "max"])}
+        {/* Keyed on the address: a bracket chip or « Tous les prix » is a
+            client navigation, and the numbers must follow it. */}
+        <BudgetFields
+          key={`${minAsked ?? ""}-${maxAsked ?? ""}`}
+          defaultMin={minAsked ? String(minAsked) : ""}
+          defaultMax={maxAsked ? String(maxAsked) : ""}
+          minLabel={t("minLabel")}
+          maxLabel={t("maxLabel")}
+          maxPlaceholder={t("maxPlaceholder")}
+          step={deal === "rent" ? 50 : 1000}
+          invertedMessage={t("rangeInverted")}
+        />
+        <button type="submit" className="mazed-btn-luxe tap-target h-11 shrink-0 px-4 text-[12.5px]">
+          {t("apply")}
+        </button>
+      </form>
+    </>
+  );
+
+  const budgetMenu = (where: "phone" | "desktop") => (
+    <details
+      key={`budget-${where}-${min ?? ""}-${max ?? ""}`}
+      open={priceInverted}
+      className={where === "desktop" ? "relative" : "overflow-hidden rounded-2xl border border-border bg-surface"}
+    >
+      <summary
+        className={
+          where === "desktop"
+            ? MENU_BUTTON
+            : "tap-target flex cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5 [&::-webkit-details-marker]:hidden"
+        }
+      >
+        <span className="inline-flex items-center gap-2 text-[12.5px] font-bold text-foreground">
+          <Wallet className="size-4 text-muted" strokeWidth={2} aria-hidden />
+          {t(deal === "rent" ? "budgetRent" : "budget")}
+        </span>
+        <span
+          className={`mazed-tabular text-[11.5px] font-semibold ${
+            priceInverted ? "text-[var(--danger)]" : priceLabel ? "text-foreground" : "text-muted"
+          }`}
+        >
+          {priceInverted ? t("budgetToFix") : priceLabel ?? (where === "desktop" ? "" : t("allPrices"))}
+        </span>
+        {where === "desktop" && <ChevronDown className="size-3.5 text-muted" strokeWidth={2.4} aria-hidden />}
+      </summary>
+      <div
+        className={
+          where === "desktop"
+            ? "absolute start-0 z-30 mt-2 w-[420px] rounded-2xl bg-surface p-3 shadow-[var(--shadow-float)] ring-1 ring-border"
+            : "border-t border-border p-3"
+        }
+      >
+        {budgetBody}
+      </div>
+    </details>
+  );
+
+  const moreBody = (
+    <form
+      action={`/${locale}/annonces`}
+      method="get"
+      className="grid gap-3 sm:grid-cols-2"
+    >
+      {carried(["surface", "rooms", "furnished", "avail"])}
+
+      <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+        {t("surfaceMin")}
+        <input
+          type="number"
+          name="surface"
+          min={0}
+          step={10}
+          inputMode="numeric"
+          defaultValue={surface ? String(surface) : ""}
+          placeholder="100"
+          className="mazed-tabular mt-1 h-11 w-full rounded-xl border border-border bg-surface-2 px-3 text-[16px] font-bold text-foreground outline-none transition placeholder:font-normal placeholder:text-muted focus:border-foreground/40 focus:bg-surface"
+        />
+      </label>
+
+      <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+        {t("roomsMin")}
+        <select
+          name="rooms"
+          defaultValue={roomsMin ? String(roomsMin) : ""}
+          className="mt-1 h-11 w-full appearance-none rounded-xl border border-border bg-surface-2 px-3 text-[15px] font-bold text-foreground outline-none focus:border-foreground/40"
+        >
+          <option value="">{t("anyValue")}</option>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <option key={n} value={n}>{t("roomsAtLeast", { count: n })}</option>
+          ))}
+        </select>
+      </label>
+
+      {deal === "rent" && (
+        <>
+          <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+            {t("furnishedLabel")}
+            <select
+              name="furnished"
+              defaultValue={furnished ?? ""}
+              className="mt-1 h-11 w-full appearance-none rounded-xl border border-border bg-surface-2 px-3 text-[15px] font-bold text-foreground outline-none focus:border-foreground/40"
+            >
+              <option value="">{t("anyValue")}</option>
+              {FURNISHED.map((f) => (
+                <option key={f} value={f}>{t(`furnished.${f}`)}</option>
+              ))}
+            </select>
+          </label>
+          <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+            {t("availBy")}
+            <input
+              type="date"
+              name="avail"
+              defaultValue={availBy ?? ""}
+              className="mt-1 h-11 w-full rounded-xl border border-border bg-surface-2 px-3 text-[15px] font-bold text-foreground outline-none focus:border-foreground/40"
+            />
+          </label>
+        </>
+      )}
+
+      <div className="flex items-center gap-2 sm:col-span-2">
+        <button type="submit" className="mazed-btn-luxe tap-target h-11 px-5 text-[12.5px]">
+          {t("apply")}
+        </button>
+        {moreActive && (
+          <Link
+            href={qs({ surface: undefined, rooms: undefined, furnished: undefined, avail: undefined }) as never}
+            className="tap-target inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11.5px] font-semibold text-muted transition hover:text-foreground"
+          >
+            <X className="size-3" strokeWidth={2.5} aria-hidden /> {t("clearMore")}
+          </Link>
+        )}
+      </div>
+    </form>
+  );
+
+  const moreMenu = (where: "phone" | "desktop") => (
+    <details
+      key={`more-${where}-${moreChips.join("|")}`}
+      open={moreActive && where === "phone"}
+      className={where === "desktop" ? "relative" : "overflow-hidden rounded-2xl border border-border bg-surface"}
+    >
+      <summary
+        className={
+          where === "desktop"
+            ? MENU_BUTTON
+            : "tap-target flex cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5 [&::-webkit-details-marker]:hidden"
+        }
+      >
+        <span className="inline-flex items-center gap-2 text-[12.5px] font-bold text-foreground">
+          <SlidersHorizontal className="size-4 text-muted" strokeWidth={2} aria-hidden />
+          {t("moreFilters")}
+          {where === "desktop" && moreChips.length > 0 && (
+            <span className="mazed-tabular inline-grid size-5 place-items-center rounded-full bg-foreground text-[11px] font-extrabold text-[var(--background)]">
+              {moreChips.length}
+            </span>
+          )}
+        </span>
+        {where === "phone" && (
+          <span className={`text-[11.5px] font-semibold ${moreActive ? "text-foreground" : "text-muted"}`}>
+            {moreActive ? moreChips.join(" · ") : t("moreNone")}
+          </span>
+        )}
+        {where === "desktop" && <ChevronDown className="size-3.5 text-muted" strokeWidth={2.4} aria-hidden />}
+      </summary>
+      <div
+        className={
+          where === "desktop"
+            ? "absolute end-0 z-30 mt-2 w-[460px] rounded-2xl bg-surface p-3 shadow-[var(--shadow-float)] ring-1 ring-border"
+            : "border-t border-border p-3"
+        }
+      >
+        {moreBody}
+      </div>
+    </details>
+  );
+
+  const dealTabs = (
+    <div role="tablist" aria-label={t("dealAria")} className="mazed-segment w-full sm:w-auto">
+      {DEALS.map((k) => {
+        const on = (deal ?? "all") === k;
+        return (
+          <Link
+            key={k}
+            role="tab"
+            aria-selected={on}
+            href={qs({
+              deal: k === "all" ? undefined : k,
+              min: undefined,
+              max: undefined,
+              // Rental-only filters do not follow the visitor to the sales.
+              furnished: k === "rent" ? furnished ?? undefined : undefined,
+              avail: k === "rent" ? availBy ?? undefined : undefined,
+            }) as never}
+            className="tap-target"
+          >
+            {t(`deal.${k}`)}
+          </Link>
+        );
+      })}
+    </div>
+  );
+
+  const filtersOn = filterSummary.length;
+
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-6 pt-4 lg:px-6 lg:pb-10 lg:pt-6">
+    <main className="mx-auto max-w-[var(--max-w-wide)] px-4 pb-6 pt-4 lg:px-8 lg:pb-12 lg:pt-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSafe(breadcrumbLd(crumbs)) }} />
       {rows.length > 0 && (
         <script
@@ -507,11 +813,8 @@ export default async function AnnoncesPage({
           dangerouslySetInnerHTML={{ __html: jsonLdSafe(itemListLd(rows.map((r) => absoluteUrl(`/${locale}/annonces/${r.id}`)))) }}
         />
       )}
-      {/* No visible title. An eyebrow, a 32px headline and a strapline took
-          180px — a third of a phone screen — to tell a visitor who tapped
-          « Explorer » that they are looking at things for sale. The filters
-          and the first row of results are the heading. The h1 stays for
-          assistive tech and search engines. */}
+      {/* No visible title. The filters and the first row of results are the
+          heading; the h1 stays for assistive tech and search engines. */}
       <h1 className="sr-only">{t("heading")}</h1>
       {/* GA's « search », from whichever box sent it (header, home, this page,
           the microphone): the words as typed — before a natural search turned
@@ -528,22 +831,10 @@ export default async function AnnoncesPage({
           it works before hydration and carries the active filters along. */}
       <form action={`/${locale}/annonces`} method="get" role="search" className="relative lg:hidden">
         <input type="hidden" name="via" value="search" />
-        {deal && <input type="hidden" name="deal" value={deal} />}
-        {sp.cat && <input type="hidden" name="cat" value={sp.cat} />}
-        {sp.gov && <input type="hidden" name="gov" value={sp.gov} />}
-        {multiCats.length > 0 && <input type="hidden" name="cats" value={multiCats.map((c) => c.slug).join(",")} />}
-        {multiGovs.length > 0 && <input type="hidden" name="govs" value={multiGovs.join(",")} />}
-        {del && <input type="hidden" name="del" value={del} />}
-        {sp.sort && <input type="hidden" name="sort" value={sp.sort} />}
-        {min ? <input type="hidden" name="min" value={String(min)} /> : null}
-        {max ? <input type="hidden" name="max" value={String(max)} /> : null}
-        {surface ? <input type="hidden" name="surface" value={String(surface)} /> : null}
-        {roomsMin ? <input type="hidden" name="rooms" value={String(roomsMin)} /> : null}
-        {furnished && <input type="hidden" name="furnished" value={furnished} />}
-        {availBy && <input type="hidden" name="avail" value={availBy} />}
+        {carried(["q"])}
         <Search
           aria-hidden
-          className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted"
+          className="pointer-events-none absolute start-4 top-1/2 size-[18px] -translate-y-1/2 text-muted"
           strokeWidth={2}
         />
         {/* 16px text: iOS zooms the whole page into any smaller input on focus.
@@ -558,49 +849,24 @@ export default async function AnnoncesPage({
           placeholder={t("searchPlaceholder")}
           aria-label={t("searchLabel")}
           enterKeyHint="search"
-          className="h-11 w-full rounded-full border border-border bg-surface-2 pe-12 ps-11 text-[16px] text-foreground outline-none transition placeholder:text-muted focus:border-gold-soft focus:bg-surface"
+          className="h-12 w-full rounded-full border border-border bg-surface pe-12 ps-11 text-[16px] text-foreground shadow-[var(--shadow-sm)] outline-none transition placeholder:text-muted focus:border-foreground/40"
         />
         {/* Say it instead: the words fill the box and the form is sent. */}
         <VoiceSearchButton className="absolute end-1 top-1/2 -translate-y-1/2" />
       </form>
 
-      {/* Buy or rent first: the one question that changes every other filter
-          (a rent is per month, its budget is in hundreds). Changing it clears
-          the price, which belongs to the other deal's scale. */}
-      <div role="tablist" aria-label={t("dealAria")} className="mt-5 grid grid-cols-3 gap-1 rounded-xl bg-surface-2 p-1 sm:inline-grid sm:w-auto">
-        {DEALS.map((k) => {
-          const on = (deal ?? "all") === k;
-          return (
-            <Link
-              key={k}
-              role="tab"
-              aria-selected={on}
-              href={qs({
-                deal: k === "all" ? undefined : k,
-                min: undefined,
-                max: undefined,
-                // Rental-only filters do not follow the visitor to the sales.
-                furnished: k === "rent" ? furnished ?? undefined : undefined,
-                avail: k === "rent" ? availBy ?? undefined : undefined,
-              }) as never}
-              className={
-                "inline-flex h-9 items-center justify-center rounded-lg px-4 text-[13px] font-bold transition " +
-                (on ? "bg-[var(--gold)] text-white shadow-[var(--shadow-gold)]" : "text-muted hover:text-foreground")
-              }
-            >
-              {t(`deal.${k}`)}
-            </Link>
-          );
-        })}
-      </div>
+      {/* ── Toolbar ── Buy or rent first: the one question that changes every
+          other filter (a rent is per month, its budget is in hundreds).
+          Changing it clears the price, which belongs to the other deal's scale. */}
+      <div className="mt-3 lg:mt-0">{dealTabs}</div>
 
       {/* ── Filtrer, on a phone ──────────────────────────────────────────
-          At 390 px the categories, the places, the sort and the two panels
-          below took the whole first screen before a single annonce. On a phone
-          they fold behind one row that says what is set; a desktop has the
-          room and always shows them. A checkbox and its label rather than a
-          script: like everything else here, it opens before any JavaScript
-          has run. Open on arrival when the budget needs correcting. */}
+          At 390 px the categories, the places and the two panels took the
+          whole first screen before a single annonce. On a phone they fold
+          behind one row that says what is set; a desktop has the room and
+          always shows them. A checkbox and its label rather than a script:
+          like everything else here, it opens before any JavaScript has run.
+          Open on arrival when the budget needs correcting. */}
       <input
         type="checkbox"
         id="catalogue-filters"
@@ -608,116 +874,79 @@ export default async function AnnoncesPage({
         aria-controls="catalogue-filters-panel"
         className="peer sr-only lg:hidden"
       />
-      <label
-        htmlFor="catalogue-filters"
-        className="tap-target mt-3 flex cursor-pointer items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 peer-checked:[&_.chevron]:rotate-180 peer-focus-visible:ring-2 peer-focus-visible:ring-gold-soft lg:hidden"
-      >
-        <span className="inline-flex shrink-0 items-center gap-2 text-[12.5px] font-bold text-foreground">
-          <SlidersHorizontal className="size-4 text-muted" strokeWidth={2} />
-          {t("filtersToggle")}
-        </span>
-        <span
-          className={`min-w-0 flex-1 truncate text-end text-[11.5px] font-semibold ${
-            priceInverted ? "text-[var(--danger)]" : filterSummary.length ? "text-gold" : "text-muted"
-          }`}
+      <div className="mt-2.5 flex items-center gap-2 peer-checked:[&_.chevron]:rotate-180 peer-focus-visible:[&_label]:ring-2 peer-focus-visible:[&_label]:ring-foreground/40 lg:hidden">
+        <label
+          htmlFor="catalogue-filters"
+          className="tap-target flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-full border border-border bg-surface px-3.5 py-2.5"
         >
-          {filterSummary.length ? filterSummary.join(" · ") : t("filtersNone")}
-        </span>
-        <ChevronDown className="chevron size-4 shrink-0 text-muted transition" strokeWidth={2} />
-      </label>
+          <span className="inline-flex shrink-0 items-center gap-2 text-[12.5px] font-bold text-foreground">
+            <SlidersHorizontal className="size-4 text-muted" strokeWidth={2} aria-hidden />
+            {t("filtersToggle")}
+            {filtersOn > 0 && !priceInverted && (
+              <span className="mazed-tabular inline-grid size-5 place-items-center rounded-full bg-foreground text-[11px] font-extrabold text-[var(--background)]">
+                {filtersOn}
+              </span>
+            )}
+          </span>
+          <span
+            className={`min-w-0 flex-1 truncate text-end text-[11.5px] font-semibold ${
+              priceInverted ? "text-[var(--danger)]" : filtersOn ? "text-foreground" : "text-muted"
+            }`}
+          >
+            {filtersOn ? filterSummary.join(" · ") : t("filtersNone")}
+          </span>
+          <ChevronDown className="chevron size-4 shrink-0 text-muted transition" strokeWidth={2} aria-hidden />
+        </label>
+        {sortMenu("phone")}
+      </div>
 
       <div id="catalogue-filters-panel" className="hidden peer-checked:block lg:block">
-        {/* Filters. Property is filtered by what it IS and where it is — the two
-            questions a buyer actually starts from. */}
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Link
-            href={qs({ cat: undefined, cats: undefined }) as never}
-            className={
-              "whitespace-nowrap rounded-full px-3.5 py-1.5 text-[12.5px] font-bold transition " +
-              (!active && multiCats.length === 0
-                ? "bg-foreground text-[var(--background)]"
-                : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground")
-            }
-          >
-            {t("allCategories")}
-          </Link>
-          {leaves.map((c) => (
-            <Link
-              key={c.id}
-              href={qs({ cat: c.slug, cats: undefined }) as never}
-              className={
-                "whitespace-nowrap rounded-full px-3.5 py-1.5 text-[12.5px] font-bold transition " +
-                (active?.slug === c.slug || multiCats.some((m) => m.id === c.id)
-                  ? "bg-foreground text-[var(--background)]"
-                  : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground")
-              }
-            >
-              {categoryLabel(c, locale)}
+        {/* Property is filtered by what it IS and where it is — the two
+            questions a buyer actually starts from. The types are one line that
+            scrolls on a phone and wraps on a desktop, with the three menus at
+            the end of it. */}
+        <div className="mt-3 flex items-center gap-2 lg:flex-wrap">
+          <div className="hide-scrollbar -mx-4 flex min-w-0 flex-1 gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
+            <Link href={qs({ cat: undefined, cats: undefined }) as never} className={chip(!active && multiCats.length === 0)}>
+              {t("allCategories")}
             </Link>
-          ))}
+            {leaves.map((c) => (
+              <Link
+                key={c.id}
+                href={qs({ cat: c.slug, cats: undefined }) as never}
+                className={chip(active?.slug === c.slug || multiCats.some((m) => m.id === c.id))}
+              >
+                {categoryLabel(c, locale)}
+              </Link>
+            ))}
+          </div>
+          <div className="ms-auto hidden shrink-0 items-center gap-2 lg:flex">
+            {budgetMenu("desktop")}
+            {moreMenu("desktop")}
+            {sortMenu("desktop")}
+          </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Link
-            href={qs({ gov: undefined, del: undefined, govs: undefined }) as never}
-            className={
-              "whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-semibold transition " +
-              (!sp.gov && multiGovs.length === 0
-                ? "bg-foreground text-[var(--background)]"
-                : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground")
-            }
-          >
+        <div className="hide-scrollbar -mx-4 mt-2.5 flex gap-1.5 overflow-x-auto px-4 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
+          <Link href={qs({ gov: undefined, del: undefined, govs: undefined }) as never} className={chip(!sp.gov && multiGovs.length === 0, "sm")}>
             {t("allTunisia")}
           </Link>
           {govs.map((g) => (
             <Link
               key={g}
               href={qs({ gov: g, del: undefined, govs: undefined }) as never}
-              className={
-                "whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-semibold transition " +
-                (sp.gov === g || multiGovs.includes(g)
-                  ? "bg-foreground text-[var(--background)]"
-                  : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground")
-              }
+              className={chip(sp.gov === g || multiGovs.includes(g), "sm")}
             >
               {governorateLabel(g, locale)}
             </Link>
           ))}
-
-          {/* `flex-wrap`, not `inline-flex`. As bare text these four fitted a
-              phone row; as chips they do not, and an `inline-flex` cannot break —
-              so « Surface » was cut off at the right edge with no way to reach it. */}
-          <span className="ms-auto flex flex-wrap items-center gap-1.5">
-            {SORTS.map((s) => (
-              <Link
-                key={s}
-                href={qs({ sort: s }) as never}
-                className={
-                  "whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-semibold transition " +
-                  (sort === s
-                    ? "bg-foreground text-[var(--background)]"
-                    : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground")
-                }
-              >
-                {t(`sort.${s}`)}
-              </Link>
-            ))}
-          </span>
         </div>
 
         {/* The governorate's délégations, once one is chosen — the ones with
             annonces online, so no chip leads to an empty page. */}
         {sp.gov && dels.length > 0 && (
-          <nav aria-label={t("delegationsLabel")} className="mt-2 flex flex-wrap items-center gap-1.5">
-            <Link
-              href={qs({ del: undefined }) as never}
-              className={
-                "whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold transition " +
-                (!del
-                  ? "bg-foreground text-[var(--background)]"
-                  : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground")
-              }
-            >
+          <nav aria-label={t("delegationsLabel")} className="hide-scrollbar -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
+            <Link href={qs({ del: undefined }) as never} className={chip(!del, "sm")}>
               {t("allDelegations")}
             </Link>
             {dels.map((d) => (
@@ -725,12 +954,7 @@ export default async function AnnoncesPage({
                 key={d}
                 href={qs({ del: d }) as never}
                 aria-current={del === d ? "true" : undefined}
-                className={
-                  "whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold transition " +
-                  (del === d
-                    ? "bg-foreground text-[var(--background)]"
-                    : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground")
-                }
+                className={chip(del === d, "sm")}
               >
                 {delegationLabel(d, locale)}
               </Link>
@@ -738,209 +962,18 @@ export default async function AnnoncesPage({
           </nav>
         )}
 
-        {/* ── Budget ───────────────────────────────────────────────────────
-            The catalogue already filtered on `min`/`max` — the home page's
-            brackets link straight into it — but nothing here could set them.
-            A buyer arriving from the nav or from Google could narrow by type
-            and by governorate, and not by price.
-
-            A <details> with a GET form inside: it opens, applies and clears
-            before any JavaScript has run, which is also what the keyword
-            search above it does. */}
-        <details open={priceInverted} className="mt-3 overflow-hidden rounded-2xl border border-border bg-surface">
-          <summary className="tap-target flex cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5">
-            <span className="inline-flex items-center gap-2 text-[12.5px] font-bold text-foreground">
-              <Wallet className="size-4 text-muted" strokeWidth={2} />
-              {t(deal === "rent" ? "budgetRent" : "budget")}
-            </span>
-            <span
-              className={`mazed-tabular text-[11.5px] font-semibold ${
-                priceInverted ? "text-[var(--danger)]" : priceLabel ? "text-gold" : "text-muted"
-              }`}
-            >
-              {priceInverted ? t("budgetToFix") : priceLabel ?? t("allPrices")}
-            </span>
-          </summary>
-
-          <div className="border-t border-border p-3">
-            <div className="flex flex-wrap gap-1.5">
-              {buckets.map((b) => {
-                const on = (b.min ?? 0) === (min ?? 0) && (b.max ?? 0) === (max ?? 0);
-                return (
-                  <Link
-                    key={b.key}
-                    href={qs({
-                      min: b.min ? String(b.min) : undefined,
-                      max: b.max ? String(b.max) : undefined,
-                    }) as never}
-                    className={
-                      "tap-target whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-semibold transition " +
-                      (on
-                        ? "bg-foreground text-[var(--background)]"
-                        : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground")
-                    }
-                  >
-                    {t(deal === "rent" ? `rentBuckets.${b.key}` : `priceBuckets.${b.key}`)}
-                  </Link>
-                );
-              })}
-              {(min || max || priceInverted) && (
-                <Link
-                  href={qs({ min: undefined, max: undefined }) as never}
-                  className="tap-target inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[11.5px] font-semibold text-muted transition hover:text-foreground"
-                >
-                  <X className="size-3" strokeWidth={2.5} /> {t("allPrices")}
-                </Link>
-              )}
-            </div>
-
-            {/* An exact bracket, for someone whose budget is not one of four. */}
-            <form
-              action={`/${locale}/annonces`}
-              method="get"
-              className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3"
-            >
-              {deal && <input type="hidden" name="deal" value={deal} />}
-              {sp.cat && <input type="hidden" name="cat" value={sp.cat} />}
-              {sp.gov && <input type="hidden" name="gov" value={sp.gov} />}
-        {multiCats.length > 0 && <input type="hidden" name="cats" value={multiCats.map((c) => c.slug).join(",")} />}
-        {multiGovs.length > 0 && <input type="hidden" name="govs" value={multiGovs.join(",")} />}
-              {del && <input type="hidden" name="del" value={del} />}
-              {sp.sort && <input type="hidden" name="sort" value={sp.sort} />}
-              {sp.q && <input type="hidden" name="q" value={sp.q} />}
-              {surface ? <input type="hidden" name="surface" value={String(surface)} /> : null}
-              {roomsMin ? <input type="hidden" name="rooms" value={String(roomsMin)} /> : null}
-              {furnished && <input type="hidden" name="furnished" value={furnished} />}
-              {availBy && <input type="hidden" name="avail" value={availBy} />}
-              {/* Keyed on the address: a bracket chip or « Tous les prix » is a
-                  client navigation, and the numbers must follow it. */}
-              <BudgetFields
-                key={`${minAsked ?? ""}-${maxAsked ?? ""}`}
-                defaultMin={minAsked ? String(minAsked) : ""}
-                defaultMax={maxAsked ? String(maxAsked) : ""}
-                minLabel={t("minLabel")}
-                maxLabel={t("maxLabel")}
-                maxPlaceholder={t("maxPlaceholder")}
-                step={deal === "rent" ? 50 : 1000}
-                invertedMessage={t("rangeInverted")}
-              />
-              <button
-                type="submit"
-                className="mazed-btn-luxe tap-target h-11 shrink-0 px-4 text-[12.5px]"
-              >
-                {t("apply")}
-              </button>
-            </form>
-          </div>
-        </details>
-
-        {/* ── Plus de filtres ───────────────────────────────────────────────
-            Same shape as the budget: a GET form in a <details>, working before
-            any JavaScript. Open on arrival when one of its filters is set. */}
-        <details open={moreActive} className="mt-2 overflow-hidden rounded-2xl border border-border bg-surface">
-          <summary className="tap-target flex cursor-pointer list-none items-center justify-between gap-3 px-3.5 py-2.5">
-            <span className="inline-flex items-center gap-2 text-[12.5px] font-bold text-foreground">
-              <SlidersHorizontal className="size-4 text-muted" strokeWidth={2} />
-              {t("moreFilters")}
-            </span>
-            <span className={`text-[11.5px] font-semibold ${moreActive ? "text-gold" : "text-muted"}`}>
-              {moreActive ? moreChips.join(" · ") : t("moreNone")}
-            </span>
-          </summary>
-
-          <form
-            action={`/${locale}/annonces`}
-            method="get"
-            className="grid gap-3 border-t border-border p-3 sm:grid-cols-2"
-          >
-            {deal && <input type="hidden" name="deal" value={deal} />}
-            {sp.cat && <input type="hidden" name="cat" value={sp.cat} />}
-            {sp.gov && <input type="hidden" name="gov" value={sp.gov} />}
-        {multiCats.length > 0 && <input type="hidden" name="cats" value={multiCats.map((c) => c.slug).join(",")} />}
-        {multiGovs.length > 0 && <input type="hidden" name="govs" value={multiGovs.join(",")} />}
-            {del && <input type="hidden" name="del" value={del} />}
-            {sp.sort && <input type="hidden" name="sort" value={sp.sort} />}
-            {sp.q && <input type="hidden" name="q" value={sp.q} />}
-            {min ? <input type="hidden" name="min" value={String(min)} /> : null}
-            {max ? <input type="hidden" name="max" value={String(max)} /> : null}
-
-            <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
-              {t("surfaceMin")}
-              <input
-                type="number"
-                name="surface"
-                min={0}
-                step={10}
-                inputMode="numeric"
-                defaultValue={surface ? String(surface) : ""}
-                placeholder="100"
-                className="mazed-tabular mt-1 h-11 w-full rounded-xl border border-border bg-surface-2 px-3 text-[16px] font-bold text-foreground outline-none transition placeholder:font-normal placeholder:text-muted focus:border-gold-soft focus:bg-surface"
-              />
-            </label>
-
-            <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
-              {t("roomsMin")}
-              <select
-                name="rooms"
-                defaultValue={roomsMin ? String(roomsMin) : ""}
-                className="mt-1 h-11 w-full appearance-none rounded-xl border border-border bg-surface-2 px-3 text-[15px] font-bold text-foreground outline-none focus:border-gold-soft"
-              >
-                <option value="">{t("anyValue")}</option>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>{t("roomsAtLeast", { count: n })}</option>
-                ))}
-              </select>
-            </label>
-
-            {deal === "rent" && (
-              <>
-                <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
-                  {t("furnishedLabel")}
-                  <select
-                    name="furnished"
-                    defaultValue={furnished ?? ""}
-                    className="mt-1 h-11 w-full appearance-none rounded-xl border border-border bg-surface-2 px-3 text-[15px] font-bold text-foreground outline-none focus:border-gold-soft"
-                  >
-                    <option value="">{t("anyValue")}</option>
-                    {FURNISHED.map((f) => (
-                      <option key={f} value={f}>{t(`furnished.${f}`)}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
-                  {t("availBy")}
-                  <input
-                    type="date"
-                    name="avail"
-                    defaultValue={availBy ?? ""}
-                    className="mt-1 h-11 w-full rounded-xl border border-border bg-surface-2 px-3 text-[15px] font-bold text-foreground outline-none focus:border-gold-soft"
-                  />
-                </label>
-              </>
-            )}
-
-            <div className="flex items-center gap-2 sm:col-span-2">
-              <button type="submit" className="mazed-btn-luxe tap-target h-11 px-5 text-[12.5px]">
-                {t("apply")}
-              </button>
-              {moreActive && (
-                <Link
-                  href={qs({ surface: undefined, rooms: undefined, furnished: undefined, avail: undefined }) as never}
-                  className="tap-target inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11.5px] font-semibold text-muted transition hover:text-foreground"
-                >
-                  <X className="size-3" strokeWidth={2.5} /> {t("clearMore")}
-                </Link>
-              )}
-            </div>
-          </form>
-        </details>
+        {/* The budget and the other filters, as accordions, on a phone. */}
+        <div className="mt-3 space-y-2 lg:hidden">
+          {budgetMenu("phone")}
+          {moreMenu("phone")}
+        </div>
       </div>
 
       {settings.feature_natural_search && sp.nlq && (
-        <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-gold-faint px-3 py-2 text-[12.5px] text-foreground ring-1 ring-gold-soft">
-          <Sparkles className="size-3.5 shrink-0 text-gold" />
+        <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-surface-2 px-3 py-2 text-[12.5px] text-foreground ring-1 ring-border">
+          <Sparkles className="size-3.5 shrink-0 text-foreground" aria-hidden />
           <span>{t("understood", { query: sp.nlq })}</span>
-          <Link href={`/annonces?q=${encodeURIComponent(sp.nlq)}&nl=0` as never} className="font-bold text-gold underline-offset-2 hover:underline">
+          <Link href={`/annonces?q=${encodeURIComponent(sp.nlq)}&nl=0` as never} className="font-bold text-foreground underline-offset-2 hover:underline">
             {t("searchAsTyped")}
           </Link>
         </p>
@@ -948,129 +981,65 @@ export default async function AnnoncesPage({
 
       <FeaturedAgencies shops={featured} />
 
-      <p className="mt-4 text-[12.5px] text-muted">
-        {t("resultCount", { count: total })}
+      {/* The results' own heading: how many, of what, where. */}
+      <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <h2 className="text-[15px] font-extrabold text-foreground">
+          {t("resultCount", { count: total })}
+          {active ? ` · ${categoryLabel(active, locale)}` : ""}
+          {sp.gov ? ` · ${governorateLabel(sp.gov, locale)}` : ""}
+        </h2>
         {sp.q?.trim() && (
           <Link
             href={qs({ q: undefined }) as never}
             aria-label={t("clearSearch", { query: sp.q.trim() })}
-            className="ms-2 inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-0.5 font-semibold text-foreground ring-1 ring-border transition hover:ring-gold-soft"
+            className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-0.5 text-[12.5px] font-semibold text-foreground ring-1 ring-border transition hover:ring-foreground/40"
           >
             {t("queryChip", { query: sp.q.trim() })}
-            <X className="size-3" />
+            <X className="size-3" aria-hidden />
           </Link>
         )}
-        {active ? ` · ${categoryLabel(active, locale)}` : ""}
-        {sp.gov ? ` · ${governorateLabel(sp.gov, locale)}` : ""}
-      </p>
+      </div>
 
       {rows.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-border bg-surface-2/40 p-10 text-center">
-          <SearchX className="mx-auto size-6 text-muted" />
-          <p className="mt-3 text-[13.5px] font-bold text-foreground">{t("emptyTitle")}</p>
-          <p className="mt-1 text-[12.5px] text-muted">{t("emptyBody")}</p>
+        <div className="mt-6 rounded-3xl border border-dashed border-border bg-surface-2/40 px-6 py-14 text-center">
+          <span className="inline-grid size-12 place-items-center rounded-full bg-surface text-muted ring-1 ring-border">
+            <SearchX className="size-5" aria-hidden />
+          </span>
+          <p className="mt-4 text-[15px] font-extrabold text-foreground">{t("emptyTitle")}</p>
+          <p className="mt-1 text-[13px] text-muted">{t("emptyBody")}</p>
           {/* A way out. Seven of the eight category chips are empty at this
               catalogue size, and this state used to be text only. */}
           {(sp.cat || sp.gov || sp.q || min || max || moreActive || deal) && (
             <Link
               href={"/annonces" as never}
-              className="tap-target mt-4 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12.5px] font-bold text-[var(--background)]"
+              className="tap-target mt-5 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12.5px] font-bold text-[var(--background)]"
             >
-              <X className="size-3.5" /> {t("clearFilters")}
+              <X className="size-3.5" aria-hidden /> {t("clearFilters")}
             </Link>
           )}
         </div>
       ) : (
-        <ul className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
-          {rows.map((r, i) => {
-            const cat = one(r.category);
-            const cover = coverPhoto(r.photos);
-            const specs = specLine(r, t, locale);
-            return (
-              <Fragment key={r.id}>
-                <li className="relative">
-                  {/* Outside the card link: a button cannot sit inside an <a>. */}
-                  <div className="absolute end-2 top-2 z-10">
-                    <CompareToggle listingId={r.id} />
-                  </div>
-                  <Link
-                    href={`/annonces/${r.id}` as never}
-                    className="group block overflow-hidden rounded-2xl border border-border bg-surface transition hover:border-gold-soft hover:shadow-[0_10px_30px_-18px_rgba(0,0,0,0.35)]"
-                  >
-                    <div className="relative aspect-[4/3] bg-surface-2">
-                      {cover ? (
-                        <ListingImage
-                          path={cover.storage_path}
-                          alt={r.title}
-                          sizes="(min-width:1024px) 260px, 45vw"
-                          priority={i < 4}
-                          className="transition duration-500 group-hover:scale-[1.02]"
-                        />
-                      ) : (
-                        <span className="grid size-full place-items-center text-muted">
-                          <ImageOff className="size-6" />
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="p-3">
-                      <span className="inline-flex flex-wrap items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] text-muted">
-                        <Home className="size-3" /> {categoryLabel(cat, locale)}
-                        {r.deal_type === "rent" && (
-                          <span className="ms-1 rounded-full bg-gold-faint px-1.5 py-0.5 text-gold">{t("forRent")}</span>
-                        )}
-                        {r.promo_top_listed && (
-                          <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-foreground ring-1 ring-border">{t("promoted")}</span>
-                        )}
-                        {r.availability === "reserved" && (
-                          <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-amber-600">{t("reserved")}</span>
-                        )}
-                      </span>
-                      <h2 dir="auto" className="mt-0.5 line-clamp-2 break-words text-[13.5px] font-bold leading-snug text-foreground">
-                        {r.title}
-                      </h2>
-
-                      <p className="mazed-tabular mt-1.5 text-[15px] font-extrabold text-foreground">
-                        {r.price_on_request || r.price == null
-                          ? t("priceOnRequest")
-                          : t(r.deal_type === "rent" ? "rentAmount" : "priceAmount", {
-                              amount: formatTND(Number(r.price), locale),
-                            })}
-                        {r.negotiable && !r.price_on_request && (
-                          <span className="ms-1.5 text-[10.5px] font-bold text-muted">{t("negotiable")}</span>
-                        )}
-                      </p>
-
-                      {/* One wrapping row. These were two inline-flex paragraphs,
-                          which sit side by side with nothing between them when
-                          they fit: "200 m²◎ Sfax". */}
-                      <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted">
-                        {specs.length > 0 && (
-                          <span className="inline-flex items-center gap-1">
-                            <Ruler className="size-3" /> {specs.join(" · ")}
-                          </span>
-                        )}
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="size-3" /> {shownDelegation(r.governorate, r.delegation, locale) ? `${shownDelegation(r.governorate, r.delegation, locale)}, ` : ""}{governorateLabel(r.governorate, locale)}
-                        </span>
-                      </div>
-                      {/* Kept in by the « libre avant » filter because the owner gave
-                          no date: say so, rather than let it pass as a match. */}
-                      {availBy && r.deal_type === "rent" && !r.available_from && (
-                        <p className="mt-1 text-[10.5px] font-semibold text-amber-600">{t("availUnconfirmed")}</p>
-                      )}
-                    </div>
-                  </Link>
-                </li>
-                {/* An advertising space across the grid, after the first four
-                    cards — two rows on a phone, one on a desktop — or after the
-                    last when there are fewer. Nothing when no campaign runs. */}
-                {i === Math.min(3, rows.length - 1) && (
-                  <AdSlot placement="catalogue" as="li" className="col-span-full" />
-                )}
-              </Fragment>
-            );
-          })}
+        <ul className={`mt-4 grid gap-x-3 gap-y-7 ${phoneCols} sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-9 xl:grid-cols-4`}>
+          {rows.map((r, i) => (
+            <Fragment key={r.id}>
+              <li>
+                <AnnonceCard
+                  listing={r}
+                  priority={i < 4}
+                  sizes="(min-width: 1280px) 300px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+                  // Kept in by the « libre avant » filter because the owner gave
+                  // no date: say so, rather than let it pass as a match.
+                  note={availBy && r.deal_type === "rent" && !r.available_from ? t("availUnconfirmed") : null}
+                />
+              </li>
+              {/* An advertising space across the grid, after the first four
+                  cards — or after the last when there are fewer. Nothing when
+                  no campaign runs. */}
+              {i === Math.min(3, rows.length - 1) && (
+                <AdSlot placement="catalogue" as="li" className="col-span-full" />
+              )}
+            </Fragment>
+          ))}
         </ul>
       )}
 
@@ -1079,16 +1048,16 @@ export default async function AnnoncesPage({
           the words too: the form keeps them in « Autres souhaits » and says
           they are not a criterion (src/lib/requests/prefill.ts). */}
       {settings.feature_requests && (
-        <section className="mt-8 flex flex-col items-start gap-3 rounded-2xl border border-gold-soft bg-gold-faint p-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="mazed-band-warm mt-10 flex flex-col items-start gap-3 rounded-3xl border border-border p-5 sm:flex-row sm:items-center sm:justify-between lg:p-7">
           <div>
-            <p className="text-[14px] font-extrabold text-foreground">{t("requestCtaTitle")}</p>
-            <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted">{t("requestCtaBody")}</p>
+            <p className="text-[15px] font-extrabold text-foreground">{t("requestCtaTitle")}</p>
+            <p className="mt-0.5 max-w-xl text-[12.5px] leading-relaxed text-muted">{t("requestCtaBody")}</p>
           </div>
           <Link
             href={qs({ sort: undefined }).replace("/annonces", "/demandes/nouvelle") as never}
             className="mazed-btn-luxe tap-target inline-flex shrink-0 items-center gap-1.5 px-4 py-2.5 text-[13px]"
           >
-            <BellRing className="size-4" /> {t("requestCta")}
+            <BellRing className="size-4" aria-hidden /> {t("requestCta")}
           </Link>
         </section>
       )}
@@ -1098,9 +1067,9 @@ export default async function AnnoncesPage({
           {page > 1 ? (
             <Link
               href={qs({ page: page - 1 > 1 ? String(page - 1) : undefined }) as never}
-              className="tap-target inline-flex items-center gap-1 rounded-full bg-surface-2 px-4 py-2 text-[12.5px] font-bold text-foreground ring-1 ring-border transition hover:ring-foreground/30"
+              className="tap-target inline-flex items-center gap-1 rounded-full bg-surface px-4 py-2 text-[12.5px] font-bold text-foreground ring-1 ring-border transition hover:ring-foreground/40"
             >
-              <ChevronLeft className="size-4 rtl:-scale-x-100" /> {t("previous")}
+              <ChevronLeft className="size-4 rtl:-scale-x-100" aria-hidden /> {t("previous")}
             </Link>
           ) : (
             <span aria-hidden className="w-[108px]" />
@@ -1111,9 +1080,9 @@ export default async function AnnoncesPage({
           {page < lastPage ? (
             <Link
               href={qs({ page: String(page + 1) }) as never}
-              className="tap-target inline-flex items-center gap-1 rounded-full bg-surface-2 px-4 py-2 text-[12.5px] font-bold text-foreground ring-1 ring-border transition hover:ring-foreground/30"
+              className="tap-target inline-flex items-center gap-1 rounded-full bg-surface px-4 py-2 text-[12.5px] font-bold text-foreground ring-1 ring-border transition hover:ring-foreground/40"
             >
-              {t("next")} <ChevronRight className="size-4 rtl:-scale-x-100" />
+              {t("next")} <ChevronRight className="size-4 rtl:-scale-x-100" aria-hidden />
             </Link>
           ) : (
             <span aria-hidden className="w-[108px]" />

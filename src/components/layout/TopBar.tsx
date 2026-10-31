@@ -54,6 +54,8 @@ const TITLE_BY_SEGMENT: Record<string, string> = {
   sell: "sell",
   admin: "admin",
   payment: "payment",
+  agences: "agences",
+  pro: "pro",
 };
 
 /**

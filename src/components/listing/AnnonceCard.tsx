@@ -2,9 +2,10 @@ import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { formatNumber, formatTND } from "@/lib/utils";
-import { ArrowUpRight, MapPin, Ruler, BedDouble } from "lucide-react";
+import { BedDouble, Camera, Home, MapPin, Ruler, Store } from "lucide-react";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { IMAGE_BLUR_MAP } from "@/lib/imageBlurMap";
+import { coverPhoto } from "@/lib/listingCover";
 import { FavoriteButton } from "@/components/property/FavoriteButton";
 import { CompareToggle } from "@/components/compare/CompareToggle";
 import { Ltr } from "@/components/ui/Ltr";
@@ -14,32 +15,23 @@ import { shownDelegation } from "@/lib/delegations";
 import { asDealType } from "@/lib/listings/deal";
 
 /**
- * One annonce, as a card.
+ * One annonce, as a card — the same card on the home rails, in the
+ * catalogue and on an agence's page (2026-10-31 redesign).
  *
- * This is `PropertyCard` with the auction taken out — deliberately the SAME
- * visual language, because the design is not what is changing: 4:5 photo as
- * the entire surface, hairline ring that warms to gold on hover, the body
- * naked on the page background with no card chrome, and the price in
- * `gradient-gold-text` so the figure is the one gold thing on a quiet card.
+ * The recipe is the one every property site that reads as premium shares
+ * (Zillow, Rightmove, Idealista, Airbnb): the photo is the card, cropped to
+ * 4:3 with rounded corners and no chrome around it; what sits ON the photo is
+ * only what is read at a glance (« À louer », a paid placement, the heart,
+ * how many photos there are); under it the PRICE comes first and biggest,
+ * then the title on one line, then the facts a buyer sorts on (type, surface,
+ * rooms) and the place. Everything else — the reference, the seller — waits
+ * on the annonce's page.
  *
- * What the auction card put on the photo cannot be carried over, and the
- * replacements are not arbitrary:
- *
- *   LiveTimer countdown  → nothing. A fixed price has no clock, and a chip
- *                          counting down to nothing is worse than an empty
- *                          corner.
- *   auction-type pill    → the category (Villas, Terrains). It is the one
- *                          thing a buyer scanning a rail actually sorts on.
- *   bid step / bidders   → surface and rooms, pulled from `attributes`. On a
- *                          property site "120 m² · S+2" is the line that
- *                          decides whether the card is worth opening, and it
- *                          is the one that was missing entirely.
- *   lot number           → `reference` (MZ-00042). Same corner, same mono
- *                          treatment, but now it is a number the seller and
- *                          the office can both say out loud on the telephone.
- *   StartBiddingButton   → nothing. The action is a phone call, and the number
- *                          is deliberately not on this page (see
- *                          `/annonces/[id]`).
+ * The clickable area is a STRETCHED LINK overlay (absolute inset-0), NOT an
+ * <a> wrapping the whole card — wrapping nests FavoriteButton's <button>
+ * inside an <a> (invalid HTML; breaks assistive tech and hydration). The
+ * controls sit above the link via z-index so they stay independently
+ * clickable.
  */
 
 export type AnnonceCardRow = {
@@ -50,14 +42,15 @@ export type AnnonceCardRow = {
   negotiable: boolean;
   governorate: string;
   delegation: string | null;
-  reference: string | null;
+  /** The MZ- number; not shown on the card, read on the annonce's page. */
+  reference?: string | null;
   attributes: Record<string, unknown> | null;
   /** `label_ar` is shown on Arabic pages when the caller's select includes it. */
   category:
     | { label_fr: string; label_ar?: string | null }
     | { label_fr: string; label_ar?: string | null }[]
     | null;
-  photos: { storage_path: string; sort_order: number }[] | null;
+  photos: { storage_path: string; sort_order: number; is_cover?: boolean | null }[] | null;
   /** 0166. Absent on a select that predates it: read as a sale. */
   deal_type?: string | null;
   availability?: string | null;
@@ -65,6 +58,9 @@ export type AnnonceCardRow = {
   promo_home_featured?: boolean | null;
   promo_banner?: boolean | null;
   promo_top_listed?: boolean | null;
+  /** Published for an agence (0173), when the caller's select includes it:
+   *  the card says so, as Tayara's « Boutique » and Mubawab's logo do. */
+  shop_id?: string | null;
 };
 
 const one = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
@@ -73,20 +69,27 @@ export async function AnnonceCard({
   listing,
   saved = false,
   loggedIn = false,
+  priority = false,
+  sizes = "(min-width: 1280px) 300px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw",
+  note = null,
 }: {
   listing: AnnonceCardRow;
   /** Pre-resolved favourite membership for this user. Defaults false (anon). */
   saved?: boolean;
   loggedIn?: boolean;
+  /** Above the fold (the catalogue's first row): the photo loads eagerly at high priority. */
+  priority?: boolean;
+  /** The CSS width the photo occupies, for next/image to pick a size. */
+  sizes?: string;
+  /** A line in amber under the facts — the catalogue's « date non précisée ». */
+  note?: string | null;
 }) {
   const t = await getTranslations();
   const locale = await getLocale();
-  const isRTL = locale === "ar";
 
   const category = one(listing.category);
-  const heroPhoto = (listing.photos ?? [])
-    .slice()
-    .sort((a, b) => a.sort_order - b.sort_order)[0];
+  const photos = listing.photos ?? [];
+  const cover = coverPhoto(photos);
 
   const attrs = (listing.attributes ?? {}) as Record<string, unknown>;
   const area = Number(attrs.area_sqm);
@@ -95,170 +98,123 @@ export async function AnnonceCard({
   const rent = asDealType(listing.deal_type) === "rent";
   const promoted = Boolean(listing.promo_home_featured || listing.promo_banner || listing.promo_top_listed);
   const reserved = listing.availability === "reserved";
+  const onRequest = listing.price_on_request || listing.price == null;
 
   return (
-    <div className="block">
-      {/* The clickable area is a STRETCHED LINK overlay (absolute inset-0), NOT
-          an <a> wrapping the whole card — wrapping nests FavoriteButton's
-          <button> inside an <a> (invalid HTML; breaks assistive tech and
-          hydration). The heart sits above the link via z-index so it stays
-          independently clickable. */}
-      <div className="group relative block">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-surface-2 ring-1 ring-border transition-all duration-300 group-hover:ring-gold-soft/40">
-          {heroPhoto ? (
-            (() => {
-              const src = propertyPhotoUrl(heroPhoto.storage_path);
-              const blur = IMAGE_BLUR_MAP[heroPhoto.storage_path];
-              // Always optimized, always lazy.
-              //
-              // Seed photos under /public/properties used to skip the optimizer
-              // as "already 20–40 KB webps". They are up to 1600px and 390 KB
-              // now, and a 230px card downloaded every byte. Cards also took
-              // `priority`, which on home put a <link rel="preload"> in the head
-              // for photos in rails below the hero — and for rails in the layout
-              // the screen was not even showing — all racing the real LCP image.
-              return (
-                <Image
-                  src={src}
-                  alt={listing.title}
-                  fill
-                  sizes="(min-width: 1024px) 240px, (min-width: 640px) 33vw, 50vw"
-                  placeholder={blur ? "blur" : "empty"}
-                  blurDataURL={blur}
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                />
-              );
-            })()
-          ) : (
-            <div className="flex h-full items-center justify-center text-5xl text-foreground/15">
-              🏛️
-            </div>
-          )}
-
-          {/* Keeps the gold arrow chip readable over a bright photo. */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />
-
-          {/* Top-leading — the category. Same pill the auction type used. */}
-          {/* With a rental's « À louer » beside it: the first thing a buyer
-              and a tenant need to tell apart on a mixed rail. */}
-          {(category || rent || reserved || promoted) && (
-            <div className="absolute top-2.5 start-2.5 end-2.5 flex flex-wrap gap-1">
-              {/* A paid placement says it is one. */}
-              {promoted && (
-                <span className="inline-flex h-7 items-center rounded-full bg-white/90 px-2.5 text-[10px] font-extrabold uppercase tracking-wider text-foreground backdrop-blur-sm">
-                  {t("listing.promoted")}
-                </span>
-              )}
-              {category && (
-                <span className="mazed-gold-fill inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[10px] font-extrabold uppercase tracking-wider shadow-[var(--shadow-gold)]">
-                  {categoryLabel(category, locale)}
-                </span>
-              )}
-              {rent && (
-                <span className="inline-flex h-7 items-center rounded-full bg-black/60 px-2.5 text-[10px] font-extrabold uppercase tracking-wider text-white backdrop-blur-sm">
-                  {t("listing.forRent")}
-                </span>
-              )}
-              {reserved && (
-                <span className="inline-flex h-7 items-center rounded-full bg-amber-500/90 px-2.5 text-[10px] font-extrabold uppercase tracking-wider text-white">
-                  {t("listing.reserved")}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Bottom-leading — favourite. z-20 keeps it ABOVE the stretched
-              card link (z-10) so its button still receives clicks. */}
-          <div className="absolute bottom-2.5 start-2.5 z-20 flex items-center gap-1.5">
-            <FavoriteButton listingId={listing.id} initialSaved={saved} loggedIn={loggedIn} />
-            <CompareToggle listingId={listing.id} />
+    <article className="group relative">
+      <div className="mazed-photo-frame aspect-[4/3]">
+        {cover ? (
+          <Image
+            src={propertyPhotoUrl(cover.storage_path)}
+            alt={listing.title}
+            fill
+            sizes={sizes}
+            placeholder={IMAGE_BLUR_MAP[cover.storage_path] ? "blur" : "empty"}
+            blurDataURL={IMAGE_BLUR_MAP[cover.storage_path]}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
+            className="object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-muted">
+            <Home className="size-8" strokeWidth={1.5} />
           </div>
+        )}
 
-          {/* Bottom-trailing — polished-brass arrow chip, rotates on hover. */}
-          <div className="absolute bottom-2.5 end-2.5">
-            <span className="mazed-gold-fill gold-rim inline-flex h-9 w-9 items-center justify-center rounded-full transition-transform group-hover:scale-110 group-hover:rotate-45 rtl:group-hover:-rotate-45">
-              <ArrowUpRight className="size-4 rtl:-scale-x-100" strokeWidth={2.5} />
-            </span>
-          </div>
-        </div>
-
-        {/* BODY — naked, sits on the page. No padding, no box. */}
-        <div className="space-y-1 px-1 pt-3">
-          <div className="flex items-start justify-between gap-2">
-            {/* dir="auto" lets the title's first strong directional character
-                pick the truncation side: Latin titles ellipsis at the right,
-                Arabic titles at the left. */}
-            <h3
-              dir="auto"
-              className={`line-clamp-1 flex-1 text-[15px] font-bold leading-tight ${
-                isRTL ? "font-arabic" : ""
-              }`}
-            >
-              {listing.title}
-            </h3>
-            {listing.reference && (
-              <Ltr className="mazed-tabular mt-0.5 shrink-0 font-mono text-[9px] font-bold tracking-[0.05em] text-subtle">
-                {listing.reference}
-              </Ltr>
-            )}
-          </div>
-
-          {/* Price row. `dir="ltr"` on the figure so "261.000 TND" is not
-              reordered into "TND 261.000" inside an RTL container. */}
-          <div className="flex items-center justify-between gap-2">
-            {listing.price_on_request || listing.price == null ? (
-              <span className="text-[13px] font-bold text-muted">{t("listing.priceOnRequest")}</span>
-            ) : (
-              <span
-                dir="ltr"
-                className="mazed-tabular gradient-gold-text inline-flex items-baseline gap-1 text-base font-extrabold"
-              >
-                {formatTND(Number(listing.price), locale)}
-                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted">
-                  {rent ? t("listing.tndPerMonth") : t("common.tnd")}
-                </span>
+        {/* What is read before the price: a paid placement, a rental, a
+            reservation. Top-start, where the eye lands first. */}
+        {(promoted || rent || reserved || listing.shop_id) && (
+          <div className="pointer-events-none absolute start-2.5 top-2.5 z-[2] flex flex-wrap gap-1">
+            {promoted && <span className="mazed-chip-photo">{t("listing.promoted")}</span>}
+            {rent && <span className="mazed-chip-photo mazed-chip-photo-ink">{t("listing.forRent")}</span>}
+            {listing.shop_id && !promoted && (
+              <span className="mazed-chip-photo">
+                <Store className="size-3" strokeWidth={2.4} aria-hidden /> {t("listing.shopLabel")}
               </span>
             )}
-            {listing.negotiable && !listing.price_on_request && (
-              <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] text-muted">
-                {t("listing.negotiable")}
+            {reserved && (
+              <span className="mazed-chip-photo" style={{ background: "rgba(245, 158, 11, 0.95)", color: "#1c1917" }}>
+                {t("listing.reserved")}
               </span>
             )}
           </div>
+        )}
 
-          {/* The line that decides whether the card is worth opening. */}
-          <div className="flex items-center gap-2.5 text-[11px] text-muted">
-            <span className="inline-flex min-w-0 items-center gap-1">
-              <MapPin className="size-3 shrink-0" strokeWidth={2} />
-              <span className="truncate">{where}</span>
-            </span>
-            {Number.isFinite(area) && area > 0 && (
-              <span className="mazed-tabular inline-flex shrink-0 items-center gap-1">
-                <Ruler className="size-3" strokeWidth={2} />
-                {t("listing.areaValue", { area: formatNumber(area, locale) })}
-              </span>
-            )}
-            {Number.isFinite(rooms) && rooms > 0 && (
-              <span className="mazed-tabular inline-flex shrink-0 items-center gap-1">
-                <BedDouble className="size-3" strokeWidth={2} />
-                {/* Tunisian shorthand, written in Latin in both languages.
-                    Isolated so RTL does not turn "S+3" into "3+S". */}
-                <Ltr>S+{rooms}</Ltr>
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Stretched link — the whole card is clickable without wrapping the
-            interactive heart in an <a>. z-10 sits under the heart's z-20. */}
-        <Link
-          href={`/annonces/${listing.id}` as "/annonces"}
-          aria-label={listing.title}
-          className="absolute inset-0 z-10"
-        >
-          <span className="sr-only">{listing.title}</span>
-        </Link>
+        {/* How many photos there are to see — the one thing a buyer asks of a
+            card before opening it. */}
+        {photos.length > 1 && (
+          <span className="mazed-chip-photo mazed-chip-photo-ink pointer-events-none absolute bottom-2.5 end-2.5 z-[2]">
+            <Camera className="size-3" strokeWidth={2.4} aria-hidden />
+            <span className="mazed-tabular">{photos.length}</span>
+            <span className="sr-only">{t("listing.gallery.photos", { count: photos.length })}</span>
+          </span>
+        )}
       </div>
-    </div>
+
+      {/* The heart and the comparison, top-end. z-20 keeps them ABOVE the
+          stretched link (z-10) so their buttons still receive clicks. */}
+      <div className="absolute end-2.5 top-2.5 z-20 flex items-center gap-1.5">
+        <CompareToggle listingId={listing.id} />
+        <FavoriteButton listingId={listing.id} initialSaved={saved} loggedIn={loggedIn} size="sm" />
+      </div>
+
+      {/* BODY — naked, on the page. The price first. */}
+      <div className="pt-3">
+        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+          {onRequest ? (
+            <span className="text-[15px] font-extrabold text-foreground">{t("listing.priceOnRequest")}</span>
+          ) : (
+            <span dir="ltr" className="mazed-tabular inline-flex items-baseline gap-1 text-[17px] font-extrabold leading-none text-foreground">
+              {formatTND(Number(listing.price), locale)}
+              <span className="text-[11px] font-bold text-muted">{rent ? t("listing.tndPerMonth") : t("common.tnd")}</span>
+            </span>
+          )}
+          {listing.negotiable && !onRequest && (
+            <span className="text-[11px] font-semibold text-muted">{t("listing.negotiable")}</span>
+          )}
+        </div>
+
+        {/* dir="auto" lets the title's first strong directional character
+            pick the truncation side: Latin titles ellipsis at the right,
+            Arabic titles at the left. */}
+        <h3 dir="auto" className="mt-1.5 line-clamp-1 text-[14px] font-semibold leading-snug text-foreground">
+          {listing.title}
+        </h3>
+
+        {/* The line that decides whether the card is worth opening. */}
+        <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[12.5px] text-muted">
+          {category && <span>{categoryLabel(category, locale)}</span>}
+          {Number.isFinite(area) && area > 0 && (
+            <span className="mazed-tabular inline-flex items-center gap-1">
+              <Ruler className="size-3" strokeWidth={2} aria-hidden />
+              {t("listing.areaValue", { area: formatNumber(area, locale) })}
+            </span>
+          )}
+          {Number.isFinite(rooms) && rooms > 0 && (
+            <span className="mazed-tabular inline-flex items-center gap-1">
+              <BedDouble className="size-3" strokeWidth={2} aria-hidden />
+              {/* Tunisian shorthand, written in Latin in both languages.
+                  Isolated so RTL does not turn "S+3" into "3+S". */}
+              <Ltr>S+{rooms}</Ltr>
+            </span>
+          )}
+        </p>
+        <p className="mt-0.5 flex items-center gap-1 text-[12px] text-muted">
+          <MapPin className="size-3 shrink-0" strokeWidth={2} aria-hidden />
+          <span className="truncate">{where}</span>
+        </p>
+        {note && <p className="mt-1 text-[11px] font-semibold text-amber-600">{note}</p>}
+      </div>
+
+      {/* Stretched link — the whole card is clickable without wrapping the
+          interactive heart in an <a>. z-10 sits under the controls' z-20. */}
+      <Link
+        href={`/annonces/${listing.id}` as "/annonces"}
+        aria-label={listing.title}
+        className="absolute inset-0 z-10 rounded-2xl"
+      >
+        <span className="sr-only">{listing.title}</span>
+      </Link>
+    </article>
   );
 }

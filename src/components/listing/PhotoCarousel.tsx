@@ -22,7 +22,7 @@ const USER_NAV_PAUSE_MS = 6000;
 const SWIPE_THRESHOLD = 40;
 
 /**
- * Cinematic hero with auto-sliding photos.
+ * The annonce's photos, one at a time.
  *
  * Moved here from `components/auction/` when the auction product was deleted.
  * Nothing about a photo gallery is auction-specific — the lot page was simply
@@ -31,20 +31,33 @@ const SWIPE_THRESHOLD = 40;
  *   - Real horizontal SLIDE (translateX track), not a cross-fade.
  *   - Seamless infinite loop: the first photo is cloned at the end, and we
  *     snap back to it without animation once the slide lands on the clone.
- *   - Auto-advances every 1.5s; pauses briefly after any manual interaction.
  *   - Swipe left/right on touch, arrows on desktop, clickable thumbnail strip.
+ *   - `autoplay` advances every 4.5s; the annonce page passes false (2026-10-31):
+ *     a buyer inspecting a photo must not have it taken away. The option stays
+ *     for a showcase that wants it.
+ *   - `counter` prints « 3 / 12 » on the photo, the way every property app
+ *     does, so the reader knows how much there is to see.
+ *   - `variant="modal"` is the full-screen gallery the desktop mosaic opens.
  *
- * The server-rendered overlay (LIVE chip, lot chip, title) is passed in via
- * `children` so crawlers see it without waiting for hydration.
+ * The server-rendered overlay (chips, title) is passed in via `children` so
+ * crawlers see it without waiting for hydration.
  */
 export function PhotoCarousel({
   photos,
   alt,
   children,
+  autoplay = true,
+  counter = false,
+  startIndex = 0,
+  variant = "page",
 }: {
   photos: Photo[];
   alt: string;
   children?: React.ReactNode;
+  autoplay?: boolean;
+  counter?: boolean;
+  startIndex?: number;
+  variant?: "page" | "modal";
 }) {
   const t = useTranslations();
   // Right-to-left, the flex track lays the slides out leftwards from the right
@@ -53,10 +66,11 @@ export function PhotoCarousel({
   const rtl = isRtl(useLocale());
   const count = photos.length;
   const loop = count > 1;
+  const modal = variant === "modal";
   // Clone the first photo at the tail for a seamless wrap.
   const slides = loop ? [...photos, photos[0]] : photos;
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => Math.min(Math.max(0, startIndex), Math.max(0, count - 1)));
   const [anim, setAnim] = useState(true);
   const pauseUntil = useRef(0);
   const touchX = useRef<number | null>(null);
@@ -65,14 +79,14 @@ export function PhotoCarousel({
 
   // Auto-advance.
   useEffect(() => {
-    if (!loop) return;
+    if (!loop || !autoplay) return;
     const id = window.setInterval(() => {
       if (Date.now() < pauseUntil.current) return;
       setAnim(true);
       setIndex((i) => i + 1);
     }, AUTO_INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [loop]);
+  }, [loop, autoplay]);
 
   // Re-enable the transition the frame after a no-anim snap-back.
   useEffect(() => {
@@ -103,20 +117,37 @@ export function PhotoCarousel({
   }
 
   function jumpTo(i: number) {
-    // eslint-disable-next-line react-hooks/purity -- synchronising with an external system, which is what an effect is for.
+     
     pauseUntil.current = Date.now() + USER_NAV_PAUSE_MS;
     setAnim(true);
     setIndex(i);
   }
 
+  // Keyboard, in the modal: the arrows step through the photos.
+  useEffect(() => {
+    if (!modal || !loop) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "ArrowRight") go(rtl ? -1 : 1);
+      else if (e.key === "ArrowLeft") go(rtl ? 1 : -1);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `go` only reads refs and setters
+  }, [modal, loop, rtl]);
+
+  const arrow =
+    "absolute top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.2)] backdrop-blur-md transition hover:bg-white active:scale-95";
+
   return (
     <div>
-      <div className="mazed-photo-overlay relative">
+      <div className="relative">
         {/* 4:3 on a phone too, and never more than half the screen: a portrait
             photo pushed the title, the place and the price below the fold
-            (2026-10-27 audit). */}
+            (2026-10-27 audit). The modal has the whole screen. */}
         <div
-          className="relative aspect-[4/3] max-h-[50svh] w-full overflow-hidden bg-surface-2"
+          className={`relative w-full overflow-hidden ${
+            modal ? "aspect-[4/3] max-h-[78svh] bg-black" : "aspect-[4/3] max-h-[50svh] bg-surface-2"
+          }`}
           style={{ touchAction: "pan-y" }}
           onTouchStart={(e) => {
             touchX.current = e.touches[0].clientX;
@@ -152,10 +183,10 @@ export function PhotoCarousel({
                       fill
                       loading={i === 0 ? "eager" : "lazy"}
                       fetchPriority={i === 0 ? "high" : undefined}
-                      sizes="(min-width: 1024px) 1100px, 100vw"
+                      sizes={modal ? "100vw" : "(min-width: 1024px) 1100px, 100vw"}
                       placeholder={blur ? "blur" : "empty"}
                       blurDataURL={blur}
-                      className="object-cover"
+                      className={modal ? "object-contain" : "object-cover"}
                     />
                   </div>
                 );
@@ -171,6 +202,15 @@ export function PhotoCarousel({
         {/* Overlay content — badges + title, server-rendered. */}
         {children}
 
+        {/* « 3 / 12 » */}
+        {counter && count > 1 && (
+          <span className="mazed-chip-photo mazed-chip-photo-ink pointer-events-none absolute end-3 top-3 z-20 h-7 px-2.5 text-[12px]">
+            <span className="mazed-tabular" dir="ltr">
+              {t("listing.gallery.counter", { n: activeDot + 1, total: count })}
+            </span>
+          </span>
+        )}
+
         {/* Arrows + dots — only when there's more than one photo. */}
         {loop && (
           <>
@@ -178,7 +218,7 @@ export function PhotoCarousel({
               type="button"
               aria-label={t("gallery.prev")}
               onClick={() => go(-1)}
-              className="absolute top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-md ring-1 ring-white/20 hover:bg-black/75 active:scale-95 transition-all ltr:left-3 rtl:right-3"
+              className={`${arrow} ltr:left-3 rtl:right-3`}
             >
               <ChevronLeft className="h-5 w-5 ltr:block rtl:hidden" strokeWidth={2.5} />
               <ChevronRight className="h-5 w-5 ltr:hidden rtl:block" strokeWidth={2.5} />
@@ -187,34 +227,37 @@ export function PhotoCarousel({
               type="button"
               aria-label={t("gallery.next")}
               onClick={() => go(1)}
-              className="absolute top-1/2 z-20 -translate-y-1/2 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-md ring-1 ring-white/20 hover:bg-black/75 active:scale-95 transition-all ltr:right-3 rtl:left-3"
+              className={`${arrow} ltr:right-3 rtl:left-3`}
             >
               <ChevronRight className="h-5 w-5 ltr:block rtl:hidden" strokeWidth={2.5} />
               <ChevronLeft className="h-5 w-5 ltr:hidden rtl:block" strokeWidth={2.5} />
             </button>
 
-            <div className="absolute bottom-2 left-1/2 z-20 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1.5 backdrop-blur-md ring-1 ring-white/15">
-              {photos.map((p, i) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  aria-label={t("gallery.goToPhoto", { n: i + 1 })}
-                  onClick={() => jumpTo(i)}
-                  className={`block h-1.5 rounded-full transition-all ${
-                    i === activeDot
-                      ? "w-5 bg-white"
-                      : "w-1.5 bg-white/55 hover:bg-white/85"
-                  }`}
-                />
-              ))}
-            </div>
+            {/* Dots, under the photo on the page; the modal has the thumbnails. */}
+            {!modal && (
+              <div className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1.5 backdrop-blur-md ring-1 ring-white/15">
+                {photos.slice(0, 12).map((p, i) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    aria-label={t("gallery.goToPhoto", { n: i + 1 })}
+                    onClick={() => jumpTo(i)}
+                    className={`block h-1.5 rounded-full transition-all ${
+                      i === activeDot
+                        ? "w-5 bg-white"
+                        : "w-1.5 bg-white/55 hover:bg-white/85"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
 
       {/* Clickable thumbnail strip — jump straight to a photo. */}
       {loop && (
-        <div className="hide-scrollbar flex gap-2 overflow-x-auto px-4 pt-3">
+        <div className={`hide-scrollbar flex gap-2 overflow-x-auto ${modal ? "justify-center px-4 pt-3" : "px-4 pt-3 lg:px-0"}`}>
           {photos.map((p, i) => {
             const src = propertyPhotoUrl(p.storage_path);
             return (
@@ -222,18 +265,19 @@ export function PhotoCarousel({
                 key={p.id}
                 type="button"
                 aria-label={t("gallery.goToPhoto", { n: i + 1 })}
+                aria-current={i === activeDot ? "true" : undefined}
                 onClick={() => jumpTo(i)}
-                className={`relative aspect-square w-16 shrink-0 overflow-hidden rounded-xl transition ${
+                className={`relative aspect-[4/3] w-[72px] shrink-0 overflow-hidden rounded-lg transition ${
                   i === activeDot
-                    ? "ring-2 ring-[var(--gold)]"
-                    : "opacity-70 ring-1 ring-border hover:opacity-100"
-                }`}
+                    ? "ring-2 ring-[var(--foreground)] ring-offset-2 ring-offset-[var(--background)]"
+                    : "opacity-60 hover:opacity-100"
+                } ${modal ? "ring-offset-black" : ""}`}
               >
                 <Image
                   src={src}
                   alt=""
                   fill
-                  sizes="64px"
+                  sizes="72px"
                   className="object-cover"
                 />
               </button>

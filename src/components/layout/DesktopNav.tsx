@@ -3,7 +3,7 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Optional } from "@/components/ui/Optional";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
@@ -51,25 +51,29 @@ const NotificationBell = dynamic(
  * The old paths still match below: an auction-era bookmark or notification
  * should not land on an unlit nav either.
  */
-const LINKS: { href: "/" | "/annonces" | "/account/activity"; key: "home" | "browse" | "activity" }[] = [
-  { href: "/", key: "home" },
-  { href: "/annonces", key: "browse" },
-  { href: "/account/activity", key: "activity" },
+/**
+ * The links a property site is navigated by: what you came to do (buy, rent),
+ * who sells (the agences) and the offer for them (Pro). « Accueil » is the
+ * logo, « Explorer » is the search box beside these, and « Favoris » stays in
+ * the account menu and on the phone's bar — the three used to take the nav's
+ * whole width and said nothing a visitor does not already know.
+ */
+type NavLink = { key: "buy" | "rent" | "agencies" | "pro"; href: string; deal?: "sale" | "rent" };
+const LINKS: NavLink[] = [
+  { key: "buy", href: "/annonces?deal=sale", deal: "sale" },
+  { key: "rent", href: "/annonces?deal=rent", deal: "rent" },
+  { key: "agencies", href: "/agences" },
+  { key: "pro", href: "/pro" },
 ];
 
-function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
-  if (href === "/annonces") {
-    return (
-      pathname === "/annonces" ||
-      // …but not the sell form: « Explorer » lit up while publishing.
-      (pathname.startsWith("/annonces/") && pathname !== "/annonces/nouvelle") ||
-      pathname === "/properties" ||
-      pathname.startsWith("/properties/") ||
-      pathname.startsWith("/auctions")
-    );
+/** `deal` is the catalogue's `?deal=` (QueryFromUrl): « Acheter » lights on the sales, « Louer » on the rentals. */
+function isActive(pathname: string, link: NavLink, deal: string | null): boolean {
+  if (link.deal) {
+    // The old explore paths still redirect here; a bookmark should not land on an unlit nav.
+    const catalogue = pathname === "/annonces" || pathname === "/properties" || pathname.startsWith("/auctions");
+    return catalogue && deal === link.deal;
   }
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return pathname === link.href || pathname.startsWith(`${link.href}/`);
 }
 
 /**
@@ -85,14 +89,17 @@ function isActive(pathname: string, href: string): boolean {
  * page among them) render on the client. Here only this, which draws nothing,
  * waits for the browser.
  */
-function QueryFromUrl({ onQuery }: { onQuery: (q: string) => void }) {
-  const q = useSearchParams().get("q") ?? "";
+function QueryFromUrl({ onQuery }: { onQuery: (q: string, deal: string | null) => void }) {
+  const sp = useSearchParams();
+  const q = sp.get("q") ?? "";
+  // The deal too, so « Acheter » / « Louer » light up with the catalogue.
+  const deal = sp.get("deal");
   const pathname = usePathname();
   // The path too: words typed and not sent are dropped on leaving the page,
   // as before.
   useEffect(() => {
-    onQuery(q);
-  }, [q, pathname, onQuery]);
+    onQuery(q, deal);
+  }, [q, deal, pathname, onQuery]);
   return null;
 }
 
@@ -107,6 +114,11 @@ export function DesktopNav() {
   const installOn = useSetting("feature_install_button");
   // What the results are filtered by; QueryFromUrl keeps it on the address.
   const [q, setQ] = useState("");
+  const [deal, setDeal] = useState<string | null>(null);
+  const onUrlState = useCallback((nextQ: string, nextDeal: string | null) => {
+    setQ(nextQ);
+    setDeal(nextDeal);
+  }, []);
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -148,7 +160,7 @@ export function DesktopNav() {
     <header className="fixed inset-x-0 top-0 z-40 hidden h-[var(--desktop-nav-h)] items-center border-b border-border bg-white lg:flex">
       <div className="mx-auto flex h-full w-full max-w-[var(--max-w-wide)] items-center gap-6 px-8">
         {/* ── Left zone: brand + primary links ── */}
-        <div className="flex shrink-0 items-center gap-7">
+        <div className="flex h-full shrink-0 items-center gap-6">
           {/* Mark + name, matching the mobile TopBar. The logo file is a
               portrait lockup whose wordmark is illegible at nav height — see
               the note in TopBar.tsx. */}
@@ -167,21 +179,20 @@ export function DesktopNav() {
             </span>
           </Link>
 
-          <nav className="flex items-center gap-1" aria-label={tShell("mainNav")}>
+          {/* The page you are on is underlined, the way a newspaper's section
+              is: an ink rule under the word, not a tinted pill around it. */}
+          <nav className="flex h-full items-stretch gap-0.5" aria-label={tShell("mainNav")}>
             {LINKS.map((l) => {
-              const active = isActive(pathname, l.href);
+              const active = isActive(pathname, l, deal);
               return (
                 <Link
-                  key={l.href}
-                  href={l.href}
-                  // Behind sign-in: for a guest, prefetching it on every page
-                  // fetches nothing but the redirect to /login.
-                  prefetch={l.href.startsWith("/account") ? false : undefined}
+                  key={l.key}
+                  href={l.href as never}
                   aria-current={active ? "page" : undefined}
-                  className={`rounded-full px-3.5 py-2 text-[13.5px] font-semibold transition-colors ${
+                  className={`inline-flex items-center border-b-2 px-3 pt-0.5 text-[13.5px] font-semibold transition-colors ${
                     active
-                      ? "bg-gold-faint text-[var(--gold)]"
-                      : "text-[var(--foreground-muted)] hover:bg-surface-2 hover:text-[var(--foreground)]"
+                      ? "border-foreground text-foreground"
+                      : "border-transparent text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
                   }`}
                 >
                   {t(l.key)}
@@ -193,7 +204,7 @@ export function DesktopNav() {
 
         {/* ── Center zone: real search — submits to the explore surface ── */}
         <Suspense fallback={null}>
-          <QueryFromUrl onQuery={setQ} />
+          <QueryFromUrl onQuery={onUrlState} />
         </Suspense>
         <form onSubmit={submitSearch} className="flex flex-1 justify-center" role="search">
           <div className="relative flex w-full max-w-md items-center">

@@ -14,6 +14,7 @@ import { canonicalDelegation, shownDelegation } from "@/lib/delegations";
 import { routing } from "@/i18n/routing";
 import { Ltr } from "@/components/ui/Ltr";
 import { PhotoCarousel } from "@/components/listing/PhotoCarousel";
+import { GalleryMosaic } from "@/components/listing/GalleryMosaic";
 import { ContactReveal } from "./ContactReveal";
 import { StickyContact } from "./StickyContact";
 import { ReportListing } from "./ReportListing";
@@ -29,7 +30,32 @@ import { shareText } from "@/lib/share";
 import { RelatedListings } from "@/components/listing/RelatedListings";
 import { ViewTracker } from "@/components/listing/ViewTracker";
 import { AdSlot } from "@/components/ads/AdSlot";
-import { BadgeCheck, MapPin, Clock, ShieldAlert, Hash, Home, Store, PencilLine } from "lucide-react";
+import {
+  ArrowUpDown,
+  BadgeCheck,
+  Bath,
+  BedDouble,
+  Building2,
+  CalendarDays,
+  Car,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  FileCheck,
+  Flame,
+  Hammer,
+  Hash,
+  Home,
+  MapPin,
+  PencilLine,
+  Plug,
+  Ruler,
+  ShieldAlert,
+  Snowflake,
+  Store,
+  Trees,
+  Waves,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { jsonLdSafe } from "@/lib/jsonld";
 import { breadcrumbLd, listingDescription } from "@/lib/seo";
@@ -37,11 +63,7 @@ import { breadcrumbLd, listingDescription } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 /**
- * One annonce — the page the catalogue has been missing.
- *
- * `/annonces` has listed the fixed-price catalogue since the pivot began, and
- * every card led nowhere: there was no detail page to open. The moderation
- * queue could publish a listing that no buyer could read.
+ * One annonce.
  *
  * Note what is NOT on this page: the seller's phone number. `contact_phone` is
  * granted to service_role alone (0146), so it is not in the HTML and cannot
@@ -49,16 +71,13 @@ export const dynamic = "force-dynamic";
  * rate-limited. On a property site that is not a nicety: a list of everyone
  * selling land in a governorate is something an agency would pay for.
  *
- * Differences from Mazed Auto's equivalent, all deliberate:
- *
- *   • No `condition`. Neuf / occasion does not describe a building; a property
- *     carries `year_built` and its category attributes instead.
- *   • No fitments. A part fits a car; a villa fits nothing.
- *   • No seller avatar. Mazed Immo has no avatars bucket, so the contact card shows
- *     an initial rather than a broken image frame.
- *   • No inspection sheet. Mazed Immo's inspection reports belong to the auction
- *     product, which is being retired; wiring them in here would tie the new
- *     catalogue to the old one.
+ * THE LOOK (2026-10-31 redesign), after the pages of Zillow, Idealista and
+ * Airbnb: the photos first — a swipe carousel with « 3 / 12 » on a phone, a
+ * mosaic that opens a full-screen gallery on a desktop — then what it is,
+ * where, and the three figures a buyer sorts on; the price and the way to
+ * reach the seller in a card that follows the page down on a desktop and
+ * sits under the title on a phone, where a bar at the foot keeps the number
+ * one tap away.
  */
 
 type Row = {
@@ -106,6 +125,24 @@ const CONTACT_CARD_ID = "annonce-contact";
 // `listing.previewStatus.<status>` in messages/.
 
 const OG_LOCALE: Record<string, string> = { fr: "fr_TN", ar: "ar_TN" };
+
+/** An icon for the facts a category defines, by field key; a tick for the rest. */
+const FACT_ICONS: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
+  area_sqm: Ruler,
+  rooms: BedDouble,
+  bathrooms: Bath,
+  floor: Building2,
+  year_built: CalendarDays,
+  buildable: Hammer,
+  titled: FileCheck,
+  serviced: Plug,
+  air_conditioning: Snowflake,
+  heating: Flame,
+  elevator: ArrowUpDown,
+  parking: Car,
+  garden: Trees,
+  pool: Waves,
+};
 
 // `cache`: generateMetadata and the page both need the listing for the same
 // request, and without it that was two identical database round trips.
@@ -317,7 +354,7 @@ export default async function AnnoncePage({
       // the living room — and isolated so RTL does not turn « S+2 » into « 2+S ».
       const value =
         d.field_key === "rooms" && /^\d+$/.test(String(raw))
-          ? `\u2066S+${raw}\u2069`
+          ? `⁦S+${raw}⁩`
           : raw === true
           ? t("yes")
           : d.options?.find((o) => o.value === String(raw))?.label ??
@@ -327,9 +364,23 @@ export default async function AnnoncePage({
       const label = tRoot.has(`attributes.${d.field_key}`)
         ? tRoot(`attributes.${d.field_key}`)
         : d.label;
-      return { label, value };
+      return { key: d.field_key, label, value };
     })
-    .filter(Boolean) as { label: string; value: string }[];
+    .filter(Boolean) as { key: string; label: string; value: string }[];
+
+  // The three figures a buyer sorts on, in one line under the title.
+  const area = Number(attrs.area_sqm);
+  const rooms = Number(attrs.rooms);
+  const baths = Number(attrs.bathrooms);
+  const keyFacts: { key: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; text: React.ReactNode }[] = [
+    ...(Number.isFinite(area) && area > 0
+      ? [{ key: "area", Icon: Ruler, text: t("areaValue", { area: formatNumber(area, locale) }) }]
+      : []),
+    ...(Number.isFinite(rooms) && rooms > 0 ? [{ key: "rooms", Icon: BedDouble, text: <Ltr>S+{rooms}</Ltr> }] : []),
+    ...(Number.isFinite(baths) && baths > 0
+      ? [{ key: "baths", Icon: Bath, text: tRoot("catalogue.specBathrooms", { count: baths }) }]
+      : []),
+  ];
 
   // Structured data. A plain Offer, not the auction-shaped Product with bidding
   // fields that /auctions/[id] emits — this listing has a price, not a bid.
@@ -404,7 +455,7 @@ export default async function AnnoncePage({
   // A phone reads this page as one column. A desktop should not: a single
   // narrow column leaves half a 1280px screen empty and pushes the price and
   // the seller's number below the fold — the one thing the buyer came for. So
-  // the desktop puts them in a rail that follows you down the page.
+  // the desktop puts them in a card that follows you down the page.
   //
   // Written once and placed twice rather than duplicated by hand. Only one copy
   // is ever visible (the other is display:none at that width).
@@ -420,21 +471,19 @@ export default async function AnnoncePage({
 
   const priceBlock = (
     <div>
-      <div className="mazed-tabular gradient-gold-text text-[34px] font-extrabold leading-none">
-        {l.price_on_request || l.price == null
-          ? t("priceOnRequest")
-          : `${formatTND(Number(l.price), locale)} `}
-        {!l.price_on_request && l.price != null && (
-          <span className="text-[13px] font-bold uppercase tracking-[0.16em] text-gold/80">
-            {rent ? t("tndPerMonth") : tRoot("common.tnd")}
-          </span>
-        )}
-      </div>
+      {l.price_on_request || l.price == null ? (
+        <p className="text-[24px] font-extrabold leading-none text-foreground lg:text-[28px]">{t("priceOnRequest")}</p>
+      ) : (
+        <p dir="ltr" className="mazed-tabular flex flex-wrap items-baseline gap-x-2 text-start text-[30px] font-extrabold leading-none text-foreground lg:text-[34px]">
+          {formatTND(Number(l.price), locale)}
+          <span className="text-[13px] font-bold text-muted">{rent ? t("tndPerMonth") : tRoot("common.tnd")}</span>
+        </p>
+      )}
       {l.negotiable && !l.price_on_request && (
-        <p className="mt-1 text-[12px] text-muted">{t("priceNegotiable")}</p>
+        <p className="mt-1.5 text-[12.5px] text-muted">{t("priceNegotiable")}</p>
       )}
       {rentFacts.length > 0 && (
-        <dl className="mt-3 divide-y divide-border rounded-xl bg-surface-2/60 px-3 ring-1 ring-border">
+        <dl className="mt-4 divide-y divide-border rounded-xl bg-surface-2/60 px-3 ring-1 ring-border">
           {rentFacts.map((f) => (
             <div key={f.label} className="flex items-center justify-between gap-3 py-2 text-[12.5px]">
               <dt className="text-muted">{f.label}</dt>
@@ -459,9 +508,10 @@ export default async function AnnoncePage({
     !l.price_on_request &&
     l.price != null &&
     Number(l.price) >= Math.max(1, settings.credit_min_price);
+
   const ownerCard =
     isOwner && editOn && isEditable(l) ? (
-      <section className="rounded-2xl border border-border bg-surface p-4">
+      <div>
         <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">{t("yourListing")}</p>
         <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{t("yourListingHint")}</p>
         <Link
@@ -473,78 +523,56 @@ export default async function AnnoncePage({
         <Link href={"/account/listings" as never} className="mt-2 block text-center text-[12.5px] font-bold text-muted hover:text-foreground">
           {t("yourListings")}
         </Link>
-      </section>
+      </div>
     ) : null;
 
-  const sellerCard = shop ? (
-    <section className="rounded-2xl border border-border bg-surface p-4">
+  // Who to call, and how. Chrome-less: the phone column puts it in a card
+  // under the price, the desktop in the floating card beside the photos.
+  const sellerBlock = (
+    <div>
       <div className="flex items-center gap-3">
-        <Link href={`/agences/${shop.slug}` as never} className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border">
-          {shop.logo_path ? (
-            // eslint-disable-next-line @next/next/no-img-element -- the shop's logo
-            <img src={propertyPhotoUrl(shop.logo_path, { transform: { width: 100, quality: 75 } })} alt="" className="size-full object-cover" />
-          ) : (
-            <Store className="size-5 text-muted" />
-          )}
-        </Link>
-        <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">{t("shopLabel")}</div>
-          <div className="flex items-center gap-1.5">
-            <Link href={`/agences/${shop.slug}` as never} dir="auto" className="truncate text-[14.5px] font-bold text-foreground hover:underline">
-              {shop.name}
-            </Link>
-            {shop.verified_at && <BadgeCheck className="size-4 shrink-0 text-gold" strokeWidth={2.4} aria-label={t("verifiedShop")} />}
-          </div>
-          {l.contact_name && <div dir="auto" className="truncate text-[12px] text-muted">{l.contact_name}</div>}
-        </div>
-        <FavoriteButton listingId={l.id} initialSaved={saved} loggedIn={user !== null} />
-      </div>
-      <div className="mt-4">
-        <ContactReveal listingId={l.id} showPhone={l.show_phone} />
-        {!isOwner && !isPreview && (
-          <VisitRequest listingId={l.id} loggedIn={!!user} defaultName={visitDefaults.name} defaultPhone={visitDefaults.phone} open={openVisit} />
+        {shop ? (
+          <Link href={`/agences/${shop.slug}` as never} className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border">
+            {shop.logo_path ? (
+              // eslint-disable-next-line @next/next/no-img-element -- the shop's logo
+              <img src={propertyPhotoUrl(shop.logo_path, { transform: { width: 100, quality: 75 } })} alt="" className="size-full object-cover" />
+            ) : (
+              <Store className="size-5 text-muted" />
+            )}
+          </Link>
+        ) : (
+          // An initial, not a photo: Mazed Immo has no avatars bucket, and an empty
+          // frame reads as a broken page rather than as "no picture".
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-surface-2 text-[16px] font-extrabold text-muted ring-1 ring-border">
+            {(l.contact_name ?? "?").trim().charAt(0).toUpperCase() || "?"}
+          </span>
         )}
-        {!isPreview && (
-          <div className="mt-3 flex flex-wrap justify-center gap-2">
-            <CompareToggle listingId={l.id} variant="pill" />
-          </div>
-        )}
-      </div>
-      <Link href={`/agences/${shop.slug}` as never} className="mt-3 block text-center text-[12.5px] font-bold text-gold hover:underline">
-        {t("seeShop")}
-      </Link>
-    </section>
-  ) : (
-    <section className="rounded-2xl border border-border bg-surface p-4">
-      <div className="flex items-center gap-3">
-        {/* An initial, not a photo: Mazed Immo has no avatars bucket, and an empty
-            frame reads as a broken page rather than as "no picture". */}
-        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-surface-2 text-[15px] font-extrabold text-muted ring-1 ring-border">
-          {(l.contact_name ?? "?").trim().charAt(0).toUpperCase() || "?"}
-        </span>
 
         <div className="min-w-0 flex-1">
           <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">
-            {t("seller")}
+            {shop ? t("shopLabel") : t("seller")}
           </div>
           <div className="flex items-center gap-1.5">
-            <span dir="auto" className="truncate text-[14.5px] font-bold text-foreground">
-              {l.contact_name ?? t("privateSeller")}
-            </span>
-            {/* A tick, not a second "Vendeur vérifié" chip — that claim is
-                already made at the top of the page. Here it answers the
-                question being asked at this exact moment: do I call? */}
-            {badge === true && (
-              <BadgeCheck
-                className="size-4 shrink-0 text-gold"
-                strokeWidth={2.4}
-                aria-label={t("verifiedSeller")}
-              />
+            {shop ? (
+              <Link href={`/agences/${shop.slug}` as never} dir="auto" className="truncate text-[15px] font-bold text-foreground hover:underline">
+                {shop.name}
+              </Link>
+            ) : (
+              <span dir="auto" className="truncate text-[15px] font-bold text-foreground">
+                {l.contact_name ?? t("privateSeller")}
+              </span>
+            )}
+            {/* A tick, not a second "vérifié" chip — that claim is already made
+                at the top of the page. Here it answers the question being asked
+                at this exact moment: do I call? */}
+            {(shop ? !!shop.verified_at : badge === true) && (
+              <BadgeCheck className="size-4 shrink-0 text-foreground" strokeWidth={2.4} aria-label={shop ? t("verifiedShop") : t("verifiedSeller")} />
             )}
           </div>
+          {shop && l.contact_name && <div dir="auto" className="truncate text-[12px] text-muted">{l.contact_name}</div>}
         </div>
 
-        <FavoriteButton listingId={l.id} initialSaved={saved} loggedIn={user !== null} />
+        <FavoriteButton listingId={l.id} initialSaved={saved} loggedIn={user !== null} className="ring-1 ring-border" />
       </div>
 
       <div className="mt-4">
@@ -553,17 +581,23 @@ export default async function AnnoncePage({
           <VisitRequest listingId={l.id} loggedIn={!!user} defaultName={visitDefaults.name} defaultPhone={visitDefaults.phone} open={openVisit} />
         )}
         {!isPreview && (
-          <div className="mt-3 flex flex-wrap justify-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+            <ShareButton title={l.title} text={shareWords} />
             <CompareToggle listingId={l.id} variant="pill" />
           </div>
         )}
       </div>
-    </section>
+      {shop && (
+        <Link href={`/agences/${shop.slug}` as never} className="mt-3 block text-center text-[12.5px] font-bold text-foreground underline-offset-4 hover:underline">
+          {t("seeShop")}
+        </Link>
+      )}
+    </div>
   );
 
   const safetyNote = (
     <section className="flex items-start gap-2.5 rounded-2xl bg-surface-2 p-4 ring-1 ring-border">
-      <ShieldAlert className="mt-0.5 size-4 shrink-0 text-muted" />
+      <ShieldAlert className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />
       <div>
         <p className="text-[12.5px] leading-relaxed text-muted">{t("safetyNote")}</p>
         {/* Only a live annonce can be reported, and never by its own seller. */}
@@ -572,10 +606,13 @@ export default async function AnnoncePage({
     </section>
   );
 
+  const place = governorateLabel(l.governorate, locale);
+  const delegation = shownDelegation(l.governorate, l.delegation, locale);
+  // An old free-text délégation off the list reads as the quartier it was.
+  const quarter = l.address ?? (l.delegation && !canonicalDelegation(l.governorate, l.delegation) ? l.delegation : null);
+
   return (
-    // max-w-3xl up to lg so tablets keep a readable measure; the wider frame
-    // only appears where there are two columns to put in it.
-    <main className="mx-auto max-w-3xl pb-16 lg:max-w-6xl">
+    <main className="mx-auto max-w-[var(--max-w-wide)] pb-16 lg:px-8">
       <script
         type="application/ld+json"
         // jsonLdSafe: the title and description are the seller's words, and a
@@ -589,7 +626,7 @@ export default async function AnnoncePage({
             breadcrumbLd([
               { name: tRoot("nav.home"), url: absoluteUrl(`/${locale}`) },
               { name: tRoot("catalogue.breadcrumb"), url: absoluteUrl(`/${locale}/annonces`) },
-              { name: governorateLabel(l.governorate, locale), url: absoluteUrl(`/${locale}/annonces?gov=${encodeURIComponent(l.governorate)}`) },
+              { name: place, url: absoluteUrl(`/${locale}/annonces?gov=${encodeURIComponent(l.governorate)}`) },
               { name: l.title, url: absoluteUrl(`/${locale}/annonces/${l.id}`) },
             ]),
           ),
@@ -601,7 +638,7 @@ export default async function AnnoncePage({
       {!isPreview && <ViewTracker listingId={l.id} />}
 
       {isPreview && (
-        <div className="mx-4 mt-3 rounded-2xl border border-dashed border-gold-soft bg-gold-faint px-4 py-3 lg:mx-0">
+        <div className="mx-4 mt-3 rounded-2xl border border-dashed border-border bg-surface-2 px-4 py-3 lg:mx-0">
           <p className="text-[12.5px] font-bold text-foreground">
             {t("previewTitle", {
               status: t.has(`previewStatus.${l.status}`)
@@ -616,158 +653,177 @@ export default async function AnnoncePage({
           </p>
           <Link
             href={"/account/listings" as never}
-            className="mt-2 inline-flex text-[12.5px] font-bold text-gold hover:underline"
+            className="mt-2 inline-flex text-[12.5px] font-bold text-foreground underline-offset-4 hover:underline"
           >
             {t("manageListings")}
           </Link>
         </div>
       )}
 
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-8 lg:px-6 lg:pt-6">
+      {/* Where this page sits — a desktop reads it; a phone has the back button. */}
+      <nav aria-label={tRoot("catalogue.breadcrumb")} className="hidden pt-5 lg:block">
+        <ol className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted">
+          <li><Link href="/" className="hover:text-foreground">{tRoot("nav.home")}</Link></li>
+          <li aria-hidden><ChevronRight className="size-3.5 rtl:-scale-x-100" /></li>
+          <li><Link href="/annonces" className="hover:text-foreground">{tRoot("catalogue.breadcrumb")}</Link></li>
+          <li aria-hidden><ChevronRight className="size-3.5 rtl:-scale-x-100" /></li>
+          <li><Link href={`/annonces?gov=${encodeURIComponent(l.governorate)}` as never} className="hover:text-foreground">{place}</Link></li>
+          <li aria-hidden><ChevronRight className="size-3.5 rtl:-scale-x-100" /></li>
+          <li dir="auto" className="max-w-[40ch] truncate font-semibold text-foreground" aria-current="page">{l.title}</li>
+        </ol>
+      </nav>
+
+      {/* ── The photos ── a swipe carousel on a phone, a mosaic on a desktop. */}
+      {photos.length > 0 && (
+        <div className="lg:mt-4">
+          <div className="lg:hidden">
+            <PhotoCarousel photos={photos} alt={l.title} autoplay={false} counter />
+          </div>
+          <GalleryMosaic photos={photos} alt={l.title} />
+        </div>
+      )}
+
+      <div className="mt-5 lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-12">
         {/* ── Left: the thing being sold ── */}
-        <div className="min-w-0">
-          {photos.length > 0 && (
-            <div className="overflow-hidden lg:rounded-2xl lg:border lg:border-border">
-              <PhotoCarousel photos={photos} alt={l.title} />
-            </div>
+        <div className="min-w-0 px-4 lg:px-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-extrabold",
+                rent ? "bg-foreground text-[var(--background)]" : "bg-surface-2 text-foreground ring-1 ring-border",
+              )}
+            >
+              {rent ? t("forRent") : t("forSale")}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-bold text-muted ring-1 ring-border">
+              <Home className="size-3" aria-hidden />
+              {category ? categoryLabel(category, locale) : t("categoryFallback")}
+            </span>
+            {reserved && (
+              <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-extrabold text-amber-700 ring-1 ring-amber-500/30">
+                {t("reserved")}
+              </span>
+            )}
+            {badge === true && !shop && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-extrabold text-foreground ring-1 ring-border">
+                <BadgeCheck className="size-3.5" strokeWidth={2.4} aria-hidden /> {t("verifiedSeller")}
+              </span>
+            )}
+          </div>
+
+          {/* break-words: a title can arrive as one unbroken string. */}
+          <h1 dir="auto" className="mazed-h2 mt-3 break-words text-[24px] text-foreground lg:text-[30px]">
+            {l.title}
+          </h1>
+
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted">
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="size-3.5" aria-hidden /> {place}
+              {delegation ? ` · ${delegation}` : ""}
+              {quarter ? ` · ${quarter}` : ""}
+            </span>
+            {l.published_at && (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="size-3.5" aria-hidden />
+                {t("publishedOn", { date: formatDate(l.published_at, locale, "short") })}
+              </span>
+            )}
+            {/* Printed where a buyer will find it when they call: "je vous
+                appelle pour la MZ-00042". A uuid cannot be read down a phone
+                line, and property here is sold by telephone. */}
+            {l.reference && (
+              <span
+                className="mazed-tabular inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-[12px] font-semibold tracking-wide text-foreground ring-1 ring-border"
+                title={t("referenceTitle")}
+              >
+                <Hash className="size-3" aria-hidden />
+                <Ltr>{l.reference}</Ltr>
+              </span>
+            )}
+          </div>
+
+          {/* The figures a buyer sorts on, before anything else. */}
+          {keyFacts.length > 0 && (
+            <ul className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-border py-3 text-[14px] font-bold text-foreground">
+              {keyFacts.map((f) => (
+                <li key={f.key} className="mazed-tabular inline-flex items-center gap-2">
+                  <f.Icon className="size-[18px] text-muted" strokeWidth={2} aria-hidden />
+                  {f.text}
+                </li>
+              ))}
+            </ul>
           )}
 
-          <div className="px-4 lg:px-0">
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-bold text-muted ring-1 ring-border">
-                <Home className="size-3" />
-                {category ? categoryLabel(category, locale) : t("categoryFallback")}
-              </span>
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-extrabold ring-1",
-                  rent ? "bg-gold-faint text-gold ring-gold-soft" : "bg-surface-2 text-muted ring-border",
-                )}
-              >
-                {rent ? t("forRent") : t("forSale")}
-              </span>
-              {reserved && (
-                <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-extrabold text-amber-600 ring-1 ring-amber-500/30">
-                  {t("reserved")}
-                </span>
-              )}
-              {badge === true && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gold-faint px-2.5 py-1 text-[11px] font-extrabold text-gold ring-1 ring-gold-soft">
-                  <BadgeCheck className="size-3.5" strokeWidth={2.4} /> {t("verifiedSeller")}
-                </span>
-              )}
-            </div>
+          {/* On a phone the price and the seller sit here, in reading order.
+              On a desktop they are in the floating card instead. */}
+          <div className="mt-5 lg:hidden">{priceBlock}</div>
+          <div id={CONTACT_CARD_ID} className="mt-5 rounded-2xl border border-border bg-surface p-4 lg:hidden">
+            {ownerCard ?? sellerBlock}
+          </div>
 
-            {/* break-words: a title can arrive as one unbroken string. */}
-            <h1 dir="auto" className="mt-2 break-words text-[24px] font-extrabold leading-tight tracking-tight lg:text-[28px]">
-              {l.title}
-            </h1>
-
-            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-muted">
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="size-3.5" /> {governorateLabel(l.governorate, locale)}
-                {shownDelegation(l.governorate, l.delegation, locale) ? ` · ${shownDelegation(l.governorate, l.delegation, locale)}` : ""}
-                {/* An old free-text délégation off the list reads as the quartier it was. */}
-                {(l.address ?? (l.delegation && !canonicalDelegation(l.governorate, l.delegation) ? l.delegation : null)) ? ` · ${l.address ?? l.delegation}` : ""}
-              </span>
-              {l.published_at && (
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="size-3.5" />
-                  {t("publishedOn", { date: formatDate(l.published_at, locale, "short") })}
-                </span>
-              )}
-              {/* Printed where a buyer will find it when they call: "je vous
-                  appelle pour la MZ-00042". A uuid cannot be read down a phone
-                  line, and property here is sold by telephone. */}
-              {l.reference && (
-                <span
-                  className="mazed-tabular inline-flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 font-semibold tracking-wide text-foreground ring-1 ring-border"
-                  title={t("referenceTitle")}
-                >
-                  <Hash className="size-3" />
-                  <Ltr>{l.reference}</Ltr>
-                </span>
-              )}
-            </div>
-
-            {/* « Partager » at the top, where the eye lands, not only in the
-                seller's card further down (the owner, 2026-10-28): the link
-                goes out to WhatsApp, Facebook or the clipboard with the title,
-                the price and the place. */}
-            {!isPreview && (
-              <div className="mt-3">
-                <ShareButton title={l.title} text={shareWords} />
-              </div>
-            )}
-
-            {/* On a phone the price and the seller sit here, in reading order.
-                On a desktop they are in the rail instead. */}
-            <div className="mt-3 lg:hidden">{priceBlock}</div>
-            <div id={CONTACT_CARD_ID} className="mt-5 lg:hidden">{ownerCard ?? sellerCard}</div>
-
-            {specs.length > 0 && (
-              <section className="mt-6">
-                <h2 className="mazed-eyebrow">{t("specsTitle")}</h2>
-                <dl className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {specs.map((s) => (
-                    <div
-                      key={s.label}
-                      className="min-w-0 rounded-xl bg-surface-2 p-3 ring-1 ring-border"
-                    >
-                      <dt className="text-[10.5px] uppercase tracking-[0.1em] text-muted">
-                        {s.label}
-                      </dt>
-                      <dd className="mt-0.5 break-words text-[13.5px] font-bold text-foreground">
-                        {s.value}
-                      </dd>
+          {specs.length > 0 && (
+            <section className="mt-8">
+              <h2 className="mazed-h2 text-[18px] text-foreground">{t("specsTitle")}</h2>
+              <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {specs.map((s) => {
+                  const Icon = FACT_ICONS[s.key] ?? CheckCircle2;
+                  return (
+                    <div key={s.key} className="flex min-w-0 items-center gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
+                      <span className="inline-grid size-9 shrink-0 place-items-center rounded-full bg-surface-2 text-foreground">
+                        <Icon className="size-4" strokeWidth={2} aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <dt className="truncate text-[11px] uppercase tracking-[0.08em] text-muted">{s.label}</dt>
+                        <dd className="break-words text-[14px] font-bold text-foreground">{s.value}</dd>
+                      </div>
                     </div>
-                  ))}
-                </dl>
-              </section>
-            )}
+                  );
+                })}
+              </dl>
+            </section>
+          )}
 
-            {l.description && (
-              <section className="mt-6">
-                <h2 className="mazed-eyebrow">{t("descriptionTitle")}</h2>
-                {/* Sellers paste links, and a URL is one unbreakable word. With
-                    nothing to break it, the paragraph sets its own minimum
-                    width and pushes the whole page sideways. `anywhere` breaks
-                    it and, unlike `break-word`, also stops it inflating the
-                    column's min-content width inside the grid. */}
-                <p dir="auto" className="mt-2 whitespace-pre-line text-[14px] leading-relaxed text-foreground/85 [overflow-wrap:anywhere]">
-                  {l.description}
-                </p>
-              </section>
-            )}
+          {l.description && (
+            <section className="mt-8">
+              <h2 className="mazed-h2 text-[18px] text-foreground">{t("descriptionTitle")}</h2>
+              {/* Sellers paste links, and a URL is one unbreakable word. With
+                  nothing to break it, the paragraph sets its own minimum
+                  width and pushes the whole page sideways. `anywhere` breaks
+                  it and, unlike `break-word`, also stops it inflating the
+                  column's min-content width inside the grid. */}
+              <p dir="auto" className="mt-3 max-w-prose whitespace-pre-line text-[15px] leading-relaxed text-foreground/85 [overflow-wrap:anywhere]">
+                {l.description}
+              </p>
+            </section>
+          )}
 
-            {creditOn && (
-              <CreditSimulator
-                price={Number(l.price)}
-                defaults={{
-                  ratePercent: settings.credit_rate_percent,
-                  years: settings.credit_years,
-                  downPercent: settings.credit_down_percent,
-                }}
-              />
-            )}
+          {creditOn && (
+            <CreditSimulator
+              price={Number(l.price)}
+              defaults={{
+                ratePercent: settings.credit_rate_percent,
+                years: settings.credit_years,
+                downPercent: settings.credit_down_percent,
+              }}
+            />
+          )}
 
-            {/* An advertising space, once the annonce has been read: below its
-                description, never in the seller's card. Not on a seller's own
-                preview — nobody the advertiser pays to reach sees it. */}
-            {!isPreview && (
-              <AdSlot placement="listing" className="mt-8" sizes="(min-width: 1024px) 760px, 100vw" />
-            )}
+          {/* An advertising space, once the annonce has been read: below its
+              description, never in the seller's card. Not on a seller's own
+              preview — nobody the advertiser pays to reach sees it. */}
+          {!isPreview && (
+            <AdSlot placement="listing" className="mt-8" sizes="(min-width: 1024px) 760px, 100vw" />
+          )}
 
-            <div className="mt-8 lg:hidden">{safetyNote}</div>
+          <div className="mt-8 lg:hidden">{safetyNote}</div>
 
-            <div className="mt-6">
-              <Link
-                href={"/annonces" as never}
-                className="text-[13px] font-bold text-gold hover:underline"
-              >
-                {t("backToCatalogue")}
-              </Link>
-            </div>
+          <div className="mt-6">
+            <Link
+              href={"/annonces" as never}
+              className="text-[13px] font-bold text-foreground underline-offset-4 hover:underline"
+            >
+              {t("backToCatalogue")}
+            </Link>
           </div>
         </div>
 
@@ -775,8 +831,10 @@ export default async function AnnoncePage({
                the decision to call is made while reading the caractéristiques,
                not after scrolling back up to find the button. ── */}
         <aside className="hidden lg:sticky lg:top-24 lg:block">
-          {priceBlock}
-          <div className="mt-4">{ownerCard ?? sellerCard}</div>
+          <div className="mazed-float p-5">
+            {priceBlock}
+            <div className="mt-5 border-t border-border pt-5">{ownerCard ?? sellerBlock}</div>
+          </div>
           <div className="mt-4">{safetyNote}</div>
         </aside>
       </div>

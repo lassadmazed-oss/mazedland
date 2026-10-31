@@ -51,14 +51,15 @@ export type HomeListingRow = {
   promo_home_featured?: boolean | null;
   promo_banner?: boolean | null;
   promo_expires_at?: string | null;
+  /** Published for an agence (0173): the card says so. */
+  shop_id?: string | null;
 };
 
-// Trimmed select — only the columns AnnonceCard, the hero builder and the rail
-// plan read.
+// Trimmed select — only the columns AnnonceCard and the rail plan read.
 const HOME_LISTING_COLUMNS = `
   id, title, price, price_on_request, negotiable, governorate, delegation,
   reference, attributes, published_at, created_at, deal_type, availability,
-  promo_home_featured, promo_banner, promo_expires_at,
+  promo_home_featured, promo_banner, promo_expires_at, shop_id,
   photos:listing_photos ( storage_path, sort_order )
 `;
 const HOME_LISTING_SELECT = `${HOME_LISTING_COLUMNS},

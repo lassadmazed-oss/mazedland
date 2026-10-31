@@ -138,12 +138,12 @@ export function FavoriteButton({
       disabled={busy}
       aria-pressed={saved}
       aria-label={saved ? t("remove") : t("add")}
+      // White glass over a photo, ink heart; filled red once saved — the one
+      // place the accent means « yours » rather than « live ».
       className={cn(
-        "inline-flex items-center justify-center rounded-full border backdrop-blur-md transition",
+        "inline-flex items-center justify-center rounded-full bg-white/95 text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.18)] backdrop-blur-md transition hover:bg-white active:scale-95",
         px,
-        saved
-          ? "border-[var(--gold-soft)] bg-[var(--gold-faint)] text-[var(--gold)]"
-          : "border-white/20 bg-black/45 text-white hover:bg-black/65",
+        saved && "text-[var(--accent)]",
         className,
       )}
     >

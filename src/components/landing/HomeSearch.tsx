@@ -7,7 +7,7 @@ import { normalizeSearchQuery } from "@/lib/search";
 import { isMostlyArabic } from "@/lib/search/script";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { delegationLabel, delegationsOf } from "@/lib/delegations";
-import { Search, MapPin } from "lucide-react";
+import { Search, MapPin, Home } from "lucide-react";
 import { SelectMenu, type SelectOption } from "@/components/ui/SelectMenu";
 import { TYPE_TO_CATEGORY } from "@/lib/catalog/browse";
 import { useSetting } from "@/components/settings/SettingsProvider";
@@ -22,25 +22,34 @@ const TYPE_KEYS = [
   "apartment", "villa", "house", "land", "farm", "commercial", "office", "warehouse",
 ] as const;
 
+/** The deal tabs of the hero search; the text is `catalogue.deal.<key>`. */
+const DEALS = ["all", "sale", "rent"] as const;
+type Deal = (typeof DEALS)[number];
+
 /**
  * Home search — keyword + governorate + type, submits to /annonces.
  *
- * This is the marketplace's missing primary action: an inline search
- * the moment a user lands. Without it the home reads as a magazine
- * (browse-by-scroll); with it, intent-driven users can jump straight
- * to a filtered catalogue in one tap.
+ * This is the marketplace's primary action: an inline search the moment a
+ * visitor lands. Without it the home reads as a magazine (browse-by-scroll);
+ * with it, intent-driven users jump straight to a filtered catalogue.
+ *
+ * Three layouts:
+ *   "hero"    — the redesign's floating white card (2026-10-31): a deal
+ *               switch (tout · à vendre · à louer) over one row of keyword,
+ *               governorate, type and the button; the row stacks on a phone.
+ *               The same card on the phone and the desktop.
+ *   "stacked" — the older two-row card (kept for any caller that still asks).
+ *   "bar"     — the older single desktop row.
  *
  * Submits via `router.push` so the next-intl locale prefix is added
  * automatically and the navigation stays inside the SPA cache.
  */
 export function HomeSearch({
   isRTL: _isRTL,
-  layout = "stacked",
+  layout = "hero",
 }: {
   isRTL: boolean;
-  /** "stacked" — the original mobile two-row card (default, untouched).
-   *  "bar" — a single horizontal row for the desktop hero. */
-  layout?: "stacked" | "bar";
+  layout?: "stacked" | "bar" | "hero";
 }) {
   void _isRTL;
   const router = useRouter();
@@ -51,6 +60,7 @@ export function HomeSearch({
   const [gov, setGov] = useState("");
   const [del, setDel] = useState("");
   const [type, setType] = useState("");
+  const [deal, setDeal] = useState<Deal>("all");
   // A délégation belongs to one governorate: changing it starts over.
   const pickGov = (g: string) => {
     setGov(g);
@@ -79,6 +89,7 @@ export function HomeSearch({
     // Strip ilike wildcards + `or()` separators here so the catalogue's
     // server query doesn't have to re-clean the same input.
     const cleanQ = normalizeSearchQuery(q);
+    if (deal !== "all") params.set("deal", deal);
     if (cleanQ) params.set("q", cleanQ);
     if (gov) params.set("gov", gov);
     if (gov && del) params.set("del", del);
@@ -100,6 +111,96 @@ export function HomeSearch({
       return;
     }
     router.push((qs ? `/annonces?${qs}` : "/annonces") as `/annonces`);
+  }
+
+  if (layout === "hero") {
+    const field =
+      "tap-target flex h-12 w-full items-center gap-2 rounded-xl bg-surface-2 px-3.5 text-[13.5px] font-bold text-foreground transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40 hover:bg-surface-3/60";
+    return (
+      <form onSubmit={submit} className="mazed-float p-2.5 text-start sm:p-3" role="search">
+        {/* Buy or rent first: the one question that changes every other filter. */}
+        <div role="tablist" aria-label={t("catalogue.dealAria")} className="mazed-segment w-full sm:w-auto">
+          {DEALS.map((k) => (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={deal === k}
+              onClick={() => setDeal(k)}
+              className="tap-target"
+            >
+              {t(`catalogue.deal.${k}`)}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-2.5 flex flex-col gap-2 lg:flex-row lg:items-stretch">
+          {/* Keyword absorbs the free space. */}
+          <div className="relative min-w-0 flex-1">
+            <Search
+              className="pointer-events-none absolute top-1/2 size-[18px] -translate-y-1/2 text-muted ltr:left-4 rtl:right-4"
+              strokeWidth={2}
+              aria-hidden
+            />
+            {/* 16px text: iOS zooms the whole page into any smaller input on focus. */}
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder={t("search.placeholder")}
+              aria-label={t("search.placeholder")}
+              enterKeyHint="search"
+              className="h-12 w-full rounded-xl bg-surface-2 text-[16px] text-foreground placeholder:text-muted focus:bg-surface focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/30 ltr:pl-11 ltr:pr-12 rtl:pl-12 rtl:pr-11 lg:text-[14.5px]"
+            />
+            <VoiceSearchButton className="absolute end-1 top-1/2 -translate-y-1/2" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 lg:flex lg:shrink-0">
+            <div className="min-w-0 lg:w-48">
+              <SelectMenu
+                value={gov}
+                onChange={pickGov}
+                options={govOptions}
+                ariaLabel={t("search.governorate")}
+                icon={<MapPin className="size-4 shrink-0 text-muted" strokeWidth={2} aria-hidden />}
+                triggerClassName={field}
+              />
+            </div>
+            <div className="min-w-0 lg:w-44">
+              <SelectMenu
+                value={type}
+                onChange={setType}
+                options={typeOptions}
+                ariaLabel={t("search.type")}
+                align="end"
+                icon={<Home className="size-4 shrink-0 text-muted" strokeWidth={2} aria-hidden />}
+                triggerClassName={field}
+              />
+            </div>
+            {gov && (
+              <div className="col-span-2 min-w-0 lg:w-48">
+                <SelectMenu
+                  value={del}
+                  onChange={setDel}
+                  options={delOptions}
+                  ariaLabel={t("search.delegation")}
+                  icon={<MapPin className="size-4 shrink-0 text-muted" strokeWidth={2} aria-hidden />}
+                  triggerClassName={field}
+                />
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="mazed-btn-luxe tap-target inline-flex h-12 shrink-0 items-center justify-center gap-2 px-6 text-[14px]"
+          >
+            <Search className="size-4" strokeWidth={2.5} aria-hidden />
+            {t("search.submit")}
+          </button>
+        </div>
+      </form>
+    );
   }
 
   // Desktop hero variant — one horizontal row: keyword | governorate |
@@ -148,7 +249,7 @@ export function HomeSearch({
         />
         <button
           type="submit"
-          className="mazed-gold-fill inline-flex shrink-0 items-center gap-2 rounded-xl px-7 text-[13px] font-extrabold shadow-[var(--shadow-gold)] ring-1 ring-black/10 transition active:scale-[0.98]"
+          className="mazed-btn-luxe inline-flex shrink-0 items-center gap-2 px-7 text-[13px] font-extrabold transition active:scale-[0.98]"
         >
           <Search className="size-4" strokeWidth={2.5} />
           {t("search.submit")}
@@ -186,7 +287,7 @@ export function HomeSearch({
           </div>
           <button
             type="submit"
-            className="mazed-gold-fill tap-target inline-flex size-11 shrink-0 items-center justify-center rounded-full shadow-[var(--shadow-gold)] ring-1 ring-black/10"
+            className="mazed-btn-luxe tap-target inline-flex size-11 shrink-0 items-center justify-center rounded-full"
             aria-label={t("search.submit")}
           >
             <Search className="size-4" strokeWidth={2.5} />

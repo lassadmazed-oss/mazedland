@@ -1,4 +1,17 @@
 {
+  "footer": {
+    "explore": "Explorer",
+    "buy": "Acheter",
+    "rent": "Louer",
+    "agencies": "Les agences",
+    "publish": "Publier une annonce",
+    "company": "Mazed Immo",
+    "pro": "Espace Pro",
+    "info": "Informations",
+    "language": "Langue",
+    "rights": "© {year} {name}. Tous droits réservés.",
+    "country": "Tunisie"
+  },
   "brand": {
     "name": "Mazed Immo",
     "titleSuffix": "Petites annonces immobilières en Tunisie",
@@ -30,6 +43,10 @@
     "back": "Retour",
     "skipToContent": "Aller au contenu",
     "tabs": {
+      "buy": "Acheter",
+      "rent": "Louer",
+      "agencies": "Agences",
+      "pro": "Pro",
       "home": "Accueil",
       "browse": "Explorer",
       "sell": "Publier",
@@ -39,6 +56,8 @@
       "publishCta": "Publier une annonce"
     },
     "pageTitles": {
+      "agences": "Agences",
+      "pro": "Mazed Immo Pro",
       "annonces": "Annonce",
       "annoncesNew": "Publier une annonce",
       "properties": "Biens",
@@ -618,6 +637,11 @@
     }
   },
   "home": {
+    "heroKicker": "Immobilier en Tunisie",
+    "sellBandTitle": "Vous vendez ou louez un bien ?",
+    "sellBandBody": "Publiez votre annonce en quelques minutes : vos photos, votre prix. Elle est vérifiée avant publication.",
+    "sellBandCta": "Publier mon annonce",
+    "quickLinksTitle": "Raccourcis",
     "endingSoonEyebrow": "À saisir",
     "browseByType": "Parcourir par type",
     "browseByPrice": "Parcourir par prix",
@@ -825,6 +849,9 @@
     }
   },
   "catalogue": {
+    "sortBy": "Trier",
+    "filtersCount": "{count, plural, one {# filtre actif} other {# filtres actifs}}",
+    "resultsIn": "{count, plural, one {# bien} other {# biens}} · {place}",
     "metaTitleDefault": "Annonces immobilières",
     "metaTitleIn": "{what} à {governorate} — Mazed Immo",
     "metaTitleTunisia": "{what} en Tunisie — Mazed Immo",
@@ -927,6 +954,14 @@
     "metaDescriptionAny": "{title}. Prix affichés, vendeurs joignables directement, en français et en arabe."
   },
   "listing": {
+    "gallery": {
+      "counter": "{n} / {total}",
+      "all": "Toutes les photos",
+      "photos": "{count, plural, one {# photo} other {# photos}}",
+      "close": "Fermer"
+    },
+    "factsTitle": "L'essentiel",
+    "breadcrumbHome": "Accueil",
     "metaNotFound": "Annonce introuvable — Mazed Immo",
     "metaDescriptionFallback": "{title} à {governorate}.",
     "priceOnRequest": "Prix sur demande",
@@ -4002,6 +4037,8 @@
       "other": "Autre document"
     },
     "landing": {
+      "popular": "Le plus choisi",
+      "planCta": "Commencer avec ce plan",
       "metaTitle": "Mazed Immo Pro — votre agence immobilière",
       "metaDescription": "Agences, promoteurs et lotisseurs : une page à votre nom, vos annonces dans le catalogue Mazed Immo et une équipe qui publie avec vous.",
       "title": "Votre agence a sa vitrine sur Mazed Immo",
@@ -4541,6 +4578,14 @@
     }
   },
   "shops": {
+    "contactTitle": "Contacter l'agence",
+    "actions": {
+      "call": "Appeler",
+      "whatsapp": "WhatsApp",
+      "email": "E-mail",
+      "website": "Site web"
+    },
+    "memberSince": "Sur Mazed Immo depuis {year}",
     "metaTitle": "Agences et promoteurs immobiliers en Tunisie",
     "metaDescription": "Les agences immobilières sur Mazed Immo, promoteurs et lotisseurs compris, avec leurs annonces à vendre et à louer.",
     "unavailable": "Service momentanément indisponible.",
@@ -4899,6 +4944,10 @@
     }
   },
   "settingsRegistry": {
+    "catalogue_phone_columns": {
+      "label": "Colonnes du catalogue sur téléphone",
+      "hint": "Une colonne : de grandes photos, comme Idealista. Deux : plus d'annonces par écran, comme Tayara."
+    },
     "groups": {
       "features": {
         "title": "Fonctionnalités",
