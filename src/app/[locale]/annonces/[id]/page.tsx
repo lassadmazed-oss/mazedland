@@ -24,6 +24,7 @@ import { isEditable } from "@/lib/listings/edit";
 import { getSettings } from "@/lib/settings/server";
 import { FavoriteButton } from "@/components/property/FavoriteButton";
 import { ShareButton } from "@/components/listing/ShareButton";
+import { CreditSimulator } from "@/components/listing/CreditSimulator";
 import { shareText } from "@/lib/share";
 import { RelatedListings } from "@/components/listing/RelatedListings";
 import { ViewTracker } from "@/components/listing/ViewTracker";
@@ -449,7 +450,15 @@ export default async function AnnoncePage({
 
   // Its seller sees the way to correct it, not « call » and « visit » (0172) —
   // unless an admin has switched editing off.
-  const editOn = (await getSettings()).feature_listing_edit;
+  const settings = await getSettings();
+  const editOn = settings.feature_listing_edit;
+  // « Simulez votre crédit »: a sale with a price, above the minimum worth a loan.
+  const creditOn =
+    settings.feature_credit_simulator &&
+    !rent &&
+    !l.price_on_request &&
+    l.price != null &&
+    Number(l.price) >= Math.max(1, settings.credit_min_price);
   const ownerCard =
     isOwner && editOn && isEditable(l) ? (
       <section className="rounded-2xl border border-border bg-surface p-4">
@@ -729,6 +738,17 @@ export default async function AnnoncePage({
                   {l.description}
                 </p>
               </section>
+            )}
+
+            {creditOn && (
+              <CreditSimulator
+                price={Number(l.price)}
+                defaults={{
+                  ratePercent: settings.credit_rate_percent,
+                  years: settings.credit_years,
+                  downPercent: settings.credit_down_percent,
+                }}
+              />
             )}
 
             {/* An advertising space, once the annonce has been read: below its
