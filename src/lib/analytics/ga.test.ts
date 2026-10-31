@@ -164,6 +164,14 @@ describe("track", () => {
     flushPending();
     expect(win.gtag).toHaveBeenCalledWith("event", "search", { search_term: "villa" });
 
+    // Not ready yet when the next one comes: the earlier event still goes first.
+    delete win.gtag;
+    track("phone_reveal", { listing_id: "a" });
+    const inOrder = vi.fn();
+    win.gtag = inOrder;
+    track("contact_call", { listing_id: "a" });
+    expect(inOrder.mock.calls.map((c) => c[1])).toEqual(["phone_reveal", "contact_call"]);
+
     const later = vi.fn();
     delete win.gtag;
     track("search", { search_term: "maison" });

@@ -135,6 +135,8 @@ export function track(name: string, params: EventParams = {}): void {
   const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""));
   const gtag = (window as GaWindow).gtag;
   if (typeof gtag === "function") {
+    // What waited goes first, so the order stays the order things happened.
+    flushPending();
     gtag("event", name, clean);
     return;
   }

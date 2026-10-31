@@ -81,8 +81,10 @@ export function GoogleAnalytics() {
   if (!allowed || !id || onConsole) return null;
   return (
     <>
-      <Script id="ga-init" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: gaInitScript(id) }} onReady={flushPending} />
-      <Script id="ga-gtag" strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${id}`} />
+      <Script id="ga-init" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: gaInitScript(id) }} />
+      {/* The queue waits for gtag.js, not the inline script: next/script calls
+          an inline script's onReady before it puts it in the page. */}
+      <Script id="ga-gtag" strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${id}`} onReady={flushPending} />
     </>
   );
 }
