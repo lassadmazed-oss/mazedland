@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { BadgeCheck, ChevronRight, Store } from "lucide-react";
+import { BadgeCheck, ChevronRight, Store, Zap } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { governorateLabel } from "@/lib/tunisia";
@@ -48,7 +48,14 @@ export async function FeaturedAgencies({ shops }: { shops: FeaturedShop[] }) {
                 <span className="block truncate text-[11.5px] text-muted">
                   {s.city ? `${delegationLabel(s.city, locale)}, ` : ""}{governorateLabel(s.governorate, locale)}
                 </span>
-                <span className="block text-[11.5px] font-bold text-foreground">{t("listingsCount", { count: s.listings })}</span>
+                <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] font-bold text-foreground">
+                  {t("listingsCount", { count: s.listings })}
+                  {s.reactive && (
+                    <span className="mazed-tone-ok inline-flex items-center gap-0.5 rounded-full px-1.5 py-px text-[10.5px] font-bold leading-tight">
+                      <Zap className="size-2.5" strokeWidth={2.6} aria-hidden /> {t("reactiveShort")}
+                    </span>
+                  )}
+                </span>
               </span>
             </Link>
           </li>

@@ -17,6 +17,7 @@ import { ProClients, type ClientRow } from "./ProClients";
 import { SuggestListing } from "./SuggestListing";
 import { ProjectsTab } from "./ProjectsTab";
 import { ReportsTab } from "./ReportsTab";
+import { ImportListings } from "./ImportListings";
 import { parsePeriod } from "@/lib/pro/reports";
 import { MAX_SUGGESTIONS_PER_REQUEST, rankForRequest } from "@/lib/pro/suggest";
 import { toMatchable } from "@/lib/requests/server";
@@ -27,7 +28,8 @@ import { tunisDay, type LeadStage } from "@/lib/visits";
 import { getSettings } from "@/lib/settings/server";
 import { paymentsAreOpen } from "@/lib/payments/server";
 import { PaymentsClosedNotice } from "@/components/payments/PaymentsClosedNotice";
-import { BadgeCheck, ExternalLink, Plus } from "lucide-react";
+import { BadgeCheck, ExternalLink, Plus, Zap } from "lucide-react";
+import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 
 export const dynamic = "force-dynamic";
 
@@ -249,6 +251,8 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
 
       {tab === "annonces" && (
         <section className="mt-5">
+          {/* A file saved from Excel becomes drafts (the agencies' bulk import). */}
+          {settings.feature_listing_import && shop.status === "approved" && can(role, "publish") && <ImportListings shopId={shop.id} />}
           {listings.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-[13px] text-muted">{t("noListings")}</p>
           ) : (
@@ -269,6 +273,8 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
                     {/* The edit form is its author's (0172). */}
                     {settings.feature_listing_edit && l.status === "published" && l.seller_id === user!.id && <Link href={`/annonces/nouvelle?edit=${l.id}` as never} className="text-foreground hover:underline">{t("edit")}</Link>}
                     {l.status === "published" && <Link href={`/annonces/${l.id}` as never} className="text-gold hover:underline">{t("view")}</Link>}
+                    {/* A draft is resumed in the form: the photos and the attestation are what it lacks (an imported one has all the rest). */}
+                    {l.status === "draft" && l.seller_id === user!.id && <Link href={`/annonces/nouvelle?draft=${l.id}` as never} className="text-gold hover:underline">{t("continueDraft")}</Link>}
                     {/* The agence pushes its annonce into its groups from here (the owner, 2026-10-28). */}
                     {l.status === "published" && <ShareButton variant="text" href={`/${locale}/annonces/${l.id}`} title={l.title} />}
                   </div>
@@ -335,14 +341,30 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
   // ── Tabs that read more ────────────────────────────────────────────────────
   async function VisitsTab({ shopId }: { shopId: string }) {
     const visits = await loadVisits(admin!, { shop: shopId });
-    return visits.length === 0 ? (
-      <p className="mt-5 rounded-2xl border border-dashed border-border p-8 text-center text-[13px] text-muted">{t("noVisits")}</p>
-    ) : (
-      <section className="mt-5 space-y-3">
-        {visits.map((v) => (
-          <VisitCard key={v.id} visit={v} side="seller" locale={locale} />
-        ))}
-      </section>
+    // « Agence réactive »: where the agence stands, and what the badge asks (src/lib/pro/reactivity.ts).
+    const r = settings.feature_agency_reactive ? (await loadReactivity(admin!, [shopId], reactiveRules(settings))).get(shopId) : null;
+    const standing = r && (r.reactive ? "earned" : r.total < r.rules.minRequests ? "tooFew" : "below");
+    const reactiveNote = r && standing
+      ? t(`reactive.${standing}`, { fast: r.fast, total: r.total, rate: r.rate ?? 0, hours: r.rules.hours, days: r.rules.days, min: r.rules.minRequests, minRate: r.rules.minRate })
+      : null;
+    return (
+      <>
+        {reactiveNote && (
+          <section className={`mt-5 flex items-start gap-3 rounded-2xl p-4 text-[12.5px] leading-relaxed ${r?.reactive ? "mazed-tone-ok" : "bg-surface-2 text-foreground ring-1 ring-border"}`}>
+            <Zap className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <p><span className="font-extrabold">{t("reactive.title")}</span> · {reactiveNote}</p>
+          </section>
+        )}
+        {visits.length === 0 ? (
+          <p className="mt-5 rounded-2xl border border-dashed border-border p-8 text-center text-[13px] text-muted">{t("noVisits")}</p>
+        ) : (
+          <section className="mt-5 space-y-3">
+            {visits.map((v) => (
+              <VisitCard key={v.id} visit={v} side="seller" locale={locale} />
+            ))}
+          </section>
+        )}
+      </>
     );
   }
 

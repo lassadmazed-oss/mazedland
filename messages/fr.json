@@ -3390,7 +3390,8 @@
     "admin_payment_credit_note": "Avoir émis",
     "admin_shop_offer_plan": "Période offerte à une agence",
     "admin_shop_request_receipt": "Reçu d'une demande d'agence refusé",
-    "admin_shop_request_fix": "Demande d'agence renvoyée pour correction"
+    "admin_shop_request_fix": "Demande d'agence renvoyée pour correction",
+    "shop_import": "Annonces importées par une agence"
   },
   "adminApi": {
     "bulk": {
@@ -4233,7 +4234,14 @@
       "periodOffered": "Offerte par Mazed Immo",
       "fixCta": "Corriger l'agence",
       "resendReceipt": "Envoyer un nouveau reçu",
-      "planRequestWaiting": "Votre demande avec l'abonnement {plan} attend l'équipe : rien d'autre à choisir pour l'instant."
+      "planRequestWaiting": "Votre demande avec l'abonnement {plan} attend l'équipe : rien d'autre à choisir pour l'instant.",
+      "continueDraft": "Ajouter les photos et envoyer",
+      "reactive": {
+        "title": "Votre réactivité",
+        "earned": "vous avez le badge « Agence réactive » : {fast, plural, one {# demande de visite} other {# demandes de visite}} sur {total} traitées en moins de {hours} h ces {days} derniers jours. Il se voit sur vos annonces et sur votre page, et vous passe devant dans le bandeau des agences recommandées.",
+        "tooFew": "le badge « Agence réactive » demande au moins {min} demandes de visite traitées sur {days} jours ; vous en avez {total}. Confirmer ou décliner dans les {hours} h suffit.",
+        "below": "{fast, plural, =0 {Aucune demande de visite} one {# demande de visite} other {# demandes de visite}} sur {total} traitées en moins de {hours} h ({rate} %). Le badge « Agence réactive » demande {minRate} % : confirmez ou déclinez les prochaines plus vite."
+      }
     },
     "clients": {
       "open": "En cours",
@@ -4497,6 +4505,59 @@
       },
       "toDashboard": "Mon espace Pro",
       "restored": "Votre demande en cours a été reprise."
+    },
+    "import": {
+      "title": "Importer plusieurs annonces",
+      "intro": "Vos annonces sont déjà dans Excel ? Chaque ligne devient un brouillon : il ne lui manque que les photos.",
+      "step1": "1. Téléchargez le modèle",
+      "step1Hint": "Il s'ouvre dans Excel. Type, Prix et Surface sont obligatoires ; toutes les autres colonnes sont facultatives. Une colonne que nous ne connaissons pas est simplement ignorée.",
+      "model": "Télécharger le modèle",
+      "step2": "2. Choisissez votre fichier, ou collez vos lignes",
+      "step2Hint": "Dans Excel : Fichier → Enregistrer sous → CSV. Vous pouvez aussi copier les cellules (avec la ligne des titres) et les coller ci-dessous.",
+      "chooseFile": "Choisir un fichier .csv",
+      "pasteLabel": "Ou collez les lignes copiées depuis Excel",
+      "check": "Vérifier",
+      "checking": "Vérification…",
+      "summary": "{ok, plural, =0 {Aucune ligne prête} one {# ligne prête} other {# lignes prêtes}} · {error, plural, =0 {aucune à corriger} one {# à corriger} other {# à corriger}} · {duplicate, plural, =0 {aucune déjà présente} one {# déjà présente} other {# déjà présentes}}",
+      "line": "Ligne {line}",
+      "status": {
+        "ok": "Prête",
+        "error": "À corriger",
+        "duplicate": "Déjà présente"
+      },
+      "onRequest": "Prix sur demande",
+      "tnd": "TND",
+      "moreRows": "{count, plural, one {Et # autre ligne.} other {Et # autres lignes.}}",
+      "create": "{count, plural, one {Créer # brouillon} other {Créer # brouillons}}",
+      "creating": "Création…",
+      "fixHint": "Les lignes à corriger ne sont pas importées : corrigez-les dans le fichier et recommencez, les lignes déjà créées ne seront pas doublées.",
+      "done": "{count, plural, one {# brouillon créé.} other {# brouillons créés.}}",
+      "doneHint": "Ouvrez chacun dans la liste ci-dessous (« Ajouter les photos et envoyer ») : ajoutez les photos, confirmez, et l'annonce est relue avant d'être publiée.",
+      "another": "Importer un autre fichier",
+      "file": {
+        "empty": "Le fichier est vide.",
+        "no_rows": "Le fichier n'a que la ligne des titres : ajoutez au moins une annonce.",
+        "missing_columns": "Colonnes obligatoires absentes : {columns}.",
+        "too_many_rows": "Trop de lignes : {max} au plus par fichier. Coupez-le en deux.",
+        "too_big": "Le fichier est trop volumineux.",
+        "feature_off": "L'import est désactivé pour le moment.",
+        "nothing_to_import": "Aucune ligne prête à importer.",
+        "generic": "L'import n'a pas abouti. Réessayez."
+      },
+      "issue": {
+        "deal_unknown": "Transaction non reconnue : « {value} » (Vente ou Location).",
+        "type_missing": "Type de bien manquant.",
+        "type_unknown": "Type non reconnu : « {value} » (Appartement, Villa, Maison, Terrain, Ferme, Local commercial, Bureau, Dépôt).",
+        "governorate_unknown": "Gouvernorat non reconnu : « {value} ».",
+        "price_missing": "Prix manquant (ou écrivez « sur demande »).",
+        "price_invalid": "Prix illisible : « {value} ».",
+        "answer_missing": "Information manquante : {value}.",
+        "answer_invalid": "Valeur impossible — {value}.",
+        "answer_unclear": "Réponse oui / non attendue — {value}.",
+        "title_short": "Titre trop court (3 caractères au moins).",
+        "price_low": "Prix très bas ({value} TND) : vérifiez qu'il ne manque pas de zéros.",
+        "price_high": "Loyer très élevé ({value} TND par mois) : vérifiez-le."
+      }
     }
   },
   "proApi": {
@@ -4536,7 +4597,9 @@
       },
       "outcome": "Choisissez ce que devient le paiement.",
       "requestNeedsPayments": "Cette demande comprend un paiement : il faut aussi l'accès « Paiements ».",
-      "requestDeciding": "Un autre administrateur traite ce paiement : rechargez la page."
+      "requestDeciding": "Un autre administrateur traite ce paiement : rechargez la page.",
+      "importNotOpen": "L'import n'est possible que pour une agence ouverte.",
+      "importTooManyDrafts": "Trop de brouillons : {drafts} en cours + {count} à créer, pour {capacity} au plus. Envoyez ou supprimez des brouillons d'abord."
     },
     "leadErrors": {
       "name": "Indiquez un nom (2 lettres au moins).",
@@ -4614,7 +4677,10 @@
       "onRequest": "Prix sur demande"
     },
     "featuredTitle": "Agences recommandées",
-    "featuredAll": "Toutes les agences"
+    "featuredAll": "Toutes les agences",
+    "reactiveBadge": "Agence réactive",
+    "reactiveShort": "Réactive",
+    "reactiveProof": "Répond vite : {fast} sur {total} demandes de visite traitées en moins de {hours} h (sur {days} jours)."
   },
   "adminShops": {
     "unavailable": "Service indisponible.",
@@ -5450,6 +5516,38 @@
     "credit_min_price": {
       "label": "Prix minimum pour le simulateur",
       "hint": "En dessous de ce prix, une annonce n'a pas de simulateur de crédit."
+    },
+    "feature_listing_import": {
+      "label": "Import d'annonces par fichier",
+      "hint": "Dans l'espace agence : un fichier CSV (ou des lignes collées depuis Excel) devient des brouillons d'annonces, à qui il ne manque que les photos."
+    },
+    "import_max_rows": {
+      "label": "Lignes par fichier importé",
+      "hint": "Le nombre maximal d'annonces qu'un fichier peut contenir. Les brouillons restent limités par les places du plan de l'agence."
+    },
+    "feature_agency_reactive": {
+      "label": "Badge « Agence réactive »",
+      "hint": "Une agence qui répond vite à ses demandes de visite gagne un badge, affiché sur ses annonces, sur sa page et dans le bandeau des agences recommandées. Il se calcule seul : personne ne l'attribue."
+    },
+    "reactive_hours": {
+      "label": "Délai de réponse du badge",
+      "hint": "Une demande de visite doit recevoir une réponse (confirmée ou déclinée) dans ce délai pour compter comme rapide."
+    },
+    "reactive_min_rate": {
+      "label": "Part de réponses rapides",
+      "hint": "Le pourcentage de demandes traitées dans le délai qu'il faut pour avoir le badge."
+    },
+    "reactive_min_requests": {
+      "label": "Demandes minimum pour le badge",
+      "hint": "Un badge ne se calcule pas sur une ou deux demandes : il faut au moins ce nombre de demandes jugées sur la période."
+    },
+    "reactive_days": {
+      "label": "Période du badge",
+      "hint": "Les demandes de ces derniers jours comptent, les plus anciennes sont oubliées : le badge se gagne et se perd."
+    },
+    "agency_strip_reactive_first": {
+      "label": "Agences réactives en premier",
+      "hint": "Dans le bandeau des agences recommandées, celles qui ont le badge passent devant ; l'ordre tourne chaque jour dans chaque groupe."
     }
   },
   "ads": {

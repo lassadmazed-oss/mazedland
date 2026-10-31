@@ -6,6 +6,9 @@ import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { governorateLabel } from "@/lib/tunisia";
 import { delegationLabel } from "@/lib/delegations";
 import { ArrowUpRight, BadgeCheck, Store } from "lucide-react";
+import { getSettings } from "@/lib/settings/server";
+import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
+import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +46,9 @@ export default async function ShopsPage() {
     const { data: rows } = await admin.from("listings").select("shop_id").eq("status", "published").in("shop_id", shops.map((s) => s.id));
     for (const r of (rows ?? []) as { shop_id: string }[]) counts.set(r.shop_id, (counts.get(r.shop_id) ?? 0) + 1);
   }
+  // « Agence réactive »: earned by answering visit requests fast (src/lib/pro/reactivity.ts).
+  const settings = await getSettings();
+  const reactivity = settings.feature_agency_reactive ? await loadReactivity(admin, shops.map((s) => s.id), reactiveRules(settings)) : new Map();
 
   return (
     <main className="mx-auto max-w-[var(--max-w-wide)] px-4 py-6 lg:px-8 lg:py-10">
@@ -82,7 +88,10 @@ export default async function ShopsPage() {
                   <span className="mt-0.5 block truncate text-[12.5px] text-muted">
                     {tKinds(s.kind)} · {s.city ? `${delegationLabel(s.city, locale)}, ` : ""}{governorateLabel(s.governorate, locale)}
                   </span>
-                  <span className="mt-1 block text-[12.5px] font-bold text-foreground">{t("listingsCount", { count: counts.get(s.id) ?? 0 })}</span>
+                  <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] font-bold text-foreground">
+                    {t("listingsCount", { count: counts.get(s.id) ?? 0 })}
+                    <ReactiveBadge reactivity={reactivity.get(s.id)} />
+                  </span>
                 </span>
                 <ArrowUpRight className="size-4 shrink-0 text-subtle transition group-hover:text-foreground rtl:-scale-x-100" strokeWidth={2.2} aria-hidden />
               </Link>

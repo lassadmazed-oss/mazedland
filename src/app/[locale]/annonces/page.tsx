@@ -39,6 +39,7 @@ import { breadcrumbLd, catalogueIndexing, itemListLd, pageAlternates } from "@/l
 import { TrackEvent } from "@/components/analytics/TrackEvent";
 import { FeaturedAgencies } from "@/components/agency/FeaturedAgencies";
 import { loadFeaturedShops } from "@/lib/pro/featured";
+import { reactiveRules } from "@/lib/pro/reactivity";
 import { cleanSearchTerm } from "@/lib/analytics/ga";
 
 export const dynamic = "force-dynamic";
@@ -437,6 +438,9 @@ export default async function AnnoncesPage({
         minQuota: settings.agency_strip_min_quota,
         max: settings.agency_strip_max,
         governorate: sp.gov ?? null,
+        reactive: settings.feature_agency_reactive
+          ? { rules: reactiveRules(settings), first: settings.agency_strip_reactive_first }
+          : null,
       })
     : [];
 
