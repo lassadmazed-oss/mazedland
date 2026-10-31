@@ -340,7 +340,8 @@ async function loadDetail(
     }),
   );
 
-  const [listingRes, productRes, invoiceRes] = await Promise.all([
+  const shopId = r.kind === "subscription" && typeof r.metadata?.shop_id === "string" ? r.metadata.shop_id : null;
+  const [listingRes, productRes, invoiceRes, shopRes] = await Promise.all([
     r.metadata?.listing_id
       ? admin
           .from("listings")
@@ -356,7 +357,12 @@ async function loadDetail(
           .maybeSingle()
       : Promise.resolve({ data: null }),
     admin.from("invoices").select("id, number").eq("payment_id", r.id).maybeSingle(),
+    // An agence still waiting: its plan is decided with it, from Agences.
+    shopId && /^[0-9a-f-]{36}$/i.test(shopId)
+      ? admin.from("shops").select("id, name, status").eq("id", shopId).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
+  const shop = shopRes.data as { id: string; name: string; status: string } | null;
 
   const listing = listingRes.data as { id: string; title: string; status: string } | null;
   const product = productRes.data as { name_fr: string; name_ar: string | null } | null;
@@ -390,5 +396,6 @@ async function loadDetail(
     invoice,
     creditNote: (note as { id: string; number: string; reason: string | null } | null) ?? null,
     lines,
+    agenceRequest: shop?.status === "pending" ? { shopId: shop.id, name: shop.name } : null,
   };
 }

@@ -19,6 +19,10 @@ const IDENTITY = ["name", "legal_name", "legal_id"] as const;
  * business until an admin looks again: the mark comes off and the admins
  * are told (the QA tour, 2026-10-30, kept the badge through a change of
  * both). Contacts and the page's text change freely.
+ *
+ * An agence still waiting that the console sent back « à corriger » (its
+ * motif in rejection_reason, the agence request): saving it clears the motif
+ * and tells the admins the request is to look at again.
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -36,12 +40,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!update.logo_path) delete update.logo_path;
   if (!update.cover_path) delete update.cover_path;
 
-  const { data: stored } = await admin.from("shops").select("name, legal_name, legal_id, verified_at").eq("id", id).maybeSingle();
+  const { data: stored } = await admin.from("shops").select("name, legal_name, legal_id, verified_at, status, rejection_reason").eq("id", id).maybeSingle();
   const changed = stored?.verified_at ? IDENTITY.filter((k) => (stored[k] ?? null) !== (parsed.value[k] ?? null)) : [];
   if (changed.length > 0) {
     update.verified_at = null;
     update.verified_by = null;
   }
+  // The console asked for a correction (« à corriger », the agence request):
+  // saving is the answer, and the request goes back to the admins.
+  const corrected = stored?.status === "pending" && Boolean(stored.rejection_reason);
+  if (corrected) update.rejection_reason = null;
 
   if (typeof body.slug === "string" && body.slug.trim()) {
     const slug = body.slug.trim().toLowerCase();
@@ -56,6 +64,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { error } = await admin.from("shops").update(update).eq("id", id);
   if (error) return fail("shop_update_failed", 500, error);
   logAction(req, user, "shop.update", { id });
+  if (corrected) {
+    const name = parsed.value.name;
+    await admin
+      .rpc("_notify_admins", {
+        p_kind: "admin_shop_pending",
+        p_title: "Agence corrigée — à revoir",
+        p_body: `« ${name} » a corrigé son agence : la demande est à revoir.`,
+        p_link: `/admin/agences?id=${id}`,
+        p_payload: { vars: { variant: "fixed", name } },
+      })
+      .then(() => {}, () => {});
+  }
   if (changed.length > 0) {
     const was = stored?.name ?? "";
     await admin

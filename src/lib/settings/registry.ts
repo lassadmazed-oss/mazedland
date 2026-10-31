@@ -22,6 +22,10 @@ export const SETTINGS = {
   feature_compare: { group: "features", type: "bool", default: true, client: true },
   feature_requests: { group: "features", type: "bool", default: true, client: true, href: "/admin/demandes" },
   feature_pro_signup: { group: "features", type: "bool", default: true, client: true, href: "/admin/agences" },
+  // Opening an agence asks for its plan and the plan's receipt in the same
+  // form, sent as one request the console decides whole (the owner,
+  // 2026-10-31). Off: the agence alone, its plan chosen and paid after.
+  feature_pro_signup_plan: { group: "features", type: "bool", default: true, href: "/admin/agences" },
   feature_promos: { group: "features", type: "bool", default: true, client: true, href: "/admin/offres" },
   social_enabled: { group: "features", type: "bool", default: true, href: "/admin/social" },
   ai_enabled: { group: "features", type: "bool", default: true },
@@ -95,6 +99,9 @@ export const SETTINGS = {
   plan_renew_days: { group: "publication", type: "int", default: 5, min: 1, max: 30, unit: "days", choices: [3, 5, 7, 15] },
   // « Offrir une période » in the agences console: how long the offered plan runs (src/lib/pro/offer.ts).
   founding_offer_months: { group: "publication", type: "int", default: 3, min: 1, max: 12, unit: "months", choices: [1, 2, 3, 6, 12] },
+  // « Envoyer sans payer » under the agence request: the agence comes alone,
+  // for the founding offer the console then gives (« Offrir une période »).
+  pro_signup_pay_later: { group: "publication", type: "bool", default: true },
 
   // ── Buyers: visits, compare, demandes.
   visits_max_slots: { group: "buyers", type: "int", default: 3, min: 1, max: 5, client: true },
