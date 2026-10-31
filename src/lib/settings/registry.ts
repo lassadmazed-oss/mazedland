@@ -63,6 +63,8 @@ export const SETTINGS = {
   // running plan is big enough (agency_strip_min_quota), in an order that turns
   // each day (src/lib/pro/featured.ts).
   feature_agency_strip: { group: "features", type: "bool", default: true, href: "/admin/agences" },
+  // « Simulez votre crédit » on an annonce for sale (src/lib/credit.ts).
+  feature_credit_simulator: { group: "features", type: "bool", default: true },
   // The admins hear of a crash in production the first time it happens (0185).
   feature_error_alerts: { group: "features", type: "bool", default: true, href: "/admin/activity?type=error" },
 
@@ -116,6 +118,12 @@ export const SETTINGS = {
   // The strip's size, and the smallest plan that earns a place in it: the plan's
   // annonces (10 Starter and up, 40 Pro and up, 120 Business only).
   agency_strip_max: { group: "buyers", type: "int", default: 6, min: 2, max: 12, choices: [4, 6, 8, 12] },
+  // What the credit simulator opens on. The rate is indicative: the bank sets the real one.
+  credit_rate_percent: { group: "buyers", type: "number", default: 10, min: 1, max: 30, step: 0.5, unit: "percent" },
+  credit_years: { group: "buyers", type: "int", default: 20, min: 5, max: 30, unit: "years", choices: [10, 15, 20, 25] },
+  credit_down_percent: { group: "buyers", type: "int", default: 20, min: 0, max: 90, unit: "percent", choices: [10, 20, 30, 40, 50] },
+  // Below this price a loan is not what the buyer is asking about: no simulator.
+  credit_min_price: { group: "buyers", type: "int", default: 30000, min: 0, max: 5000000, unit: "tnd" },
   agency_strip_min_quota: { group: "buyers", type: "int", default: 40, min: 1, max: 1000, choices: [10, 40, 120] },
 
   // ── How people reach Mazed Immo.

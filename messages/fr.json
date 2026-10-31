@@ -1030,7 +1030,22 @@
     "yourListingHint": "Une erreur dans le prix, la surface ou les photos ? Corrigez-la : notre équipe vérifie la modification, et l'annonce revient en ligne dès qu'elle est validée.",
     "editYourListing": "Modifier l'annonce",
     "yourListings": "Mes annonces",
-    "promoted": "Mise en avant"
+    "promoted": "Mise en avant",
+    "credit": {
+      "title": "Simulez votre crédit",
+      "summary": "Environ {amount} par mois",
+      "tnd": "TND",
+      "perMonth": "par mois",
+      "down": "Apport",
+      "years": "Durée",
+      "yearsValue": "{count} ans",
+      "rate": "Taux annuel",
+      "borrowed": "Montant emprunté",
+      "downPayment": "Votre apport",
+      "interest": "Intérêts",
+      "total": "Total remboursé",
+      "disclaimer": "Estimation indicative, hors assurance et frais de dossier. Le taux réel dépend de votre banque et de votre profil."
+    }
   },
   "listingApi": {
     "tooManyReveals": "Trop de numéros consultés depuis cet appareil. Réessayez plus tard.",
@@ -5155,7 +5170,8 @@
       "per_day": "par jour",
       "seconds": "secondes",
       "hours": "heures",
-      "months": "mois"
+      "months": "mois",
+      "years": "ans"
     },
     "ui": {
       "tabsLabel": "Parties des réglages",
@@ -5370,6 +5386,26 @@
     "agency_strip_min_quota": {
       "label": "Abonnement minimum pour y figurer",
       "hint": "Le nombre d'annonces du plan : 10 = Starter et plus, 40 = Pro et plus, 120 = Business seulement. Une période offerte compte comme un abonnement."
+    },
+    "feature_credit_simulator": {
+      "label": "Simulateur de crédit",
+      "hint": "Sur chaque annonce à vendre : la mensualité d'un crédit pour ce prix, selon l'apport, la durée et le taux choisis. Indicatif."
+    },
+    "credit_rate_percent": {
+      "label": "Taux du simulateur",
+      "hint": "Le taux annuel avec lequel le simulateur s'ouvre. Indicatif : à régler selon ce que proposent les banques. L'acheteur peut le changer."
+    },
+    "credit_years": {
+      "label": "Durée du simulateur",
+      "hint": "La durée du crédit avec laquelle le simulateur s'ouvre."
+    },
+    "credit_down_percent": {
+      "label": "Apport du simulateur",
+      "hint": "La part du prix payée au départ, avec laquelle le simulateur s'ouvre."
+    },
+    "credit_min_price": {
+      "label": "Prix minimum pour le simulateur",
+      "hint": "En dessous de ce prix, une annonce n'a pas de simulateur de crédit."
     }
   },
   "ads": {
