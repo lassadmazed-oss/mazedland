@@ -27,6 +27,8 @@ import { jsonLdSafe } from "@/lib/jsonld";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { breadcrumbLd, catalogueIndexing, itemListLd, pageAlternates } from "@/lib/seo";
 import { TrackEvent } from "@/components/analytics/TrackEvent";
+import { FeaturedAgencies } from "@/components/agency/FeaturedAgencies";
+import { loadFeaturedShops } from "@/lib/pro/featured";
 import { cleanSearchTerm } from "@/lib/analytics/ga";
 
 export const dynamic = "force-dynamic";
@@ -404,6 +406,16 @@ export default async function AnnoncesPage({
     .select("governorate")
     .eq("status", "published");
   const govs = [...new Set((govRows ?? []).map((g) => g.governorate as string))].sort();
+
+  // « Agences recommandées »: the first page only, narrowed to the governorate
+  // when one is chosen (no agence there, no strip).
+  const featured = settings.feature_agency_strip && page === 1
+    ? await loadFeaturedShops(admin, {
+        minQuota: settings.agency_strip_min_quota,
+        max: settings.agency_strip_max,
+        governorate: sp.gov ?? null,
+      })
+    : [];
 
   // The chosen governorate's délégations that have annonces online, in the
   // reader's alphabet — plus the one asked, even with nothing left in it.
@@ -933,6 +945,8 @@ export default async function AnnoncesPage({
           </Link>
         </p>
       )}
+
+      <FeaturedAgencies shops={featured} />
 
       <p className="mt-4 text-[12.5px] text-muted">
         {t("resultCount", { count: total })}

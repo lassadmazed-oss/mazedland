@@ -59,6 +59,10 @@ export const SETTINGS = {
   feature_projects: { group: "features", type: "bool", default: true, client: true, href: "/admin/agences" },
   // What a period brought to an agence's annonces (0183): the « Rapports » tab.
   feature_pro_reports: { group: "features", type: "bool", default: true },
+  // « Agences recommandées » above the catalogue's annonces: the open agences whose
+  // running plan is big enough (agency_strip_min_quota), in an order that turns
+  // each day (src/lib/pro/featured.ts).
+  feature_agency_strip: { group: "features", type: "bool", default: true, href: "/admin/agences" },
   // The admins hear of a crash in production the first time it happens (0185).
   feature_error_alerts: { group: "features", type: "bool", default: true, href: "/admin/activity?type=error" },
 
@@ -109,6 +113,10 @@ export const SETTINGS = {
   compare_max: { group: "buyers", type: "int", default: 3, min: 2, max: 4, client: true },
   requests_max_active: { group: "buyers", type: "int", default: 10, min: 1, max: 50 },
   requests_days: { group: "buyers", type: "int", default: 60, min: 7, max: 365, unit: "days" },
+  // The strip's size, and the smallest plan that earns a place in it: the plan's
+  // annonces (10 Starter and up, 40 Pro and up, 120 Business only).
+  agency_strip_max: { group: "buyers", type: "int", default: 6, min: 2, max: 12, choices: [4, 6, 8, 12] },
+  agency_strip_min_quota: { group: "buyers", type: "int", default: 40, min: 1, max: 1000, choices: [10, 40, 120] },
 
   // ── How people reach Mazed Immo.
   contact_whatsapp: { group: "contact", type: "text", default: "+216 58 415 510", max: 30, ltr: true, client: true },

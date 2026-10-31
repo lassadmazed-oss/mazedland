@@ -4557,7 +4557,9 @@
       "call": "Appeler",
       "seeAgency": "Voir l'agence",
       "onRequest": "Prix sur demande"
-    }
+    },
+    "featuredTitle": "Agences recommandées",
+    "featuredAll": "Toutes les agences"
   },
   "adminShops": {
     "unavailable": "Service indisponible.",
@@ -5356,6 +5358,18 @@
     "pro_signup_pay_later": {
       "label": "« Envoyer sans payer » (offre de lancement)",
       "hint": "Sous la demande d'agence, un lien discret permet de l'envoyer sans payer : la console offre ensuite la période (« Offrir une période ») ou attend le paiement. À couper quand l'offre de lancement se termine."
+    },
+    "feature_agency_strip": {
+      "label": "Agences recommandées dans le catalogue",
+      "hint": "Un bandeau au-dessus des annonces : les agences ouvertes dont l'abonnement en cours est assez grand et qui ont au moins une annonce en ligne. L'ordre tourne chaque jour."
+    },
+    "agency_strip_max": {
+      "label": "Agences dans le bandeau",
+      "hint": "Combien d'agences le bandeau montre au plus."
+    },
+    "agency_strip_min_quota": {
+      "label": "Abonnement minimum pour y figurer",
+      "hint": "Le nombre d'annonces du plan : 10 = Starter et plus, 40 = Pro et plus, 120 = Business seulement. Une période offerte compte comme un abonnement."
     }
   },
   "ads": {
