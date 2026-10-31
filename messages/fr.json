@@ -32,10 +32,11 @@
     "tabs": {
       "home": "Accueil",
       "browse": "Explorer",
-      "sell": "Vendre",
+      "sell": "Publier",
       "watchlist": "Favoris",
       "activity": "Favoris",
-      "account": "Compte"
+      "account": "Compte",
+      "publishCta": "Publier une annonce"
     },
     "pageTitles": {
       "annonces": "Annonce",
@@ -5185,8 +5186,8 @@
       "hint": "Une deuxième façon de publier : le vendeur discute avec l'assistant, surtout à la voix, et appuie sur « Publier » à la fin. Un lien la propose en haut du formulaire. Elle a besoin de l'assistant IA (clé, interrupteur et budget)."
     },
     "publish_chat_default": {
-      "label": "« Vendre » ouvre la version B",
-      "hint": "Allumé : le bouton « Vendre » ouvre « Publier en parlant », le formulaire reste à un lien. Éteint : le formulaire d'abord."
+      "label": "« Publier une annonce » ouvre la version B",
+      "hint": "Allumé : le bouton « Publier une annonce » ouvre « Publier en parlant », le formulaire reste à un lien. Éteint : le formulaire d'abord."
     },
     "feature_error_alerts": {
       "label": "Alertes d'erreur",
