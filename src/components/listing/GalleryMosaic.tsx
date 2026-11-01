@@ -29,7 +29,7 @@ export function GalleryMosaic({ photos, alt }: { photos: Photo[]; alt: string })
   // How many tiles, and how the big one spans.
   const cols = n === 1 ? "grid-cols-1" : n === 2 ? "grid-cols-2" : n <= 4 ? "grid-cols-3" : "grid-cols-4";
   const small = n === 1 ? [] : n === 2 ? photos.slice(1, 2) : n <= 4 ? photos.slice(1, 3) : photos.slice(1, 5);
-  const bigSpan = n === 1 ? "" : n === 2 ? "row-span-2" : "col-span-2 row-span-2";
+  const bigSpan = n === 1 ? "row-span-2" : n === 2 ? "row-span-2" : "col-span-2 row-span-2";
 
   return (
     <div className="hidden lg:block">
