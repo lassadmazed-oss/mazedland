@@ -55,6 +55,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!sb || !base) return staticRoutes;
 
   try {
+    // « Le marché en chiffres » (/marche), while the console keeps it on.
+    const settings = await loadSettings(sb);
+    const marketRoutes: MetadataRoute.Sitemap = settings.public_stats_enabled
+      ? localized(base, "/marche", { changeFrequency: "daily", priority: 0.5 })
+      : [];
+
     // `auctions` joined to `properties`, filtered to `status = 'ready'`, until
     // migration 0153 dropped both. The catch below swallowed the resulting
     // error and returned only the static routes — so since that migration, not
@@ -129,7 +135,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // The guides (0208): the index and every published guide, while the
     // feature is on. Weekly: a guide is written once and touched up.
     const guideRoutes: MetadataRoute.Sitemap = [];
-    if ((await loadSettings(sb)).guides_enabled) {
+    if (settings.guides_enabled) {
       const { data: guides } = await sb
         .from("articles")
         .select("slug, updated_at, published_at")
@@ -150,7 +156,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
 
-    return [...staticRoutes, ...landingRoutes, ...shopRoutes, ...projectRoutes, ...guideRoutes, ...listingRoutes];
+    return [...staticRoutes, ...marketRoutes, ...landingRoutes, ...shopRoutes, ...projectRoutes, ...guideRoutes, ...listingRoutes];
   } catch {
     // Never let a DB hiccup 500 the sitemap — degrade to static routes.
     return staticRoutes;

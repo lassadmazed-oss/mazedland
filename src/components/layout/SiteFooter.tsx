@@ -21,6 +21,7 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 export async function SiteFooter() {
   const t = await getTranslations();
   const year = String(new Date().getFullYear());
+  // « Le marché en chiffres » is listed while the console keeps the page on;
   // « Guides » (0208) once there is one to read and the feature is on.
   const settings = await getSettings();
   const hasGuides = settings.guides_enabled && (await publishedGuides()).length > 0;
@@ -33,6 +34,7 @@ export async function SiteFooter() {
         { href: "/annonces?deal=sale", label: t("footer.buy") },
         { href: "/annonces?deal=rent", label: t("footer.rent") },
         { href: "/agences", label: t("footer.agencies") },
+        ...(settings.public_stats_enabled ? [{ href: "/marche", label: t("footer.market") }] : []),
         { href: "/annonces/nouvelle", label: t("footer.publish") },
       ],
     },

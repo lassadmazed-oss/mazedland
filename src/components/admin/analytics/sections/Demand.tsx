@@ -7,7 +7,7 @@ import type { Period } from "@/lib/analytics/period";
 import { rate } from "@/lib/analytics/shape";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
-import { BarList } from "../Charts";
+import { BarList } from "@/components/charts/Charts";
 import { Card, ErrorNote, errorText, Facts, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
 
 /** The demand: what people search, open, ask for — and how fast agences answer. */

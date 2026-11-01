@@ -5,7 +5,7 @@ import type { Settings } from "@/lib/settings/registry";
 import type { Period } from "@/lib/analytics/period";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
-import { BarList, Bars } from "../Charts";
+import { BarList, Bars } from "@/components/charts/Charts";
 import { Card, ErrorNote, errorText, Facts, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
 
 /** Pro & revenue: the agences by plan, the money in, the documents, the offers. */

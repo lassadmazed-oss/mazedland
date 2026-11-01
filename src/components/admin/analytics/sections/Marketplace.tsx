@@ -7,7 +7,7 @@ import { bandLabel, bandTable, funnelSteps, RENT_BANDS, SALE_BANDS } from "@/lib
 import { formatDate } from "@/lib/utils";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
-import { BarList, Funnel, StackedBars } from "../Charts";
+import { BarList, Funnel, StackedBars } from "@/components/charts/Charts";
 import { Card, Empty, ErrorNote, errorText, Facts, Grid, Section, Table, type TableRow } from "../ui";
 
 const STATUSES = ["published", "pending_review", "pending_payment", "draft", "rejected", "expired", "archived", "sold", "rented"] as const;

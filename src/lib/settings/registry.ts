@@ -79,6 +79,10 @@ export const SETTINGS = {
   feature_credit_simulator: { group: "features", type: "bool", default: true },
   // The admins hear of a crash in production the first time it happens (0185).
   feature_error_alerts: { group: "features", type: "bool", default: true, href: "/admin/activity?type=error" },
+  // « Le marché en chiffres » (/marche): the site's own figures, public —
+  // asking prices, supply and demand by governorate (src/lib/market/stats.ts).
+  // Off: the page answers 404 and every link to it disappears.
+  public_stats_enabled: { group: "features", type: "bool", default: true },
   // « Guides » (0208): the articles written in /admin/contenu and read on
   // /guides. Off: the pages answer not found, the footer link and the
   // « Guides utiles » strips go; what is written stays in the console.
@@ -288,6 +292,13 @@ export const SETTINGS = {
   analytics_gov_demand_min: { group: "analytics", type: "int", default: 20, min: 5, max: 1000, choices: [10, 20, 50, 100] },
   // …with fewer annonces online than this lacks supply.
   analytics_gov_low_supply: { group: "analytics", type: "int", default: 5, min: 1, max: 100, choices: [3, 5, 10, 20] },
+  // ── « Le marché en chiffres » (/marche, src/lib/market/stats.ts).
+  // A median or a demand figure is shown only when at least this many
+  // annonces (or searches, visits, demandes) are behind it — 0207 applies the
+  // rule in SQL; under it the page says there is not enough data yet.
+  public_stats_min_sample: { group: "analytics", type: "int", default: 5, min: 2, max: 100, choices: [3, 5, 10, 20] },
+  // The page's figures are computed again at most this often (kept in analytics_cache).
+  public_stats_cache_minutes: { group: "analytics", type: "int", default: 60, min: 5, max: 1440, unit: "minutes", choices: [15, 30, 60, 180, 360, 1440] },
 
   // ── Paid services (0203, /admin/abonnements): an SMS before Vercel,
   //    Supabase, a domain or a credit runs out. The watchdog in the database

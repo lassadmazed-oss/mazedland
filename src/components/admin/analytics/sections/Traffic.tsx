@@ -6,7 +6,7 @@ import { formatDate } from "@/lib/utils";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
 import { Ga4Connect } from "../Ga4Connect";
-import { LineChart } from "../Charts";
+import { LineChart } from "@/components/charts/Charts";
 import { Card, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
 
 /**

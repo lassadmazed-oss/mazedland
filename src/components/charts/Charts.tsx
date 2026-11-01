@@ -1,13 +1,16 @@
 /**
- * The console's charts: inline SVG, no library. A sparkline for a tile, a
- * line chart for a period against the one before, bars for a day series, a
- * stacked bar for parts of a whole, a funnel for the steps of a form.
+ * The site's charts, inline SVG and HTML, no library: a sparkline for a
+ * tile, a line chart for a period against the one before, bars for a day
+ * series, a stacked bar for parts of a whole, a funnel for the steps of a
+ * form, a ranked list, a few named columns. The console's Statistiques and
+ * the public « marché en chiffres » draw from the same file.
  *
  * One ink for the figures of the period, a dashed grey for the previous
  * one, and the tone colours only where a value means good or bad. Every
- * chart reads left to right whatever the page's direction (`dir="ltr"`):
- * time runs that way in Arabic charts too. Server components, so a page
- * draws them without shipping a byte of JavaScript.
+ * SVG chart reads left to right whatever the page's direction (`dir="ltr"`):
+ * time runs that way in Arabic charts too; the HTML ones follow the page.
+ * Server components, so a page draws them without shipping a byte of
+ * JavaScript.
  */
 
 const INK = "var(--foreground)";
@@ -214,6 +217,50 @@ export function Funnel({ steps, label }: { steps: readonly FunnelStepView[]; lab
         );
       })}
     </svg>
+  );
+}
+
+/**
+ * A few columns, every one named — price bands, a handful of categories —
+ * where `Bars` (a day series) names only its ends. HTML, so it follows the
+ * page's direction and each column is a list item a screen reader can read
+ * with its label and value; the tallest column is full ink, the rest lighter.
+ */
+export function Columns({
+  items,
+  format = (n) => String(n),
+  label,
+  height = 120,
+}: {
+  items: readonly { label: string; value: number }[];
+  format?: (n: number) => string;
+  /** What the chart shows, for a screen reader. */
+  label: string;
+  height?: number;
+}) {
+  const max = Math.max(1, ...items.map((i) => i.value));
+  // The labels wrap onto two lines of a fixed height: a band such as
+  // « 100 000 – 200 000 » kept on one line made every column as wide as its
+  // label, and six of them pushed a phone's layout past the screen.
+  return (
+    <ol className="flex w-full min-w-0 items-end gap-1.5 sm:gap-3" aria-label={label} style={{ height: height + 52 }}>
+      {items.map((it) => {
+        const share = it.value / max;
+        return (
+          <li key={it.label} className="flex min-w-0 flex-1 flex-col items-center justify-end">
+            <span className="mazed-tabular text-[11px] font-bold text-foreground">{it.value > 0 ? format(it.value) : ""}</span>
+            <span
+              className="mt-1 block w-full max-w-10 rounded-t-[4px] bg-foreground"
+              style={{ height: Math.max(it.value > 0 ? 3 : 1, Math.round(share * height)), opacity: it.value === max ? 1 : it.value > 0 ? 0.55 : 0.12 }}
+              aria-hidden
+            />
+            <span className="mazed-tabular mt-1.5 block h-7 w-full overflow-hidden text-center text-[10px] leading-[14px] text-muted [overflow-wrap:anywhere]" title={it.label}>
+              {it.label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 

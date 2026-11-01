@@ -1,5 +1,5 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
-import { Sparkline } from "./Charts";
+import { Sparkline } from "@/components/charts/Charts";
 import { ExportCsv } from "./ExportCsv";
 import { csvFileName, toCsv, type CsvCell } from "@/lib/analytics/csv";
 

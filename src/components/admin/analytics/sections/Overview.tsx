@@ -9,7 +9,7 @@ import { daysOf, pctChange, type Period } from "@/lib/analytics/period";
 import { funnelSteps, pick, rate } from "@/lib/analytics/shape";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
-import { Funnel, LineChart } from "../Charts";
+import { Funnel, LineChart } from "@/components/charts/Charts";
 import { Card, ErrorNote, errorText, Grid, KpiTile, Section } from "../ui";
 
 /**
