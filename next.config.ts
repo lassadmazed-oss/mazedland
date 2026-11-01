@@ -281,7 +281,7 @@ const nextConfig: NextConfig = {
       },
       // The brand files and the app icons: not fingerprinted, so a day with a
       // week's grace rather than a year — they were revalidated on every view.
-      ...["/icons/:path*", "/logo.:ext", "/logo-mark.:ext", "/logo-stamp.:ext", "/logo-square.:ext", "/logo-watermark.:ext", "/og.png", "/favicon.ico", "/favicon-64.png", "/auth-hero.:ext", "/auth-hero.:size.:ext"].map((source) => ({
+      ...["/icons/:path*", "/brand/:path*", "/logo.:ext", "/logo-mark.:ext", "/logo-stamp.:ext", "/logo-square.:ext", "/logo-watermark.:ext", "/og.png", "/favicon.ico", "/favicon-64.png", "/auth-hero.:ext", "/auth-hero.:size.:ext"].map((source) => ({
         source,
         headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
       })),

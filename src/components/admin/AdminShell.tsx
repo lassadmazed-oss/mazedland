@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import {
@@ -13,6 +12,7 @@ import {
 import { NavIcon } from "./kit/LinkPending";
 import { InstallAppButton } from "./InstallAppButton";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { useCanOpen } from "./AdminScopes";
 import type { ConsoleSection } from "@/lib/admin/sections";
 import { SITE_TABS } from "./kit/SiteTabs";
@@ -66,14 +66,12 @@ const SITE: Item = { key: "site", href: "/admin/site", Icon: SlidersHorizontal }
 function BrandMark({ onNavigate }: { onNavigate?: () => void }) {
   const t = useTranslations("admin");
   return (
-    <Link href="/admin" onClick={onNavigate} className="flex items-center gap-2.5">
-      {/* The mark, not a house glyph. The glyph was standing in for a logo
-          the product had no usable file of; it has one now, and the console
-          should be recognisably the same product as the site. */}
-      <Image src="/logo-mark.webp" alt="" width={127} height={160} className="h-5 w-auto" />
-      <span className="text-[12px] font-bold uppercase tracking-[0.16em] text-foreground">
-        Mazed Immo<span className="text-[var(--gold)]">{" "}{t("console")}</span>
-      </span>
+    <Link href="/admin" onClick={onNavigate} className="flex min-w-0 items-center gap-2" aria-label={`Mazed Immo ${t("console")}`}>
+      {/* The site's own logo, sideways as in its bars: the console should be
+          recognisably the same product. 28 px tall, so the logo and the
+          label share the 196 px rail. */}
+      <BrandLogo variant="lockup" alt="" eager className="h-7 w-auto shrink-0" />
+      <span className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--gold)]">{t("console")}</span>
     </Link>
   );
 }
