@@ -51,10 +51,10 @@ export async function AuthScreen({
           <div className="mazed-hero-scrim absolute inset-0" aria-hidden />
           <div className="relative px-5 pb-14 pt-[4.5rem] text-white">
             {/* The logo on the photo: its dark-surface file (the « A » and
-                the gavel in cream) on a smoked-glass pill, so the gold holds
+                the gavel in cream) on a smoked-glass tile, so the gold holds
                 over the white walls of the picture. */}
-            <p className="inline-flex items-center rounded-full bg-black/40 px-3.5 py-1.5 ring-1 ring-white/20 backdrop-blur-sm">
-              <BrandLogo variant="lockupOnDark" alt={t("name")} eager className="h-7 w-auto" />
+            <p className="inline-flex rounded-2xl bg-black/40 p-2.5 ring-1 ring-white/20 backdrop-blur-sm">
+              <BrandLogo variant="logoOnDark" alt={t("name")} eager className="h-16 w-auto" />
             </p>
             <h1 id={labelledBy} className={`mazed-display mt-3 max-w-[14ch] text-[30px] text-white drop-shadow-sm ${arabic}`}>
               {title}

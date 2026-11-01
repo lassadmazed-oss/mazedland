@@ -113,12 +113,16 @@
   --shadow-gold: 0 6px 20px -6px rgba(168, 111, 34, 0.30), 0 2px 6px rgba(168, 111, 34, 0.16);
 
   /* Mobile-app shell. Unchanged — pure layout math. */
-  --topbar-h: 56px;
+  --topbar-h: 72px;
   --bottombar-h: 80px;
   /* Desktop (lg+) horizontal nav height. The mobile TopBar +
      BottomTabBar are hidden at lg and this nav takes over; the shell's
      top padding switches to this value in the lg media query below. */
-  --desktop-nav-h: 72px;
+  --desktop-nav-h: 96px;
+  /* The owner's logo in the bars, as drawn: the tower above MAZED. It fills
+     the bar but for a margin, so a taller bar is a bigger, more legible logo. */
+  --topbar-logo-h: calc(var(--topbar-h) - 8px);
+  --desktop-logo-h: calc(var(--desktop-nav-h) - 12px);
   --max-w: 480px;
   --max-w-content: 720px;
   --max-w-app: 960px;

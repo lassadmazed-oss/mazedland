@@ -78,7 +78,7 @@ export function MobileShell({
           <header className="border-b border-border bg-white pt-safe">
             <div className="mx-auto flex h-[var(--mazed-topbar-h)] max-w-[var(--max-w-wide)] items-center px-4 lg:h-[var(--desktop-nav-h)] lg:px-8">
               <Link href="/" className="flex items-center" aria-label="Mazed Immo">
-                <BrandLogo variant="lockup" alt="" eager className="h-10 w-auto lg:h-11" />
+                <BrandLogo alt="" eager className="h-[var(--topbar-logo-h)] w-auto lg:h-[var(--desktop-logo-h)]" />
               </Link>
             </div>
           </header>

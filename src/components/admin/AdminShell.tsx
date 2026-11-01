@@ -66,11 +66,10 @@ const SITE: Item = { key: "site", href: "/admin/site", Icon: SlidersHorizontal }
 function BrandMark({ onNavigate }: { onNavigate?: () => void }) {
   const t = useTranslations("admin");
   return (
-    <Link href="/admin" onClick={onNavigate} className="flex min-w-0 items-center gap-2" aria-label={`Mazed Immo ${t("console")}`}>
-      {/* The site's own logo, sideways as in its bars: the console should be
-          recognisably the same product. 28 px tall, so the logo and the
-          label share the 196 px rail. */}
-      <BrandLogo variant="lockup" alt="" eager className="h-7 w-auto shrink-0" />
+    <Link href="/admin" onClick={onNavigate} className="flex min-w-0 items-center gap-2.5" aria-label={`Mazed Immo ${t("console")}`}>
+      {/* The site's own logo, as the owner drew it: the console should be
+          recognisably the same product. The headers holding it are h-16. */}
+      <BrandLogo alt="" eager className="h-14 w-auto shrink-0" />
       <span className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--gold)]">{t("console")}</span>
     </Link>
   );
@@ -159,7 +158,7 @@ function ExitLink({ onNavigate }: { onNavigate?: () => void }) {
 export function AdminRail({ counts }: { counts: AdminCounts }) {
   return (
     <aside className="hidden h-dvh w-[196px] shrink-0 flex-col border-e border-border lg:flex">
-      <header className="flex h-12 items-center border-b border-border px-4">
+      <header className="flex h-16 items-center border-b border-border px-4">
         <BrandMark />
       </header>
       <NavList counts={counts} />
@@ -203,7 +202,7 @@ export function AdminMobileBar({ counts }: { counts: AdminCounts }) {
 
   return (
     <div className="lg:hidden">
-      <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-4">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-4">
         <BrandMark />
         <div className="flex items-center gap-1">
           <InstallAppButton variant="icon" />
@@ -228,7 +227,7 @@ export function AdminMobileBar({ counts }: { counts: AdminCounts }) {
             aria-hidden
           />
           <div className="absolute inset-y-0 start-0 flex w-[240px] max-w-[85vw] flex-col border-e border-border bg-background animate-fade-in">
-            <header className="flex h-12 items-center justify-between border-b border-border px-4">
+            <header className="flex h-16 items-center justify-between border-b border-border px-4">
               <BrandMark onNavigate={() => setOpen(false)} />
               <button
                 type="button"

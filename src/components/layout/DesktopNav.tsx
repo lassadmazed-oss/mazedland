@@ -163,10 +163,9 @@ export function DesktopNav() {
       <div className="mx-auto flex h-full w-full max-w-[var(--max-w-wide)] items-center gap-4 px-6 xl:gap-6 xl:px-8">
         {/* ── Left zone: brand + primary links ── */}
         <div className="flex h-full shrink-0 items-center gap-6">
-          {/* The logo sideways, matching the mobile TopBar: the portrait
-              logo's MAZED is illegible at nav height — see BrandLogo. */}
+          {/* The owner's logo as drawn, filling the bar's height — see BrandLogo. */}
           <Link href="/" className="flex shrink-0 items-center" aria-label="Mazed Immo">
-            <BrandLogo variant="lockup" alt="" eager className="h-12 w-auto" />
+            <BrandLogo alt="" eager className="h-[var(--desktop-logo-h)] w-auto" />
           </Link>
 
           {/* The page you are on is underlined, the way a newspaper's section

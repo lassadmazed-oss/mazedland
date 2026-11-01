@@ -1,31 +1,28 @@
 import Image from "next/image";
 
 /**
- * The owner's logo (sent 2026-11-01, « this logo on every page »), in the
- * shapes public/brand holds — made from docs/brand/mazed-logo-source.jpg by
+ * The owner's logo, exactly as they sent it: the tower above, MAZED between
+ * its two gold rules below. Made from docs/brand/mazed-logo-source.jpg by
  * scripts/brand-logo.mjs, transparent, the gold as the owner drew it.
  *
- *   - `lockup`: the tower and MAZED side by side. The logo itself is a
- *     portrait — the tower, a rule, MAZED, a rule — and squeezed into a bar
- *     56 px tall its MAZED lands at about nine pixels. Laid out sideways the
- *     same two pieces read at bar height. Every bar uses it.
- *   - `logo`: the whole portrait logo, where there is room (footer, sign-in
- *     card, invoice, 404).
- *   - `mark`: the tower alone, for the smallest places.
- *   - `…OnDark`: the black of the « A » and its gavel turned cream, for a
- *     dark surface, where the black would vanish.
+ * Never recompose it. A first version (2026-11-01) laid the tower and MAZED
+ * side by side for the bars; the owner turned it down: « صلحه كيف ما بعثته
+ * لك ». Every bar is tall enough for the logo as it is (--topbar-h,
+ * --desktop-nav-h in globals.css).
  *
- * Size it by height (`className="h-10 w-auto"`); the width follows.
+ *   - `logo`: everywhere on a light surface.
+ *   - `logoOnDark`: on a photo or a dark surface, where the black of the
+ *     « A » and its gavel would vanish (turned cream).
+ *
+ * Size it by height (`className="h-12 w-auto"`); the width follows.
  */
 export const BRAND_FILES = {
-  lockup: { src: "/brand/mazed-lockup.webp", width: 371, height: 120 },
-  lockupOnDark: { src: "/brand/mazed-lockup-ondark.webp", width: 371, height: 120 },
-  logo: { src: "/brand/mazed-logo.webp", width: 363, height: 480 },
-  mark: { src: "/brand/mazed-mark.webp", width: 129, height: 160 },
+  logo: { src: "/brand/mazed-logo.webp", width: 269, height: 360 },
+  logoOnDark: { src: "/brand/mazed-logo-ondark.webp", width: 179, height: 240 },
 } as const;
 
 export function BrandLogo({
-  variant = "lockup",
+  variant = "logo",
   className,
   alt = "Mazed Immo",
   eager = false,
