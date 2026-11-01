@@ -82,7 +82,7 @@ export default async function ProLandingPage() {
             <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-muted lg:text-[17px]">{t("subtitle")}</p>
             <div className="mt-7 flex flex-wrap items-center gap-4">
               {showCta && (
-                <Link href={cta as never} className="mazed-btn-luxe tap-target inline-flex h-12 items-center gap-2 px-7 text-[14px]">
+                <Link href={cta as never} data-track="pro_cta" data-track-cta="hero" className="mazed-btn-luxe tap-target inline-flex h-12 items-center gap-2 px-7 text-[14px]">
                   {ctaLabel} <ArrowUpRight className="size-4 rtl:-scale-x-100" strokeWidth={2.4} aria-hidden />
                 </Link>
               )}
@@ -179,6 +179,9 @@ export default async function ProLandingPage() {
                 {showCta && (
                   <Link
                     href={cta as never}
+                    data-track="pro_cta"
+                    data-track-cta="plan"
+                    data-track-plan={p.slug}
                     className={`tap-target mt-6 inline-flex h-11 items-center justify-center rounded-full text-[13.5px] font-bold transition ${
                       featured
                         ? "mazed-btn-luxe"

@@ -23,6 +23,7 @@ export const ADMIN_SECTIONS = [
   "paiements",
   "offres",
   "resultats",
+  "analytics",
   "publicites",
   "home",
   "popups",

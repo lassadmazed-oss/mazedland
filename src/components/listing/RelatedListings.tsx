@@ -4,6 +4,7 @@ import { coverPhoto } from "@/lib/listingCover";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { ListingImage } from "@/components/media/ListingImage";
 import { TrendingRail } from "@/components/landing/TrendingRail";
+import { Impressions } from "@/components/analytics/Impressions";
 import { formatTND } from "@/lib/utils";
 import type { DealType } from "@/lib/listings/deal";
 import { categoryLabel } from "@/lib/i18n";
@@ -214,6 +215,7 @@ export async function RelatedListings({
             </div>
           ))}
           <div className="w-1 shrink-0" />
+          <Impressions ids={scored.map((r) => r.id)} surface="related" />
         </TrendingRail>
       </div>
 
@@ -221,6 +223,7 @@ export async function RelatedListings({
         {scored.map((r) => (
           <Card key={r.id} listing={r} badged={badged.has(r.seller_id)} locale={locale} />
         ))}
+        <Impressions ids={scored.map((r) => r.id)} surface="related" />
       </div>
     </section>
   );

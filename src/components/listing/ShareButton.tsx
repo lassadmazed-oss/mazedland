@@ -6,7 +6,7 @@ import { Check, Copy, Facebook, MessageCircle, Share2 } from "lucide-react";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { useToast } from "@/components/ui/Toast";
 import { shareLinks } from "@/lib/share";
-import { track } from "@/lib/analytics/ga";
+import { trackEvent } from "@/lib/analytics/events";
 import { cn } from "@/lib/utils";
 
 /**
@@ -66,8 +66,10 @@ export function ShareButton({
   const link = () => `${window.location.origin}${href ?? window.location.pathname}`;
   const words = text ?? title;
   // GA's « share »: how, and which annonce (the last part of its path).
-  const shared = (method: "native" | "whatsapp" | "facebook" | "copy") =>
-    track("share", { method, content_type: "listing", item_id: (href ?? window.location.pathname).split("/").filter(Boolean).pop() });
+  const shared = (method: "native" | "whatsapp" | "facebook" | "copy") => {
+    const itemId = (href ?? window.location.pathname).split("/").filter(Boolean).pop();
+    trackEvent("share", { method, content_type: "listing", item_id: itemId }, { listing: itemId });
+  };
 
   async function share() {
     const url = link();

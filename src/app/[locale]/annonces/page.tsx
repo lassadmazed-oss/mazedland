@@ -37,6 +37,7 @@ import { jsonLdSafe } from "@/lib/jsonld";
 import { absoluteUrl } from "@/lib/siteUrl";
 import { breadcrumbLd, catalogueIndexing, itemListLd, pageAlternates } from "@/lib/seo";
 import { TrackEvent } from "@/components/analytics/TrackEvent";
+import { Impressions } from "@/components/analytics/Impressions";
 import { FeaturedAgencies } from "@/components/agency/FeaturedAgencies";
 import { loadFeaturedShops } from "@/lib/pro/featured";
 import { reactiveRules } from "@/lib/pro/reactivity";
@@ -524,6 +525,16 @@ export default async function AnnoncesPage({
         : []),
   ];
 
+  // The filters set, by name, for the count of which ones people use.
+  const activeFilters = (
+    [
+      ["deal", deal], ["cat", sp.cat || (multiCats.length ? "cats" : undefined)], ["gov", sp.gov || (multiGovs.length ? "govs" : undefined)],
+      ["del", del], ["min", min], ["max", max], ["surface", surface], ["rooms", roomsMin], ["furnished", furnished], ["avail", availBy],
+    ] as const
+  )
+    .filter(([, v]) => Boolean(v))
+    .map(([k]) => k);
+
   // The filters every GET form carries along, so applying one keeps the others.
   const carried = (omit: string[] = []) => {
     const all: [string, string | undefined][] = [
@@ -826,7 +837,22 @@ export default async function AnnoncesPage({
       {(sp.nlq || sp.q) && (
         <TrackEvent
           name="search"
-          params={{ search_term: cleanSearchTerm(sp.nlq || sp.q), deal: deal ?? undefined, cat: sp.cat, gov: sp.gov, results: total }}
+          params={{
+            search_term: cleanSearchTerm(sp.nlq || sp.q),
+            q: cleanSearchTerm(sp.nlq || sp.q),
+            deal: deal ?? undefined, cat: sp.cat, gov: sp.gov, results: total,
+            // Whether the natural search read filters out of the words; a
+            // visitor who asked for the words as typed (nl=0) is not judged.
+            understood: sp.nlq ? true : sp.nl === "0" ? undefined : false,
+          }}
+        />
+      )}
+      {/* The filters in use and the order chosen — every menu is a plain GET,
+          so the page itself is where a change is seen. */}
+      {(activeFilters.length > 0 || (sp.sort && sp.sort !== "recent")) && (
+        <TrackEvent
+          name="catalogue_view"
+          params={{ deal: deal ?? undefined, cat: sp.cat, gov: sp.gov, sort: sp.sort, filters: activeFilters, results: total, page }}
         />
       )}
 
@@ -1044,6 +1070,7 @@ export default async function AnnoncesPage({
               )}
             </Fragment>
           ))}
+          <Impressions ids={rows.map((r) => r.id)} surface="catalogue" />
         </ul>
       )}
 

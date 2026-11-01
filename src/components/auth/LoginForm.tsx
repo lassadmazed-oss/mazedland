@@ -8,6 +8,7 @@ import { stripLocalePrefix } from "@/i18n/routing";
 import { PhoneInput } from "./PhoneInput";
 import { forgetPhone, rememberPhone } from "./rememberedPhone";
 import { normalizeE164, validatePhone } from "@/lib/tunisia";
+import { trackEvent } from "@/lib/analytics/events";
 
 /**
  * Reject anything that, despite starting with "/", could be parsed by
@@ -105,6 +106,8 @@ export function LoginForm() {
         return;
       }
       forgetPhone();
+      // Google only: the route counts the login for the site itself.
+      trackEvent("login", { method: "phone" }, {}, { firstParty: false });
       window.location.assign(destination);
     });
   }

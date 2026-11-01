@@ -8,6 +8,7 @@ import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { IMAGE_BLUR_MAP } from "@/lib/imageBlurMap";
 import { isRtl } from "@/lib/i18n";
 import { HiddenAt } from "@/components/ui/HiddenAt";
+import { trackEvent } from "@/lib/analytics/events";
 
 type Photo = {
   id: string;
@@ -52,6 +53,7 @@ export function PhotoCarousel({
   startIndex = 0,
   variant = "page",
   hiddenAt,
+  listingId,
 }: {
   photos: Photo[];
   alt: string;
@@ -62,6 +64,8 @@ export function PhotoCarousel({
   variant?: "page" | "modal";
   /** The media query at which CSS hides this carousel: its eager first photo is not downloaded there. */
   hiddenAt?: string;
+  /** The annonce, for the count of photos looked at (Statistiques). */
+  listingId?: string;
 }) {
   const t = useTranslations();
   // Right-to-left, the flex track lays the slides out leftwards from the right
@@ -108,10 +112,21 @@ export function PhotoCarousel({
     }
   }
 
+  // A photo a reader chose to look at, once each per annonce (not the autoplay).
+  const looked = useRef(new Set<number>());
+  function lookedAt(i: number) {
+    if (!listingId || count < 2) return;
+    const at = ((i % count) + count) % count;
+    if (looked.current.has(at)) return;
+    looked.current.add(at);
+    trackEvent("gallery_photo", { index: at, of: count, where: modal ? "modal" : "page" }, { listing: listingId });
+  }
+
   function go(delta: number) {
     if (!loop) return;
     pauseUntil.current = Date.now() + USER_NAV_PAUSE_MS;
     setAnim(true);
+    lookedAt(index + delta);
     setIndex((i) => {
       const n = i + delta;
       if (n < 0) return count - 1;
@@ -121,9 +136,10 @@ export function PhotoCarousel({
   }
 
   function jumpTo(i: number) {
-     
+
     pauseUntil.current = Date.now() + USER_NAV_PAUSE_MS;
     setAnim(true);
+    lookedAt(i);
     setIndex(i);
   }
 

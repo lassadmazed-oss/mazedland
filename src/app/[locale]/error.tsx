@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle, RotateCcw, Home, WifiOff } from "lucide-react";
 import { reportClientError } from "@/components/observability/ClientErrorReporter";
+import { trackEvent } from "@/lib/analytics/events";
 
 /**
  * Locale-root error boundary. Without this, a render error anywhere
@@ -63,6 +64,8 @@ export default function LocaleError({
         kind: "react-boundary",
       });
     }
+    // Google only: the activity log already keeps every error for the site.
+    trackEvent("client_error", { kind: isNetwork ? "network" : "render" }, {}, { firstParty: false });
   }, [error, isNetwork]);
 
   // Auto-recover network-flavored failures the moment the browser

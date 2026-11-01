@@ -3,8 +3,15 @@
 import { useTranslations } from "next-intl";
 import { BarChart3 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { writeConsent } from "@/lib/analytics/ga";
+import { writeConsent, type Consent } from "@/lib/analytics/ga";
+import { trackEvent } from "@/lib/analytics/events";
 import { useAnalytics } from "./GoogleAnalytics";
+
+/** The answer, kept, and counted (a no reaches Google never, the site's count only when it counts everyone). */
+function answer(v: Consent) {
+  writeConsent(v);
+  trackEvent("consent", { answer: v });
+}
 
 /**
  * « Accepter / Refuser » for Google Analytics, when an admin asked for it
@@ -36,14 +43,14 @@ export function AnalyticsConsentBar() {
       <div className="mt-2.5 flex justify-end gap-2">
         <button
           type="button"
-          onClick={() => writeConsent("denied")}
+          onClick={() => answer("denied")}
           className="tap-target inline-flex items-center justify-center rounded-full border border-border px-4 py-1.5 text-[12.5px] font-bold text-foreground transition hover:bg-surface-2"
         >
           {t("decline")}
         </button>
         <button
           type="button"
-          onClick={() => writeConsent("granted")}
+          onClick={() => answer("granted")}
           className="mazed-btn-luxe tap-target inline-flex items-center justify-center px-4 py-1.5 text-[12.5px]"
         >
           {t("accept")}
@@ -78,7 +85,7 @@ export function AnalyticsChoice() {
       <p className="mt-1 text-[13px] leading-relaxed text-foreground/80">{status}</p>
       <button
         type="button"
-        onClick={() => writeConsent(allowed ? "denied" : "granted")}
+        onClick={() => answer(allowed ? "denied" : "granted")}
         className={
           allowed
             ? "tap-target mt-3 inline-flex items-center justify-center rounded-full border border-border bg-surface px-4 py-1.5 text-[12.5px] font-bold text-foreground transition hover:bg-surface-2"

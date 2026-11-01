@@ -7,7 +7,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import {
   BarChart3, BellRing, Megaphone, Store, GalleryHorizontalEnd,
   LayoutDashboard, Inbox, Receipt, Tag, Users, FolderTree,
-  SlidersHorizontal, ExternalLink, Menu, X,
+  SlidersHorizontal, ExternalLink, Menu, X, TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 import { NavIcon } from "./kit/LinkPending";
@@ -49,6 +49,7 @@ export type AdminCounts = Partial<Record<CountKey, number>>;
 const NAV: Item[] = [
   { key: "dashboard", href: "/admin", Icon: LayoutDashboard },
   { key: "results", href: "/admin/resultats", Icon: BarChart3, section: "resultats" },
+  { key: "analytics", href: "/admin/analytics", Icon: TrendingUp, section: "analytics" },
   { key: "listings", href: "/admin/annonces", Icon: Inbox, countKey: "annonces", section: "annonces" },
   { key: "demandes", href: "/admin/demandes", Icon: BellRing, section: "demandes" },
   { key: "social", href: "/admin/social", Icon: Megaphone, countKey: "social", section: "social" },

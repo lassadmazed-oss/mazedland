@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AutoRail } from "@/components/landing/AutoRail";
 import { AnnonceCard } from "@/components/listing/AnnonceCard";
+import { Impressions } from "@/components/analytics/Impressions";
 import { isRtl } from "@/lib/i18n";
 import type { HomeRail } from "@/lib/home/rails";
 
@@ -78,6 +79,7 @@ export async function HomeRailSection({
             />
           </div>
         ))}
+        <Impressions ids={rail.rows.map((a) => a.id)} surface={`home_${rail.key}`} />
         {/* Room after the last card, so it does not sit on the screen's edge. */}
         <div className="w-1 shrink-0" />
       </AutoRail>

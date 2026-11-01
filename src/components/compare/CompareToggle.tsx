@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { useCompare } from "./compareStore";
+import { trackEvent } from "@/lib/analytics/events";
 
 /**
  * « Comparer »: adds this annonce to the comparison, or takes it out. On a
@@ -23,6 +24,7 @@ export function CompareToggle({ listingId, variant = "chip" }: { listingId: stri
 
   const onClick = () => {
     if (!toggle(listingId)) toast(t("full", { max }), "warning");
+    else trackEvent(on ? "compare_remove" : "compare_add", {}, { listing: listingId });
   };
 
   if (variant === "pill") {

@@ -2855,7 +2855,9 @@
       "shops": "Agences",
       "shopsHint": "Agences et promoteurs : ouvrir, vérifier, suspendre",
       "ads": "Publicités",
-      "adsHint": "Bannières des annonceurs : campagnes, vues, clics"
+      "adsHint": "Bannières des annonceurs : campagnes, vues, clics",
+      "analytics": "Statistiques",
+      "analyticsHint": "Visiteurs, recherches, annonces, agences et revenus, en chiffres"
     },
     "siteTabs": {
       "label": "Sections du site",
@@ -5281,7 +5283,8 @@
       "seconds": "secondes",
       "hours": "heures",
       "months": "mois",
-      "years": "ans"
+      "years": "ans",
+      "minutes": "minutes"
     },
     "ui": {
       "tabsLabel": "Parties des réglages",
@@ -5548,6 +5551,62 @@
     "agency_strip_reactive_first": {
       "label": "Agences réactives en premier",
       "hint": "Dans le bandeau des agences recommandées, celles qui ont le badge passent devant ; l'ordre tourne chaque jour dans chaque groupe."
+    },
+    "analytics_events_enabled": {
+      "label": "Compter sur le site",
+      "hint": "Le site compte lui-même chaque recherche, annonce ouverte, numéro affiché, favori, étape du formulaire… exact, par annonce et par agence, à côté de Google. Jamais de nom, de numéro ni d'e-mail."
+    },
+    "analytics_events_consent": {
+      "label": "Attendre le oui du visiteur",
+      "hint": "Activé : le compte du site attend aussi la réponse « Accepter » quand elle est demandée. Désactivé : il compte tout le monde, avec une clé qui change chaque jour (pas de cookie)."
+    },
+    "analytics_events_days": {
+      "label": "Conservation des événements",
+      "hint": "Au-delà, le travail de nuit supprime les événements du site. Les tableaux ne remontent pas plus loin."
+    },
+    "analytics_events_per_hour": {
+      "label": "Événements par navigateur et par heure",
+      "hint": "Au-delà, les envois d'un même navigateur sont ignorés pendant l'heure : un lecteur ouvre quelques dizaines d'annonces, des milliers c'est un script."
+    },
+    "analytics_ga_property_id": {
+      "label": "ID de la propriété GA4",
+      "hint": "Un nombre : Google Analytics → Administration → Paramètres de la propriété → « ID de la propriété ». Avec la clé du compte de service (variable GA4_SERVICE_ACCOUNT_JSON), la console lit les rapports de Google."
+    },
+    "analytics_ga_cache_minutes": {
+      "label": "Fraîcheur des rapports Google",
+      "hint": "Un rapport lu chez Google est réutilisé pendant ce délai avant d'être redemandé."
+    },
+    "analytics_top_limit": {
+      "label": "Lignes par classement",
+      "hint": "Combien d'annonces, d'agences, de recherches ou de gouvernorats chaque classement affiche."
+    },
+    "analytics_expiring_days": {
+      "label": "Annonce « bientôt expirée »",
+      "hint": "Une annonce qui se termine dans ce délai compte comme bientôt expirée."
+    },
+    "analytics_anomaly_sigma": {
+      "label": "Seuil d'anomalie (écarts-types)",
+      "hint": "Un chiffre de la semaine éloigné de la moyenne des 8 semaines précédentes d'autant d'écarts-types est signalé."
+    },
+    "analytics_mover_min_percent": {
+      "label": "Variation à signaler",
+      "hint": "Un chiffre qui bouge d'au moins ce pourcentage d'une semaine à l'autre apparaît dans « À retenir »."
+    },
+    "analytics_zero_search_min": {
+      "label": "Recherche sans résultat répétée",
+      "hint": "Une recherche sans résultat répétée au moins autant de fois est signalée : une catégorie, un lieu ou une orthographe à ajouter."
+    },
+    "analytics_no_contact_min_views": {
+      "label": "Vues sans contact",
+      "hint": "Une annonce vue au moins autant de fois sans aucun numéro affiché ni visite demandée est signalée."
+    },
+    "analytics_gov_demand_min": {
+      "label": "Gouvernorat demandé",
+      "hint": "Un gouvernorat cherché au moins autant de fois sur la période…"
+    },
+    "analytics_gov_low_supply": {
+      "label": "… avec peu d'annonces",
+      "hint": "… et qui a moins d'annonces en ligne que ce nombre manque d'offre : c'est signalé."
     }
   },
   "ads": {
@@ -5770,7 +5829,8 @@
       "notifications": "Diffusions",
       "legal-docs": "Documents légaux",
       "catalogue": "Catalogue",
-      "activity": "Journal d'activité"
+      "activity": "Journal d'activité",
+      "analytics": "Statistiques"
     },
     "members": {
       "title": "Membres de la console",
@@ -5909,5 +5969,510 @@
     "choiceDefault": "La mesure d'audience est active. Vous pouvez la refuser.",
     "withdraw": "Refuser la mesure",
     "grant": "Accepter la mesure"
+  },
+  "adminAnalytics": {
+    "eyebrow": "Pilotage",
+    "title": "Statistiques",
+    "description": "Comment va la place de marché : les visiteurs, ce qu'ils cherchent, les annonces, les agences et les revenus — sur la période choisie, comparée à la précédente.",
+    "unavailable": "Service momentanément indisponible.",
+    "error": "Les chiffres n'ont pas pu être lus : {message}",
+    "period": {
+      "label": "Période",
+      "d7": "7 jours",
+      "d30": "30 jours",
+      "d90": "90 jours",
+      "custom": "Dates",
+      "from": "Du",
+      "to": "Au",
+      "apply": "Appliquer",
+      "compared": "comparé aux {days} jours précédents",
+      "range": "du {from} au {to}"
+    },
+    "tabs": {
+      "label": "Parties des statistiques",
+      "overview": "Vue d'ensemble",
+      "traffic": "Trafic",
+      "marketplace": "Marché",
+      "demand": "Demande",
+      "pro": "Pro & revenus",
+      "users": "Comptes"
+    },
+    "common": {
+      "export": "Exporter CSV",
+      "exported": "Fichier CSV",
+      "empty": "Rien sur cette période.",
+      "previous": "période précédente",
+      "na": "—",
+      "sinceEvents": "Compté par le site depuis le 1er novembre 2026 ; avant, seuls les tableaux de l'ancien compteur existent.",
+      "sale": "Vente",
+      "rent": "Location",
+      "all": "Tout",
+      "total": "Total",
+      "hours": "{count} h",
+      "days": "{count} j",
+      "tnd": "DT",
+      "percent": "{value} %",
+      "count": "{count}",
+      "yes": "Oui",
+      "no": "Non",
+      "unknown": "Inconnu",
+      "of": "sur {total}",
+      "open": "Ouvrir",
+      "deal": "Offre",
+      "category": "Catégorie",
+      "governorate": "Gouvernorat",
+      "status": "Statut",
+      "name": "Nom",
+      "kind": "Type",
+      "date": "Date",
+      "none": "Aucun",
+      "nothingYet": "Pas encore de données : le site compte depuis sa mise en ligne."
+    },
+    "kpi": {
+      "page_views": "Pages vues",
+      "visitors": "Visiteurs",
+      "listing_views": "Annonces ouvertes",
+      "searches": "Recherches",
+      "listings_online": "Annonces en ligne",
+      "listings_new": "Nouvelles annonces",
+      "publishes": "Publications",
+      "reveals": "Numéros affichés",
+      "visit_requests": "Visites demandées",
+      "favourites": "Favoris",
+      "demandes": "Demandes",
+      "signups": "Inscriptions",
+      "agences_new": "Nouvelles agences",
+      "agences_open": "Agences ouvertes",
+      "revenue": "Revenus",
+      "paid_count": "Paiements validés",
+      "ga_users": "Utilisateurs (Google)",
+      "ga_sessions": "Sessions (Google)",
+      "ga_page_views": "Pages vues (Google)",
+      "conv_contact": "Taux de contact",
+      "conv_search": "Recherche → annonce",
+      "conv_publish": "Formulaire → publication"
+    },
+    "kpiHint": {
+      "visitors": "Un visiteur = une clé par jour, ou l'identifiant du navigateur quand il a accepté les statistiques.",
+      "conv_contact": "Numéros affichés + visites demandées, pour 100 annonces ouvertes.",
+      "conv_search": "Annonces ouvertes pour 100 recherches.",
+      "conv_publish": "Annonces publiées pour 100 formulaires commencés.",
+      "revenue": "Paiements validés sur la période, en dinars."
+    },
+    "insights": {
+      "title": "À retenir",
+      "sub": "Ce qui bouge cette semaine, ce qui sort de l'ordinaire, et où agir.",
+      "empty": "Rien d'inhabituel cette semaine : les chiffres suivent leur cours.",
+      "mover_up": "{metric} : {value} cette semaine, +{pct} % par rapport à la précédente ({previous}).",
+      "mover_down": "{metric} : {value} cette semaine, −{pct} % par rapport à la précédente ({previous}).",
+      "anomaly_high": "{metric} : {value}, bien au-dessus de l'habitude des 8 dernières semaines ({mean} en moyenne, {sigma} écarts-types).",
+      "anomaly_low": "{metric} : {value}, bien en dessous de l'habitude des 8 dernières semaines ({mean} en moyenne, {sigma} écarts-types).",
+      "zero_search": "« {query} » cherché {count} fois sans résultat : une catégorie, un lieu ou une orthographe à ajouter.",
+      "no_contact": "{title} ({reference}) : {views} vues et aucun contact. Prix ou photos à revoir.",
+      "slow_agence": "{name} répond à {rate} % des demandes de visite en moins de {hours} h ({late} en attente). Sous la barre du badge « Agence réactive ».",
+      "gov_gap": "{gov} : {searches} recherches et {demandes} demandes sur la période, mais {online} annonces en ligne.",
+      "expiring": "{count} annonces expirent dans les prochains jours.",
+      "pending_payments": "{count} reçus attendent une décision ({amount} DT).",
+      "no_photo": "{count} annonces en ligne sans photo."
+    },
+    "charts": {
+      "daily": "Jour par jour",
+      "current": "Cette période",
+      "previous": "Période précédente",
+      "noData": "Pas de courbe : rien à tracer."
+    },
+    "overview": {
+      "kpisTitle": "Les chiffres",
+      "trendsTitle": "Tendances",
+      "funnelTitle": "Du formulaire à la publication",
+      "convTitle": "Conversions"
+    },
+    "traffic": {
+      "title": "Trafic (Google Analytics)",
+      "description": "Ce que Google voit : d'où viennent les visiteurs, sur quels appareils, quelles pages. Échantillonné, soumis au consentement, et la veille au plus tôt — le reste de la page compte en direct.",
+      "connect": {
+        "title": "Connecter Google Analytics",
+        "intro": "Trois étapes, une seule fois. La page fonctionne déjà sans : seul cet onglet attend Google.",
+        "step1": "Dans Google Cloud, créez un compte de service (IAM → Comptes de service), puis une clé au format JSON.",
+        "step2": "Dans Google Analytics, ajoutez l'e-mail de ce compte de service comme Lecteur sur la propriété (Administration → Gestion des accès à la propriété).",
+        "step3": "Mettez le contenu du fichier JSON dans la variable d'environnement {env} de l'hébergement (jamais dans le code), puis l'ID numérique de la propriété dans les réglages.",
+        "step4": "Redéployez, revenez ici et testez la connexion.",
+        "noKey": "La clé du compte de service ({env}) n'est pas définie.",
+        "noProperty": "L'ID de la propriété GA4 n'est pas renseigné.",
+        "settings": "Ouvrir les réglages",
+        "test": "Tester la connexion",
+        "testing": "Test en cours…",
+        "testOk": "Connexion réussie : {users} utilisateurs sur les 7 derniers jours.",
+        "testFail": "Échec : {error}"
+      },
+      "fetchedAt": "Rapport Google lu le {time}",
+      "cached": "(en cache)",
+      "failed": "Google n'a pas répondu : {error}",
+      "partial": "Google a refusé une partie : {list}",
+      "users": "Utilisateurs",
+      "newUsers": "Nouveaux",
+      "sessions": "Sessions",
+      "pageViews": "Pages vues",
+      "engaged": "Sessions engagées",
+      "avgSession": "Durée moyenne",
+      "seconds": "{count} s",
+      "topPages": "Pages les plus vues",
+      "sources": "Sources",
+      "source": "Source",
+      "medium": "Canal",
+      "devices": "Appareils",
+      "countries": "Pays",
+      "cities": "Villes",
+      "languages": "Langues",
+      "landingPages": "Pages d'entrée",
+      "searchTerms": "Recherches (Google)",
+      "searchTermsHint": "Demande la dimension personnalisée « search_term » dans GA4 ; les recherches exactes sont dans l'onglet Demande.",
+      "cols": {
+        "page": "Page",
+        "views": "Vues",
+        "users": "Utilisateurs",
+        "sessions": "Sessions",
+        "device": "Appareil",
+        "country": "Pays",
+        "city": "Ville",
+        "language": "Langue",
+        "term": "Mots",
+        "count": "Nombre"
+      }
+    },
+    "marketplace": {
+      "title": "Marché",
+      "byStatus": "Annonces par statut",
+      "byDeal": "Vente et location",
+      "byCategory": "Par catégorie",
+      "byGovernorate": "Par gouvernorat",
+      "priceBands": "Prix par catégorie",
+      "timeToPublish": "Délai de publication",
+      "funnel": "Entonnoir de publication",
+      "moderation": "Modération",
+      "quality": "Qualité des annonces en ligne",
+      "statuses": {
+        "draft": "Brouillons",
+        "pending_payment": "Paiement en attente",
+        "pending_review": "À vérifier",
+        "published": "En ligne",
+        "rejected": "Refusées",
+        "expired": "Expirées",
+        "archived": "Archivées",
+        "sold": "Vendues",
+        "rented": "Louées"
+      },
+      "cols": {
+        "online": "En ligne",
+        "published": "Publiées",
+        "new": "Créées",
+        "views": "Ouvertes",
+        "reveals": "Numéros",
+        "searches": "Recherches",
+        "demandes": "Demandes",
+        "medianSale": "Prix médian (vente)",
+        "medianRent": "Loyer médian",
+        "band": "Tranche",
+        "count": "Annonces",
+        "expires": "Expire le",
+        "reference": "Réf.",
+        "title": "Annonce"
+      },
+      "funnelSteps": {
+        "start": "Formulaire ouvert",
+        "category": "Catégorie choisie",
+        "photos": "Photos",
+        "details": "Détails",
+        "review": "Récapitulatif",
+        "submitted": "Envoyé",
+        "published": "Publié"
+      },
+      "funnelNote": "Personnes distinctes par étape. Abandons : {abandoned} · brouillons créés : {drafts}.",
+      "drop": "−{pct} %",
+      "ttp": {
+        "avg": "Moyenne : {hours} h",
+        "median": "Médiane : {hours} h",
+        "n": "sur {count} publications",
+        "none": "Aucune publication sur la période.",
+        "medianLabel": "Délai médian",
+        "avgLabel": "Délai moyen"
+      },
+      "moderationKeys": {
+        "submitted": "Envoyées",
+        "auto_published": "Publiées automatiquement",
+        "approved": "Acceptées",
+        "rejected": "Refusées",
+        "archived": "Archivées",
+        "edits_approved": "Modifications acceptées",
+        "edits_rejected": "Modifications refusées",
+        "reports": "Signalements",
+        "pending_now": "En attente maintenant",
+        "review_median_hours": "Délai médian de vérification (h)"
+      },
+      "qualityKeys": {
+        "online": "En ligne",
+        "no_photo": "Sans photo",
+        "no_price": "Sans prix",
+        "expiring": "Expirent sous {days} j"
+      },
+      "expiringList": "Bientôt expirées"
+    },
+    "demand": {
+      "title": "Demande",
+      "topSearches": "Recherches les plus fréquentes",
+      "zeroSearches": "Recherches sans résultat",
+      "understood": "Recherche en langage naturel",
+      "understoodHint": "Part des recherches où les mots ont été lus en filtres (offre, lieu, budget…).",
+      "filters": "Filtres utilisés",
+      "sorts": "Tris choisis",
+      "topListings": "Annonces les plus ouvertes",
+      "topAgences": "Agences les plus consultées",
+      "visits": "Demandes de visite",
+      "visitsByAgence": "Réponse par agence",
+      "favourites": "Favoris",
+      "compare": "Comparateur",
+      "shares": "Partages",
+      "credit": "Simulateur de crédit",
+      "searchers": "{count} personnes",
+      "searches": "{count} recherches",
+      "zeroTotal": "{count} sans résultat",
+      "catalogueViews": "{count} pages du catalogue filtrées",
+      "cols": {
+        "query": "Mots",
+        "count": "Fois",
+        "avgResults": "Résultats (moy.)",
+        "zero": "Sans résultat",
+        "filter": "Filtre",
+        "sort": "Tri",
+        "uses": "Utilisations",
+        "views": "Ouvertes",
+        "uniqueViewers": "Visiteurs",
+        "reveals": "Numéros",
+        "favourites": "Favoris",
+        "visits": "Visites",
+        "price": "Prix",
+        "contacts": "Contacts",
+        "listingsOnline": "Annonces",
+        "listingViews": "Annonces ouvertes",
+        "total": "Demandes",
+        "answered": "Répondues",
+        "fast": "Sous {hours} h",
+        "late": "En retard",
+        "avgHours": "Délai moyen (h)",
+        "rate": "Taux",
+        "badge": "Badge"
+      },
+      "visitKeys": {
+        "total": "Demandées",
+        "waiting": "En attente",
+        "confirmed": "Confirmées",
+        "declined": "Refusées",
+        "cancelled": "Annulées",
+        "done": "Faites",
+        "answered": "Répondues",
+        "fast": "Répondues sous {hours} h",
+        "late": "En retard",
+        "avg_answer_hours": "Délai moyen (h)",
+        "median_answer_hours": "Délai médian (h)"
+      },
+      "compareKeys": {
+        "adds": "Ajouts",
+        "users": "Personnes",
+        "opens": "Ouvertures"
+      },
+      "creditKeys": {
+        "opens": "Ouvertures",
+        "uses": "Réglages changés"
+      },
+      "reactive": "Réactive",
+      "notReactive": "Sous la barre",
+      "tooFew": "Trop peu",
+      "filterNames": {
+        "deal": "Offre",
+        "cat": "Catégorie",
+        "gov": "Gouvernorat",
+        "del": "Délégation",
+        "min": "Prix min",
+        "max": "Prix max",
+        "surface": "Surface",
+        "rooms": "Pièces",
+        "furnished": "Meublé",
+        "avail": "Libre avant"
+      },
+      "sortNames": {
+        "recent": "Récentes",
+        "popular": "Populaires",
+        "cheap": "Prix croissant",
+        "value": "Prix au m²",
+        "dear": "Prix décroissant",
+        "big": "Surface"
+      }
+    },
+    "pro": {
+      "title": "Pro & revenus",
+      "byPlan": "Agences par plan",
+      "noPlan": "Sans plan actif",
+      "agences": "Agences",
+      "mrr": "Revenu mensuel récurrent (MRR)",
+      "mrrOffered": "dont offert : {amount} DT",
+      "endingSoon": "{count} plans se terminent sous 14 jours sans suite",
+      "payments": "Paiements sur la période",
+      "pendingNow": "Reçus en attente",
+      "revenueByKind": "Revenus par type",
+      "revenueByProvider": "Revenus par moyen",
+      "invoices": "Factures et avoirs",
+      "planChanges": "Plans souscrits sur la période",
+      "offers": "Périodes offertes",
+      "imports": "Imports d'annonces",
+      "social": "Social Publisher",
+      "ai": "Assistant IA",
+      "cols": {
+        "plan": "Plan",
+        "price": "Prix",
+        "agences": "Agences",
+        "offered": "Offertes",
+        "quota": "Annonces",
+        "status": "Statut",
+        "count": "Nombre",
+        "amount": "Montant",
+        "kind": "Type",
+        "provider": "Moyen",
+        "paid": "Payés",
+        "files": "Fichiers",
+        "rows": "Lignes",
+        "calls": "Appels",
+        "failed": "Échecs",
+        "cost": "Coût (USD)"
+      },
+      "agenceKeys": {
+        "approved": "Ouvertes",
+        "pending": "En attente",
+        "suspended": "Suspendues",
+        "rejected": "Refusées",
+        "verified": "Vérifiées",
+        "new": "Nouvelles"
+      },
+      "kinds": {
+        "agency": "Agences",
+        "promoter": "Promoteurs",
+        "land_developer": "Lotisseurs",
+        "property_manager": "Gestionnaires"
+      },
+      "paymentStatus": {
+        "pending": "À payer",
+        "pending_review": "Reçu à vérifier",
+        "authorized": "Autorisés",
+        "captured": "Validés",
+        "refunded": "Remboursés",
+        "failed": "Refusés"
+      },
+      "paymentKinds": {
+        "listing_fee": "Publication",
+        "listing_pack": "Packs d'annonces",
+        "promo": "Mises en avant",
+        "badge": "Badge vérifié",
+        "renewal": "Renouvellements",
+        "subscription": "Abonnements"
+      },
+      "providers": {
+        "bank_transfer": "Virement",
+        "d17": "D17",
+        "manual": "Manuel",
+        "konnect": "Konnect",
+        "paymee": "Paymee",
+        "flouci": "Flouci"
+      },
+      "invoiceKeys": {
+        "invoices": "Factures",
+        "invoices_amount": "Montant facturé",
+        "credit_notes": "Avoirs",
+        "credit_notes_amount": "Montant des avoirs"
+      },
+      "socialStatus": {
+        "draft": "Brouillons",
+        "pending_approval": "À valider",
+        "scheduled": "Programmées",
+        "published": "Publiées",
+        "failed": "Échouées",
+        "rejected": "Refusées",
+        "cancelled": "Annulées",
+        "withdrawn": "Retirées"
+      },
+      "socialRevenue": "Encaissé : {amount} DT"
+    },
+    "users": {
+      "title": "Comptes",
+      "signups": "Inscriptions",
+      "byDay": "Inscriptions par jour",
+      "byLocale": "Par langue",
+      "byRole": "Par rôle",
+      "byDevice": "Par appareil (à l'inscription)",
+      "logins": "Connexions",
+      "active": "Comptes actifs",
+      "activeKeys": {
+        "period": "Sur la période",
+        "d7": "7 derniers jours",
+        "d30": "30 derniers jours"
+      },
+      "total": "Comptes au total",
+      "deleted": "Supprimés sur la période",
+      "cohorts": "Fidélité par semaine d'inscription",
+      "cohortHint": "Semaine 1 : revenus entre le 7e et le 14e jour. Semaine 4 : entre le 28e et le 35e. « — » tant que la fenêtre n'est pas passée.",
+      "cohortCols": {
+        "week": "Inscrits du",
+        "size": "Comptes",
+        "w1": "Semaine 1",
+        "w4": "Semaine 4"
+      },
+      "consent": "Consentement aux statistiques",
+      "consentKeys": {
+        "granted": "Accepté",
+        "denied": "Refusé",
+        "rate": "Taux d'acceptation"
+      },
+      "install": "Installation de l'app",
+      "installKeys": {
+        "shown": "Bouton montré",
+        "click": "Bouton tapé",
+        "done": "Installée",
+        "rate": "Taux d'installation"
+      },
+      "languageSwitches": "Changements de langue",
+      "errors": "Erreurs",
+      "errorKeys": {
+        "not_found": "Pages introuvables (404)",
+        "client": "Erreurs du navigateur",
+        "uploads": "Envois de fichiers échoués"
+      },
+      "byLocaleEvents": "Pages vues par langue",
+      "byDeviceEvents": "Pages vues par appareil",
+      "locales": {
+        "fr": "Français",
+        "ar": "Arabe",
+        "en": "Anglais",
+        "other": "Autre",
+        "unknown": "Inconnue"
+      },
+      "devices": {
+        "phone": "Téléphone",
+        "tablet": "Tablette",
+        "desktop": "Ordinateur",
+        "unknown": "Inconnu"
+      },
+      "roles": {
+        "individual": "Particuliers",
+        "agency": "Agences",
+        "admin": "Admins",
+        "bank": "Banques",
+        "bailiff": "Huissiers",
+        "inspector": "Inspecteurs"
+      },
+      "cols": {
+        "day": "Jour",
+        "fr": "Français",
+        "ar": "Arabe",
+        "other": "Autre"
+      }
+    }
   }
 }

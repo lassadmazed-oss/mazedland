@@ -31,6 +31,15 @@ describe("canOpen", () => {
   });
 });
 
+describe("the statistics section", () => {
+  it("is a section of its own, given to no preset by itself", () => {
+    expect(ADMIN_SECTIONS).toContain("analytics");
+    expect(canOpen(["analytics"], "analytics")).toBe(true);
+    expect(canOpen(ROLE_PRESETS.finance, "analytics")).toBe(false);
+    expect(canOpen(ROLE_PRESETS.moderation, "analytics")).toBe(false);
+  });
+});
+
 describe("cleanScopes", () => {
   it("keeps known sections once, in the console's order", () => {
     expect(cleanScopes(["paiements", "annonces", "paiements", "nope", 3])).toEqual(["annonces", "paiements"]);

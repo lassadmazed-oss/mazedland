@@ -9,6 +9,7 @@ import { runPool } from "@/lib/pool";
 import { settleUpload, trackUpload } from "@/lib/uploadsInFlight";
 import { useToast } from "@/components/ui/Toast";
 import { useSetting } from "@/components/settings/SettingsProvider";
+import { trackEvent } from "@/lib/analytics/events";
 import {
   ArrowLeft, ArrowRight, Camera, CircleAlert, Loader2, RotateCw, Star, Trash2, X,
 } from "lucide-react";
@@ -228,6 +229,7 @@ export function PhotoUploader({
         }
         if (!target) {
           mark({ phase: "failed", error: t("unexpectedResponse") });
+          trackEvent("upload_failed", { kind: "photo", reason: "unexpected_response" });
           return null;
         }
 
@@ -253,6 +255,7 @@ export function PhotoUploader({
         disarm();
         if (!put.ok) {
           mark({ phase: "failed", error: t("putRefused", { status: put.status }) });
+          trackEvent("upload_failed", { kind: "photo", reason: "put_refused", status: put.status });
           return null;
         }
 
@@ -267,6 +270,7 @@ export function PhotoUploader({
           phase: "failed",
           error: e instanceof MintError ? e.message : timedOut ? t("tooSlow") : t("sendFailed"),
         });
+        trackEvent("upload_failed", { kind: "photo", reason: e instanceof MintError ? "mint" : timedOut ? "timeout" : "network" });
         return null;
       } finally {
         done();

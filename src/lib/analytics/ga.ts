@@ -180,12 +180,14 @@ export function dropPending(): void {
 const PHONE_LIKE = /\+?\d[\d\s.-]{6,}\d/g;
 const EMAIL_LIKE = /[^\s@]+@[^\s@]+/g;
 
-/** A search's words, without what could be a phone number or an e-mail. */
-export function cleanSearchTerm(raw: string | null | undefined): string {
+/** A text without what could be a phone number or an e-mail, whatever its length. */
+export function maskPersonal(raw: string | null | undefined): string {
   return (raw ?? "")
     .replace(EMAIL_LIKE, "[email]")
-    .replace(PHONE_LIKE, (m) => (m.replace(/\D/g, "").length >= 8 ? "[phone]" : m))
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 100);
+    .replace(PHONE_LIKE, (m) => (m.replace(/\D/g, "").length >= 8 ? "[phone]" : m));
+}
+
+/** A search's words, without what could be a phone number or an e-mail. */
+export function cleanSearchTerm(raw: string | null | undefined): string {
+  return maskPersonal(raw).replace(/\s+/g, " ").trim().slice(0, 100);
 }
