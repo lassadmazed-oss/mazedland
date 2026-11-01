@@ -34,11 +34,12 @@ export const ADMIN_SECTIONS = [
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
 
 /**
- * Never handed out piecemeal: the settings (payee, limits, every switch) and
- * the team itself. Only a full admin opens them — otherwise someone given
- * « Finance » could give themselves the rest.
+ * Never handed out piecemeal: the settings (payee, limits, every switch), the
+ * team itself, and the site's own subscriptions (which accounts pay Vercel,
+ * Supabase, the domains). Only a full admin opens them — otherwise someone
+ * given « Finance » could give themselves the rest.
  */
-export const OWNER_SECTIONS = ["settings", "equipe"] as const;
+export const OWNER_SECTIONS = ["settings", "equipe", "abonnements"] as const;
 export type OwnerSection = (typeof OWNER_SECTIONS)[number];
 
 export type ConsoleSection = AdminSection | OwnerSection;

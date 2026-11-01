@@ -222,8 +222,14 @@ export async function sendSms(params: {
   }
 }
 
-/** Account SMS credit balance (admin diagnostics). Rate-limited 1/30s by WinSMS. */
-export async function checkBalance(): Promise<{ ok: true; balance: number } | { ok: false; error: string }> {
+/**
+ * Account SMS credit balance (admin diagnostics, /admin/abonnements), with
+ * the licence's end and the holder's name when WinSMS sends them
+ * (`{"balance":…,"user":…,"licence":"2027-10-04"}`). Rate-limited 1/30s by WinSMS.
+ */
+export async function checkBalance(): Promise<
+  { ok: true; balance: number; licence?: string; holder?: string } | { ok: false; error: string }
+> {
   const apiKey = process.env.WINSMS_API_KEY;
   if (!apiKey) return { ok: false, error: "sms_not_configured" };
   try {
@@ -240,7 +246,9 @@ export async function checkBalance(): Promise<{ ok: true; balance: number } | { 
     }
     if (!res.ok) return { ok: false, error: String((data.error as string) || text) };
     const balance = Number(data.balance ?? data.solde ?? data.credits ?? 0);
-    return { ok: true, balance: Number.isNaN(balance) ? 0 : balance };
+    const licence = typeof data.licence === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data.licence) ? data.licence : undefined;
+    const holder = typeof data.user === "string" && data.user.trim() ? data.user.trim().slice(0, 120) : undefined;
+    return { ok: true, balance: Number.isNaN(balance) ? 0 : balance, licence, holder };
   } catch {
     return { ok: false, error: "exception" };
   }

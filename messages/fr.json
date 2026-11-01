@@ -2755,6 +2755,10 @@
       "team": {
         "label": "Équipe",
         "description": "Qui a accès à la console et à quelles sections ; le journal des changements sensibles."
+      },
+      "services": {
+        "label": "Abonnements",
+        "description": "Vercel, Supabase, domaines, crédits : dates, prix et alertes SMS."
       }
     }
   },
@@ -2836,7 +2840,8 @@
       "broadcasts": "Diffusions",
       "settings": "Réglages",
       "journal": "Journal",
-      "team": "Équipe"
+      "team": "Équipe",
+      "services": "Abonnements"
     },
     "pager": {
       "previous": "Précédent",
@@ -5013,6 +5018,10 @@
       "analytics": {
         "title": "Statistiques",
         "hint": "Google Analytics 4 : d'où viennent les visiteurs et ce qu'ils font sur le site (recherches, numéros affichés, WhatsApp, partages, visites demandées, annonces publiées). Le journal d'activité du site continue de compter les pages vues de son côté. La console n'est jamais mesurée."
+      },
+      "services": {
+        "title": "Abonnements",
+        "hint": "Les alertes SMS des services que le site paie : Vercel, Supabase, les domaines, les crédits. La liste des services est dans Site → Abonnements."
       }
     },
     "feature_visits": {
@@ -5237,7 +5246,9 @@
       "seconds": "secondes",
       "hours": "heures",
       "months": "mois",
-      "years": "ans"
+      "years": "ans",
+      "hour_of_day": "h",
+      "sms": "SMS"
     },
     "ui": {
       "tabsLabel": "Parties des réglages",
@@ -5504,6 +5515,46 @@
     "agency_strip_reactive_first": {
       "label": "Agences réactives en premier",
       "hint": "Dans le bandeau des agences recommandées, celles qui ont le badge passent devant ; l'ordre tourne chaque jour dans chaque groupe."
+    },
+    "services_alerts_enabled": {
+      "label": "Alertes SMS des abonnements",
+      "hint": "Un SMS avant que Vercel, Supabase, un domaine ou un crédit ne s'arrête (Site → Abonnements)."
+    },
+    "services_sms_recipients": {
+      "label": "Numéros qui reçoivent les alertes",
+      "hint": "Un numéro par ligne, cinq au plus. « 98 124 111 » suffit pour la Tunisie."
+    },
+    "services_lead_days": {
+      "label": "Premier rappel",
+      "hint": "Combien de jours avant la fin part le premier SMS. Chaque service peut en avoir un autre."
+    },
+    "services_alert_day_before": {
+      "label": "Rappel la veille",
+      "hint": "Un deuxième SMS le jour d'avant."
+    },
+    "services_alert_on_day": {
+      "label": "Rappel le jour même",
+      "hint": "Un SMS le jour où le service se renouvelle ou expire."
+    },
+    "services_quiet_start": {
+      "label": "Silence à partir de",
+      "hint": "Heure de Tunis. Les rappels attendent la fin du silence."
+    },
+    "services_quiet_end": {
+      "label": "Silence jusqu'à",
+      "hint": "Heure de Tunis."
+    },
+    "services_urgent_at_night": {
+      "label": "Urgences même la nuit",
+      "hint": "Un site bloqué ou injoignable, un impayé : le SMS part tout de suite, même pendant le silence."
+    },
+    "services_sms_arabic": {
+      "label": "SMS en arabe",
+      "hint": "Désactivé : en français."
+    },
+    "services_sms_low_balance": {
+      "label": "Alerte de crédit SMS",
+      "hint": "Sous ce nombre de SMS restants chez WinSMS, un SMS dit de recharger. Jamais : pas d'alerte."
     }
   },
   "ads": {
@@ -5865,5 +5916,241 @@
     "choiceDefault": "La mesure d'audience est active. Vous pouvez la refuser.",
     "withdraw": "Refuser la mesure",
     "grant": "Accepter la mesure"
+  },
+  "adminServices": {
+    "title": "Abonnements",
+    "eyebrow": "Site",
+    "description": "Tout ce que le site paie pour rester en ligne : quand chaque service se renouvelle, ce qu'il coûte et qui le paie. Un SMS part avant que l'un d'eux ne s'arrête.",
+    "unavailable": "Les abonnements ne sont pas disponibles pour le moment.",
+    "add": "Ajouter",
+    "checkNow": "Vérifier maintenant",
+    "checked": "Contrôle fait : {refreshed} lus chez les fournisseurs, {sent} SMS envoyés.",
+    "warn": {
+      "alertsOff": "Les alertes SMS sont désactivées : la liste reste à jour, aucun SMS ne part.",
+      "smsOff": "WinSMS n'est pas configuré : aucun SMS ne peut partir.",
+      "noRecipients": "Aucun numéro valide ne reçoit les alertes.",
+      "fix": "Régler les alertes"
+    },
+    "summary": {
+      "todo": "À régler",
+      "soon": "Bientôt",
+      "fine": "En ordre",
+      "monthly": "Par mois",
+      "monthlyHint": "Les annuels comptés au douzième ; crédits et usage à part.",
+      "none": "—"
+    },
+    "watchdog": {
+      "title": "Surveillance hors Vercel",
+      "ok": "Le site répond ({code}), contrôlé {ago}.",
+      "blocked": "Le site répond 402 : bloqué par Vercel depuis {since}.",
+      "down": "Le site ne répond plus depuis {since}.",
+      "stale": "Le contrôle horaire ne tourne plus depuis {since}.",
+      "waiting": "Premier contrôle dans quelques minutes.",
+      "hourly": "Contrôle horaire des fournisseurs : {ago}.",
+      "hourlyNever": "Contrôle horaire des fournisseurs : pas encore passé."
+    },
+    "kinds": {
+      "hosting": "Hébergement",
+      "database": "Base de données",
+      "domain": "Nom de domaine",
+      "sms": "SMS",
+      "email": "E-mail",
+      "ai": "Intelligence artificielle",
+      "other": "Autre"
+    },
+    "cycles": {
+      "monthly": "Mensuel",
+      "yearly": "Annuel",
+      "prepaid": "Crédit prépayé",
+      "usage": "À l'usage",
+      "once": "Une fois"
+    },
+    "price": {
+      "monthly": "{amount} / mois",
+      "yearly": "{amount} / an",
+      "prepaid": "{amount} par recharge",
+      "usage": "{amount} selon l'usage",
+      "once": "{amount}",
+      "unknown": "Prix à compléter"
+    },
+    "payments": {
+      "card": "Carte bancaire",
+      "transfer": "Virement",
+      "d17": "D17",
+      "prepaid": "Crédit prépayé",
+      "cash": "Espèces"
+    },
+    "state": {
+      "blocked": "Bloqué par {provider}",
+      "unpaid": "Paiement en attente",
+      "overdue": "{days, plural, one {En retard d'un jour} other {En retard de # jours}}",
+      "today": "Se renouvelle aujourd'hui",
+      "soon": "{days, plural, one {Demain} other {Dans # jours}}",
+      "low": "Crédit bas",
+      "unknown": "Date à compléter",
+      "error": "{provider} ne répond pas",
+      "ok": "{days, plural, one {OK · demain} other {OK · dans # jours}}",
+      "okNoDate": "OK",
+      "paused": "Suivi arrêté"
+    },
+    "list": {
+      "empty": "Aucun service pour le moment.",
+      "emptyHint": "Ajoutez Vercel, Supabase ou un domaine : un fournisseur, une date, c'est tout.",
+      "auto": "Suivi auto",
+      "noDate": "sans date",
+      "renews": "le {date}"
+    },
+    "detail": {
+      "providerSays": "Ce que dit {provider}",
+      "checked": "lu {ago}",
+      "notChecked": "Pas encore lu : le prochain contrôle s'en charge.",
+      "vercel": "Plan {plan}, statut « {status} », période jusqu'au {date}.",
+      "vercelBlock": "Bloqué ({reason}) depuis {since}.",
+      "rdap": "Registraire : {registrar}. Expire le {date}.",
+      "rdapStatus": "Statut : {statuses}.",
+      "winsms": "Crédit : {balance} SMS. Licence jusqu'au {date}.",
+      "winsmsHolder": "Titulaire : {holder}.",
+      "anthropic": "30 derniers jours : {calls} appels, environ {spend} $.",
+      "anthropicNoCredit": "Plus de crédit depuis {since}.",
+      "supabase": "La base répond : chaque contrôle la lit.",
+      "error": "Dernière erreur : {error}",
+      "billing": "Ouvrir la facturation",
+      "alerts": "SMS de ce service",
+      "noAlerts": "Aucun SMS pour ce service."
+    },
+    "alerts": {
+      "title": "Alertes SMS",
+      "hint": "À qui, combien de jours avant la fin, et quand se taire. Chaque service peut avoir son propre délai.",
+      "to": "Les alertes partent vers : {list}",
+      "invalid": "Numéro non reconnu, ignoré : {list}",
+      "test": "Envoyer un SMS de test",
+      "testSent": "{sent, plural, one {SMS de test envoyé.} other {# SMS de test envoyés.}}"
+    },
+    "log": {
+      "title": "Derniers SMS",
+      "empty": "Aucun SMS envoyé pour l'instant.",
+      "site": "Le site",
+      "when": "Quand",
+      "service": "Service",
+      "stage": "Motif",
+      "phone": "Numéro",
+      "status": "État",
+      "dailyCap": "plafond du jour atteint"
+    },
+    "stages": {
+      "lead": "Rappel",
+      "day_before": "Veille",
+      "day": "Jour J",
+      "overdue": "En retard",
+      "unpaid": "Impayé",
+      "blocked": "Blocage",
+      "low": "Crédit bas",
+      "site_blocked": "Site bloqué",
+      "site_down": "Site injoignable",
+      "site_ok": "Site rétabli",
+      "monitor_stale": "Contrôle arrêté",
+      "test": "Test"
+    },
+    "alertStatus": {
+      "sending": "En cours",
+      "sent": "Envoyé",
+      "failed": "Échec"
+    },
+    "editor": {
+      "new": "Nouveau service",
+      "presets": "Fournisseur",
+      "presetOther": "Autre",
+      "kind": "Type",
+      "provider": "Nom du fournisseur",
+      "name": "Nom du service",
+      "namePlaceholder": "ex. mazed.immo",
+      "purpose": "À quoi il sert",
+      "cost": "Prix",
+      "costHint": "Vide tant qu'on ne le connaît pas.",
+      "currency": "Devise",
+      "cycle": "Cycle",
+      "renewsOn": "Prochain renouvellement ou fin",
+      "renewsOnAuto": "Donnée par {provider} à chaque contrôle.",
+      "plusMonth": "+1 mois",
+      "plusYear": "+1 an",
+      "unknownDate": "Inconnue",
+      "autoRenew": "Prélèvement automatique",
+      "autoRenewHint": "Payé par une carte enregistrée. Désactivé : à payer à la main.",
+      "account": "Compte qui paie",
+      "accountPlaceholder": "e-mail ou nom du compte",
+      "payment": "Moyen de paiement",
+      "billingUrl": "Page de facturation",
+      "lead": "Premier SMS",
+      "leadDefault": "Par défaut ({days} j)",
+      "leadDays": "{days} j avant",
+      "notes": "Notes",
+      "active": "Suivre ce service",
+      "activeHint": "Désactivé : plus aucun SMS, la ligne reste dans la liste.",
+      "save": "Enregistrer",
+      "saved": "Service enregistré.",
+      "created": "Service ajouté.",
+      "cancel": "Annuler",
+      "missing": {
+        "provider": "Le fournisseur manque.",
+        "name": "Le nom manque."
+      }
+    },
+    "actions": {
+      "renewed": "Payé : cycle suivant",
+      "renewedDone": "Date avancée au cycle suivant.",
+      "pause": "Arrêter le suivi",
+      "resume": "Reprendre le suivi",
+      "paused": "Suivi arrêté.",
+      "resumed": "Suivi repris.",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer ce service ?",
+      "deleteBody": "Il disparaît de la liste avec ses SMS. Pour un service qu'on ne paie plus, « Arrêter le suivi » garde l'historique.",
+      "deleted": "Service supprimé."
+    },
+    "api": {
+      "kind": "Type inconnu.",
+      "provider": "Le fournisseur manque ou est trop long.",
+      "name": "Le nom manque ou est trop long.",
+      "purpose": "La description est trop longue.",
+      "cost": "Prix impossible.",
+      "currency": "Devise inconnue.",
+      "cycle": "Cycle inconnu.",
+      "renews_on": "Date impossible.",
+      "auto_renew": "Valeur impossible.",
+      "account": "Le compte est trop long.",
+      "payment_note": "Le moyen de paiement est trop long.",
+      "billing_url": "Lien impossible : une adresse https.",
+      "lead_days": "Délai impossible.",
+      "active": "Valeur impossible.",
+      "notes": "Les notes sont trop longues."
+    },
+    "sms": {
+      "title": {
+        "lead": "Rappel : {name}",
+        "day_before": "Demain : {name}",
+        "day": "Aujourd'hui : {name}",
+        "overdue": "En retard : {name}",
+        "unpaid": "Paiement en attente : {name}",
+        "blocked": "BLOQUÉ : {name}",
+        "low": "Crédit bas : {name}",
+        "test": "SMS de test",
+        "database_down": "ALERTE base de données"
+      },
+      "body": {
+        "lead": "{name} ({provider}) se renouvelle le {date}, {days, plural, one {dans # jour} other {dans # jours}}.",
+        "day_before": "{name} se renouvelle demain, le {date}.",
+        "day": "{name} se renouvelle aujourd'hui.",
+        "overdue": "{name} devait se renouveler le {date}. Vérifiez qu'il est payé et mettez la date à jour.",
+        "unpaid": "{provider} signale un paiement en attente ({status}). Payez avant que le service ne s'arrête.",
+        "blocked": "{provider} a arrêté {name} ({status}). Payez la facture tout de suite.",
+        "low": "Plus que {balance} SMS chez {provider}. Rechargez le crédit.",
+        "test": "Les alertes des abonnements arrivent bien à ce numéro.",
+        "database_down": "Supabase ne répond plus : le site est en panne. Ouvrez supabase.com, onglet Billing."
+      },
+      "action": {
+        "auto": "Paiement auto : vérifiez la carte.",
+        "manual": "À payer à la main."
+      }
+    }
   }
 }

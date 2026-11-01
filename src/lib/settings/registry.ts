@@ -210,6 +210,25 @@ export const SETTINGS = {
   // On: Google loads only once the visitor said yes to the bar (and never
   // after a no). Off: it loads for everyone, with advertising signals denied.
   analytics_ask_consent: { group: "analytics", type: "bool", default: true, client: true },
+
+  // ── Paid services (0203, /admin/abonnements): an SMS before Vercel,
+  //    Supabase, a domain or a credit runs out. The watchdog in the database
+  //    (services_watchdog) reads the same keys with the same defaults.
+  services_alerts_enabled: { group: "services", type: "bool", default: true, href: "/admin/abonnements" },
+  // Who gets them: the owner's number by default (« lassad », 2026-11-01).
+  services_sms_recipients: { group: "services", type: "list", default: ["+216 98 124 111"], maxItems: 5, maxLen: 20 },
+  // The first SMS, this many days before the end; each service may say otherwise.
+  services_lead_days: { group: "services", type: "int", default: 4, min: 1, max: 30, unit: "days", choices: [1, 3, 4, 7, 14] },
+  services_alert_day_before: { group: "services", type: "bool", default: true },
+  services_alert_on_day: { group: "services", type: "bool", default: true },
+  // No reminder between these hours (Tunis time); it goes when they end.
+  services_quiet_start: { group: "services", type: "int", default: 22, min: 0, max: 23, unit: "hour_of_day", choices: [20, 21, 22, 23] },
+  services_quiet_end: { group: "services", type: "int", default: 8, min: 0, max: 23, unit: "hour_of_day", choices: [6, 7, 8, 9, 10] },
+  // A blocked or unreachable site is sent even at night.
+  services_urgent_at_night: { group: "services", type: "bool", default: true },
+  services_sms_arabic: { group: "services", type: "bool", default: true },
+  // Below this many SMS left on WinSMS, one SMS says to top up. 0 = never.
+  services_sms_low_balance: { group: "services", type: "int", default: 200, min: 0, max: 5000, unit: "sms", choices: [100, 200, 500, 1000, 0] },
 } as const satisfies Record<string, SettingDef>;
 
 export type SettingKey = keyof typeof SETTINGS;
@@ -221,7 +240,7 @@ export type ClientSettings = Pick<Settings, ClientSettingKey>;
 
 /** The console's tabs, in order. */
 export const SETTING_GROUPS = [
-  "features", "home", "moderation", "publication", "buyers", "contact", "social", "payment", "company", "limits", "privacy", "analytics",
+  "features", "home", "moderation", "publication", "buyers", "contact", "social", "payment", "company", "limits", "privacy", "analytics", "services",
 ] as const;
 
 export function isSettingKey(k: string): k is SettingKey {
