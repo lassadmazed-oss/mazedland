@@ -6032,7 +6032,7 @@
       "soon": "{days, plural, one {Demain} other {Dans # jours}}",
       "low": "Crédit bas",
       "unknown": "Date à compléter",
-      "error": "{provider} ne répond pas",
+      "error": "Contrôle automatique en échec",
       "ok": "{days, plural, one {OK · demain} other {OK · dans # jours}}",
       "okNoDate": "OK",
       "paused": "Suivi arrêté"

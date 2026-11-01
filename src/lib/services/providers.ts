@@ -117,8 +117,16 @@ export function anthropicReading(calls: AiCall[]): Reading {
   };
 }
 
-async function fetchJson(url: string, init?: RequestInit): Promise<unknown> {
-  const res = await fetch(url, { ...init, signal: AbortSignal.timeout(10_000), cache: "no-store" });
+// rdap.org answers 403 to Node's default User-Agent (2026-11-01).
+const USER_AGENT = "MazedImmo-ServicesWatch/1 (+https://www.mazed.immo)";
+
+async function fetchJson(url: string, init: RequestInit = {}): Promise<unknown> {
+  const res = await fetch(url, {
+    ...init,
+    headers: { "User-Agent": USER_AGENT, ...(init.headers as Record<string, string> | undefined) },
+    signal: AbortSignal.timeout(10_000),
+    cache: "no-store",
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
