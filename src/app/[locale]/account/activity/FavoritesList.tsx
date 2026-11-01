@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { ListingImage } from "@/components/media/ListingImage";
 import { FavoriteButton } from "@/components/property/FavoriteButton";
 import { formatTND } from "@/lib/utils";
-import { Heart, ImageOff, MapPin, Search } from "lucide-react";
+import { Heart, Home, MapPin, Search } from "lucide-react";
 
 /** One saved annonce, with its words already in the page's language. */
 export type SavedItem = {
@@ -33,9 +33,15 @@ export type SavedItem = {
  * opened again. Now the card goes on the tap, the count and the empty state
  * follow, and if the write fails the heart rolls back (FavoriteButton says
  * why in a toast) and the card comes back where it was.
+ *
+ * The cards are the catalogue's (2026-10-31): the photo at 4:3 with what is
+ * read at a glance on it, then the price first, the title, the type and the
+ * place — so a saved annonce looks like the thing that was saved, on a phone
+ * as on a desktop. `phoneCols` is the catalogue's `catalogue_phone_columns`.
  */
-export function FavoritesList({ items }: { items: SavedItem[] }) {
+export function FavoritesList({ items, phoneCols = 1 }: { items: SavedItem[]; phoneCols?: number }) {
   const t = useTranslations("account.favorites");
+  const tRoot = useTranslations();
   const locale = useLocale();
   // Ids taken off on this page. Filtering keeps the order, so a card that
   // comes back after a failed write lands in its old place.
@@ -50,147 +56,113 @@ export function FavoritesList({ items }: { items: SavedItem[] }) {
       return next;
     });
 
-  const priceLabel = (i: SavedItem, onRequest: string) =>
+  const priceLabel = (i: SavedItem) =>
     i.priceOnRequest || i.price == null
-      ? onRequest
+      ? t("priceOnRequest")
       : t(i.rent ? "pricePerMonth" : "price", { amount: formatTND(i.price, locale) });
 
   return (
     <>
       <header>
-        <h1 className="inline-flex items-center gap-2 text-[24px] font-extrabold tracking-tight">
-          <Heart className="size-5 text-gold" strokeWidth={2.4} /> {t("title")}
+        <h1 className="mazed-h2 inline-flex items-center gap-2.5 text-[26px] text-foreground lg:text-[32px]">
+          <Heart className="size-6 shrink-0" strokeWidth={2.2} aria-hidden /> {t("title")}
         </h1>
         {/* Polite live region: a screen reader hears the new count when a
             card leaves, since the card itself just disappears. */}
-        <p className="mt-1 text-[13px] text-muted" aria-live="polite">
+        <p className="mt-1 text-[13.5px] text-muted" aria-live="polite">
           {visible.length === 0 ? t("subtitleEmpty") : t("subtitleCount", { count: visible.length })}
         </p>
       </header>
 
       {visible.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-border bg-surface-2/40 p-8 text-center">
-          <p className="text-[13px] text-muted">{t("emptyBody")}</p>
+        <div className="mazed-band-warm mt-6 rounded-[var(--radius-3xl)] px-6 py-12 text-center lg:py-16">
+          <span className="mx-auto grid size-12 place-items-center rounded-full bg-surface text-foreground shadow-[var(--shadow-card)]">
+            <Heart className="size-5" strokeWidth={2.2} aria-hidden />
+          </span>
+          <p className="mx-auto mt-4 max-w-sm text-[14px] leading-relaxed text-muted">{t("emptyBody")}</p>
           <Link
             href={"/annonces" as never}
-            className="mazed-btn-luxe tap-target mt-4 inline-flex px-5 py-2.5 text-[13px]"
+            className="mazed-btn-luxe tap-target mt-6 inline-flex h-12 items-center gap-2 rounded-full px-6 text-[14px]"
           >
-            <Search className="size-4" /> {t("browse")}
+            <Search className="size-4" aria-hidden /> {t("browse")}
           </Link>
         </div>
       ) : (
-        <>
-          {/* Phone: a list. A saved annonce is scanned by name and price, and a
-              row puts both on one line at a readable size. */}
-          <div className="mt-5 space-y-3 lg:hidden">
-            {visible.map((i) => (
-              <article
-                key={i.id}
-                className={"flex gap-3 rounded-2xl border border-border bg-surface p-3 " + (i.gone ? "opacity-70" : "")}
-              >
-                <Link
-                  href={`/annonces/${i.id}` as never}
-                  className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border"
-                >
-                  {i.coverPath ? (
-                    <ListingImage path={i.coverPath} alt="" sizes="80px" fit="cover" />
-                  ) : (
-                    <span className="grid size-full place-items-center text-muted">
-                      <ImageOff className="size-5" />
-                    </span>
-                  )}
-                </Link>
-
-                <div className="min-w-0 flex-1">
-                  {!i.withheld && (
-                    <span className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-muted">{i.category}</span>
-                  )}
-                  <Link href={`/annonces/${i.id}` as never} className="block">
-                    <h2 className="mt-0.5 truncate text-[14.5px] font-bold text-foreground hover:text-gold">
-                      {i.withheld ? t("withheldTitle") : i.title}
-                    </h2>
-                  </Link>
-                  {i.withheld ? (
-                    <p className="mt-0.5 text-[11px] font-bold text-[var(--accent-deep)]">{t("unavailable")}</p>
-                  ) : (
-                    <>
-                      <p className="mazed-tabular mt-0.5 text-[13.5px] font-extrabold text-foreground">
-                        {priceLabel(i, t("priceOnRequest"))}
-                      </p>
-                      <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted">
-                        <MapPin className="size-3" /> {i.place}
-                        {i.gone && <span className="ms-2 font-bold text-[var(--accent-deep)]">· {t("unavailable")}</span>}
-                      </p>
-                    </>
-                  )}
-                </div>
-
-                <div className="self-start">
-                  <FavoriteButton listingId={i.id} initialSaved loggedIn size="sm" onSavedChange={follow(i.id)} />
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {/* Desktop: the cards the catalogue uses, so a saved annonce looks
-              like the thing that was saved. */}
-          <div className="mt-6 hidden gap-5 lg:grid lg:grid-cols-3 xl:grid-cols-4">
-            {visible.map((i) => (
-              <article
-                key={i.id}
-                className={
-                  "group relative overflow-hidden rounded-2xl border border-border bg-surface transition hover:border-gold-soft " +
-                  (i.gone ? "opacity-70" : "")
-                }
-              >
-                <Link href={`/annonces/${i.id}` as never} className="block">
-                  <div className="relative aspect-[4/3] bg-surface-2">
-                    {i.coverPath ? (
-                      <ListingImage path={i.coverPath} alt={i.title} sizes="(min-width:1280px) 22vw, 30vw" fit="cover" />
+        <ul
+          className={`mt-5 grid gap-x-3 gap-y-7 ${
+            phoneCols === 2 ? "grid-cols-2" : "grid-cols-1"
+          } sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-9 xl:grid-cols-4`}
+        >
+          {visible.map((i) => {
+            const title = i.withheld ? t("withheldTitle") : i.title;
+            return (
+              <li key={i.id}>
+                <article className={`group relative ${i.gone ? "opacity-80" : ""}`}>
+                  <div className="mazed-photo-frame aspect-[4/3]">
+                    {i.coverPath && !i.withheld ? (
+                      <ListingImage
+                        path={i.coverPath}
+                        alt=""
+                        sizes="(min-width: 1280px) 300px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+                        fit="cover"
+                      />
                     ) : (
-                      <span className="grid size-full place-items-center text-muted">
-                        <ImageOff className="size-6" />
-                      </span>
+                      <div className="flex h-full items-center justify-center text-muted">
+                        <Home className="size-8" strokeWidth={1.5} aria-hidden />
+                      </div>
                     )}
+                    {i.rent && !i.withheld && (
+                      <div className="pointer-events-none absolute start-2.5 top-2.5 z-[2]">
+                        <span className="mazed-chip-photo mazed-chip-photo-ink">{tRoot("listing.forRent")}</span>
+                      </div>
+                    )}
+                    {/* « plus disponible », on the photo where « À louer » would be read. */}
                     {i.gone && (
-                      <span className="absolute inset-x-0 bottom-0 bg-black/75 py-1 text-center text-[10.5px] font-extrabold uppercase tracking-[0.12em] text-white">
+                      <span className="mazed-chip-photo mazed-chip-photo-ink pointer-events-none absolute bottom-2.5 start-2.5 z-[2]">
                         {t("unavailable")}
                       </span>
                     )}
                   </div>
-                </Link>
 
-                {/* The heart stays on the card: this page is where people come
-                    to REMOVE things, and hunting for that control is the one
-                    thing it must not make you do. */}
-                <div className="absolute end-2 top-2">
-                  <FavoriteButton listingId={i.id} initialSaved loggedIn size="sm" onSavedChange={follow(i.id)} />
-                </div>
+                  {/* The heart stays on the card: this page is where people come
+                      to REMOVE things, and hunting for that control is the one
+                      thing it must not make you do. z-20 keeps it above the
+                      stretched link. */}
+                  <div className="absolute end-2.5 top-2.5 z-20">
+                    <FavoriteButton listingId={i.id} initialSaved loggedIn size="sm" onSavedChange={follow(i.id)} />
+                  </div>
 
-                <div className="p-3">
-                  {!i.withheld && (
-                    <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted">{i.category}</span>
-                  )}
-                  <Link href={`/annonces/${i.id}` as never} className="block">
-                    <h2 className="mt-0.5 line-clamp-2 min-h-[2.5em] text-[13.5px] font-bold leading-snug text-foreground hover:text-gold">
-                      {i.withheld ? t("withheldTitle") : i.title}
-                    </h2>
+                  <div className="pt-3">
+                    {i.withheld ? (
+                      <>
+                        <p className="text-[15px] font-extrabold text-foreground">{title}</p>
+                        <p className="mt-1 text-[12.5px] font-semibold text-[var(--accent-deep)]">{t("unavailable")}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mazed-tabular text-[17px] font-extrabold leading-none text-foreground">{priceLabel(i)}</p>
+                        <h2 dir="auto" className="mt-1.5 line-clamp-1 text-[14px] font-semibold leading-snug text-foreground">
+                          {title}
+                        </h2>
+                        <p className="mt-1 text-[12.5px] text-muted">{i.category}</p>
+                        <p className="mt-0.5 flex items-center gap-1 text-[12px] text-muted">
+                          <MapPin className="size-3 shrink-0" strokeWidth={2} aria-hidden />
+                          <span className="truncate">{i.place}</span>
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Stretched link — the whole card opens the annonce without
+                      wrapping the heart's <button> in an <a>. */}
+                  <Link href={`/annonces/${i.id}` as never} aria-label={title} className="absolute inset-0 z-10 rounded-2xl">
+                    <span className="sr-only">{title}</span>
                   </Link>
-                  {!i.withheld && (
-                    <>
-                      <p className="mazed-tabular mt-1 text-[15px] font-extrabold text-foreground">
-                        {priceLabel(i, t("onRequest"))}
-                      </p>
-                      <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted">
-                        <MapPin className="size-3" /> {i.place}
-                      </p>
-                    </>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-        </>
+                </article>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </>
   );

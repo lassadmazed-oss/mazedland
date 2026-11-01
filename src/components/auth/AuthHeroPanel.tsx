@@ -3,13 +3,14 @@ import { useTranslations } from "next-intl";
 import { BELOW_LG, EMPTY_GIF } from "@/components/ui/HiddenAt";
 
 /**
- * Desktop-only split-screen hero for the auth pages. A full-height
- * property photo under a warm near-black scrim, with the brand promise, three
- * trust points, and a slim social-proof line set directly on the image
- * (no stacked cards) — kept compact so the whole auth screen fits in one
- * viewport without scrolling. Rendered only inside the `hidden lg:grid`
- * tree. That hides it on phones but does not stop the photo downloading, so
- * the first <source> hands narrow screens an empty GIF (see HiddenAt).
+ * Desktop-only half of the auth screens: the brand photograph that opens the
+ * home page (2026-10-31), under the home hero's own scrim, with the promise,
+ * three trust points and a slim social-proof line set directly on it — kept
+ * compact so the whole auth screen fits in one viewport without scrolling.
+ * Rendered only inside the `hidden lg:grid` tree. That hides it on phones
+ * but does not stop the photo downloading, so the first <source> hands narrow
+ * screens an empty GIF (see HiddenAt); the phone tree draws the same photo
+ * with HeroPhoto.
  */
 const FEATURES = [
   { Icon: ShieldCheck, key: "secure" },
@@ -20,7 +21,7 @@ const FEATURES = [
 export function AuthHeroPanel() {
   const t = useTranslations("auth.hero");
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#1a1206]">
+    <div className="relative h-full w-full overflow-hidden bg-[#1b2a36]">
       <picture>
         <source media={BELOW_LG} srcSet={EMPTY_GIF} />
         <source srcSet="/auth-hero.avif" type="image/avif" />
@@ -30,61 +31,56 @@ export function AuthHeroPanel() {
           alt=""
           fetchPriority="high"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover object-[50%_62%]"
         />
       </picture>
-      {/* Deep scrim so white text + icons read on any photo. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#140d04]/95 via-[#140d04]/55 to-[#140d04]/35" />
+      {/* The home hero's scrim, and a little more at the foot: three lines of
+          small white type sit there. */}
+      <div className="mazed-hero-scrim absolute inset-0" aria-hidden />
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/55 to-transparent" aria-hidden />
 
-      <div className="relative flex h-full flex-col justify-between p-12">
-        {/* Top — one brand pill */}
-        <span className="inline-flex w-fit items-center gap-2.5 rounded-full bg-white/10 px-4 py-2 text-[12.5px] font-bold text-white ring-1 ring-white/20 backdrop-blur">
-          <ShieldCheck className="size-4 shrink-0" strokeWidth={2} />
+      <div className="relative flex h-full flex-col justify-between p-12 text-white">
+        {/* Top — one brand pill, as on the home page. */}
+        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-black/30 px-3.5 py-1.5 text-[12px] font-bold ring-1 ring-white/25 backdrop-blur-sm">
+          <ShieldCheck className="size-4 shrink-0" strokeWidth={2.2} aria-hidden />
           {t("badge")}
         </span>
 
         {/* Bottom — headline + trust points + social proof */}
         <div>
-          <h2 className="max-w-md text-balance text-[32px] font-extrabold leading-[1.12] tracking-tight text-white">
-            {t("title")}
-          </h2>
+          <h2 className="mazed-display max-w-[14ch] text-[44px] text-white drop-shadow-sm">{t("title")}</h2>
 
-          <div className="mt-7 space-y-4">
+          <ul className="mt-8 space-y-3.5">
             {FEATURES.map((f) => (
-              <div key={f.key} className="flex items-center gap-3.5 text-white">
-                <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/12 ring-1 ring-white/20">
-                  <f.Icon className="size-5" strokeWidth={2} />
+              <li key={f.key} className="flex items-center gap-3.5">
+                <span className="inline-grid size-10 shrink-0 place-items-center rounded-full bg-white/14 ring-1 ring-white/25 backdrop-blur-sm">
+                  <f.Icon className="size-[18px]" strokeWidth={2} aria-hidden />
                 </span>
                 <div>
                   <div className="text-[14px] font-bold leading-tight">{t(`${f.key}Title`)}</div>
-                  <div className="text-[12px] text-white/65">{t(`${f.key}Sub`)}</div>
+                  <div className="mt-0.5 text-[12px] text-white/70">{t(`${f.key}Sub`)}</div>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
 
           <div className="mt-8 flex items-center gap-3">
             {/* Tailwind 4's space-x is margin-inline-start/end, so the overlap
-                already mirrors under RTL. */}
+                already mirrors under RTL. Neutral tones: the page has one accent. */}
             <div className="flex -space-x-2.5">
-              {["#dfae55", "#cc902e", "#a86f22", "#e8d5a3"].map((c, i) => (
-                <span
-                  key={i}
-                  aria-hidden
-                  className="size-8 rounded-full ring-2 ring-[#1a1206]"
-                  style={{ background: c }}
-                />
+              {["#e4e4e7", "#a1a1aa", "#52525b", "#f4f4f5"].map((c, i) => (
+                <span key={i} aria-hidden className="size-8 rounded-full ring-2 ring-black/40" style={{ background: c }} />
               ))}
             </div>
-            <div className="leading-tight text-white">
+            <div className="leading-tight">
               <div className="text-[12.5px] font-extrabold">{t("users")}</div>
               <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="flex gap-0.5">
+                <span className="flex gap-0.5" aria-hidden>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="size-3 fill-amber-400 text-amber-400" strokeWidth={0} />
+                    <Star key={i} className="size-3 fill-white text-white" strokeWidth={0} />
                   ))}
                 </span>
-                <span className="text-[11px] text-white/60">{t("trust")}</span>
+                <span className="text-[11px] text-white/70">{t("trust")}</span>
               </div>
             </div>
           </div>

@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import { getTranslations, getLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { AuthHeroPanel } from "@/components/auth/AuthHeroPanel";
+import { AuthScreen } from "@/components/auth/AuthScreen";
 import { Link } from "@/i18n/navigation";
 
 /**
- * Login surface.
- *   - Mobile (< lg): the original centered card, preserved verbatim.
- *   - Desktop (lg+): a split screen — a property-photo hero with floating
- *     trust cards on the left, the sign-in card on the right.
+ * Login surface — AuthScreen draws the frame (the brand photo, the floating
+ * card on phones, the split screen from lg); this page is the words and the
+ * form.
  */
 export async function generateMetadata({
   params,
@@ -32,128 +30,32 @@ export default async function LoginPage({
   const sp = await searchParams;
   const next = typeof sp.next === "string" ? sp.next : undefined;
   const t = await getTranslations();
-  const locale = await getLocale();
-  const isRTL = locale === "ar";
 
   return (
-    <>
-      {/* ── MOBILE / tablet (< lg) — unchanged centered card ── */}
-      <div className="lg:hidden mx-auto flex min-h-[calc(100dvh-9rem)] max-w-[var(--max-w)] flex-col items-center justify-center px-6">
-        <div className="relative w-full max-w-sm">
-          <div
-            aria-hidden
-            className="mazed-gradient-blob mazed-gradient-blob-lg absolute -start-1/3 -top-1/4 -z-10 opacity-20"
-          />
-
-          <div className="relative overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-[var(--shadow-md)]">
-            <div aria-hidden className="mazed-gradient-gold h-[2px] w-full" />
-
-            <div className="p-7 sm:p-8">
-              <div className="flex flex-col items-center text-center">
-                <Image
-                  src="/logo.webp"
-                  alt={t("brand.name")}
-                  width={357}
-                  height={480}
-                  sizes="60px"
-                  loading="eager"
-                  fetchPriority="high"
-                  className="h-20 w-auto"
-                />
-                <h1
-                  className={`mt-5 text-[24px] font-extrabold leading-[1.1] tracking-tight ${
-                    isRTL ? "font-arabic" : ""
-                  }`}
-                >
-                  <span className="gradient-gold-text">{t("nav.login")}</span>
-                </h1>
-              </div>
-
-              <div className="mt-7">
-                <LoginForm />
-              </div>
-              <p className="mt-4 text-center text-[12.5px]">
-                <Link
-                  href="/forgot-password"
-                  className="font-semibold text-muted transition hover:text-gold-bright"
-                >
-                  {t("auth.login.forgotPassword")}
-                </Link>
-              </p>
-            </div>
-
-            <div className="border-t border-border bg-surface-2 px-7 py-4 text-center sm:px-8">
-              <p className="text-[12.5px] text-muted">
-                {t("auth.login.noAccount")}{" "}
-                <Link
-                  href={{ pathname: "/signup", query: next ? { next } : {} }}
-                  className="font-bold text-foreground transition hover:text-gold-bright"
-                >
-                  {t("nav.signup")}
-                </Link>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── DESKTOP (lg+) — one-screen split: hero + sign-in card ── */}
-      <div className="hidden h-[100dvh] overflow-hidden lg:grid lg:grid-cols-[1.05fr_0.95fr]">
-        <AuthHeroPanel />
-
-        <div className="relative flex h-[100dvh] items-center justify-center overflow-y-auto bg-surface-2 px-8 py-10">
-          <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-surface p-8 shadow-[0_36px_90px_-34px_rgba(15,23,42,0.4)] ring-1 ring-border">
-            <div aria-hidden className="mazed-gradient-gold absolute inset-x-0 top-0 h-[3px]" />
-
-            <div className="flex flex-col items-center text-center">
-              {/* The mark itself, not a generic house glyph in a gold tile.
-                  The tile was standing in for a logo the product did not have
-                  a usable file of; it does now. */}
-              <Image
-                src="/logo.webp"
-                alt=""
-                width={357}
-                height={480}
-                sizes="60px"
-                loading="eager"
-                fetchPriority="high"
-                className="h-20 w-auto"
-              />
-              <h1
-                className={`mt-5 text-[28px] font-extrabold leading-[1.1] tracking-tight ${
-                  isRTL ? "font-arabic" : ""
-                }`}
-              >
-                {t.rich("auth.login.welcome", {
-                  brand: (chunks) => <span className="gradient-gold-text">{chunks}</span>,
-                })}
-              </h1>
-            </div>
-
-            <div className="mt-8">
-              <LoginForm />
-            </div>
-            <p className="mt-4 text-center text-[13px]">
-              <Link
-                href="/forgot-password"
-                className="font-semibold text-muted transition hover:text-gold-bright"
-              >
-                {t("auth.login.forgotPassword")}
-              </Link>
-            </p>
-
-            <p className="mt-6 text-center text-[13px] text-muted">
-              {t("auth.login.noAccount")}{" "}
-              <Link
-                href={{ pathname: "/signup", query: next ? { next } : {} }}
-                className="font-bold text-foreground transition hover:text-gold-bright"
-              >
-                {t("nav.signup")}
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    </>
+    <AuthScreen
+      labelledBy="login-title"
+      title={t("nav.login")}
+      desktopTitle={t.rich("auth.login.welcome", { brand: (chunks) => <span>{chunks}</span> })}
+      below={
+        <p className="mt-4 text-center text-[13px]">
+          <Link href="/forgot-password" className="font-semibold text-muted transition hover:text-foreground">
+            {t("auth.login.forgotPassword")}
+          </Link>
+        </p>
+      }
+      footer={
+        <>
+          {t("auth.login.noAccount")}{" "}
+          <Link
+            href={{ pathname: "/signup", query: next ? { next } : {} }}
+            className="font-bold text-foreground underline underline-offset-4 transition hover:text-muted"
+          >
+            {t("nav.signup")}
+          </Link>
+        </>
+      }
+    >
+      <LoginForm />
+    </AuthScreen>
   );
 }

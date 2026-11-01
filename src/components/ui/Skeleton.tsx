@@ -64,8 +64,7 @@ export function AuthFormSkeleton({
   // The form card is identical on both breakpoints — render once.
   const card = (
     <div className="relative w-full max-w-sm">
-      <div className="relative overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-[var(--shadow-md)]">
-        <div aria-hidden className="mazed-gradient-gold h-[2px] w-full" />
+      <div className="mazed-float relative overflow-hidden">
         <div className="p-7 sm:p-8">
           <div className="flex flex-col items-center text-center">
             <div className="mazed-skeleton size-20 rounded-2xl" />
@@ -109,9 +108,9 @@ export function AuthFormSkeleton({
           signup don't tear into a different shape while loading. */}
       <div className="hidden h-[100dvh] overflow-hidden lg:grid lg:grid-cols-[1.05fr_0.95fr]">
         {/* Hero side — solid navy block (the real AuthHeroPanel photo). */}
-        <div className="mazed-surface-navy-luxe h-full w-full" />
+        <div className="h-full w-full bg-[#1b2a36]" />
         {/* Form side */}
-        <div className="flex h-[100dvh] items-center justify-center bg-surface-2 px-8 py-10">
+        <div className="flex h-[100dvh] items-center justify-center bg-paper-warm px-8 py-10">
           <div className="w-full max-w-md">{card}</div>
         </div>
       </div>

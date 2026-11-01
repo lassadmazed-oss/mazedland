@@ -1,7 +1,7 @@
 /**
- * Home loading skeleton — mirrors LandingPage's actual rhythm so
- * the swap is invisible: full-bleed hero block, live ticker tape,
- * trending horizontal rail of 5 cards, then a 2/4 col grid.
+ * Home loading skeleton — mirrors LandingPage's rhythm (2026-10-31) so the
+ * swap is invisible: the photographic hero with the floating search card,
+ * the intent row, then two rails of 4:3 cards.
  *
  * Lives under (home) route group so it ONLY fires on `/` and never
  * leaks into other top-level routes (the prior `[locale]/loading.tsx`
@@ -13,164 +13,59 @@ import { LoadingText } from "@/components/ui/LoadingText";
 
 export default function HomeLoading() {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="mx-auto max-w-[var(--max-w)] lg:max-w-[var(--max-w-wide)]"
-    >
+    <div role="status" aria-live="polite" className="mx-auto max-w-[var(--max-w-wide)]">
       <DesktopLoadingSpinner />
-      {/* Hero banner — full-bleed carousel slot */}
-      <div className="px-4 pt-3 lg:hidden">
-        <div className="mazed-skeleton-luxe aspect-[16/10] w-full rounded-3xl" />
-        <div className="mt-3 flex justify-center gap-1.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="mazed-skeleton h-1.5 w-6 rounded-full" />
+
+      {/* Hero — the photo band, then the search card over its edge. */}
+      <div className="lg:hidden">
+        <div className="mazed-skeleton h-[300px] w-full rounded-none" />
+        <div className="relative z-10 -mt-9 px-4">
+          <div className="mazed-float h-[232px] w-full" />
+        </div>
+        <div className="mt-4 flex gap-2 px-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="mazed-skeleton h-10 w-28 rounded-full" />
           ))}
         </div>
       </div>
+      <div className="hidden px-8 lg:block">
+        <div className="mazed-skeleton mt-5 h-[420px] w-full rounded-[var(--radius-3xl)]" />
+        <div className="relative z-10 -mt-12 px-8 xl:px-12">
+          <div className="mazed-float h-[124px] w-full" />
+        </div>
+      </div>
 
-      {/* Hero — desktop split (copy + trust left, auto-sliding banner
-          right), the full-width search bar, then the live-stats strip. */}
-      <div className="hidden px-8 pt-8 lg:block">
-        <div className="grid grid-cols-12 items-center gap-10">
-          <div className="col-span-5 space-y-5">
-            <div className="mazed-skeleton h-7 w-48 rounded-full" />
-            <div className="space-y-3">
-              <div className="mazed-skeleton h-10 w-full rounded" />
-              <div className="mazed-skeleton h-10 w-5/6 rounded" />
-              <div className="mazed-skeleton h-10 w-2/3 rounded" />
+      {/* Two rails of cards. */}
+      {Array.from({ length: 2 }).map((_, r) => (
+        <section key={r} className="mt-10 px-4 lg:mt-16 lg:px-8">
+          <div className="flex items-end justify-between gap-3">
+            <div className="space-y-2">
+              <div className="mazed-skeleton h-2.5 w-20 rounded" />
+              <div className="mazed-skeleton h-6 w-44 rounded" />
             </div>
-            <div className="mazed-skeleton h-4 w-3/4 rounded" />
-            <div className="flex gap-6 pt-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-2.5">
-                  <div className="mazed-skeleton size-9 rounded-xl" />
-                  <div className="space-y-1.5">
-                    <div className="mazed-skeleton h-3 w-20 rounded" />
-                    <div className="mazed-skeleton h-2.5 w-16 rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <div className="mazed-skeleton h-6 w-20 rounded-full" />
           </div>
-          <div className="col-span-7">
-            <div className="mazed-skeleton-luxe aspect-[16/11] w-full rounded-2xl" />
+          <div className="hide-scrollbar mt-5 flex gap-3 overflow-x-hidden lg:gap-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <RailCardSkeleton key={i} />
+            ))}
           </div>
-        </div>
-        <div className="mazed-skeleton mt-8 h-16 w-full rounded-2xl" />
-        <div className="mt-6 grid grid-cols-4 gap-px overflow-hidden rounded-2xl ring-1 ring-border">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="mazed-skeleton h-[88px] w-full rounded-none" />
-          ))}
-        </div>
-      </div>
+        </section>
+      ))}
 
-      {/* Live ticker tape — single thin row */}
-      <div className="mt-5 px-4">
-        <div className="mazed-skeleton h-9 w-full rounded-full" />
-      </div>
-
-      {/* Ending soon urgency strip */}
-      <div className="mt-4 px-4">
-        <div className="mazed-skeleton h-14 w-full rounded-2xl" />
-      </div>
-
-      {/* Trending rail — header + 5 horizontal cards */}
-      <section className="mt-7">
-        <div className="flex items-end justify-between gap-3 px-4">
-          <div className="space-y-2">
-            <div className="mazed-skeleton h-2.5 w-24 rounded" />
-            <div className="mazed-skeleton h-5 w-40 rounded" />
-          </div>
-          <div className="mazed-skeleton h-7 w-20 rounded-full" />
-        </div>
-        <div className="hide-scrollbar mt-4 flex gap-3 overflow-x-hidden px-4 pb-1">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <RailCardSkeleton key={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* Nouveautés rail (second rail) */}
-      <section className="mt-7">
-        <div className="flex items-end justify-between gap-3 px-4">
-          <div className="space-y-2">
-            <div className="mazed-skeleton h-2.5 w-20 rounded" />
-            <div className="mazed-skeleton h-5 w-36 rounded" />
-          </div>
-          <div className="mazed-skeleton h-7 w-20 rounded-full" />
-        </div>
-        <div className="hide-scrollbar mt-4 flex gap-3 overflow-x-hidden px-4 pb-1">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <RailCardSkeleton key={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* Coverage strip — 1 row of pill chips */}
-      <section className="mt-6 px-4">
-        <div className="flex gap-2 overflow-hidden">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="mazed-skeleton h-8 w-20 shrink-0 rounded-full" />
-          ))}
-        </div>
-      </section>
-
-      {/* "More to explore" grid */}
-      <section className="mt-9 px-4">
-        <div className="flex items-end justify-between gap-3">
-          <div className="mazed-skeleton h-5 w-44 rounded" />
-          <div className="mazed-skeleton h-7 w-20 rounded-full" />
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <GridCardSkeleton key={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* Browse by type rail */}
-      <section className="mt-10 px-4">
-        <div className="mazed-skeleton h-4 w-32 rounded" />
-        <div className="mt-3 flex gap-2 overflow-hidden">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="mazed-skeleton h-10 w-28 shrink-0 rounded-full"
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Final browse band */}
-      <section className="mt-10 px-4 pb-10">
-        <div className="mazed-skeleton-luxe h-24 w-full rounded-2xl" />
-      </section>
-
-      <LoadingText />
+      <LoadingText className="sr-only" />
     </div>
   );
 }
 
 function RailCardSkeleton() {
   return (
-    <div className="w-[230px] shrink-0">
-      <div className="mazed-skeleton-luxe aspect-[4/5] rounded-2xl" />
-      <div className="space-y-1.5 px-1 pt-3">
-        <div className="mazed-skeleton h-4 w-3/4 rounded" />
-        <div className="mazed-skeleton h-3 w-1/2 rounded" />
-      </div>
-    </div>
-  );
-}
-
-function GridCardSkeleton() {
-  return (
-    <div>
-      <div className="mazed-skeleton-luxe aspect-[4/5] rounded-2xl" />
-      <div className="space-y-1.5 px-1 pt-3">
-        <div className="mazed-skeleton h-4 w-3/4 rounded" />
-        <div className="mazed-skeleton h-3 w-1/2 rounded" />
+    <div className="w-[264px] shrink-0 lg:w-[300px]">
+      <div className="mazed-skeleton aspect-[4/3] w-full rounded-2xl" />
+      <div className="mt-3 space-y-2">
+        <div className="mazed-skeleton h-4 w-1/2 rounded" />
+        <div className="mazed-skeleton h-3.5 w-3/4 rounded" />
+        <div className="mazed-skeleton h-3 w-2/3 rounded" />
       </div>
     </div>
   );

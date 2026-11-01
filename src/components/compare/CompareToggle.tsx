@@ -48,9 +48,10 @@ export function CompareToggle({ listingId, variant = "chip" }: { listingId: stri
       aria-pressed={on}
       aria-label={t(on ? "remove" : "add")}
       title={t(on ? "remove" : "add")}
+      // White glass over a photo, like the heart beside it; ink-filled once added.
       className={cn(
-        "inline-flex size-8 items-center justify-center rounded-full border backdrop-blur-md transition",
-        on ? "border-[var(--gold-soft)] bg-[var(--gold-faint)] text-[var(--gold)]" : "border-white/20 bg-black/45 text-white hover:bg-black/65",
+        "inline-flex size-8 items-center justify-center rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.18)] backdrop-blur-md transition active:scale-95",
+        on ? "bg-foreground text-[var(--background)]" : "bg-white/95 text-foreground hover:bg-white",
       )}
     >
       <Scale className="size-4" strokeWidth={2.2} />

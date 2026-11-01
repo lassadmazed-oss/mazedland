@@ -70,7 +70,7 @@ export function RenewButton({
       type="button"
       onClick={renew}
       disabled={busy}
-      className="tap-target mt-2 inline-flex items-center gap-1.5 rounded-full bg-gold-faint px-3 py-1.5 text-[12px] font-bold text-gold ring-1 ring-gold-soft transition hover:bg-gold-faint/70 disabled:opacity-60"
+      className="mazed-btn-luxe tap-target mt-2.5 inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[12.5px] disabled:opacity-60"
     >
       {busy ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCw className="size-3.5" />}
       {t("button")}

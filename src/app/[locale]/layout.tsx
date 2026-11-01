@@ -12,6 +12,7 @@ import { routing } from "@/i18n/routing";
 import { isRtl } from "@/lib/i18n";
 import { jakarta, cairo } from "../fonts";
 import { MobileShell } from "@/components/layout/MobileShell";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { NetworkStatus } from "@/components/layout/NetworkStatus";
 import { PWARegister } from "@/components/layout/PWARegister";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -156,7 +157,7 @@ export default async function LocaleLayout({
           <ToastProvider>
             <NetworkStatus />
             <FavoritesSync />
-            <MobileShell>{children}</MobileShell>
+            <MobileShell footer={<SiteFooter />}>{children}</MobileShell>
             {/* Site-wide admin-managed popup surface. Lazy-loaded (ssr:false)
                 so its JS + /api/popups/match fetch stay off the critical path.
                 Self-skips admin routes so previews don't compete with live

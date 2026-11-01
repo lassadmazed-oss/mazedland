@@ -30,6 +30,7 @@ import { paymentsAreOpen } from "@/lib/payments/server";
 import { PaymentsClosedNotice } from "@/components/payments/PaymentsClosedNotice";
 import { BadgeCheck, ExternalLink, Plus, Zap } from "lucide-react";
 import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
+import { chipClass } from "@/lib/chips";
 
 export const dynamic = "force-dynamic";
 
@@ -136,7 +137,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
             <Link
               key={m.shop.id}
               href={`/pro/dashboard?shop=${m.shop.id}` as never}
-              className={`rounded-full px-3 py-1 text-[12px] font-bold ring-1 ${m.shop.id === shop.id ? "bg-gold-faint text-foreground ring-gold-soft" : "text-muted ring-border"}`}
+              className={chipClass(m.shop.id === shop.id)}
             >
               {m.shop.name}
             </Link>
@@ -146,10 +147,10 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
 
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11.5px] font-extrabold uppercase tracking-[0.14em] text-gold">{t("eyebrow")}</p>
-          <h1 className="mt-0.5 flex items-center gap-2 truncate text-[24px] font-extrabold tracking-tight" dir="auto">
+          <p className="mazed-eyebrow">{t("eyebrow")}</p>
+          <h1 className="mazed-h2 mt-1 flex items-center gap-2 truncate text-[26px] text-foreground lg:text-[32px]" dir="auto">
             {shop.name}
-            {shop.verified_at && <BadgeCheck className="size-5 shrink-0 text-gold" aria-label={t("verified")} />}
+            {shop.verified_at && <BadgeCheck className="size-5 shrink-0 text-foreground" aria-label={t("verified")} />}
           </h1>
           <p className="mt-0.5 text-[12.5px] text-muted">
             {tKinds(shop.kind)} · {governorateLabel(shop.governorate, locale)} · {t("yourRole", { role: tRoles(role) })}
@@ -158,7 +159,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
         <div className="flex flex-wrap items-center gap-2">
           <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-bold ${STATUS_TONE[shop.status] ?? ""}`}>{tStatus(shop.status)}</span>
           {shop.status === "approved" && (
-            <Link href={`/agences/${shop.slug}` as never} className="inline-flex items-center gap-1 text-[12.5px] font-bold text-gold hover:underline">
+            <Link href={`/agences/${shop.slug}` as never} className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12.5px]">
               {t("publicPage")} <ExternalLink className="size-3.5" />
             </Link>
           )}
@@ -174,13 +175,13 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
           <div className="mt-2.5">
             {fixAsked ? (
               can(role, "edit_shop") && (
-                <Link href={href("agence") as never} className="mazed-btn-luxe tap-target inline-flex h-10 items-center px-4 text-[13px]">
+                <Link href={href("agence") as never} className="mazed-btn-luxe tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
                   {t("fixCta")}
                 </Link>
               )
             ) : (
               receiptRefused && can(role, "subscribe") && (
-                <a href={`/${locale}/payment/checkout?payment=${receiptRefused.id}`} className="mazed-btn-luxe tap-target inline-flex h-10 items-center px-4 text-[13px]">
+                <a href={`/${locale}/payment/checkout?payment=${receiptRefused.id}`} className="mazed-btn-luxe tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
                   {t("resendReceipt")}
                 </a>
               )
@@ -198,15 +199,13 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
       )}
 
       <nav className="-mx-4 mt-5 overflow-x-auto px-4 [scrollbar-width:none]">
-        <div className="flex min-w-max gap-1.5">
+        <div className="mazed-segment min-w-max">
           {visibleTabs.map((k) => (
             <Link
               key={k}
               href={href(k) as never}
               aria-current={k === tab ? "page" : undefined}
-              className={`tap-target rounded-xl border px-3.5 py-2 text-[13px] font-bold transition ${
-                k === tab ? "border-gold-soft bg-gold-faint text-foreground" : "border-border text-muted hover:text-foreground"
-              }`}
+              className="whitespace-nowrap"
             >
               {t(`tabs.${k}`)}
               {k === "visites" && (visitsWaiting ?? 0) > 0 && <span className="mazed-tabular ms-1 text-[11px] text-[var(--tone-warn)]">{visitsWaiting}</span>}
@@ -221,26 +220,26 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
           <Stat label={t("quotaLabel")} value={plan ? `${used} / ${plan.quota}` : String(used)} sub={t("quotaSub")} />
           <Stat label={t("viewsLabel")} value={formatNumber(views, locale)} />
           <Stat label={t("revealsLabel")} value={formatNumber(reveals, locale)} />
-          <div className="rounded-2xl border border-border bg-surface p-4 sm:col-span-2 lg:col-span-4">
+          <div className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:col-span-2 lg:col-span-4">
             <p className="text-[13.5px] font-extrabold text-foreground">{t("nextTitle")}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {shop.status === "approved" && can(role, "publish") && (
-                <Link href={`/annonces/nouvelle?shop=${shop.id}` as never} className="mazed-btn-luxe tap-target inline-flex h-10 items-center gap-1.5 px-4 text-[13px]">
+                <Link href={`/annonces/nouvelle?shop=${shop.id}` as never} className="mazed-btn-luxe tap-target inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[13px]">
                   <Plus className="size-4" /> {t("publishForShop")}
                 </Link>
               )}
               {!plan && !requestSent && can(role, "subscribe") && (shop.status === "approved" || shop.status === "pending") && (
-                <Link href={href("abonnement") as never} className="tap-target inline-flex h-10 items-center rounded-xl border border-border px-4 text-[13px] font-bold">
+                <Link href={href("abonnement") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
                   {t("choosePlan")}
                 </Link>
               )}
               {(visitsWaiting ?? 0) > 0 && (
-                <Link href={href("visites") as never} className="tap-target inline-flex h-10 items-center rounded-xl border border-border px-4 text-[13px] font-bold">
+                <Link href={href("visites") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
                   {t("visitsWaiting", { count: visitsWaiting ?? 0 })}
                 </Link>
               )}
               {can(role, "documents") && !shop.verified_at && (
-                <Link href={href("documents") as never} className="tap-target inline-flex h-10 items-center rounded-xl border border-border px-4 text-[13px] font-bold">
+                <Link href={href("documents") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
                   {t("getVerified")}
                 </Link>
               )}
@@ -254,9 +253,9 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
           {/* A file saved from Excel becomes drafts (the agencies' bulk import). */}
           {settings.feature_listing_import && shop.status === "approved" && can(role, "publish") && <ImportListings shopId={shop.id} />}
           {listings.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-border p-8 text-center text-[13px] text-muted">{t("noListings")}</p>
+            <p className="mazed-band-warm rounded-[var(--radius-3xl)] p-8 text-center text-[13px] text-muted">{t("noListings")}</p>
           ) : (
-            <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
+            <ul className="divide-y divide-border rounded-[var(--radius-2xl)] bg-surface ring-1 ring-border">
               {listings.map((l) => (
                 <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                   <div className="min-w-0">
@@ -272,9 +271,9 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
                   <div className="flex items-center gap-3 text-[12.5px] font-bold">
                     {/* The edit form is its author's (0172). */}
                     {settings.feature_listing_edit && l.status === "published" && l.seller_id === user!.id && <Link href={`/annonces/nouvelle?edit=${l.id}` as never} className="text-foreground hover:underline">{t("edit")}</Link>}
-                    {l.status === "published" && <Link href={`/annonces/${l.id}` as never} className="text-gold hover:underline">{t("view")}</Link>}
+                    {l.status === "published" && <Link href={`/annonces/${l.id}` as never} className="text-foreground underline underline-offset-4">{t("view")}</Link>}
                     {/* A draft is resumed in the form: the photos and the attestation are what it lacks (an imported one has all the rest). */}
-                    {l.status === "draft" && l.seller_id === user!.id && <Link href={`/annonces/nouvelle?draft=${l.id}` as never} className="text-gold hover:underline">{t("continueDraft")}</Link>}
+                    {l.status === "draft" && l.seller_id === user!.id && <Link href={`/annonces/nouvelle?draft=${l.id}` as never} className="text-foreground underline underline-offset-4">{t("continueDraft")}</Link>}
                     {/* The agence pushes its annonce into its groups from here (the owner, 2026-10-28). */}
                     {l.status === "published" && <ShareButton variant="text" href={`/${locale}/annonces/${l.id}`} title={l.title} />}
                   </div>
@@ -356,7 +355,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
           </section>
         )}
         {visits.length === 0 ? (
-          <p className="mt-5 rounded-2xl border border-dashed border-border p-8 text-center text-[13px] text-muted">{t("noVisits")}</p>
+          <p className="mt-5 mazed-band-warm rounded-[var(--radius-3xl)] p-8 text-center text-[13px] text-muted">{t("noVisits")}</p>
         ) : (
           <section className="mt-5 space-y-3">
             {visits.map((v) => (
@@ -420,7 +419,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
       .slice(0, 60);
 
     if (cards.length === 0) {
-      return <p className="mt-5 rounded-2xl border border-dashed border-border p-8 text-center text-[13px] leading-relaxed text-muted">{t("noDemandes")}</p>;
+      return <p className="mt-5 mazed-band-warm rounded-[var(--radius-3xl)] p-8 text-center text-[13px] leading-relaxed text-muted">{t("noDemandes")}</p>;
     }
     return (
       <section className="mt-5 space-y-3">
@@ -445,10 +444,10 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
             .filter((x) => !done.includes(x.listing.id))
             .map((x) => ({ id: x.listing.id, title: x.listing.title, score: x.match.score, ok: x.match.ok }));
           return (
-            <article key={r.id} className={`rounded-2xl bg-surface p-4 ring-1 ${full ? "ring-gold-soft" : "ring-border"}`}>
+            <article key={r.id} className={`rounded-[var(--radius-2xl)] bg-surface p-4 ${full ? "ring-2 ring-foreground/60" : "ring-1 ring-border"}`}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-gold">{tReq(rent ? "kindRent" : "kindBuy")}</p>
+                  <p className="mazed-eyebrow">{tReq(rent ? "kindRent" : "kindBuy")}</p>
                   <p className="mt-0.5 text-[14px] font-bold text-foreground">{what} · {where}</p>
                   {extra.length > 0 && <p className="mt-0.5 text-[12.5px] text-muted">{extra.join(" · ")}</p>}
                 </div>
@@ -508,7 +507,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
     }[];
     return (
       <section className="mt-5 space-y-4">
-        <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
+        <ul className="divide-y divide-border rounded-[var(--radius-2xl)] bg-surface ring-1 ring-border">
           {members.map((m) => {
             const p = Array.isArray(m.person) ? m.person[0] : m.person;
             const removable = can(actor, "manage_members") && m.role !== "owner" && (actor === "owner" || m.role === "agent") && m.user_id !== user!.id;
@@ -528,7 +527,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
           })}
         </ul>
         {can(actor, "manage_members") && (
-          <div className="rounded-2xl border border-border bg-surface p-4">
+          <div className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border">
             <AddMember shopId={shopId} actor={actor} />
           </div>
         )}
@@ -570,7 +569,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
     const mayBuy = can(actor, "subscribe") && (status === "approved" || status === "pending") && requestWaiting === null;
     return (
       <section className="mt-5 space-y-5">
-        <p className="rounded-2xl bg-surface-2 px-4 py-3 text-[12.5px] leading-relaxed text-foreground ring-1 ring-border">
+        <p className="mazed-band-warm rounded-2xl px-4 py-3 text-[12.5px] leading-relaxed text-foreground ring-1 ring-border">
           {running ? t("planRunning", { name: running.name, date: formatDate(running.endsAt, locale, "medium") }) : t("planNone")}
           {queued && queuedPlan && <span className="mt-1 block font-semibold">{t("planThen", { name: planName(queuedPlan), from: day(queued.startsAt), to: day(queued.endsAt) })}</span>}
         </p>
@@ -593,26 +592,26 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
               : q.kind === "new" ? t("chooseFor", { amount: money(q.amount) })
               : "";
             return (
-              <div key={p.slug} className={`rounded-2xl border bg-surface p-4 ${q.kind === "same" ? "border-gold-soft ring-1 ring-gold-soft" : "border-border"}`}>
+              <div key={p.slug} className={`rounded-[var(--radius-2xl)] bg-surface p-5 ${q.kind === "same" ? "ring-2 ring-foreground shadow-[var(--shadow-float)]" : "ring-1 ring-border"}`}>
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-[14px] font-extrabold text-foreground">{name}</p>
-                  {q.kind === "upgrade" && <span className="rounded-full bg-gold-faint px-2 py-0.5 text-[10.5px] font-extrabold uppercase tracking-wide text-gold">{t("upgradeBadge")}</span>}
+                  {q.kind === "upgrade" && <span className="rounded-full bg-foreground px-2 py-0.5 text-[10.5px] font-extrabold uppercase tracking-wide text-[var(--background)]">{t("upgradeBadge")}</span>}
                 </div>
-                <p className="mt-1 text-[22px] font-extrabold text-foreground">
+                <p className="mazed-tabular mt-2 text-[30px] font-extrabold leading-none text-foreground">
                   {formatTND(Number(p.price), locale)} <span className="text-[12px] font-normal text-muted">{t("perMonthTnd")}</span>
                 </p>
-                <p className="text-[12.5px] font-bold text-gold">{t("planQuota", { count: p.listing_quota })}</p>
+                <p className="mt-2 text-[12.5px] font-bold text-foreground">{t("planQuota", { count: p.listing_quota })}</p>
 
                 {q.kind === "same" ? (
                   // The plan they have: not bought twice; renewable in its last days.
-                  <p className="mt-3 rounded-xl bg-gold-faint px-3 py-2 text-[12px] leading-snug text-foreground">
+                  <p className="mazed-band-warm mt-3 rounded-xl px-3 py-2 text-[12px] leading-snug text-foreground ring-1 ring-border">
                     {t("planYours", { date: day(q.until) })} {t("planRenewFrom", { date: day(q.renewFrom) })}
                   </p>
                 ) : q.kind === "upgrade" || q.credit > 0 ? (
                   // The calculator: the new price, what is left of the plan it
                   // replaces (the running one for an upgrade, a smaller one
                   // queued behind for a renewal), the total.
-                  <dl className="mt-3 space-y-1 rounded-xl bg-surface-2 px-3 py-2.5 text-[12px] ring-1 ring-border">
+                  <dl className="mazed-band-warm mt-3 space-y-1 rounded-xl px-3 py-2.5 text-[12px] ring-1 ring-border">
                     <div className="flex justify-between gap-2"><dt className="text-muted">{t("calcPrice", { plan: name })}</dt><dd className="mazed-tabular font-semibold text-foreground">{money(q.price)}</dd></div>
                     {/* A plan given by an admin leaves nothing to take off: no « − 0 » line. */}
                     {q.credit > 0 && (
@@ -645,7 +644,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
             );
           })}
         </div>
-        {status === "pending" && <p className="rounded-2xl bg-gold-faint px-4 py-3 text-[12.5px] font-semibold leading-relaxed text-foreground">{requestWaiting !== null ? t("planRequestWaiting", { plan: requestWaiting }) : t("planPayFirst")}</p>}
+        {status === "pending" && <p className="mazed-band-warm rounded-2xl px-4 py-3 text-[12.5px] font-semibold leading-relaxed text-foreground ring-1 ring-border">{requestWaiting !== null ? t("planRequestWaiting", { plan: requestWaiting }) : t("planPayFirst")}</p>}
         {status !== "pending" && status !== "approved" && <p className="text-[12px] text-muted">{t("planAfterApproval")}</p>}
         <p className="text-[11.5px] leading-snug text-muted">{t("planHow")}</p>
         {(periods ?? []).length > 0 && (
@@ -687,7 +686,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
         </p>
         <SendDocument shopId={shopId} />
         {docs.length > 0 && (
-          <ul className="divide-y divide-border rounded-2xl border border-border bg-surface">
+          <ul className="divide-y divide-border rounded-[var(--radius-2xl)] bg-surface ring-1 ring-border">
             {docs.map((d) => (
               <li key={d.id} className="flex items-center justify-between gap-2 px-4 py-2.5 text-[12.5px]">
                 <span className="font-bold text-foreground">{tDocs(d.kind)}</span>
@@ -704,9 +703,9 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4">
+    <div className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border">
       <p className="text-[11.5px] font-bold text-muted">{label}</p>
-      <p className="mazed-tabular mt-1 truncate text-[20px] font-extrabold text-foreground">{value}</p>
+      <p className="mazed-tabular mt-1.5 truncate text-[24px] font-extrabold leading-none text-foreground">{value}</p>
       {sub && <p className="mt-0.5 text-[11.5px] text-muted">{sub}</p>}
     </div>
   );

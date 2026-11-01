@@ -283,10 +283,10 @@ export function ChatPublisher({
   if (done) {
     return (
       <main className="mx-auto max-w-md px-5 py-16 text-center">
-        <span className="mx-auto grid size-16 place-items-center rounded-full bg-gold-faint text-gold ring-1 ring-gold-soft">
+        <span className="mx-auto grid size-16 place-items-center rounded-full bg-foreground text-[var(--background)] shadow-[var(--shadow-card)]">
           <Check className="size-8" strokeWidth={2.6} />
         </span>
-        <h1 className="mt-5 text-[22px] font-extrabold tracking-tight">
+        <h1 className="mazed-h2 mt-5 text-[24px] text-foreground">
           {done.status === "published" ? tp("donePublishedTitle") : tp("doneTitle")}
         </h1>
         <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
@@ -295,7 +295,7 @@ export function ChatPublisher({
           {done.paidWith === "subscription" && typeof done.remaining === "number" && <> {tp("doneSubscription", { count: done.remaining })}</>}
         </p>
         {done.paidWith === "free_quota" && (
-          <div className="mt-4 rounded-2xl bg-surface-2 p-4 text-start ring-1 ring-border">
+          <div className="mazed-band-warm mt-4 rounded-2xl p-4 text-start ring-1 ring-border">
             <p className="inline-flex items-center gap-1.5 text-[13px] font-extrabold text-[var(--tone-ok)]">
               <Gift className="size-4" /> {tp("doneFreeQuota")}
             </p>
@@ -305,7 +305,7 @@ export function ChatPublisher({
                 {done.freeLeft === 0 && (
                   <>
                     {" "}
-                    <Link href={"/pro" as never} className="font-bold text-gold underline-offset-2 hover:underline">{tp("seePro")}</Link>
+                    <Link href={"/pro" as never} className="font-bold text-foreground underline underline-offset-4 hover:text-muted">{tp("seePro")}</Link>
                   </>
                 )}
               </p>
@@ -314,7 +314,7 @@ export function ChatPublisher({
         )}
         <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
           {done.status === "published" && (
-            <Link href={`/annonces/${done.id}` as never} className="mazed-btn-luxe tap-target inline-flex px-6 py-3 text-[13.5px]">
+            <Link href={`/annonces/${done.id}` as never} className="mazed-btn-luxe tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]">
               {tp("seeListing")}
             </Link>
           )}
@@ -322,8 +322,8 @@ export function ChatPublisher({
             href={"/account/listings" as never}
             className={
               done.status === "published"
-                ? "tap-target inline-flex rounded-full border border-border px-6 py-3 text-[13.5px] font-bold text-foreground"
-                : "mazed-btn-luxe tap-target inline-flex px-6 py-3 text-[13.5px]"
+                ? "mazed-btn-quiet tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
+                : "mazed-btn-luxe tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
             }
           >
             {tp("seeMyListings")}
@@ -338,7 +338,7 @@ export function ChatPublisher({
     <main className="mx-auto max-w-2xl px-4 pb-80 pt-4 lg:pb-72 lg:pt-8">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[22px] font-extrabold tracking-tight">{t("title")}</h1>
+          <h1 className="mazed-h2 text-[24px] text-foreground">{t("title")}</h1>
           <p className="mt-1 text-[13px] text-muted">{t("subtitle")}</p>
         </div>
         <Link href={"/annonces/nouvelle?forme=1" as never} className="shrink-0 text-[12px] font-bold text-muted underline-offset-2 hover:text-foreground hover:underline">
@@ -355,8 +355,8 @@ export function ChatPublisher({
 
       {/* What the conversation has built so far. */}
       {draft && (
-        <section className="mt-4 rounded-2xl border border-gold-soft bg-gold-faint p-3.5 shadow-sm lg:sticky lg:top-[calc(var(--mazed-topbar-h,64px)+8px)] lg:z-10">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-gold">{t("yourAnnonce")}</p>
+        <section className="mazed-float mt-4 p-4 lg:sticky lg:top-[calc(var(--mazed-topbar-h,64px)+8px)] lg:z-10">
+          <p className="mazed-eyebrow">{t("yourAnnonce")}</p>
           {draft.title && <p className="mt-1 text-[14px] font-extrabold text-foreground" dir="auto">{draft.title}</p>}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {chips.map((c) => (
@@ -370,10 +370,10 @@ export function ChatPublisher({
             <p className="mt-2 text-[11.5px] leading-snug text-muted">{t("stillMissing", { list: toSay.join(", ") })}</p>
           )}
           <div className="mt-2.5 flex flex-wrap gap-2">
-            <button type="button" onClick={() => setPhotosOpen(true)} className="tap-target inline-flex h-9 items-center gap-1.5 rounded-full bg-surface px-3.5 text-[12.5px] font-bold text-foreground ring-1 ring-gold-soft">
+            <button type="button" onClick={() => setPhotosOpen(true)} className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12.5px]">
               <Camera className="size-3.5" /> {t("addPhotos")}
             </button>
-            <button type="button" onClick={() => setSheetOpen(true)} className="mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 px-4 text-[12.5px]">
+            <button type="button" onClick={() => setSheetOpen(true)} className="mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[12.5px]">
               <Sparkles className="size-3.5" /> {t("publish")}
             </button>
           </div>
@@ -389,7 +389,7 @@ export function ChatPublisher({
               className={cn(
                 "max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-[14px] leading-relaxed",
                 l.role === "seller"
-                  ? "rounded-ee-md bg-gold-faint text-foreground ring-1 ring-gold-soft"
+                  ? "rounded-ee-md bg-foreground text-[var(--background)]"
                   : cn("rounded-es-md bg-surface ring-1 ring-border", l.local ? "text-[var(--tone-bad)]" : "text-foreground"),
               )}
             >
@@ -399,7 +399,7 @@ export function ChatPublisher({
         ))}
         {interim && (
           <li className="flex justify-end">
-            <p dir="auto" className="max-w-[85%] rounded-2xl rounded-ee-md bg-gold-faint/60 px-3.5 py-2.5 text-[14px] italic text-muted ring-1 ring-gold-soft">
+            <p dir="auto" className="max-w-[85%] rounded-2xl rounded-ee-md bg-foreground/80 px-3.5 py-2.5 text-[14px] italic text-[var(--background)]">
               {interim}
             </p>
           </li>
@@ -423,7 +423,7 @@ export function ChatPublisher({
             <button
               type="button"
               onClick={() => setSheetOpen(true)}
-              className="mazed-btn-luxe tap-target mb-2.5 flex h-11 w-full items-center justify-center gap-2 text-[14px]"
+              className="mazed-btn-luxe tap-target mb-2.5 flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px]"
             >
               <Check className="size-4" /> {t("publishWhenReady")}
             </button>
@@ -435,7 +435,7 @@ export function ChatPublisher({
               aria-pressed={typing}
               aria-label={t("type")}
               title={t("type")}
-              className={cn("tap-target grid size-11 place-items-center rounded-full ring-1 transition", typing ? "bg-surface-2 text-foreground ring-gold-soft" : "text-muted ring-border hover:text-foreground")}
+              className={cn("tap-target grid size-11 place-items-center rounded-full ring-1 transition", typing ? "bg-surface-2 text-foreground ring-border" : "text-muted ring-border hover:text-foreground")}
             >
               <Keyboard className="size-5" />
             </button>
@@ -494,9 +494,9 @@ export function ChatPublisher({
                 dir="auto"
                 placeholder={t("typePlaceholder")}
                 aria-label={t("type")}
-                className="h-11 min-w-0 flex-1 rounded-full border border-border bg-surface px-4 text-[14px] text-foreground placeholder:text-muted focus:border-gold focus:outline-none"
+                className="h-12 min-w-0 flex-1 rounded-full border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted focus:border-foreground focus:outline-none"
               />
-              <button type="submit" disabled={busy || !typed.trim()} aria-label={t("send")} className="mazed-btn-luxe tap-target grid size-11 place-items-center disabled:opacity-60">
+              <button type="submit" disabled={busy || !typed.trim()} aria-label={t("send")} className="mazed-btn-luxe tap-target grid size-12 place-items-center rounded-full disabled:opacity-60">
                 <Send className="size-4 rtl:-scale-x-100" />
               </button>
             </form>
@@ -508,7 +508,7 @@ export function ChatPublisher({
       <Modal open={photosOpen} onClose={() => setPhotosOpen(false)} title={t("addPhotos")} description={t("photosHint")}>
         <PhotoUploader photos={photos} onChange={setPhotos} onPendingChange={setUploading} />
         <div className="mt-4 flex justify-end">
-          <button type="button" onClick={() => setPhotosOpen(false)} className="mazed-btn-luxe tap-target inline-flex h-11 items-center px-6 text-[13px]">
+          <button type="button" onClick={() => setPhotosOpen(false)} className="mazed-btn-luxe tap-target inline-flex h-11 items-center rounded-full px-6 text-[13px]">
             {t("photosDone")}
           </button>
         </div>
@@ -530,7 +530,7 @@ export function ChatPublisher({
         ) : (
           <div className="space-y-4">
             {draft ? (
-              <div className="rounded-2xl bg-surface-2 p-3.5 ring-1 ring-border">
+              <div className="mazed-band-warm rounded-2xl p-3.5 ring-1 ring-border">
                 {draft.title && <p className="text-[15px] font-extrabold" dir="auto">{draft.title}</p>}
                 <p className="mt-1 text-[12.5px] text-muted" dir="auto">{chips.join(" · ")}</p>
                 {draft.description && <p className="mt-2 text-[13px] leading-relaxed" dir="auto">{draft.description}</p>}
@@ -559,16 +559,16 @@ export function ChatPublisher({
                 dir="ltr"
                 inputMode="tel"
                 placeholder="+216 …"
-                className="mt-1 h-11 w-full rounded-xl border border-border bg-surface px-3 text-[14px] focus:border-gold focus:outline-none"
+                className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-3.5 text-[15px] text-foreground transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
               />
             </label>
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-surface-2/40 p-3.5">
+            <label className="mazed-band-warm flex cursor-pointer items-start gap-3 rounded-2xl p-3.5 ring-1 ring-border">
               <input
                 type="checkbox"
                 checked={attested}
                 onChange={(e) => setAttested(e.target.checked)}
-                className="mt-0.5 size-5 shrink-0 accent-[var(--gold)]"
+                className="mt-0.5 size-5 shrink-0 accent-[var(--foreground)]"
               />
               <span className="text-[12px] leading-relaxed text-foreground">{tp("attestation")}</span>
             </label>
@@ -585,7 +585,7 @@ export function ChatPublisher({
                 type="button"
                 onClick={publish}
                 disabled={!ready || publishing}
-                className="mazed-btn-luxe tap-target inline-flex h-12 items-center justify-center gap-2 px-8 text-[14px] disabled:opacity-60"
+                className="mazed-btn-luxe tap-target inline-flex h-12 items-center justify-center gap-2 rounded-full px-8 text-[14px] disabled:opacity-60"
               >
                 {publishing ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 {t("publishNow")}

@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useApiError } from "@/lib/useApiError";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { Loader2 } from "lucide-react";
+import { chipClass } from "@/lib/chips";
 
 /**
  * Name and governorate — what a new annonce is pre-filled with. With no
@@ -62,7 +63,7 @@ export function ProfileForm({
 
   const label = "text-[10.5px] font-extrabold uppercase tracking-[0.12em] text-muted";
   const field =
-    "mt-1 h-11 w-full rounded-xl border border-border bg-surface px-3 text-[15px] text-foreground outline-none focus:border-gold";
+    "mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-3.5 text-[15px] text-foreground outline-none transition focus:border-foreground focus:ring-2 focus:ring-foreground/10";
 
   return (
     <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
@@ -91,7 +92,7 @@ export function ProfileForm({
           <button
             type="button"
             onClick={() => setGov(suggestion)}
-            className="tap-target mt-2 rounded-full bg-surface px-4 py-2 text-[13px] font-bold text-muted ring-1 ring-border transition hover:text-foreground"
+            className={`${chipClass(false)} mt-2`}
           >
             {t("governorateFromListing", { governorate: governorateLabel(suggestion, locale) })}
           </button>
@@ -102,7 +103,7 @@ export function ProfileForm({
         <button
           type="submit"
           disabled={busy || !dirty}
-          className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-2 px-5 text-[13px] disabled:opacity-50"
+          className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-2 rounded-full px-5 text-[13px] disabled:opacity-50"
         >
           {busy && <Loader2 className="size-4 animate-spin" />}
           {t("save")}

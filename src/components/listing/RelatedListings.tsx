@@ -188,28 +188,28 @@ export async function RelatedListings({
   const t = await getTranslations("listing.related");
 
   return (
-    <section className="mt-10 border-t border-border pt-7">
-      <div className="flex items-end justify-between gap-3 px-4 lg:px-6">
+    <section className="mt-12 border-t border-border pt-8 lg:mt-16 lg:pt-10">
+      <div className="flex items-end justify-between gap-3 px-4 lg:px-0">
         <div>
-          <span className="mazed-eyebrow">{t("eyebrow")}</span>
-          <h2 className="mt-1 text-[19px] font-extrabold tracking-tight text-foreground lg:text-[22px]">
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-subtle">{t("eyebrow")}</p>
+          <h2 className="mazed-h2 mt-1.5 text-[21px] text-foreground lg:text-[24px]">
             {t("title")}
           </h2>
         </div>
         <Link
           href={catalogueHrefFor({ cat: (category?.slug as string | undefined) ?? null, deal: dealType }) as never}
-          className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-bold text-gold hover:underline"
+          className="inline-flex shrink-0 items-center gap-0.5 text-[13px] font-bold text-foreground underline-offset-4 hover:underline"
         >
-          {t("seeAll")} <ArrowRight className="size-3.5 rtl:-scale-x-100" />
+          {t("seeAll")} <ArrowRight className="size-4 rtl:-scale-x-100" strokeWidth={2.4} aria-hidden />
         </Link>
       </div>
 
       {/* A phone scrolls sideways through them; a desktop has the room to lay
           them out and should use it. */}
-      <div className="mt-3 lg:hidden">
+      <div className="mt-4 lg:hidden">
         <TrendingRail>
           {scored.map((r) => (
-            <div key={r.id} className="w-[210px] shrink-0 snap-start">
+            <div key={r.id} className="w-[240px] shrink-0 snap-start">
               <Card listing={r} badged={badged.has(r.seller_id)} locale={locale} />
             </div>
           ))}
@@ -217,7 +217,7 @@ export async function RelatedListings({
         </TrendingRail>
       </div>
 
-      <div className="mt-3 hidden gap-5 px-6 lg:grid lg:grid-cols-4">
+      <div className="mt-5 hidden gap-5 lg:grid lg:grid-cols-4">
         {scored.map((r) => (
           <Card key={r.id} listing={r} badged={badged.has(r.seller_id)} locale={locale} />
         ))}
@@ -239,19 +239,20 @@ async function Card({
   const cat = Array.isArray(listing.category) ? listing.category[0] : listing.category;
   const cover = coverPhoto(listing.photos);
 
+  // The same shape as AnnonceCard — the photo, then the price first.
   return (
     <Link
       href={`/annonces/${listing.id}` as never}
-      className="press group relative block overflow-hidden rounded-2xl border border-border bg-surface transition hover:border-gold-soft"
+      className="press group relative block"
     >
       <LinkBusy />
-      <div className="relative aspect-[4/3] bg-surface-2">
+      <div className="mazed-photo-frame aspect-[4/3]">
         {cover ? (
           <ListingImage
             path={cover.storage_path}
             alt={listing.title}
-            sizes="(min-width:1024px) 260px, 210px"
-            className="transition group-hover:scale-[1.02]"
+            sizes="(min-width:1024px) 300px, 240px"
+            fit="cover"
           />
         ) : (
           <span className="grid size-full place-items-center text-muted">
@@ -259,27 +260,26 @@ async function Card({
           </span>
         )}
         {badged && (
-          <span className="absolute start-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.1em] text-white backdrop-blur-sm">
-            <BadgeCheck className="size-3 text-gold" /> {t("related.verified")}
+          <span className="mazed-chip-photo absolute start-2.5 top-2.5 z-[2]">
+            <BadgeCheck className="size-3" strokeWidth={2.4} aria-hidden /> {t("related.verified")}
           </span>
         )}
       </div>
-      <div className="p-3">
-        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted">
-          {categoryLabel(cat, locale)}
-        </span>
-        <h3 dir="auto" className="mt-0.5 line-clamp-2 break-words text-[13px] font-bold leading-snug text-foreground">
-          {listing.title}
-        </h3>
-        <p className="mazed-tabular mt-1 text-[14px] font-extrabold text-foreground">
+      <div className="pt-3">
+        <p className="mazed-tabular text-[15px] font-extrabold leading-none text-foreground">
           {listing.price_on_request || listing.price == null
             ? t("related.onRequest")
             : t(listing.deal_type === "rent" ? "rentAmount" : "priceAmount", {
                 amount: formatTND(Number(listing.price), locale),
               })}
         </p>
-        <p className="mt-0.5 inline-flex items-center gap-1 text-[10.5px] text-muted">
-          <MapPin className="size-3" /> {governorateLabel(listing.governorate, locale)}
+        <h3 dir="auto" className="mt-1.5 line-clamp-1 break-words text-[13.5px] font-semibold leading-snug text-foreground">
+          {listing.title}
+        </h3>
+        <p className="mt-1 flex items-center gap-1 text-[12px] text-muted">
+          <span>{categoryLabel(cat, locale)}</span>
+          <span aria-hidden>·</span>
+          <MapPin className="size-3" aria-hidden /> {governorateLabel(listing.governorate, locale)}
         </p>
       </div>
     </Link>
