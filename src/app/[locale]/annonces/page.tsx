@@ -40,6 +40,7 @@ import { breadcrumbLd, catalogueIndexing, itemListLd, pageAlternates } from "@/l
 import { TrackEvent } from "@/components/analytics/TrackEvent";
 import { Impressions } from "@/components/analytics/Impressions";
 import { FeaturedAgencies } from "@/components/agency/FeaturedAgencies";
+import { GuidesStrip } from "@/components/guides/GuidesStrip";
 import { loadFeaturedShops } from "@/lib/pro/featured";
 import { reactiveRules } from "@/lib/pro/reactivity";
 import { cleanSearchTerm } from "@/lib/analytics/ga";
@@ -1136,6 +1137,10 @@ export default async function AnnoncesPage({
           )}
         </nav>
       )}
+
+      {/* « Guides utiles » (0208): how to buy or rent, under what is for sale
+          or for rent here. Nothing while no guide is online. */}
+      <GuidesStrip deal={deal} categorySlug={active?.slug ?? null} via="catalogue" />
     </main>
   );
 }

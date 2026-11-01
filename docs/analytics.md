@@ -90,6 +90,8 @@ counted once whatever the browser did: `sign_up`, `login`, `logout`,
 | `not_found` | a 404 page | path |
 | `client_error` | a render or network error (Google only; the activity log keeps them) | `kind` |
 | `whatsapp_help` | the help link | `topic` |
+| `guide_view` | a guide's page shows (0208) | `slug`, `lang` (the language shown), `tags[]` |
+| `guide_open` | a tap on a guide in a strip, the index or « Guides liés » | `via` (annonce, catalogue, related, index, home), `slug` |
 
 ## Where it shows
 

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getSettings } from "@/lib/settings/server";
+import { publishedGuides } from "@/lib/guides/server";
 import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
@@ -20,8 +21,10 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 export async function SiteFooter() {
   const t = await getTranslations();
   const year = String(new Date().getFullYear());
-  // « Le marché en chiffres » is listed while the console keeps the page on.
+  // « Le marché en chiffres » is listed while the console keeps the page on;
+  // « Guides » (0208) once there is one to read and the feature is on.
   const settings = await getSettings();
+  const hasGuides = settings.guides_enabled && (await publishedGuides()).length > 0;
 
   const columns: { key: string; title: string; links: { href: string; label: string }[] }[] = [
     {
@@ -47,6 +50,7 @@ export async function SiteFooter() {
       key: "info",
       title: t("footer.info"),
       links: [
+        ...(hasGuides ? [{ href: "/guides", label: t("footer.guides") }] : []),
         { href: "/terms", label: t("landing.footerLinks.terms") },
         { href: "/privacy", label: t("landing.footerLinks.privacy") },
       ],

@@ -69,6 +69,9 @@ export const SETTINGS = {
   // « Agences fondatrices : X places sur 10 » on the Pro page: the places the
   // console has not yet given a free period to (src/lib/pro/founding.ts).
   feature_founding_counter: { group: "features", type: "bool", default: true, href: "/admin/agences" },
+  // « Ouvrir » on an agence with no plan gives it the founding offer by itself while places last;
+  // off: such an agence must pay (or be given its period by hand) before it opens.
+  feature_founding_auto: { group: "features", type: "bool", default: true, href: "/admin/agences" },
   // « Importer plusieurs annonces » in the agence's dashboard: a CSV (or lines
   // pasted from Excel) becomes drafts (src/lib/listings/importRows.ts).
   feature_listing_import: { group: "features", type: "bool", default: true },
@@ -80,6 +83,13 @@ export const SETTINGS = {
   // asking prices, supply and demand by governorate (src/lib/market/stats.ts).
   // Off: the page answers 404 and every link to it disappears.
   public_stats_enabled: { group: "features", type: "bool", default: true },
+  // « Guides » (0208): the articles written in /admin/contenu and read on
+  // /guides. Off: the pages answer not found, the footer link and the
+  // « Guides utiles » strips go; what is written stays in the console.
+  guides_enabled: { group: "features", type: "bool", default: true, href: "/admin/contenu" },
+  // « Aide à la rédaction » in the guide editor: the AI drafts a section the
+  // editor reads and changes. Nothing it writes is published by itself.
+  guides_ai_assist: { group: "features", type: "bool", default: true, href: "/admin/contenu" },
 
   // ── Home page: the rails of annonces and the ads move by themselves.
   home_rail_autoplay: { group: "home", type: "bool", default: true, client: true },
@@ -129,11 +139,22 @@ export const SETTINGS = {
   founding_offer_months: { group: "publication", type: "int", default: 3, min: 1, max: 12, unit: "months", choices: [1, 2, 3, 6, 12] },
   // How many agences the founding offer is for, and where (« les 10 premières
   // agences de Sfax »); an empty place says « les 10 premières agences ».
-  founding_seats: { group: "publication", type: "int", default: 10, min: 1, max: 100, choices: [5, 10, 15, 20] },
-  founding_offer_place: { group: "publication", type: "text", default: "Sfax", max: 40 },
+  founding_seats: { group: "publication", type: "int", default: 50, min: 1, max: 200, choices: [10, 20, 50, 100] },
+  founding_offer_place: { group: "publication", type: "text", default: "", max: 40 },
+  // The plan the offer gives (the slug of an offer on sale). With feature_founding_auto, « Ouvrir »
+  // gives it by itself to an agence that has no plan, while places last (src/lib/pro/founding.ts).
+  founding_offer_plan: { group: "publication", type: "text", default: "pro-pro", max: 40, ltr: true },
   // « Envoyer sans payer » under the agence request: the agence comes alone,
   // for the founding offer the console then gives (« Offrir une période »).
   pro_signup_pay_later: { group: "publication", type: "bool", default: true },
+  // The guides (0208): how many cards a page of /guides holds, how many
+  // « Guides liés » close a guide, how many « Guides utiles » stand beside an
+  // annonce and under the catalogue (0 = no strip), and from how many
+  // headings a guide gets a table of contents (0 = never).
+  guides_per_page: { group: "publication", type: "int", default: 9, min: 3, max: 30, choices: [6, 9, 12, 18, 24] },
+  guides_related_count: { group: "publication", type: "int", default: 3, min: 0, max: 6, choices: [0, 2, 3, 4, 6] },
+  guides_strip_count: { group: "publication", type: "int", default: 3, min: 0, max: 6, choices: [0, 2, 3, 4] },
+  guides_toc_min: { group: "publication", type: "int", default: 3, min: 0, max: 10, choices: [0, 2, 3, 4, 5] },
 
   // ── Buyers: visits, compare, demandes.
   visits_max_slots: { group: "buyers", type: "int", default: 3, min: 1, max: 5, client: true },

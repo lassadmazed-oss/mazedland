@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { BadgeCheck, Check, Gift, X } from "lucide-react";
 import { AdminButton } from "@/components/admin/AdminButton";
 import { Confirm } from "@/components/admin/kit";
 import { useAdminAction } from "@/components/admin/kit/useAdminAction";
+import { useToast } from "@/components/ui/Toast";
 import { REFUSAL_OUTCOMES, type RefusalOutcome } from "@/lib/pro/agenceRequest";
 
 /**
@@ -33,12 +34,32 @@ export function BoutiqueActions({
   request?: { plan: string; amount: string } | null;
 }) {
   const t = useTranslations("adminShops");
+  const locale = useLocale();
+  const { toast } = useToast();
   const { run, pending } = useAdminAction();
   const [ask, setAsk] = useState<null | "reject" | "suspend">(null);
   const [opening, setOpening] = useState(false);
   const [offering, setOffering] = useState(false);
   const act = (action: string, success: string, reason?: string, extra?: Record<string, string>) =>
     run({ url: `/api/admin/boutiques/${shopId}`, method: "POST", body: { action, reason, ...extra }, success });
+  // « Ouvrir » on an agence with no plan: the founding offer is given by itself while places last, and the
+  // console is told so (the response carries it), instead of the bare « Agence ouverte ».
+  const open = () =>
+    run({
+      url: `/api/admin/boutiques/${shopId}`,
+      method: "POST",
+      body: { action: "approve" },
+      success: null,
+      onSuccess: (data) => {
+        const o = (data as { offered?: { plan: string; months: number; until: string } }).offered;
+        toast(
+          o
+            ? t("approvedFounding", { plan: o.plan, months: o.months, date: new Date(o.until).toLocaleDateString(locale === "ar" ? "ar-TN" : "fr-TN", { day: "2-digit", month: "2-digit", year: "numeric" }) })
+            : t("approved"),
+          "success",
+        );
+      },
+    });
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -47,7 +68,7 @@ export function BoutiqueActions({
           variant="primary"
           pending={pending}
           icon={<Check className="size-3.5" />}
-          onClick={() => (request ? setOpening(true) : act("approve", t("approved")))}
+          onClick={() => (request ? setOpening(true) : open())}
         >
           {t(request ? "approveRequest" : "approve")}
         </AdminButton>

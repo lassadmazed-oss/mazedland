@@ -58,8 +58,9 @@ const add = (into: Set<string>, bucket: string, value: unknown) => {
 /**
  * Every path a row still names, per bucket. `properties` holds the annonce
  * photos — the live gallery and the one waiting in a seller's pending edit
- * (0172) — the agences' logos and covers, the projects' covers and the ad
- * banners; `receipts` the payment receipts, first one and full set.
+ * (0172) — the agences' logos and covers, the projects' covers, the ad
+ * banners and the guides' covers; `receipts` the payment receipts, first one
+ * and full set.
  */
 async function referenced(admin: Admin): Promise<{ properties: Set<string>; receipts: Set<string> }> {
   const properties = new Set<string>();
@@ -93,6 +94,12 @@ async function referenced(admin: Admin): Promise<{ properties: Set<string>; rece
     add(properties, "properties", r.image_path);
     add(properties, "properties", r.image_mobile_path);
   }
+
+  // The guides' covers (0208), drafts included: a cover picked for a guide
+  // not yet published is still a cover.
+  for (const r of await everyRow<{ cover_path: string | null }>((a, b) =>
+    admin.from("articles").select("cover_path").order("id").range(a, b),
+  )) add(properties, "properties", r.cover_path);
 
   for (const r of await everyRow<{ receipt_url: string | null; receipt_urls: string[] | null }>((a, b) =>
     admin.from("payments").select("receipt_url, receipt_urls").order("id").range(a, b),
