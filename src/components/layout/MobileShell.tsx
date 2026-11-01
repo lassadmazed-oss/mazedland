@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { ChevronLeft } from "lucide-react";
 import { TopBar } from "./TopBar";
+import { BrandLogo } from "./BrandLogo";
 import { DesktopNav } from "./DesktopNav";
 import { BottomTabBar } from "./BottomTabBar";
 import { ScrollToTop } from "./ScrollToTop";
@@ -66,9 +67,22 @@ export function MobileShell({
       pathname === "/signup" ||
       pathname === "/forgot-password" ||
       pathname === "/reset-password";
+    // Checkout, payment result, verification: no navigation to stack, but the
+    // logo still — on a page that takes money above all. The auth screens
+    // carry it in their own frame (AuthScreen), the console in its shell.
+    const brandBar = !authFlow && !pathname.startsWith("/admin");
     return (
       <>
         <ScrollToTop />
+        {brandBar && (
+          <header className="border-b border-border bg-white pt-safe">
+            <div className="mx-auto flex h-[var(--mazed-topbar-h)] max-w-[var(--max-w-wide)] items-center px-4 lg:h-[var(--desktop-nav-h)] lg:px-8">
+              <Link href="/" className="flex items-center" aria-label="Mazed Immo">
+                <BrandLogo variant="lockup" alt="" eager className="h-10 w-auto lg:h-11" />
+              </Link>
+            </div>
+          </header>
+        )}
         {authFlow && (
           <Link
             href="/"

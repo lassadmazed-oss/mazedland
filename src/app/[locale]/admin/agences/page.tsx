@@ -11,6 +11,7 @@ import { formatDate, formatTND } from "@/lib/utils";
 import { activePlan, SHOP_COLUMNS, type ShopRow } from "@/lib/pro/shops";
 import { planUsage } from "@/lib/places/server";
 import { getSettings } from "@/lib/settings/server";
+import { loadFoundingSeats } from "@/lib/pro/founding";
 import { BadgeCheck, ExternalLink, FileText, Store } from "lucide-react";
 import { BoutiqueActions } from "./BoutiqueActions";
 
@@ -137,6 +138,8 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
       id: p.id,
       label: t("offerPlanOption", { name: p.name_fr, quota: p.listing_quota }),
     }));
+    // The founding places left, said in the offer dialog (src/lib/pro/founding.ts).
+    const seats = await loadFoundingSeats(admin!, settings.founding_seats);
     const pay = payRow as {
       id: string; status: string; amount: number | string; metadata: { product_id?: string } | null;
       provider: string | null; receipt_urls: string[] | null; receipt_url: string | null; receipt_uploaded_at: string | null;
@@ -267,6 +270,7 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
             verified={!!shop.verified_at}
             plans={offerPlans}
             offerMonths={settings.founding_offer_months}
+            seats={{ left: seats.left, total: seats.total }}
             request={request ? { plan: payPlanName, amount: amountText } : null}
           />
         </div>

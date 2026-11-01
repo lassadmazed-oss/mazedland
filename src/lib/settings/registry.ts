@@ -66,6 +66,9 @@ export const SETTINGS = {
   // « Agence réactive »: the badge an agence earns by answering its visit
   // requests fast (src/lib/pro/reactivity.ts). Off: no badge anywhere.
   feature_agency_reactive: { group: "features", type: "bool", default: true, href: "/admin/agences" },
+  // « Agences fondatrices : X places sur 10 » on the Pro page: the places the
+  // console has not yet given a free period to (src/lib/pro/founding.ts).
+  feature_founding_counter: { group: "features", type: "bool", default: true, href: "/admin/agences" },
   // « Importer plusieurs annonces » in the agence's dashboard: a CSV (or lines
   // pasted from Excel) becomes drafts (src/lib/listings/importRows.ts).
   feature_listing_import: { group: "features", type: "bool", default: true },
@@ -117,6 +120,10 @@ export const SETTINGS = {
   import_max_rows: { group: "publication", type: "int", default: 60, min: 5, max: 300, choices: [30, 60, 120, 300] },
   // « Offrir une période » in the agences console: how long the offered plan runs (src/lib/pro/offer.ts).
   founding_offer_months: { group: "publication", type: "int", default: 3, min: 1, max: 12, unit: "months", choices: [1, 2, 3, 6, 12] },
+  // How many agences the founding offer is for, and where (« les 10 premières
+  // agences de Sfax »); an empty place says « les 10 premières agences ».
+  founding_seats: { group: "publication", type: "int", default: 10, min: 1, max: 100, choices: [5, 10, 15, 20] },
+  founding_offer_place: { group: "publication", type: "text", default: "Sfax", max: 40 },
   // « Envoyer sans payer » under the agence request: the agence comes alone,
   // for the founding offer the console then gives (« Offrir une période »).
   pro_signup_pay_later: { group: "publication", type: "bool", default: true },

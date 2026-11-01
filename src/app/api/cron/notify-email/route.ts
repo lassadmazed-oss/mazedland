@@ -96,7 +96,7 @@ function renderHtml(
   const fonts = isRtl(lang) ? "Tahoma,Segoe UI,Arial,sans-serif" : "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
   return `<!doctype html><html lang="${lang}" dir="${dir}"><body style="margin:0;background:#f4f4f5;padding:24px;font-family:${fonts}">
     <div style="max-width:520px;margin:0 auto;background:#ffffff;border:1px solid #e4e4e7;border-radius:16px;padding:28px">
-      <div style="font-size:18px;font-weight:800;color:#5d420b;letter-spacing:.5px">Mazed Immo</div>
+      <img src="${linkOrigin()}/brand/mazed-lockup.png" width="124" height="40" alt="Mazed Immo" style="display:block;border:0;height:40px;width:124px;color:#5d420b;font-size:18px;font-weight:800">
       <h1 style="font-size:18px;color:#18181b;margin:18px 0 8px">${escapeHtml(title)}</h1>
       <p style="font-size:14px;line-height:1.6;color:#52525b;margin:0">${escapeHtml(body)}</p>
       ${cta}

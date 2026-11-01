@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
 /**
@@ -54,9 +54,9 @@ export async function SiteFooter() {
       <div className="mx-auto max-w-[var(--max-w-wide)] px-5 py-10 md:px-8 lg:py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div className="sm:col-span-2 lg:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2.5" aria-label={t("brand.name")}>
-              <Image src="/logo-mark.webp" alt="" width={127} height={160} sizes="32px" className="h-9 w-auto" />
-              <span className="text-[16px] font-extrabold tracking-tight text-foreground">{t("brand.name")}</span>
+            {/* The whole logo: the footer has the room the bars do not. */}
+            <Link href="/" className="inline-flex" aria-label={t("brand.name")}>
+              <BrandLogo variant="logo" alt="" className="h-28 w-auto" />
             </Link>
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-muted">{t("brand.tagline")}</p>
             <p className="mt-2 text-[13px] font-bold text-foreground">{t("brand.slogan")}</p>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import Image from "next/image";
 import Link from "next/link";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { jakarta, cairo } from "./fonts";
 
 /**
@@ -102,7 +102,7 @@ export default async function RootNotFound() {
     <html lang={locale} dir={arabicFirst ? "rtl" : "ltr"} className={`${jakarta.variable} ${cairo.variable} h-full antialiased`}>
       <body className="min-h-full bg-background text-foreground font-sans" style={{ background: "#ffffff" }}>
         <main className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center px-6 text-center">
-          <Image src="/logo-mark.webp" alt="Mazed Immo" width={127} height={160} sizes="48px" className="h-16 w-auto" />
+          <BrandLogo variant="logo" eager className="h-28 w-auto" />
           {arabicFirst ? (
             <>
               <Arabic secondary={false} />

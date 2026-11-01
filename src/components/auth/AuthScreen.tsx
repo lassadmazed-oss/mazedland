@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { AuthHeroPanel } from "@/components/auth/AuthHeroPanel";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { HeroPhoto } from "@/components/landing/HeroPhoto";
 import { LG_UP } from "@/components/ui/HiddenAt";
 
@@ -50,8 +50,11 @@ export async function AuthScreen({
           <HeroPhoto hiddenAt={LG_UP} className="absolute inset-0" />
           <div className="mazed-hero-scrim absolute inset-0" aria-hidden />
           <div className="relative px-5 pb-14 pt-[4.5rem] text-white">
-            <p className="inline-flex items-center gap-2 rounded-full bg-black/30 px-3 py-1 text-[11.5px] font-bold ring-1 ring-white/25 backdrop-blur-sm">
-              {t("name")}
+            {/* The logo on the photo: its dark-surface file (the « A » and
+                the gavel in cream) on a smoked-glass pill, so the gold holds
+                over the white walls of the picture. */}
+            <p className="inline-flex items-center rounded-full bg-black/40 px-3.5 py-1.5 ring-1 ring-white/20 backdrop-blur-sm">
+              <BrandLogo variant="lockupOnDark" alt={t("name")} eager className="h-7 w-auto" />
             </p>
             <h1 id={labelledBy} className={`mazed-display mt-3 max-w-[14ch] text-[30px] text-white drop-shadow-sm ${arabic}`}>
               {title}
@@ -76,16 +79,7 @@ export async function AuthScreen({
         <div className="relative flex h-[100dvh] items-center justify-center overflow-y-auto bg-paper-warm px-8 py-10">
           <div className="mazed-float w-full max-w-md p-8">
             <div className="flex flex-col items-center text-center">
-              <Image
-                src="/logo.webp"
-                alt={t("name")}
-                width={357}
-                height={480}
-                sizes="48px"
-                loading="eager"
-                fetchPriority="high"
-                className="h-16 w-auto"
-              />
+              <BrandLogo variant="logo" alt={t("name")} eager className="h-24 w-auto" />
               {/* Each tree has its own heading, as every split page here does:
                   CSS shows one tree, and only that one's heading is read. */}
               <h1 className={`mazed-h2 mt-5 text-[26px] text-foreground ${arabic}`}>{desktopTitle ?? title}</h1>
