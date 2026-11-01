@@ -5352,6 +5352,10 @@
       "label": "Rotation des bannières",
       "hint": "Le temps qu'une bannière reste affichée avant la suivante, quand un espace en a plusieurs."
     },
+    "ads_rotate_pause": {
+      "label": "Arrêter la rotation sous la souris",
+      "hint": "Éteint (conseillé) : les bannières tournent toujours, même quand la souris est dessus ou que l'appareil demande moins d'animations ; elles s'arrêtent seulement hors de l'écran. Allumé : une bannière reste en place tant que la souris ou le clavier est dessus, et ne tourne pas sur un appareil qui demande moins d'animations."
+    },
     "home_rail_size": {
       "label": "Annonces par rubrique",
       "hint": "Combien d'annonces chaque rubrique montre au plus. Une rubrique qui en a moins de 3 ne s'affiche pas."
