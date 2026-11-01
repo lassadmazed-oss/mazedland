@@ -2,7 +2,8 @@ import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { isRtl } from "@/lib/i18n";
-import { ArrowUpRight, ClipboardCheck, Lock, Phone, Plus, Scale, Search, ShieldCheck } from "lucide-react";
+import { getSettings } from "@/lib/settings/server";
+import { ArrowUpRight, BarChart3, ClipboardCheck, Lock, Phone, Plus, Scale, Search, ShieldCheck } from "lucide-react";
 
 /**
  * The two bands that close the home page, in both layouts (2026-10-31).
@@ -50,6 +51,8 @@ export async function WhyBand({ layout }: { layout: "phone" | "desktop" }) {
   const t = await getTranslations();
   const arabic = isRtl(await getLocale()) ? "font-arabic" : "";
   const desktop = layout === "desktop";
+  // « Le marché en chiffres » (/marche): the site's own figures, while the console keeps the page on.
+  const { public_stats_enabled: marketOn } = await getSettings();
 
   return (
     <section
@@ -74,6 +77,23 @@ export async function WhyBand({ layout }: { layout: "phone" | "desktop" }) {
           </li>
         ))}
       </ul>
+
+      {/* The proof behind the pillars: the market's own figures, public. */}
+      {marketOn && (
+        <Link
+          href={"/marche" as never}
+          className={`group mt-3 flex items-center gap-3.5 rounded-2xl bg-surface ring-1 ring-border transition hover:ring-foreground/40 ${desktop ? "mt-4 p-5" : "p-4"}`}
+        >
+          <span className="inline-grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-[var(--background)]">
+            <BarChart3 className="size-4" strokeWidth={2.2} aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className={`block font-bold leading-tight text-foreground ${desktop ? "text-[15px]" : "text-[14px]"} ${arabic}`}>{t("home.marketTitle")}</span>
+            <span className={`mt-1 block leading-relaxed text-muted ${desktop ? "text-[13px]" : "text-[12px]"} ${arabic}`}>{t("home.marketBody")}</span>
+          </span>
+          <ArrowUpRight className="size-4 shrink-0 text-subtle transition group-hover:text-foreground rtl:-scale-x-100" strokeWidth={2.2} aria-hidden />
+        </Link>
+      )}
 
       {/* The journey, as three numbered rows: the order is the information. */}
       <p className="mt-10 text-[11px] font-extrabold uppercase tracking-[0.14em] text-subtle">{t("home.howItWorksEyebrow")}</p>

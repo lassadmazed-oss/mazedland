@@ -5,6 +5,7 @@ import { log } from "@/lib/log";
 import { routing } from "@/i18n/routing";
 import { projectsShown } from "@/lib/pro/projectsServer";
 import { catalogueLandings } from "@/lib/seo";
+import { loadSettings } from "@/lib/settings/server";
 
 const SITE_URL = siteUrl();
 
@@ -54,6 +55,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!sb || !base) return staticRoutes;
 
   try {
+    // « Le marché en chiffres » (/marche), while the console keeps it on.
+    const settings = await loadSettings(sb);
+    const marketRoutes: MetadataRoute.Sitemap = settings.public_stats_enabled
+      ? localized(base, "/marche", { changeFrequency: "daily", priority: 0.5 })
+      : [];
+
     // `auctions` joined to `properties`, filtered to `status = 'ready'`, until
     // migration 0153 dropped both. The catch below swallowed the resulting
     // error and returned only the static routes — so since that migration, not
@@ -125,7 +132,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // Next writes each address into the XML as it is: « & » must arrive escaped.
     ).flatMap((query) => localized(base, `/annonces?${query.replace(/&/g, "&amp;")}`, { changeFrequency: "daily" as const, priority: 0.8 }));
 
-    return [...staticRoutes, ...landingRoutes, ...shopRoutes, ...projectRoutes, ...listingRoutes];
+    return [...staticRoutes, ...marketRoutes, ...landingRoutes, ...shopRoutes, ...projectRoutes, ...listingRoutes];
   } catch {
     // Never let a DB hiccup 500 the sitemap — degrade to static routes.
     return staticRoutes;

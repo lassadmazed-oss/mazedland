@@ -12,6 +12,7 @@ import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { canonicalDelegation, delegationLabel } from "@/lib/delegations";
 import {
   ArrowUpDown,
+  BarChart3,
   BellRing,
   Check,
   ChevronDown,
@@ -42,6 +43,7 @@ import { FeaturedAgencies } from "@/components/agency/FeaturedAgencies";
 import { loadFeaturedShops } from "@/lib/pro/featured";
 import { reactiveRules } from "@/lib/pro/reactivity";
 import { cleanSearchTerm } from "@/lib/analytics/ga";
+import { governorateSlug } from "@/lib/market/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -818,6 +820,9 @@ export default async function AnnoncesPage({
   );
 
   const filtersOn = filterSummary.length;
+  // « Le marché en chiffres », for the place being browsed: its block on
+  // /marche when the governorate is a real one, the page's top otherwise.
+  const marketGov = sp.gov && (TUNISIAN_GOVERNORATES as readonly string[]).includes(sp.gov) ? sp.gov : null;
 
   return (
     <main className="mx-auto max-w-[var(--max-w-wide)] px-4 pb-6 pt-4 lg:px-8 lg:pb-12 lg:pt-6">
@@ -1026,6 +1031,15 @@ export default async function AnnoncesPage({
           >
             {t("queryChip", { query: sp.q.trim() })}
             <X className="size-3" aria-hidden />
+          </Link>
+        )}
+        {settings.public_stats_enabled && (
+          <Link
+            href={(marketGov ? `/marche#${governorateSlug(marketGov)}` : "/marche") as never}
+            className="ms-auto inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted transition hover:text-foreground"
+          >
+            <BarChart3 className="size-3.5" strokeWidth={2.2} aria-hidden />
+            {marketGov ? t("marketLinkIn", { gov: governorateLabel(marketGov, locale) }) : t("marketLink")}
           </Link>
         )}
       </div>

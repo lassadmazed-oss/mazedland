@@ -5,7 +5,7 @@ import type { Period } from "@/lib/analytics/period";
 import { rate, retention } from "@/lib/analytics/shape";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
-import { BarList, StackedBars } from "../Charts";
+import { BarList, StackedBars } from "@/components/charts/Charts";
 import { Card, ErrorNote, errorText, Facts, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
 
 /** The accounts: who signs up, from where, and whether they come back. */

@@ -99,3 +99,20 @@ Vue d'ensemble (insights, KPIs, trends, funnel), Trafic (Google), Marché,
 Demande, Pro & revenus, Comptes. The aggregations are the `analytics_*`
 functions of 0204; the insight rules are `src/lib/analytics/insights.ts`;
 every threshold is an `analytics_*` setting.
+
+## The public page: « Le marché en chiffres »
+
+`/marche` (fr and ar) publishes the market as the site sees it: annonces
+online, the median asking prices by type and by governorate (and per m²
+within a type), how they moved over the last 30 days, the spread of prices,
+the supply by governorate and type, the demand of the last 30 days (searches,
+visit requests, buyer demandes) and one block per governorate under its own
+anchor (`/marche#sfax`), which the catalogue filtered on a governorate links
+to. One SQL function, `public_market_stats` (0207), computes everything —
+aggregates only, never a row — and applies the minimum-sample rule itself: a
+median or a demand figure built from fewer than `public_stats_min_sample`
+annonces comes back null and the page says « pas encore assez de données »
+in its place. The result is kept in `analytics_cache` for
+`public_stats_cache_minutes`; `public_stats_enabled` switches the page and
+every link to it off. Code: `src/lib/market/stats.ts` (shaping, tested) and
+`src/app/[locale]/marche/page.tsx`.

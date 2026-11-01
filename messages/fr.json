@@ -10,7 +10,8 @@
     "info": "Informations",
     "language": "Langue",
     "rights": "© {year} {name}. Tous droits réservés.",
-    "country": "Tunisie"
+    "country": "Tunisie",
+    "market": "Le marché en chiffres"
   },
   "brand": {
     "name": "Mazed Immo",
@@ -71,7 +72,8 @@
       "partners": "Banques & agences",
       "sell": "Tableau du vendeur",
       "admin": "Console admin",
-      "payment": "Paiement"
+      "payment": "Paiement",
+      "marche": "Le marché en chiffres"
     },
     "mainNav": "Navigation principale",
     "offline": "Hors ligne — reconnexion automatique…",
@@ -763,7 +765,9 @@
         "title": "À découvrir",
         "sub": "D'autres annonces en ligne"
       }
-    }
+    },
+    "marketTitle": "Le marché en chiffres",
+    "marketBody": "Prix médians demandés, offre par gouvernorat, demande des acheteurs : les chiffres du site, mis à jour automatiquement."
   },
   "search": {
     "placeholder": "Rechercher un bien…",
@@ -948,7 +952,9 @@
     "breadcrumb": "Annonces",
     "crumbHome": "Accueil",
     "metaDescription": "{count, plural, =0 {Aucune annonce pour le moment} one {# annonce} other {# annonces}} : {title}. Prix affichés, vendeurs joignables directement, en français et en arabe.",
-    "metaDescriptionAny": "{title}. Prix affichés, vendeurs joignables directement, en français et en arabe."
+    "metaDescriptionAny": "{title}. Prix affichés, vendeurs joignables directement, en français et en arabe.",
+    "marketLink": "Le marché en chiffres",
+    "marketLinkIn": "Le marché à {gov} en chiffres"
   },
   "listing": {
     "gallery": {
@@ -5695,6 +5701,18 @@
     "analytics_mover_min_count": {
       "label": "Minimum pour une variation",
       "hint": "Une variation n'est signalée que si l'une des deux semaines atteint ce nombre : passer de deux à trois n'est pas une nouvelle."
+    },
+    "public_stats_enabled": {
+      "label": "Page « Le marché en chiffres »",
+      "hint": "La page publique /marche : prix médians demandés, offre et demande par gouvernorat, calculés à partir des annonces. Coupée, la page disparaît et ses liens aussi."
+    },
+    "public_stats_min_sample": {
+      "label": "Échantillon minimum du marché en chiffres",
+      "hint": "Un prix médian ou un signal de demande n'est affiché qu'à partir de ce nombre d'annonces (ou de recherches, visites, demandes). En dessous, la page dit qu'il n'y a pas encore assez de données."
+    },
+    "public_stats_cache_minutes": {
+      "label": "Rafraîchissement du marché en chiffres",
+      "hint": "Les chiffres de la page sont recalculés au plus une fois par ce délai."
     }
   },
   "ads": {
@@ -6798,6 +6816,104 @@
         "ar": "Arabe",
         "other": "Autre"
       }
+    }
+  },
+  "market": {
+    "metaTitle": "Le marché immobilier en chiffres",
+    "metaDescription": "Prix demandés, annonces en ligne par type de bien et par gouvernorat, demande des acheteurs : les chiffres du marché immobilier tunisien, calculés à partir des annonces publiées sur Mazed Immo et mis à jour automatiquement.",
+    "eyebrow": "Le marché",
+    "title": "Le marché en chiffres",
+    "intro": "Ce que le marché demande et là où il bouge : des chiffres calculés à partir des annonces publiées sur Mazed Immo, sans aucune saisie manuelle, mis à jour automatiquement.",
+    "unavailable": "Les chiffres ne peuvent pas être affichés pour le moment. Réessayez dans quelques minutes.",
+    "updated": "Mis à jour le {date}",
+    "basis": "{count, plural, =0 {aucune annonce en ligne} one {# annonce en ligne analysée} other {# annonces en ligne analysées}}",
+    "rule": "Un chiffre n'est affiché que s'il repose sur au moins {min} annonces. En dessous, nous préférons ne rien dire plutôt que d'induire en erreur.",
+    "notEnough": "Pas encore assez de données",
+    "notEnoughHint": "moins de {min} annonces",
+    "basedOn": "{count, plural, =0 {aucune annonce} one {sur # annonce} other {sur # annonces}}",
+    "breadcrumbHome": "Accueil",
+    "headline": {
+      "title": "Aujourd'hui",
+      "online": "Annonces en ligne",
+      "onlineSub": "{sale} à vendre · {rent} à louer",
+      "new": "Publiées ces {days} derniers jours",
+      "newPrev": "{count} les {days} jours d'avant",
+      "agences": "Agences et promoteurs",
+      "agencesSub": "ouverts sur Mazed Immo",
+      "governorates": "Gouvernorats couverts",
+      "governoratesSub": "sur {total}"
+    },
+    "prices": {
+      "title": "Prix demandés",
+      "hint": "La médiane des prix affichés par les vendeurs : la moitié des annonces demandent moins, l'autre moitié plus. Ce sont des prix demandés, pas des prix de vente.",
+      "medianSale": "Prix médian à la vente",
+      "medianRent": "Loyer médian par mois",
+      "trend": "{delta} vs les {days} jours d'avant",
+      "trendBasis": "Évolution calculée sur les annonces publiées : {recent} ces derniers jours contre {prev} avant.",
+      "byCategory": "Par type de bien",
+      "cols": {
+        "category": "Type",
+        "count": "En ligne",
+        "sale": "Médiane à la vente",
+        "rent": "Loyer médian",
+        "sqm": "au m²"
+      },
+      "legend": "— : pas encore assez de données (moins de {min} annonces)."
+    },
+    "bands": {
+      "title": "Répartition des prix",
+      "hintSale": "Combien d'annonces à vendre demandent chaque tranche de prix, en TND.",
+      "hintRent": "Combien d'annonces à louer demandent chaque tranche de loyer mensuel, en TND.",
+      "sale": "À vendre",
+      "rent": "À louer"
+    },
+    "supply": {
+      "title": "L'offre",
+      "byGovernorate": "Par gouvernorat",
+      "byCategory": "Par type de bien",
+      "split": "Vente et location",
+      "forSale": "à vendre",
+      "forRent": "à louer",
+      "seeCatalogue": "Voir les annonces",
+      "more": "D'autres gouvernorats apparaîtront dès qu'ils auront des annonces en ligne."
+    },
+    "demand": {
+      "title": "La demande",
+      "hint": "Ce que les visiteurs cherchent sur les {days} derniers jours. Des totaux seulement : jamais par annonce, jamais par personne.",
+      "searches": "Recherches",
+      "searchesSub": "dans le catalogue",
+      "visits": "Demandes de visite",
+      "visitsSub": "envoyées aux vendeurs",
+      "demandes": "Demandes d'acheteurs",
+      "demandesSub": "déposées sur le site",
+      "byGovernorate": "Par gouvernorat",
+      "searchesIn": "{count, plural, one {# recherche} other {# recherches}}",
+      "visitsIn": "{count, plural, one {# visite demandée} other {# visites demandées}}",
+      "demandesIn": "{count, plural, one {# demande d'acheteur} other {# demandes d'acheteurs}}"
+    },
+    "governorates": {
+      "title": "Gouvernorat par gouvernorat",
+      "hint": "Les mêmes chiffres, pour chaque gouvernorat où des biens sont en ligne.",
+      "jump": "Aller à un gouvernorat",
+      "online": "annonces en ligne",
+      "sale": "à vendre",
+      "rent": "à louer",
+      "medianSale": "Prix médian à la vente",
+      "medianRent": "Loyer médian par mois",
+      "categories": "Par type de bien",
+      "demand": "Demande sur {days} jours",
+      "catalogue": "Voir les annonces à {gov}",
+      "noDemand": "pas encore assez de signaux pour être publiés"
+    },
+    "method": {
+      "title": "D'où viennent ces chiffres",
+      "body": "Tout est calculé à partir des annonces publiées sur Mazed Immo et de ce que les visiteurs y font : aucun chiffre n'est saisi à la main. Les prix sont ceux demandés par les vendeurs ; une médiane n'est affichée qu'à partir de {min} annonces, et les signaux de demande ne sont jamais publiés par annonce ni par personne. La page se met à jour toute seule.",
+      "cta": "Vous vendez ou louez ? Votre annonce entre dans ces chiffres.",
+      "ctaButton": "Publier une annonce"
+    },
+    "dataset": {
+      "name": "Le marché immobilier tunisien en chiffres — Mazed Immo",
+      "description": "Prix médians demandés, offre par gouvernorat et par type de bien, demande des acheteurs, calculés à partir des annonces publiées sur Mazed Immo."
     }
   }
 }

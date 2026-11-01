@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { getSettings } from "@/lib/settings/server";
 import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
@@ -19,6 +20,8 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 export async function SiteFooter() {
   const t = await getTranslations();
   const year = String(new Date().getFullYear());
+  // « Le marché en chiffres » is listed while the console keeps the page on.
+  const settings = await getSettings();
 
   const columns: { key: string; title: string; links: { href: string; label: string }[] }[] = [
     {
@@ -28,6 +31,7 @@ export async function SiteFooter() {
         { href: "/annonces?deal=sale", label: t("footer.buy") },
         { href: "/annonces?deal=rent", label: t("footer.rent") },
         { href: "/agences", label: t("footer.agencies") },
+        ...(settings.public_stats_enabled ? [{ href: "/marche", label: t("footer.market") }] : []),
         { href: "/annonces/nouvelle", label: t("footer.publish") },
       ],
     },
