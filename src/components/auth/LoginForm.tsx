@@ -136,7 +136,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="mazed-btn-luxe tap-target w-full px-5 py-3 text-[13.5px] disabled:opacity-50"
+        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
       >
         {isPending ? (
           <><Loader2 className="inline size-4 animate-spin" /> {t("auth.login.submitting")}</>
@@ -172,7 +172,7 @@ function Field({
         aria-describedby={invalid ? describedBy : undefined}
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 w-full rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 px-4 py-2.5 text-sm text-mazed-cream placeholder:text-mazed-muted focus:border-mazed-gold focus:outline-none focus:ring-1 focus:ring-mazed-gold/40"
+        className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
       />
     </label>
   );

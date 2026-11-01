@@ -14,13 +14,13 @@ export default function Loading() {
           <div className="skel h-7 w-52 rounded-full lg:h-9" />
           <div className="skel mt-2 h-3 w-60 max-w-full rounded-full" />
         </div>
-        <div className="skel h-11 w-32 rounded-xl" />
+        <div className="skel h-11 w-32 rounded-full" />
       </div>
 
       {/* Status tabs */}
       <div className="mt-5 flex gap-2 overflow-hidden">
         {[84, 96, 92, 104, 96].map((w, i) => (
-          <div key={i} className="skel h-11 shrink-0 rounded-xl" style={{ width: w }} />
+          <div key={i} className="skel h-11 shrink-0 rounded-full" style={{ width: w }} />
         ))}
       </div>
 
@@ -29,14 +29,14 @@ export default function Loading() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="rounded-2xl border border-border bg-surface p-3">
             <div className="flex gap-3">
-              <div className="skel size-[74px] shrink-0 rounded-xl" />
+              <div className="skel aspect-[4/3] w-[108px] shrink-0 rounded-2xl" />
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="skel h-3 w-24 rounded-full" />
                 <div className="skel h-4 w-4/5 rounded-full" />
                 <div className="skel h-4 w-28 rounded-full" />
               </div>
             </div>
-            <div className="skel mt-3 h-10 w-full rounded-xl" />
+            <div className="skel mt-3 h-11 w-full rounded-full" />
           </div>
         ))}
       </div>
@@ -50,7 +50,7 @@ export default function Loading() {
         </div>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 border-t border-border px-5 py-3.5">
-            <div className="skel size-14 shrink-0 rounded-xl" />
+            <div className="skel aspect-[4/3] w-[76px] shrink-0 rounded-2xl" />
             <div className="min-w-0 flex-1 space-y-2">
               <div className="skel h-3.5 w-64 max-w-full rounded-full" />
               <div className="skel h-2.5 w-24 rounded-full" />

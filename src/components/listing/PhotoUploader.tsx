@@ -410,14 +410,12 @@ export function PhotoUploader({
           void accept(Array.from(e.dataTransfer.files));
         }}
         className={
-          "flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-7 transition " +
-          (dragOver
-            ? "border-gold bg-gold-faint"
-            : "border-border bg-surface-2/40 hover:border-gold-soft") +
+          "mazed-band-warm flex w-full flex-col items-center justify-center gap-2 rounded-[var(--radius-2xl)] border-2 border-dashed px-4 py-8 transition " +
+          (dragOver ? "border-foreground" : "border-border hover:border-foreground/40") +
           (disabled || room <= 0 ? " cursor-not-allowed opacity-50" : "")
         }
       >
-        <span className="grid size-11 place-items-center rounded-full bg-gold-faint text-gold">
+        <span className="grid size-11 place-items-center rounded-full bg-foreground text-[var(--background)] shadow-[var(--shadow-card)]">
           <Camera className="size-5" />
         </span>
         <span className="text-[13.5px] font-bold text-foreground">
@@ -443,7 +441,7 @@ export function PhotoUploader({
 
       {/* What is happening right now — said once, above the grid. */}
       {sending > 0 && (
-        <p className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gold-faint px-3 py-2 text-[12.5px] font-semibold text-gold ring-1 ring-gold-soft">
+        <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-2 text-[12.5px] font-semibold text-foreground">
           <Loader2 className="size-3.5 animate-spin" />
           {t("sendingCount", { count: sending })}
         </p>
@@ -474,14 +472,14 @@ export function PhotoUploader({
           {photos.map((p, i) => (
             <li
               key={p.path}
-              className="group relative aspect-square overflow-hidden rounded-xl bg-black ring-1 ring-border"
+              className="group relative aspect-[4/3] overflow-hidden rounded-[var(--radius-lg)] bg-surface-2 ring-1 ring-border"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={propertyPhotoUrl(p.path)} alt="" className="size-full object-contain" />
 
               {i === 0 && (
-                <span className="absolute inset-x-1 top-1 inline-flex items-center justify-center gap-1 rounded-md bg-[var(--gold)] py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-[var(--background)]">
-                  <Star className="size-2.5" /> {t("cover")}
+                <span className="mazed-chip-photo mazed-chip-photo-ink absolute start-1.5 top-1.5 z-[2]">
+                  <Star className="size-3" /> {t("cover")}
                 </span>
               )}
 
@@ -542,8 +540,8 @@ export function PhotoUploader({
             <li
               key={p.id}
               className={
-                "relative aspect-square overflow-hidden rounded-xl bg-black ring-1 " +
-                (p.phase === "failed" ? "ring-[var(--accent-deep)]" : "ring-border")
+                "relative aspect-[4/3] overflow-hidden rounded-[var(--radius-lg)] bg-surface-2 ring-1 " +
+                (p.phase === "failed" ? "ring-2 ring-[var(--accent-deep)]" : "ring-border")
               }
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -572,8 +570,8 @@ export function PhotoUploader({
               ) : (
                 <>
                   <div className="absolute inset-0 grid place-items-center gap-1">
-                    <Loader2 className="size-5 animate-spin text-gold" />
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-white/80">
+                    <Loader2 className="size-5 animate-spin text-foreground" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-foreground">
                       {p.phase === "preparing" ? t("preparing") : t("sending")}
                     </span>
                   </div>

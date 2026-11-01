@@ -77,18 +77,20 @@ export default async function MyPaymentsPage({
   // Empty state — keep the gold-framed CTA.
   if (payments.length === 0) {
     return (
-      <div className="mx-auto max-w-[var(--max-w)] px-4 pt-4 pb-16 lg:max-w-[var(--max-w-content)]">
+      <div className="mx-auto max-w-2xl px-4 py-6 lg:max-w-3xl lg:py-10">
         <span className="mazed-eyebrow">{t("eyebrow")}</span>
-        <h1 className="mt-1.5 text-[24px] font-extrabold leading-tight tracking-tight">{t("title")}</h1>
-        <p className="mt-1.5 text-[12px] text-muted">
+        <h1 className="mazed-h2 mt-1.5 text-[26px] text-foreground lg:text-[32px]">{t("title")}</h1>
+        <p className="mt-1.5 text-[13.5px] text-muted">
           {t("emptySubtitle")}
         </p>
-        <div className="mazed-frame-gold relative mt-6 px-6 py-10 text-center">
-          <Wallet className="mx-auto size-8 text-gold" strokeWidth={2} />
+        <div className="mazed-band-warm relative mt-6 rounded-[var(--radius-3xl)] px-6 py-12 text-center lg:py-16">
+          <span className="mx-auto grid size-12 place-items-center rounded-full bg-surface text-foreground shadow-[var(--shadow-card)]">
+            <Wallet className="size-5" strokeWidth={2} />
+          </span>
           <p className="mt-3 text-[13px] text-muted">{t("empty")}</p>
           <Link
             href="/annonces"
-            className="mazed-btn-luxe tap-target mt-5 inline-flex px-5 py-2.5 text-[12.5px]"
+            className="mazed-btn-luxe tap-target mt-6 inline-flex h-12 items-center rounded-full px-6 text-[14px]"
           >
             {t("browse")}
           </Link>
@@ -215,11 +217,11 @@ export default async function MyPaymentsPage({
   const open = await paymentsAreOpen();
 
   return (
-    <div className="mx-auto max-w-[var(--max-w)] px-4 pt-4 pb-16 lg:max-w-[var(--max-w-content)]">
+    <div className="mx-auto max-w-2xl px-4 py-6 lg:max-w-3xl lg:py-10">
       <FocusRowHighlight idPrefix="pay-" />
       <span className="mazed-eyebrow">{t("eyebrow")}</span>
-      <h1 className="mt-1.5 text-[24px] font-extrabold leading-tight tracking-tight">{t("title")}</h1>
-      <p className="mt-1.5 text-[12px] text-muted">
+      <h1 className="mazed-h2 mt-1.5 text-[26px] text-foreground lg:text-[32px]">{t("title")}</h1>
+      <p className="mt-1.5 text-[13.5px] text-muted">
         {t("subtitle")}
       </p>
 

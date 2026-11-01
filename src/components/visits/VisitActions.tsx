@@ -90,7 +90,7 @@ export function VisitActions({
   }
 
   const spin = (a: string) => (busy === a ? <Loader2 className="size-3.5 animate-spin" /> : null);
-  const btn = "tap-target inline-flex h-9 items-center gap-1.5 rounded-xl px-3.5 text-[12.5px] font-bold transition disabled:opacity-60";
+  const btn = "tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12.5px] font-bold transition disabled:opacity-60";
   const label = "text-[12px] font-bold text-foreground";
   const area = "w-full rounded-xl border border-border bg-surface px-3 py-2 text-[12.5px] text-foreground focus:border-gold-soft focus:outline-none";
   const row = "mt-1.5 flex flex-wrap gap-2";
@@ -98,7 +98,7 @@ export function VisitActions({
   if (side === "buyer") {
     if (status !== "requested" && status !== "confirmed") return null;
     return (
-      <button type="button" disabled={!!busy} onClick={() => act("cancel", t("cancelled"))} className={`${btn} border border-border text-foreground hover:bg-surface-2`}>
+      <button type="button" disabled={!!busy} onClick={() => act("cancel", t("cancelled"))} className={`${btn} mazed-btn-quiet`}>
         {spin("cancel")} {t("cancel")}
       </button>
     );
@@ -204,7 +204,7 @@ export function VisitActions({
             <button type="button" disabled={!!busy} onClick={() => act("decline", t("declined"))} className={`${btn} mazed-btn-luxe`}>
               {spin("decline") ?? <X className="size-3.5" />} {t("declineSend")}
             </button>
-            <button type="button" disabled={!!busy} onClick={() => setDeclining(false)} className={`${btn} border border-border text-foreground hover:bg-surface-2`}>
+            <button type="button" disabled={!!busy} onClick={() => setDeclining(false)} className={`${btn} mazed-btn-quiet`}>
               {t("back")}
             </button>
           </div>
@@ -269,7 +269,7 @@ export function VisitActions({
           <button type="button" disabled={!!busy} onClick={() => act("confirm", t("confirmed"))} className={`${btn} mazed-btn-luxe`}>
             {spin("confirm") ?? <Check className="size-3.5" />} {t("confirm")}
           </button>
-          <button type="button" disabled={!!busy} onClick={() => setDeclining(true)} className={`${btn} border border-border text-foreground hover:bg-surface-2`}>
+          <button type="button" disabled={!!busy} onClick={() => setDeclining(true)} className={`${btn} mazed-btn-quiet`}>
             <X className="size-3.5" /> {t("decline")}
           </button>
         </div>
@@ -283,7 +283,7 @@ export function VisitActions({
         <button type="button" disabled={!!busy} onClick={() => act("done", t("doneToast"))} className={`${btn} mazed-btn-luxe`}>
           {spin("done") ?? <Check className="size-3.5" />} {t("done")}
         </button>
-        <button type="button" disabled={!!busy} onClick={() => act("cancel", t("cancelled"))} className={`${btn} border border-border text-foreground hover:bg-surface-2`}>
+        <button type="button" disabled={!!busy} onClick={() => act("cancel", t("cancelled"))} className={`${btn} mazed-btn-quiet`}>
           {spin("cancel")} {t("cancel")}
         </button>
       </div>

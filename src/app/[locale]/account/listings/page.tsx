@@ -276,8 +276,8 @@ export default async function MyListingsPage({
 
   function Action({ l, block = false }: { l: Row; block?: boolean }) {
     const cls = block
-      ? "mazed-btn-luxe tap-target mt-2.5 flex w-full justify-center px-3 py-2.5 text-[12.5px]"
-      : "mazed-btn-luxe tap-target inline-flex px-3 py-1.5 text-[12px]";
+      ? "mazed-btn-luxe tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
+      : "mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12px]";
 
     // Receipt with an admin: the action is to look at it, not to pay again.
     if (l.status === "pending_payment" && reviewFor.has(l.id)) {
@@ -328,8 +328,8 @@ export default async function MyListingsPage({
             href={"/contact" as never}
             className={
               block
-                ? "mt-2.5 flex w-full items-center justify-center gap-1 rounded-xl border border-border px-3 py-2.5 text-[12.5px] font-bold text-foreground hover:border-gold-soft hover:text-gold"
-                : "inline-flex items-center gap-1 text-[12.5px] font-bold text-gold hover:underline"
+                ? "mazed-btn-quiet tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
+                : "inline-flex items-center gap-1 text-[12.5px] font-bold text-foreground underline underline-offset-4 hover:text-muted"
             }
           >
             <MessageCircle className="size-3.5" /> {t("contactUs")}
@@ -353,8 +353,8 @@ export default async function MyListingsPage({
           href={`/annonces/${l.id}` as never}
           className={
             block
-              ? "mt-2.5 flex w-full items-center justify-center gap-1 rounded-xl border border-border px-3 py-2.5 text-[12.5px] font-bold text-foreground hover:border-gold-soft hover:text-gold"
-              : "inline-flex items-center gap-1 text-[12.5px] font-bold text-gold hover:underline"
+              ? "mazed-btn-quiet tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
+              : "inline-flex items-center gap-1 text-[12.5px] font-bold text-foreground underline underline-offset-4 hover:text-muted"
           }
         >
           {t("view")} <ArrowRight className="size-3.5 rtl:-scale-x-100" />
@@ -376,7 +376,7 @@ export default async function MyListingsPage({
             href={`/annonces/nouvelle?edit=${l.id}` as never}
             className={
               block
-                ? "mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border px-3 py-2.5 text-[12.5px] font-bold text-foreground hover:border-gold-soft"
+                ? "mazed-btn-quiet tap-target mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
                 : "ms-3 inline-flex items-center gap-1 text-[12.5px] font-bold text-foreground hover:underline"
             }
           >
@@ -392,8 +392,8 @@ export default async function MyListingsPage({
             href={`/account/listings/${l.id}/promote` as never}
             className={
               block
-                ? "mt-2 flex w-full flex-col items-center rounded-xl border border-gold-soft bg-gold-faint px-3 py-2 text-center text-gold"
-                : "group mt-1.5 flex flex-col items-end text-end text-gold"
+                ? "mazed-band-warm mt-2 flex w-full flex-col items-center rounded-2xl px-3 py-2.5 text-center text-foreground ring-1 ring-border"
+                : "group mt-1.5 flex flex-col items-end text-end text-foreground"
             }
           >
             <span className={cn("inline-flex items-center gap-1.5 text-[12.5px] font-bold", !block && "group-hover:underline")}>
@@ -409,7 +409,7 @@ export default async function MyListingsPage({
             href={`/account/listings/${l.id}/mise-en-avant` as never}
             className={
               block
-                ? "mt-2 flex w-full flex-col items-center rounded-xl border border-border px-3 py-2 text-center text-foreground hover:border-gold-soft"
+                ? "mt-2 flex w-full flex-col items-center rounded-2xl px-3 py-2.5 text-center text-foreground ring-1 ring-border hover:ring-foreground/30"
                 : "group mt-1.5 flex flex-col items-end text-end text-foreground"
             }
           >
@@ -436,11 +436,11 @@ export default async function MyListingsPage({
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6 lg:max-w-6xl lg:px-8 lg:py-10">
+    <main className="mx-auto max-w-2xl px-4 py-6 lg:max-w-6xl lg:px-8 lg:py-10 xl:max-w-7xl">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-[24px] font-extrabold tracking-tight lg:text-[32px]">{t("title")}</h1>
+          <h1 className="mazed-h2 text-[26px] text-foreground lg:text-[32px]">{t("title")}</h1>
           <p className="mt-1 text-[13px] text-muted lg:text-[14px]">
             {all.length === 0
               ? t("subtitleEmpty")
@@ -449,23 +449,23 @@ export default async function MyListingsPage({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {allowance.kind === "plan" ? (
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-2 text-[12.5px] font-bold text-foreground ring-1 ring-border">
+            <span className="inline-flex h-11 items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-[12.5px] font-bold text-foreground">
               {t("planPlaces", { used: allowance.used, limit: allowance.limit, plan: allowance.planName })}
             </span>
           ) : (
             freeLimit > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-2 text-[12.5px] font-bold text-foreground ring-1 ring-border">
+              <span className="inline-flex h-11 items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-[12.5px] font-bold text-foreground">
                 {t("freePlaces", { used: Math.min(allowance.used, freeLimit), limit: freeLimit })}
               </span>
             )
           )}
           {creditsLeft > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-xl bg-gold-faint px-3 py-2 text-[12.5px] font-bold text-gold ring-1 ring-gold-soft">
+            <span className="inline-flex h-11 items-center gap-1.5 rounded-full bg-surface-2 px-3.5 text-[12.5px] font-bold text-foreground">
               <Ticket className="size-4" />
               {t("creditsLeft", { count: creditsLeft })}
             </span>
           )}
-          <Link href={"/annonces/nouvelle" as never} className="mazed-btn-luxe tap-target px-4 py-2.5 text-[13px]">
+          <Link href={"/annonces/nouvelle" as never} className="mazed-btn-luxe tap-target h-11 gap-1.5 rounded-full px-5 text-[13px]">
             <Plus className="size-4" /> {t("publish")}
           </Link>
         </div>
@@ -476,7 +476,7 @@ export default async function MyListingsPage({
           sideways instead of wrapping into three ragged rows. */}
       {all.length > 0 && (
         <nav className="-mx-4 mt-5 overflow-x-auto px-4 [scrollbar-width:none] lg:mx-0 lg:overflow-visible lg:px-0">
-          <div className="flex min-w-max gap-2 lg:min-w-0">
+          <div className="mazed-segment min-w-max lg:min-w-0">
             {TABS.map((tab) => {
               const n = countFor(tab.statuses);
               const on = tab.key === active.key;
@@ -488,15 +488,10 @@ export default async function MyListingsPage({
                   key={tab.key || "all"}
                   href={(tab.key ? `/account/listings?statut=${tab.key}` : "/account/listings") as never}
                   aria-current={on ? "page" : undefined}
-                  className={[
-                    "tap-target flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-[13px] font-bold transition",
-                    on
-                      ? "border-gold-soft bg-gold-faint text-gold"
-                      : "border-border bg-surface text-muted hover:border-gold-soft hover:text-foreground",
-                  ].join(" ")}
+                  className="gap-1.5 whitespace-nowrap"
                 >
                   {t(`tabs.${tab.label}`)}
-                  <span className={`mazed-tabular text-[13px] font-extrabold ${on ? "text-gold" : tab.tone}`}>
+                  <span className={`mazed-tabular text-[12.5px] font-extrabold ${on ? "text-foreground" : tab.tone}`}>
                     {n}
                   </span>
                 </Link>
@@ -513,15 +508,15 @@ export default async function MyListingsPage({
           const cover = coverPhoto(l.photos);
           const left = daysLeft(l);
           return (
-            <article key={l.id} className="rounded-2xl border border-border bg-surface p-3">
+            <article key={l.id} className="rounded-[var(--radius-2xl)] bg-surface p-3 ring-1 ring-border">
               <div className="flex gap-3">
                 <Link
                   href={`/annonces/${l.id}` as never}
                   aria-label={l.title || tAccount("untitledDraft")}
-                  className="relative size-[74px] shrink-0 overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border"
+                  className="mazed-photo-frame aspect-[4/3] w-[108px] shrink-0"
                 >
                   {cover ? (
-                    <ListingImage path={cover.storage_path} alt="" sizes="74px" />
+                    <ListingImage path={cover.storage_path} alt="" sizes="108px" fit="cover" />
                   ) : (
                     <span className="grid size-full place-items-center text-muted"><ImageOff className="size-5" /></span>
                   )}
@@ -533,10 +528,10 @@ export default async function MyListingsPage({
                     </span>
                     <span className="truncate text-[11px] text-muted">{categoryOf(l)}</span>
                   </div>
-                  <Link href={`/annonces/${l.id}` as never} className="mt-1 block truncate text-[14.5px] font-bold text-foreground">
+                  <p className="mazed-tabular mt-1.5 text-[16px] font-extrabold leading-none text-foreground">{priceOf(l)}</p>
+                  <Link href={`/annonces/${l.id}` as never} className="mt-1.5 block truncate text-[13.5px] font-semibold text-foreground">
                     {titleOf(l)}
                   </Link>
-                  <p className="mazed-tabular mt-0.5 text-[14px] font-extrabold text-gold">{priceOf(l)}</p>
                 </div>
               </div>
 
@@ -554,7 +549,7 @@ export default async function MyListingsPage({
               ) : null}
 
               {left !== null && (
-                <p className={`mt-2 inline-flex items-center gap-1 text-[11.5px] ${left <= 3 ? "font-bold text-amber-400" : "text-muted"}`}>
+                <p className={`mt-2 inline-flex items-center gap-1 text-[11.5px] ${left <= 3 ? "font-bold text-amber-600" : "text-muted"}`}>
                   <Clock className="size-3" />
                   {left <= 0 ? t("expiresToday") : t("daysLeft", { days: left })}
                   {/* Renewal is refused while an annonce is published — it
@@ -577,16 +572,29 @@ export default async function MyListingsPage({
           At this width the seller compares rows — status, price, dates — so
           they get columns and aligned numbers rather than a ribbon of cards
           with an ocean of empty space beside it. */}
-      <div className="mt-5 hidden overflow-hidden rounded-2xl border border-border bg-surface lg:block">
-        <table className="w-full text-[13px]">
-          <thead className="bg-surface-2 text-[10px] uppercase tracking-[0.14em] text-muted">
+      <div className="mt-6 hidden overflow-hidden rounded-[var(--radius-2xl)] bg-surface ring-1 ring-border lg:block">
+        {/* A fixed layout: the columns share the width, a long title truncates
+            in its cell and the actions keep their column. Laid out from the
+            content, the title and the hints pushed the table wider than the
+            page and the whole « Action » column was cut off (overflow-hidden). */}
+        <div className="overflow-x-auto">
+        <table className="w-full table-fixed text-[13px]">
+          <colgroup>
+            <col className="w-[34%]" />
+            <col className="w-[18%]" />
+            <col className="w-[10%]" />
+            <col className="w-[10%]" />
+            <col className="w-[10%]" />
+            <col className="w-[18%]" />
+          </colgroup>
+          <thead className="bg-paper-warm text-[10px] uppercase tracking-[0.14em] text-muted">
             <tr>
               <th className="px-5 py-3.5 text-start font-extrabold">{t("columns.listing")}</th>
               <th className="px-3 py-3.5 text-start font-extrabold">{t("columns.status")}</th>
               <th className="px-3 py-3.5 text-end font-extrabold">{t("columns.price")}</th>
               <th className="px-3 py-3.5 text-start font-extrabold">{t("columns.published")}</th>
               <th className="px-3 py-3.5 text-start font-extrabold">{t("columns.expires")}</th>
-              <th className="px-5 py-3.5 text-end font-extrabold">{t("columns.action")}</th>
+              <th className="px-4 py-3.5 text-end font-extrabold">{t("columns.action")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -601,10 +609,10 @@ export default async function MyListingsPage({
                       <Link
                         href={`/annonces/${l.id}` as never}
                         aria-label={l.title || tAccount("untitledDraft")}
-                        className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border"
+                        className="mazed-photo-frame aspect-[4/3] w-[76px] shrink-0"
                       >
                         {cover ? (
-                          <ListingImage path={cover.storage_path} alt="" sizes="56px" />
+                          <ListingImage path={cover.storage_path} alt="" sizes="76px" fit="cover" />
                         ) : (
                           <span className="grid size-full place-items-center text-muted"><ImageOff className="size-4" /></span>
                         )}
@@ -612,7 +620,7 @@ export default async function MyListingsPage({
                       <div className="min-w-0">
                         <Link
                           href={`/annonces/${l.id}` as never}
-                          className="block max-w-[34ch] truncate text-[14px] font-bold text-foreground hover:text-gold"
+                          className="block truncate text-[14px] font-bold text-foreground hover:underline"
                         >
                           {titleOf(l)}
                         </Link>
@@ -633,7 +641,7 @@ export default async function MyListingsPage({
                       <div className="mt-1 max-w-[26ch] text-[11px] leading-snug text-muted">{st.hint}</div>
                     ) : null}
                   </td>
-                  <td className="mazed-tabular whitespace-nowrap px-3 py-3.5 text-end font-extrabold text-gold">
+                  <td className="mazed-tabular whitespace-nowrap px-3 py-3.5 text-end font-extrabold text-foreground">
                     {priceOf(l)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3.5 text-[12.5px] text-muted">{date(l.published_at)}</td>
@@ -641,7 +649,7 @@ export default async function MyListingsPage({
                     {left === null ? (
                       <span className="text-muted">{l.status === "published" ? "—" : date(l.expires_at)}</span>
                     ) : (
-                      <span className={left <= 3 ? "font-bold text-amber-400" : "text-muted"}>
+                      <span className={left <= 3 ? "font-bold text-amber-600" : "text-muted"}>
                         {date(l.expires_at)}
                         <span className="block text-[11px]">
                           {left <= 0 ? t("today") : t("inDays", { days: left })}
@@ -649,20 +657,21 @@ export default async function MyListingsPage({
                       </span>
                     )}
                   </td>
-                  <td className="px-5 py-3.5 text-end"><Action l={l} /></td>
+                  <td className="px-4 py-3.5 text-end"><Action l={l} /></td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* ── Empty ──────────────────────────────────────────────────────────
           Distinguishes "you have nothing" from "this tab has nothing" — two
           different problems with two different ways out. */}
       {rows.length === 0 && (
-        <div className="mt-4 rounded-2xl border border-dashed border-border bg-surface-2/40 p-8 text-center lg:p-14">
-          <span className="mx-auto grid size-12 place-items-center rounded-full bg-surface text-muted">
+        <div className="mazed-band-warm mt-5 rounded-[var(--radius-3xl)] p-8 text-center lg:p-14">
+          <span className="mx-auto grid size-12 place-items-center rounded-full bg-surface text-foreground shadow-[var(--shadow-card)]">
             <Inbox className="size-6" />
           </span>
           {all.length === 0 ? (
@@ -671,7 +680,7 @@ export default async function MyListingsPage({
               <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-muted">
                 {t("emptyBody")}
               </p>
-              <Link href={"/annonces/nouvelle" as never} className="mazed-btn-luxe tap-target mt-5 inline-flex px-5 py-2.5 text-[13px]">
+              <Link href={"/annonces/nouvelle" as never} className="mazed-btn-luxe tap-target mt-6 inline-flex h-12 items-center gap-2 rounded-full px-6 text-[14px]">
                 <Plus className="size-4" /> {t("publishListing")}
               </Link>
             </>
@@ -685,7 +694,7 @@ export default async function MyListingsPage({
               </p>
               <Link
                 href={"/account/listings" as never}
-                className="mt-5 inline-flex items-center gap-1 text-[13px] font-bold text-gold hover:underline"
+                className="mt-5 inline-flex items-center gap-1 text-[13px] font-bold text-foreground underline underline-offset-4"
               >
                 {t("seeAll")} <ArrowRight className="size-3.5 rtl:-scale-x-100" />
               </Link>

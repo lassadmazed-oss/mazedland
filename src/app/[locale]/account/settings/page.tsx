@@ -72,12 +72,12 @@ export default async function AccountSettingsPage() {
   return (
     <main className="mx-auto max-w-2xl space-y-5 px-4 py-6 lg:py-10">
       <div>
-        <h1 className="text-[24px] font-extrabold tracking-tight">{t("title")}</h1>
+        <h1 className="mazed-h2 text-[26px] text-foreground lg:text-[32px]">{t("title")}</h1>
         <p className="mt-1 text-[13px] text-muted">{t("subtitle")}</p>
       </div>
 
-      <section className="rounded-2xl border border-border bg-surface p-4">
-        <h2 className="text-[15px] font-extrabold text-foreground">{t("profileTitle")}</h2>
+      <section className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
+        <h2 className="mazed-h2 text-[17px] text-foreground">{t("profileTitle")}</h2>
         {profile?.phone && (
           <p className="mt-1 text-[12.5px] text-muted">
             {t("phoneLine")} <Ltr className="font-semibold text-foreground">{profile.phone as string}</Ltr>
@@ -92,34 +92,34 @@ export default async function AccountSettingsPage() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-surface">
-        <h2 className="px-4 pt-4 text-[15px] font-extrabold text-foreground">{t("notificationsTitle")}</h2>
+      <section className="overflow-hidden rounded-[var(--radius-2xl)] bg-surface ring-1 ring-border">
+        <h2 className="mazed-h2 px-4 pt-4 text-[17px] text-foreground">{t("notificationsTitle")}</h2>
         <SmsNotificationsToggle initial={(profile?.sms_notifications_enabled as boolean | null) ?? true} />
         <Link
           href={"/account/requests" as never}
-          className="flex items-center gap-2 border-t border-border px-4 py-3 text-[12.5px] font-bold text-gold hover:underline"
+          className="flex items-center gap-2 border-t border-border px-4 py-3 text-[12.5px] font-bold text-foreground underline-offset-4 hover:underline"
         >
           <BellRing className="size-4" /> {t("requestAlerts")}
         </Link>
       </section>
 
-      <section className="rounded-2xl border border-border bg-surface p-4">
-        <h2 className="text-[15px] font-extrabold text-foreground">{t("privacyTitle")}</h2>
+      <section className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
+        <h2 className="mazed-h2 text-[17px] text-foreground">{t("privacyTitle")}</h2>
         <ul className="mt-3 space-y-2.5">
           {privacy.map(({ Icon, text }) => (
             <li key={text} className="flex items-start gap-2.5 text-[12.5px] leading-relaxed text-foreground">
-              <Icon className="mt-0.5 size-4 shrink-0 text-gold" />
+              <Icon className="mt-0.5 size-4 shrink-0 text-foreground" />
               {text}
             </li>
           ))}
         </ul>
-        <Link href={"/privacy" as never} className="mt-3 inline-flex text-[12.5px] font-bold text-gold hover:underline">
+        <Link href={"/privacy" as never} className="mt-3 inline-flex text-[12.5px] font-bold text-foreground underline underline-offset-4 hover:text-muted">
           {t("privacyPolicy")}
         </Link>
       </section>
 
-      <section className="rounded-2xl border border-border bg-surface p-4">
-        <h2 className="text-[15px] font-extrabold text-foreground">{t("dataTitle")}</h2>
+      <section className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
+        <h2 className="mazed-h2 text-[17px] text-foreground">{t("dataTitle")}</h2>
         <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{t("dataBody")}</p>
 
         <h3 className="mt-4 text-[12px] font-bold uppercase tracking-wide text-subtle">{t("consentsTitle")}</h3>
@@ -155,14 +155,14 @@ export default async function AccountSettingsPage() {
         <a
           href="/api/account/export"
           download
-          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-[12.5px] font-bold text-gold hover:bg-[var(--surface-2)]"
+          className="mazed-btn-quiet tap-target mt-4 inline-flex h-11 items-center gap-2 rounded-full px-4 text-[13px]"
         >
           <Download className="size-4" /> {t("dataDownload")}
         </a>
       </section>
 
-      <section className="rounded-2xl border border-border bg-surface p-4">
-        <h2 className="text-[15px] font-extrabold text-foreground">{t("deleteTitle")}</h2>
+      <section className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
+        <h2 className="mazed-h2 text-[17px] text-foreground">{t("deleteTitle")}</h2>
         <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{t("deleteBody")}</p>
         <div className="mt-3 max-w-sm">
           <DeleteAccountButton label={tAccount("deleteAccount")} />

@@ -11,6 +11,7 @@ import { Ltr } from "@/components/ui/Ltr";
 import { Modal } from "@/components/ui/Modal";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { formatTND, formatDate, formatNumber, cn } from "@/lib/utils";
+import { chipClass } from "@/lib/chips";
 import { track } from "@/lib/analytics/ga";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { canonicalDelegation, delegationLabel, delegationsOf } from "@/lib/delegations";
@@ -1136,10 +1137,10 @@ export function PublishWizard({
   if (done) {
     return (
       <main className="mx-auto max-w-md px-5 py-16 text-center">
-        <span className="mx-auto grid size-16 place-items-center rounded-full bg-gold-faint text-gold ring-1 ring-gold-soft">
+        <span className="mx-auto grid size-16 place-items-center rounded-full bg-foreground text-[var(--background)] shadow-[var(--shadow-card)]">
           <Check className="size-8" strokeWidth={2.6} />
         </span>
-        <h1 className="mt-5 text-[22px] font-extrabold tracking-tight">
+        <h1 className="mazed-h2 mt-5 text-[24px] text-foreground">
           {done.status === "applied"
             ? t("editAppliedTitle")
             : done.paidWith === "none" && done.status === "pending_review"
@@ -1169,7 +1170,7 @@ export function PublishWizard({
         </p>
         {/* The free places, counted: how many are left, and what comes after. */}
         {done.paidWith === "free_quota" && (
-          <div className="mt-4 rounded-2xl bg-surface-2 p-4 text-start ring-1 ring-border">
+          <div className="mazed-band-warm mt-4 rounded-2xl p-4 text-start ring-1 ring-border">
             <p className="inline-flex items-center gap-1.5 text-[13px] font-extrabold text-[var(--tone-ok)]">
               <Gift className="size-4" /> {t("doneFreeQuota")}
             </p>
@@ -1179,7 +1180,7 @@ export function PublishWizard({
                 {done.freeLeft === 0 && (
                   <>
                     {" "}
-                    <Link href={"/pro" as never} className="font-bold text-gold underline-offset-2 hover:underline">
+                    <Link href={"/pro" as never} className="font-bold text-foreground underline underline-offset-4 hover:text-muted">
                       {t("seePro")}
                     </Link>
                   </>
@@ -1195,7 +1196,7 @@ export function PublishWizard({
             <button
               // Already editing it: back to the form as just sent.
               onClick={() => (editing ? setDone(null) : router.push(`/annonces/nouvelle?edit=${done.id}` as never))}
-              className="tap-target inline-flex items-center gap-1.5 rounded-full border border-border px-6 py-3 text-[13.5px] font-bold text-foreground"
+              className="mazed-btn-quiet tap-target inline-flex h-12 items-center gap-1.5 rounded-full px-6 text-[13.5px]"
             >
               <Pencil className="size-4" /> {t("correct")}
             </button>
@@ -1203,7 +1204,7 @@ export function PublishWizard({
           {(done.status === "published" || done.status === "applied") && (
             <button
               onClick={() => router.push(`/annonces/${done.id}` as never)}
-              className="mazed-btn-luxe tap-target inline-flex px-6 py-3 text-[13.5px]"
+              className="mazed-btn-luxe tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
             >
               {t("seeListing")}
             </button>
@@ -1212,8 +1213,8 @@ export function PublishWizard({
             onClick={() => router.push("/account/listings" as never)}
             className={
               done.status === "published"
-                ? "tap-target inline-flex rounded-full border border-border px-6 py-3 text-[13.5px] font-bold text-foreground"
-                : "mazed-btn-luxe tap-target inline-flex px-6 py-3 text-[13.5px]"
+                ? "mazed-btn-quiet tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
+                : "mazed-btn-luxe tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
             }
           >
             {t("seeMyListings")}
@@ -1285,7 +1286,7 @@ export function PublishWizard({
     <button
       type="button"
       onClick={back}
-      className="tap-target inline-flex h-12 shrink-0 items-center justify-center gap-1.5 rounded-full border border-border px-5 text-[13.5px] font-bold text-foreground transition hover:bg-surface-2"
+      className="mazed-btn-quiet tap-target inline-flex h-12 shrink-0 items-center justify-center gap-1.5 rounded-full px-5 text-[13.5px]"
     >
       <ArrowLeft className="size-4 rtl:-scale-x-100" />
       {t("back")}
@@ -1297,7 +1298,7 @@ export function PublishWizard({
       <button
         type="button"
         onClick={next}
-        className="mazed-btn-luxe tap-target inline-flex h-12 flex-1 items-center justify-center gap-1.5 px-7 text-[14px] lg:flex-none"
+        className="mazed-btn-luxe tap-target inline-flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full px-7 text-[14px] lg:flex-none"
       >
         {t("next")}
         <ArrowRight className="size-4 rtl:-scale-x-100" />
@@ -1307,7 +1308,7 @@ export function PublishWizard({
         type="button"
         onClick={publishNow}
         disabled={busy || photosUploading > 0}
-        className="mazed-btn-luxe tap-target inline-flex h-12 flex-1 items-center justify-center gap-1.5 px-7 text-[14px] disabled:opacity-60 lg:flex-none"
+        className="mazed-btn-luxe tap-target inline-flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full px-7 text-[14px] disabled:opacity-60 lg:flex-none"
       >
         {busy ? (
           <><Loader2 className="size-4 animate-spin" /> {t("oneMoment")}</>
@@ -1340,7 +1341,7 @@ export function PublishWizard({
       <div className="mx-auto max-w-3xl">
         <div className="flex items-start justify-between gap-3 pt-2">
           <div>
-            <h1 className="text-[24px] font-extrabold tracking-tight">{editing ? t("editTitle") : t("title")}</h1>
+            <h1 className="mazed-h2 text-[24px] text-foreground lg:text-[32px]">{editing ? t("editTitle") : t("title")}</h1>
             <p className="mt-1 text-[13px] text-muted">
               {editing ? (waiting ? t("editWaitingSubtitle") : t("editSubtitle")) : t("subtitle")}
             </p>
@@ -1358,7 +1359,7 @@ export function PublishWizard({
         </div>
 
         {editing && (
-          <div className="mt-4 rounded-2xl border border-gold-soft bg-gold-faint px-4 py-3 text-[12.5px] leading-relaxed text-foreground">
+          <div className="mazed-band-warm mt-4 rounded-2xl px-4 py-3 text-[12.5px] leading-relaxed text-foreground ring-1 ring-border">
             <p className="font-semibold">{waiting ? t("editWaitingBanner") : t("editBanner")}</p>
             {editPending && <p className="mt-0.5 text-muted">{t("editPendingBanner")}</p>}
           </div>
@@ -1391,9 +1392,9 @@ export function PublishWizard({
         {chatOn && aiAvailable && !editing && !resumed && (
           <Link
             href={"/annonces/nouvelle/parler" as never}
-            className="mt-4 flex items-center gap-3 rounded-2xl border border-gold-soft bg-gold-faint px-4 py-3 transition hover:border-gold"
+            className="mazed-band-warm mt-4 flex items-center gap-3 rounded-2xl px-4 py-3 ring-1 ring-border transition hover:ring-foreground/40"
           >
-            <Sparkles className="size-5 shrink-0 text-gold" />
+            <Sparkles className="size-5 shrink-0 text-foreground" />
             <span className="min-w-0">
               <span className="block text-[13px] font-extrabold text-foreground">{t("tryChat")}</span>
               <span className="block text-[12px] text-muted">{t("tryChatHint")}</span>
@@ -1402,8 +1403,8 @@ export function PublishWizard({
         )}
 
         {resumed && !editing && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold-soft bg-gold-faint px-4 py-3">
-            <p className="text-[12.5px] font-semibold text-gold">
+          <div className="mazed-band-warm mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 ring-1 ring-border">
+            <p className="text-[12.5px] font-semibold text-foreground">
               {d?.updated_at
                 ? t("resumedOn", { date: formatDate(d.updated_at, locale, "short") })
                 : t("resumed")}
@@ -1419,7 +1420,7 @@ export function PublishWizard({
         )}
 
         {/* Where the seller is. Each segment is a way back to that step. */}
-        <nav aria-label={t("stepsAria")} className="mt-5">
+        <nav aria-label={t("stepsAria")} className="mt-6">
           <p className="text-[11.5px] font-bold text-muted">
             {t("stepOf", { current: step + 1, total: STEPS.length })}
           </p>
@@ -1435,7 +1436,7 @@ export function PublishWizard({
                   <span
                     className={cn(
                       "h-1.5 w-full rounded-full transition",
-                      i <= step ? "bg-[var(--gold)]" : "bg-surface-2 ring-1 ring-border",
+                      i <= step ? "bg-foreground" : "bg-surface-3",
                     )}
                   />
                   <span
@@ -1459,7 +1460,7 @@ export function PublishWizard({
               {/* Say it in a sentence — the assistant fills the steps, the
                   seller checks them. Only offered when it can answer. */}
               {aiAvailable && aiFillOn && (
-                <section className="rounded-2xl border border-gold-soft bg-gold-faint p-4 sm:p-5">
+                <section className="mazed-band-warm rounded-[var(--radius-2xl)] p-4 ring-1 ring-border sm:p-5">
                   <SectionHead id="f-ai-title" icon={Sparkles} title={t("aiTitle")} />
                   <p id="f-ai-hint" className="mt-1 text-[12.5px] leading-relaxed text-muted">{t("aiHint")}</p>
                   <textarea
@@ -1497,7 +1498,7 @@ export function PublishWizard({
               )}
 
               {/* Sell or let — the one answer that changes the questions after it. */}
-              <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+              <section className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
                 <SectionHead icon={Home} title={t("dealTitle")} />
                 <div role="radiogroup" aria-label={t("dealTitle")} className="mt-4 grid grid-cols-2 gap-2">
                   {(["sale", "rent"] as const).map((k) => {
@@ -1512,10 +1513,10 @@ export function PublishWizard({
                         onClick={() => switchDeal(k)}
                         className={cn(
                           "tap-target flex items-center gap-2.5 rounded-xl px-3.5 py-3 text-start transition",
-                          on ? "bg-gold-faint ring-2 ring-gold" : "bg-surface-2 ring-1 ring-border hover:ring-gold-soft",
+                          on ? "bg-surface ring-2 ring-foreground shadow-[var(--shadow-card)]" : "bg-surface ring-1 ring-border hover:ring-foreground/30",
                         )}
                       >
-                        <Icon className={cn("size-5 shrink-0", on ? "text-gold" : "text-muted")} />
+                        <Icon className={cn("size-5 shrink-0", on ? "text-foreground" : "text-muted")} />
                         <span className="min-w-0">
                           <span className="block text-[14px] font-extrabold text-foreground">
                             {t(k === "rent" ? "dealRentCta" : "dealSaleCta")}
@@ -1532,13 +1533,13 @@ export function PublishWizard({
 
               <section
                 id="f-category"
-                className={`scroll-mt-24 rounded-2xl border border-border bg-surface p-4 sm:p-5${flagCls("f-category")}`}
+                className={`scroll-mt-24 rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5${flagCls("f-category")}`}
               >
                 <SectionHead icon={Tag} title={t(rent ? "categoryTitleRent" : "categoryTitle")} />
                 <p className="mt-1 text-[13px] text-muted">{t("categoryHint")}</p>
 
                 {usingCredit && (
-                  <p className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold-faint px-3 py-2 text-[12.5px] font-bold text-gold ring-1 ring-gold-soft">
+                  <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-2 text-[12.5px] font-bold text-foreground">
                     <Ticket className="size-4" />
                     {t("creditsInPlan", { count: creditsLeft })}
                   </p>
@@ -1551,8 +1552,7 @@ export function PublishWizard({
                   <div
                     role="radiogroup"
                     aria-label={t("groupAria")}
-                    className="grid gap-1 rounded-xl bg-surface-2 p-1"
-                    style={{ gridTemplateColumns: `repeat(${Math.max(1, groups.length)}, minmax(0, 1fr))` }}
+                    className="mazed-segment w-full"
                   >
                     {groups.map((g) => {
                       const on = groupId === g.id;
@@ -1569,12 +1569,7 @@ export function PublishWizard({
                             // number on a plot of land.
                             if (category && category.groupId !== g.id) setCategoryId(null);
                           }}
-                          className={cn(
-                            "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-2 text-[13.5px] font-bold transition",
-                            on
-                              ? "bg-[var(--gold)] text-white shadow-[var(--shadow-gold)]"
-                              : "text-muted hover:text-foreground",
-                          )}
+                          className="truncate"
                         >
                           {g.label}
                         </button>
@@ -1605,12 +1600,7 @@ export function PublishWizard({
                             role="radio"
                             aria-checked={active}
                             onClick={() => switchCategory(c)}
-                            className={cn(
-                              "tap-target inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-bold transition",
-                              active
-                                ? "bg-gold-faint text-gold ring-1 ring-gold"
-                                : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground",
-                            )}
+                            className={chipClass(active)}
                           >
                             {active && <Check className="size-3.5" />}
                             {c.label}
@@ -1638,7 +1628,7 @@ export function PublishWizard({
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+              <section className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
                 <SectionHead icon={MapPin} title={t("locationTitle")} />
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <div>
@@ -1697,7 +1687,7 @@ export function PublishWizard({
           {step === 1 && (
             <section
               id="f-photos"
-              className={`scroll-mt-24 rounded-2xl border border-border bg-surface p-4 sm:p-5${flagCls("f-photos")}`}
+              className={`scroll-mt-24 rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5${flagCls("f-photos")}`}
             >
               <SectionHead icon={Camera} title={t("photosTitle")} />
               <p className="mt-1 text-[13px] text-muted">{t("photosHint")}</p>
@@ -1720,7 +1710,7 @@ export function PublishWizard({
             <>
               <section
                 id="f-price"
-                className={`scroll-mt-24 rounded-2xl border border-border bg-surface p-4 sm:p-5${flagCls("f-price")}`}
+                className={`scroll-mt-24 rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5${flagCls("f-price")}`}
               >
                 <SectionHead icon={Wallet} title={t(rent ? "rentTitle" : "priceTitle")} />
                 <p className="mt-1 text-[13px] text-muted">{t(rent ? "rentHint" : "priceHint")}</p>
@@ -1887,12 +1877,7 @@ export function PublishWizard({
                               role="radio"
                               aria-checked={furnished === f}
                               onClick={() => setFurnished(furnished === f ? "" : f)}
-                              className={cn(
-                                "tap-target rounded-full px-4 py-2 text-[13px] font-bold transition",
-                                furnished === f
-                                  ? "bg-[var(--gold)] text-white"
-                                  : "bg-surface text-muted ring-1 ring-border hover:text-foreground",
-                              )}
+                              className={chipClass(furnished === f)}
                             >
                               {t(`furnished.${f}`)}
                             </button>
@@ -1950,7 +1935,7 @@ export function PublishWizard({
                           setTitleTouched(false);
                           setTypedTitle("");
                         }}
-                        className="tap-target mt-1 inline-flex items-center gap-1.5 text-start text-[12px] font-bold text-gold underline-offset-2 hover:underline"
+                        className="tap-target mt-1 inline-flex items-center gap-1.5 text-start text-[12px] font-bold text-foreground underline underline-offset-4 hover:text-muted"
                       >
                         <RotateCcw className="size-3.5 shrink-0 rtl:-scale-x-100" />
                         <span dir="auto">{t("titleUseSuggested", { title: suggestedTitle })}</span>
@@ -1960,7 +1945,7 @@ export function PublishWizard({
                 </div>
               </section>
 
-              <section id="f-details" className="scroll-mt-24 rounded-2xl border border-border bg-surface p-4 sm:p-5">
+              <section id="f-details" className="scroll-mt-24 rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
                 <SectionHead icon={ClipboardList} title={t("detailsTitle")} />
                 <p className="mt-1 text-[13px] text-muted">
                   {categoryId ? t("detailsHint") : t("detailsPickCategory")}
@@ -2002,7 +1987,7 @@ export function PublishWizard({
                       type="button"
                       onClick={writeForMe}
                       aria-describedby="f-describe-hint"
-                      className="tap-target inline-flex items-center gap-2 rounded-full bg-gold-faint px-4 py-2 text-[13px] font-bold text-gold ring-1 ring-gold-soft transition hover:ring-gold"
+                      className="mazed-btn-quiet tap-target inline-flex h-10 items-center gap-2 rounded-full px-4 text-[13px]"
                     >
                       <WandSparkles className="size-4 shrink-0" />
                       {t("describeCta")}
@@ -2018,14 +2003,14 @@ export function PublishWizard({
                         <button
                           type="button"
                           onClick={() => putDescription(appendDescription(description, describePending), describePending)}
-                          className="tap-target rounded-full bg-[var(--gold)] px-4 py-2 text-[13px] font-bold text-white"
+                          className="mazed-btn-luxe tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]"
                         >
                           {t("describeAppend")}
                         </button>
                         <button
                           type="button"
                           onClick={() => putDescription(replaceDescription(description, describePending, highlightLines), describePending)}
-                          className="tap-target rounded-full bg-surface px-4 py-2 text-[13px] font-bold text-muted ring-1 ring-border hover:text-foreground"
+                          className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]"
                         >
                           {t("describeReplace")}
                         </button>
@@ -2089,47 +2074,55 @@ export function PublishWizard({
           {/* ── ④ Summary: what a buyer will see, and what to fix first ── */}
           {step === 3 && (
             <>
-              <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+              <section className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
                 <SectionHead icon={ClipboardCheck} title={t("reviewTitle")} />
                 <p className="mt-1 text-[13px] text-muted">{t("reviewHint")}</p>
 
                 <div className="mt-5 grid gap-5 sm:grid-cols-[220px_1fr]">
-                  {/* The card as the catalogue draws it, same ListingImage, so a
-                      portrait photo behaves here the way it will there. */}
-                  <div className="w-full max-w-[260px] self-start overflow-hidden rounded-2xl border border-border bg-surface">
-                    <div className="relative aspect-[4/3] bg-surface-2">
+                  {/* The card as the catalogue draws it (AnnonceCard, 2026-10-31):
+                      the photo at 4:3 with « À louer » and the count on it, then
+                      the price first, the title, the type and the place. The same
+                      ListingImage, so a portrait photo behaves here the way it
+                      will there. */}
+                  <div className="w-full max-w-[260px] self-start">
+                    <div className="mazed-photo-frame aspect-[4/3]">
                       {photos[0] ? (
-                        <ListingImage path={photos[0].path} alt="" sizes="260px" />
+                        <ListingImage path={photos[0].path} alt="" sizes="260px" fit="cover" />
                       ) : (
                         <span className="grid size-full place-items-center gap-1 text-center text-muted">
                           <ImageOff className="mx-auto size-5" />
                           <span className="px-2 text-[10px] leading-tight">{t("noPhoto")}</span>
                         </span>
                       )}
-                    </div>
-                    <div className="p-3">
-                      <span className="inline-flex flex-wrap items-center gap-1 text-[10px] font-bold text-muted">
-                        <Home className="size-3" /> {category?.label ?? "—"}
-                        <span
-                          className={cn(
-                            "ms-1 rounded-full px-1.5 py-0.5",
-                            rent ? "bg-gold-faint text-gold" : "bg-surface-2 text-muted",
-                          )}
-                        >
-                          {t(rent ? "dealRent" : "dealSale")}
+                      {rent && (
+                        <span className="mazed-chip-photo mazed-chip-photo-ink pointer-events-none absolute start-2.5 top-2.5 z-[2]">
+                          {t("dealRent")}
                         </span>
-                      </span>
-                      <h3 className="mt-0.5 line-clamp-2 text-[13.5px] font-bold leading-snug">{title || "—"}</h3>
+                      )}
+                      {photos.length > 1 && (
+                        <span className="mazed-chip-photo mazed-chip-photo-ink pointer-events-none absolute bottom-2.5 end-2.5 z-[2]">
+                          <Camera className="size-3" strokeWidth={2.4} aria-hidden />
+                          <span className="mazed-tabular">{photos.length}</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="pt-3">
                       <p
                         className={cn(
-                          "mazed-tabular mt-1",
-                          priceKnown ? "text-[15px] font-extrabold" : "text-[13px] font-semibold italic text-muted",
+                          "mazed-tabular",
+                          priceKnown ? "text-[17px] font-extrabold leading-none text-foreground" : "text-[13px] font-semibold italic text-muted",
                         )}
                       >
                         {priceText}
                       </p>
-                      <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted">
-                        <MapPin className="size-3" /> {delegation ? delegationLabel(delegation, locale) : governorateLabel(governorate, locale)}
+                      <h3 dir="auto" className="mt-1.5 line-clamp-2 text-[14px] font-semibold leading-snug text-foreground">{title || "—"}</h3>
+                      <p className="mt-1 flex flex-wrap items-center gap-x-2.5 text-[12.5px] text-muted">
+                        <span>{category?.label ?? "—"}</span>
+                        {!rent && <span>{t("dealSale")}</span>}
+                      </p>
+                      <p className="mt-0.5 flex items-center gap-1 text-[12px] text-muted">
+                        <MapPin className="size-3 shrink-0" strokeWidth={2} aria-hidden />
+                        <span className="truncate">{delegation ? delegationLabel(delegation, locale) : governorateLabel(governorate, locale)}</span>
                       </p>
                     </div>
                   </div>
@@ -2188,7 +2181,7 @@ export function PublishWizard({
 
               {/* The same rules the moderation applies, said before it does:
                   fix them here and a trusted seller goes online at once. */}
-              <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+              <section className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
                 <SectionHead icon={Lightbulb} title={t("tipsTitle")} />
                 <ul className="mt-3 space-y-2.5">
                   {tips.map((tip) => (
@@ -2203,7 +2196,7 @@ export function PublishWizard({
                         <button
                           type="button"
                           onClick={() => goToField(tip.fieldId)}
-                          className="ms-auto shrink-0 text-[12px] font-bold text-gold underline underline-offset-2"
+                          className="ms-auto shrink-0 text-[12px] font-bold text-foreground underline underline-offset-4"
                         >
                           {t("fix")}
                         </button>
@@ -2213,7 +2206,7 @@ export function PublishWizard({
                 </ul>
               </section>
 
-              <section id="f-contact" className="scroll-mt-24 rounded-2xl border border-border bg-surface p-4 sm:p-5">
+              <section id="f-contact" className="scroll-mt-24 rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border sm:p-5">
                 <SectionHead icon={Phone} title={t("contactTitle")} />
                 <p className="mt-1 text-[13px] text-muted">{t("contactHint")}</p>
 
@@ -2222,9 +2215,9 @@ export function PublishWizard({
                     // Already known: said as chosen, with the way to change it.
                     <div
                       id="f-phone"
-                      className="flex scroll-mt-24 items-center gap-3 rounded-2xl bg-surface-2 p-3.5 ring-1 ring-border"
+                      className="mazed-band-warm flex scroll-mt-24 items-center gap-3 rounded-2xl p-3.5 ring-1 ring-border"
                     >
-                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-gold-faint text-gold ring-1 ring-gold-soft">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-[var(--background)]">
                         <User className="size-4" />
                       </span>
                       <div className="min-w-0 flex-1">
@@ -2244,7 +2237,7 @@ export function PublishWizard({
                         type="button"
                         onClick={() => setContactOpen(true)}
                         aria-label={t("contactEdit")}
-                        className="tap-target inline-flex shrink-0 items-center gap-1.5 rounded-full bg-surface px-3.5 text-[12.5px] font-bold text-foreground ring-1 ring-border transition hover:ring-gold"
+                        className="mazed-btn-quiet tap-target inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[12.5px]"
                       >
                         <Pencil className="size-3.5" />
                         {t("edit")}
@@ -2293,7 +2286,7 @@ export function PublishWizard({
                   )}
 
                   {editing ? (
-                    <p className="rounded-2xl bg-surface-2 p-4 text-[12.5px] leading-relaxed text-muted ring-1 ring-border">
+                    <p className="mazed-band-warm rounded-2xl p-4 text-[12.5px] leading-relaxed text-muted ring-1 ring-border">
                       {editNote}
                     </p>
                   ) : (
@@ -2314,10 +2307,10 @@ export function PublishWizard({
                               onClick={() => setShopId(s.id)}
                               className={cn(
                                 "tap-target flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-start transition",
-                                on ? "bg-gold-faint ring-2 ring-gold" : "bg-surface-2 ring-1 ring-border hover:ring-gold-soft",
+                                on ? "bg-surface ring-2 ring-foreground shadow-[var(--shadow-card)]" : "bg-surface ring-1 ring-border hover:ring-foreground/30",
                               )}
                             >
-                              <Icon className={cn("size-4.5 shrink-0", on ? "text-gold" : "text-muted")} />
+                              <Icon className={cn("size-4.5 shrink-0", on ? "text-foreground" : "text-muted")} />
                               <span className="min-w-0">
                                 <span className="block truncate text-[13.5px] font-extrabold text-foreground" dir="auto">{s.name}</span>
                                 <span className="block text-[11.5px] leading-snug text-muted">
@@ -2340,7 +2333,7 @@ export function PublishWizard({
                   <div>
                     <label
                       id="f-attestation"
-                      className={`flex scroll-mt-24 cursor-pointer items-start gap-3 rounded-2xl border border-border bg-surface-2/40 p-3.5${flagCls("f-attestation")}`}
+                      className={`mazed-band-warm flex scroll-mt-24 cursor-pointer items-start gap-3 rounded-2xl p-3.5 ring-1 ring-border${flagCls("f-attestation")}`}
                     >
                       <input
                         type="checkbox"
@@ -2349,7 +2342,7 @@ export function PublishWizard({
                         aria-describedby={errorFor("f-attestation") ? "f-attestation-error" : undefined}
                         checked={attested}
                         onChange={(e) => setAttested(e.target.checked)}
-                        className="mt-0.5 size-5 shrink-0 accent-[var(--gold)]"
+                        className="mt-0.5 size-5 shrink-0 accent-[var(--foreground)]"
                       />
                       <span className="text-[12.5px] leading-relaxed text-foreground">{t("attestation")}</span>
                     </label>
@@ -2358,7 +2351,7 @@ export function PublishWizard({
                     )}
                   </div>
 
-                  <div className="rounded-2xl bg-surface-2 p-4 ring-1 ring-border">
+                  <div className="mazed-band-warm rounded-2xl p-4 ring-1 ring-border">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-[13px] text-muted">
                         {viaPlan ? t("feeShopPlan") : usingCredit ? t("feeFromPlan") : t("feePublication")}
@@ -2389,7 +2382,7 @@ export function PublishWizard({
                     {limitReached && (
                       <Link
                         href={"/pro" as never}
-                        className="mt-2 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-gold underline-offset-2 hover:underline"
+                        className="mt-2 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-foreground underline underline-offset-4 hover:text-muted"
                       >
                         <Store className="size-3.5" /> {t("seePro")}
                       </Link>
@@ -2419,7 +2412,7 @@ export function PublishWizard({
                           <span
                             className={cn(
                               "mt-1.5 size-1.5 shrink-0 rounded-full",
-                              flaggedNow.has(m.fieldId) ? "bg-danger" : "bg-[var(--gold)]",
+                              flaggedNow.has(m.fieldId) ? "bg-danger" : "bg-foreground",
                             )}
                           />
                           {m.label}
@@ -2461,21 +2454,21 @@ export function PublishWizard({
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Link
             href={"/account/listings" as never}
-            className="tap-target inline-flex items-center justify-center rounded-full border border-border px-5 py-2.5 text-[13px] font-bold text-foreground"
+            className="mazed-btn-quiet tap-target inline-flex h-11 items-center justify-center rounded-full px-5 text-[13px]"
           >
             {t("seeMyListings")}
           </Link>
           {limitHit?.kind === "plan" ? (
             <Link
               href={"/pro/dashboard?tab=abonnement" as never}
-              className="mazed-btn-luxe tap-target inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-[13px]"
+              className="mazed-btn-luxe tap-target inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-5 text-[13px]"
             >
               <Store className="size-4" /> {t("seeSubscription")}
             </Link>
           ) : (
             <Link
               href={"/pro" as never}
-              className="mazed-btn-luxe tap-target inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-[13px]"
+              className="mazed-btn-luxe tap-target inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-5 text-[13px]"
             >
               <Store className="size-4" /> {t("seePro")}
             </Link>
@@ -2565,12 +2558,7 @@ function AttributeField({
               role="radio"
               aria-checked={value === o.v}
               onClick={() => onChange(value === o.v ? "" : o.v)}
-              className={cn(
-                "tap-target rounded-full px-4 py-2 text-[13px] font-bold transition",
-                value === o.v
-                  ? "bg-[var(--gold)] text-white"
-                  : "bg-surface text-muted ring-1 ring-border hover:text-foreground",
-              )}
+              className={chipClass(value === o.v)}
             >
               {o.label}
             </button>
@@ -2766,12 +2754,7 @@ function Chip({
       {...(toggle ? { "aria-pressed": on } : { role: "radio", "aria-checked": on })}
       disabled={disabled}
       onClick={onClick}
-      className={cn(
-        "tap-target rounded-full px-4 py-2 text-[13px] font-bold transition disabled:cursor-not-allowed disabled:opacity-40",
-        on
-          ? "bg-[var(--gold)] text-white"
-          : "bg-surface text-muted ring-1 ring-border hover:text-foreground",
-      )}
+      className={chipClass(on)}
     >
       {children}
     </button>
@@ -2811,13 +2794,13 @@ function SummaryBlock({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl bg-surface-2/60 p-3 ring-1 ring-border">
+    <div className="mazed-band-warm rounded-2xl p-3.5 ring-1 ring-border">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[11.5px] font-bold text-muted">{title}</span>
+        <span className="mazed-eyebrow">{title}</span>
         <button
           type="button"
           onClick={onEdit}
-          className="inline-flex items-center gap-1 text-[12px] font-bold text-gold hover:underline"
+          className="inline-flex items-center gap-1 text-[12px] font-bold text-foreground underline underline-offset-4 hover:text-muted"
         >
           <Pencil className="size-3" />
           {editLabel}
@@ -2837,8 +2820,8 @@ function SectionHead({
   id?: string;
 }) {
   return (
-    <h2 id={id} className="flex items-center gap-2.5 text-[17px] font-extrabold tracking-tight">
-      <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-gold-faint text-gold ring-1 ring-gold-soft">
+    <h2 id={id} className="mazed-h2 flex items-center gap-2.5 text-[17px] text-foreground">
+      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-foreground text-[var(--background)]">
         <Icon className="size-4" />
       </span>
       {title}
@@ -2933,10 +2916,7 @@ function Toggle({ label, on, onClick }: { label: string; on: boolean; onClick: (
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      className={cn(
-        "tap-target inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold transition",
-        on ? "bg-gold-faint text-gold ring-1 ring-gold-soft" : "bg-surface text-muted ring-1 ring-border",
-      )}
+      className={chipClass(on)}
     >
       {on && <Check className="size-3.5" />}
       {label}

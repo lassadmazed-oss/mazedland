@@ -48,7 +48,7 @@ export function DeleteDraftButton({ listingId, block = false }: { listingId: str
         onClick={() => setAsking(true)}
         className={
           block
-            ? "tap-target mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-bold text-muted transition hover:text-[var(--tone-bad)]"
+            ? "tap-target mt-2 flex h-10 w-full items-center justify-center gap-1.5 rounded-full px-3 text-[12px] font-bold text-muted transition hover:text-[var(--tone-bad)]"
             : "tap-target inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11.5px] font-bold text-muted transition hover:bg-surface-2 hover:text-[var(--tone-bad)]"
         }
       >
@@ -61,7 +61,7 @@ export function DeleteDraftButton({ listingId, block = false }: { listingId: str
             type="button"
             disabled={busy}
             onClick={remove}
-            className="tap-target flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--tone-bad)] px-4 py-2.5 text-[13px] font-bold text-white disabled:opacity-60"
+            className="tap-target flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-[var(--tone-bad)] px-4 text-[13px] font-bold text-white disabled:opacity-60"
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
             {t("confirm")}
@@ -70,7 +70,7 @@ export function DeleteDraftButton({ listingId, block = false }: { listingId: str
             type="button"
             disabled={busy}
             onClick={() => setAsking(false)}
-            className="tap-target flex flex-1 justify-center rounded-xl border border-border px-4 py-2.5 text-[13px] font-bold text-muted transition hover:text-foreground disabled:opacity-60"
+            className="mazed-btn-quiet tap-target flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[13px] disabled:opacity-60"
           >
             {tActions("cancel")}
           </button>
