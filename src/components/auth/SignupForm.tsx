@@ -303,14 +303,14 @@ export function SignupForm() {
           onChange={(e) => setGovernorate(e.target.value)}
           required
           autoComplete="address-level1"
-          className="mt-1.5 w-full rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 px-4 py-2.5 text-sm text-mazed-cream focus:border-mazed-gold focus:outline-none focus:ring-1 focus:ring-mazed-gold/40"
+          className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10 appearance-none"
         >
-          <option value="" disabled className="bg-mazed-surface-2">
+          <option value="" disabled>
             {t("auth.fields.governoratePlaceholder")}
           </option>
           {/* The French name stays the stored value; only the label is localized. */}
           {TUNISIAN_GOVERNORATES.map((g) => (
-            <option key={g} value={g} className="bg-mazed-surface-2">
+            <option key={g} value={g}>
               {governorateLabel(g, locale)}
             </option>
           ))}
@@ -330,14 +330,14 @@ export function SignupForm() {
           so the user can read them without leaving signup. The legal links
           are NOT wrapped in the <label> (a label would steal their clicks and
           toggle the checkbox instead of opening the modal). */}
-      <div className="flex items-start gap-2.5 text-[12px] leading-relaxed text-mazed-cream/80">
+      <div className="flex items-start gap-2.5 text-[12.5px] leading-relaxed text-muted">
         <input
           id="signup-accept"
           type="checkbox"
           aria-labelledby="signup-accept-text"
           checked={accepted}
           onChange={(e) => setAccepted(e.target.checked)}
-          className="mt-0.5 size-4 shrink-0 accent-[var(--gold)]"
+          className="mt-0.5 size-4 shrink-0 accent-[var(--foreground)]"
         />
         <span id="signup-accept-text">
           {t.rich("auth.signup.accept", {
@@ -348,7 +348,7 @@ export function SignupForm() {
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); setLegalModal("terms"); }}
-                className="font-bold text-mazed-cream underline transition hover:text-gold-bright"
+                className="font-bold text-foreground underline underline-offset-4 transition hover:text-muted"
               >
                 {chunks}
               </button>
@@ -357,7 +357,7 @@ export function SignupForm() {
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); setLegalModal("privacy"); }}
-                className="font-bold text-mazed-cream underline transition hover:text-gold-bright"
+                className="font-bold text-foreground underline underline-offset-4 transition hover:text-muted"
               >
                 {chunks}
               </button>
@@ -373,7 +373,7 @@ export function SignupForm() {
         type="submit"
         disabled={isPending || !accepted}
         title={!accepted && !isPending ? t("auth.signup.acceptFirst") : undefined}
-        className="mazed-btn-luxe tap-target w-full px-5 py-3 text-[13.5px] disabled:opacity-50"
+        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
       >
         {isPending ? (
           <><Loader2 className="inline size-4 animate-spin" /> {t("auth.signup.submitting")}</>
@@ -390,9 +390,9 @@ export function SignupForm() {
       >
         {legalModal === "privacy" ? <PrivacyContent level={4} /> : <TermsContent level={4} />}
       </Modal>
-      <p className="text-center text-[11px] text-mazed-muted">
+      <p className="text-center text-[11.5px] text-muted">
         {t.rich("auth.signup.proNote", {
-          badge: (chunks) => <span className="text-mazed-cream">{chunks}</span>,
+          badge: (chunks) => <span className="font-bold text-foreground">{chunks}</span>,
         })}
       </p>
     </form>
@@ -419,18 +419,18 @@ function PhoneVerify({
 }) {
   const t = useTranslations("auth.otp");
   return (
-    <form onSubmit={onVerify} className="mazed-frame-gold relative p-6 text-center">
-      <span className="mazed-monogram mazed-monogram-filled mx-auto mb-3 size-12 text-[18px]">
+    <form onSubmit={onVerify} className="mazed-band-warm relative rounded-[var(--radius-2xl)] p-6 text-center ring-1 ring-border">
+      <span className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-foreground text-[var(--background)] shadow-[var(--shadow-card)]">
         <Smartphone className="size-5" strokeWidth={1.75} />
       </span>
-      <h2 className="mazed-serif text-[18px] font-semibold text-mazed-cream">
+      <h2 className="mazed-h2 text-[20px] text-foreground">
         {t("title")}
       </h2>
-      <p className="mt-2 text-sm text-mazed-cream/75">
+      <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
         {t.rich("sentTo", {
           phone,
           b: (chunks) => (
-            <span className="font-bold text-mazed-cream">
+            <span className="font-bold text-foreground">
               <Ltr>{chunks}</Ltr>
             </span>
           ),
@@ -447,7 +447,7 @@ function PhoneVerify({
         <button
           type="submit"
           disabled={pending || code.replace(/\D/g, "").length !== 6}
-          className="mazed-btn-luxe tap-target w-full px-5 py-3 text-[13px] disabled:opacity-50"
+          className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
         >
           {pending ? (
             <><Loader2 className="inline size-4 animate-spin" /> {t("verifying")}</>
@@ -459,14 +459,14 @@ function PhoneVerify({
           type="button"
           onClick={onResend}
           disabled={cooldown > 0 || pending}
-          className="mazed-btn-ghost-gold tap-target w-full px-5 py-3 text-[13px] disabled:opacity-50"
+          className="mazed-btn-quiet tap-target flex h-12 w-full items-center justify-center rounded-full text-[14px] disabled:opacity-50"
         >
           {cooldown > 0 ? t("resendIn", { seconds: cooldown }) : t("resend")}
         </button>
         <button
           type="button"
           onClick={onBack}
-          className="text-[12px] text-mazed-cream/70 hover:text-gold-bright"
+          className="text-[12.5px] font-semibold text-muted underline-offset-4 hover:text-foreground hover:underline"
         >
           {t("editInfo")}
         </button>
@@ -498,7 +498,7 @@ function Field({
         placeholder={placeholder}
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 w-full rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 px-4 py-2.5 text-sm text-mazed-cream placeholder:text-mazed-muted focus:border-mazed-gold focus:outline-none focus:ring-1 focus:ring-mazed-gold/40"
+        className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
       />
     </label>
   );

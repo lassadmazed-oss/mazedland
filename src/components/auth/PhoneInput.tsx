@@ -114,7 +114,7 @@ export function PhoneInput({
 
   return (
     <div ref={rootRef} className="relative mt-1.5">
-      <div className="flex items-stretch overflow-hidden rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 transition focus-within:border-mazed-gold focus-within:ring-1 focus-within:ring-mazed-gold/40">
+      <div className="flex h-12 items-stretch overflow-hidden rounded-xl border border-border bg-surface transition focus-within:border-foreground focus-within:ring-2 focus-within:ring-foreground/10">
         {/* Compact dial-code chip — code + chevron, no country label */}
         <button
           type="button"
@@ -126,7 +126,7 @@ export function PhoneInput({
           aria-controls={open ? listboxId : undefined}
           aria-activedescendant={open ? optionId(activeIdx) : undefined}
           aria-label={t("dialCodeLabel", { country: selectedCountry || dialCode })}
-          className="flex shrink-0 items-center gap-1 border-e border-mazed-gold/15 px-3 py-2.5 text-sm font-bold text-mazed-cream transition hover:bg-black/15 focus:outline-none"
+          className="flex shrink-0 items-center gap-1 border-e border-border px-3 text-[14px] font-bold text-foreground transition hover:bg-surface-2 focus:outline-none"
         >
           <span className="mazed-tabular" dir="ltr">{dialCode}</span>
           <ChevronDown
@@ -164,7 +164,7 @@ export function PhoneInput({
             if (next.dialCode !== dialCode) onDialCodeChange(next.dialCode);
             onNumberChange(next.number);
           }}
-          className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-mazed-cream placeholder:text-mazed-muted focus:outline-none rtl:text-end"
+          className="min-w-0 flex-1 bg-transparent px-3 text-[15px] text-foreground placeholder:text-muted focus:outline-none rtl:text-end"
         />
       </div>
 
@@ -176,7 +176,7 @@ export function PhoneInput({
           role="listbox"
           id={listboxId}
           aria-label={t("listLabel")}
-          className="absolute z-30 mt-1.5 max-h-72 w-full overflow-y-auto rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 py-1 shadow-2xl shadow-black/40"
+          className="mazed-float absolute z-30 mt-1.5 max-h-72 w-full overflow-y-auto py-1.5"
         >
           {DIAL_CODES.map((c, i) => {
             const active = c.code === dialCode;
@@ -196,18 +196,16 @@ export function PhoneInput({
                   }}
                   className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-start text-[13px] transition ${
                     active
-                      ? "bg-mazed-gold/15 text-mazed-gold"
+                      ? "bg-surface-2 font-bold text-foreground"
                       : isActive
-                        ? "bg-black/20 text-mazed-cream"
-                        : "text-mazed-cream hover:bg-black/20"
+                        ? "bg-surface-2 text-foreground"
+                        : "text-foreground hover:bg-surface-2"
                   }`}
                 >
                   <span className="flex items-baseline gap-2">
                     <span className="mazed-tabular font-bold" dir="ltr">{c.code}</span>
                     <span
-                      className={`text-[11.5px] ${
-                        active ? "text-mazed-gold/80" : "text-mazed-muted"
-                      }`}
+                      className="text-[11.5px] text-muted"
                     >
                       {country}
                     </span>

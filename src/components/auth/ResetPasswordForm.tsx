@@ -95,7 +95,7 @@ export function ResetPasswordForm() {
 
   if (ready === "invalid") {
     return (
-      <div className="mazed-tone-bad rounded-lg px-3 py-3 text-center text-xs">
+      <div className="mazed-tone-bad rounded-xl px-3 py-3 text-center text-[12.5px]">
         {/* i18n Link, not a bare href: `/fr/forgot-password` hardcoded the
             locale, so an Arabic visitor whose reset link had expired was sent
             to the French page. */}
@@ -112,14 +112,14 @@ export function ResetPasswordForm() {
 
   if (done) {
     return (
-      <div className="mazed-frame-gold p-6 text-center">
-        <span className="mazed-monogram mazed-monogram-filled mx-auto mb-3 size-12 text-[18px]">
+      <div className="mazed-band-warm relative rounded-[var(--radius-2xl)] p-6 text-center ring-1 ring-border">
+        <span className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-foreground text-[var(--background)] shadow-[var(--shadow-card)]">
           <CheckCircle2 className="size-5" strokeWidth={1.75} />
         </span>
-        <h2 className="mazed-serif text-[16px] font-semibold text-mazed-cream">
+        <h2 className="mazed-h2 text-[20px] text-foreground">
           {t("newPassword.updated")}
         </h2>
-        <p className="mt-2 text-[12.5px] text-mazed-cream/75">
+        <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
           {t("newPassword.redirecting")}
         </p>
       </div>
@@ -138,7 +138,7 @@ export function ResetPasswordForm() {
           autoFocus
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 px-4 py-2.5 text-sm text-mazed-cream focus:border-mazed-gold focus:outline-none focus:ring-1 focus:ring-mazed-gold/40"
+          className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
         />
       </label>
       <label className="block">
@@ -150,7 +150,7 @@ export function ResetPasswordForm() {
           autoComplete="new-password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 px-4 py-2.5 text-sm text-mazed-cream focus:border-mazed-gold focus:outline-none focus:ring-1 focus:ring-mazed-gold/40"
+          className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
         />
       </label>
       {error && (
@@ -159,7 +159,7 @@ export function ResetPasswordForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="mazed-btn-luxe tap-target w-full px-5 py-3 text-[13.5px] disabled:opacity-50"
+        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
       >
         {isPending ? t("newPassword.updating") : t("newPassword.update")}
       </button>

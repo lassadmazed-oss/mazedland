@@ -39,7 +39,7 @@ export function SmsNotificationsToggle({ initial }: { initial: boolean }) {
 
   return (
     <div className="flex items-center gap-3 p-4 lg:p-5">
-      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-gold-faint text-gold ring-1 ring-gold/30">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 text-foreground">
         <MessageSquare className="size-5" strokeWidth={2} />
       </span>
       <div className="min-w-0 flex-1">
@@ -56,7 +56,7 @@ export function SmsNotificationsToggle({ initial }: { initial: boolean }) {
         disabled={pending}
         onClick={toggle}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-60 ${
-          enabled ? "bg-[var(--gold)]" : "bg-surface-2 ring-1 ring-border"
+          enabled ? "bg-foreground" : "bg-surface-2 ring-1 ring-border"
         }`}
       >
         {/* The knob sits at the start of the track: on the right under RTL, so

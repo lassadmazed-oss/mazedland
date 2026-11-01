@@ -43,18 +43,16 @@ export default async function MyVisitsPage({ searchParams }: { searchParams: Pro
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6 lg:py-10">
-      <h1 className="text-[24px] font-extrabold tracking-tight">{t("title")}</h1>
+      <h1 className="mazed-h2 text-[26px] text-foreground lg:text-[32px]">{t("title")}</h1>
       <p className="mt-1 text-[13px] text-muted">{t("subtitle")}</p>
 
-      <nav className="mt-5 flex gap-1.5">
+      <nav className="mazed-segment mt-5 w-full sm:w-auto">
         {(["received", "sent"] as const).map((k) => (
           <Link
             key={k}
             href={`/account/visites?tab=${k}` as never}
             aria-current={tab === k ? "page" : undefined}
-            className={`tap-target inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-[13px] font-bold ${
-              tab === k ? "border-gold-soft bg-gold-faint text-foreground" : "border-border text-muted hover:text-foreground"
-            }`}
+            className="gap-1.5"
           >
             {t(`tabs.${k}`)}
             {k === "received" && waiting > 0 && <span className="mazed-tabular text-[11px] text-[var(--tone-warn)]">{waiting}</span>}
@@ -63,7 +61,7 @@ export default async function MyVisitsPage({ searchParams }: { searchParams: Pro
       </nav>
 
       {list.length === 0 ? (
-        <p className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center text-[13px] leading-relaxed text-muted">
+        <p className="mazed-band-warm mt-6 rounded-[var(--radius-3xl)] p-8 text-center text-[13.5px] leading-relaxed text-muted lg:p-12">
           {t(tab === "received" ? "emptyReceived" : "emptySent")}
         </p>
       ) : (

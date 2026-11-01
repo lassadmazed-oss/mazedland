@@ -213,14 +213,14 @@ export function ForgotPasswordForm() {
 
   if (phase === "done") {
     return (
-      <div className="mazed-frame-gold p-6 text-center">
-        <span className="mazed-monogram mazed-monogram-filled mx-auto mb-3 size-12 text-[18px]">
+      <div className="mazed-band-warm relative rounded-[var(--radius-2xl)] p-6 text-center ring-1 ring-border">
+        <span className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-foreground text-[var(--background)] shadow-[var(--shadow-card)]">
           <CheckCircle2 className="size-5" strokeWidth={1.75} />
         </span>
-        <h2 className="mazed-serif text-[16px] font-semibold text-mazed-cream">
+        <h2 className="mazed-h2 text-[20px] text-foreground">
           {t("newPassword.updated")}
         </h2>
-        <p className="mt-2 text-[12.5px] text-mazed-cream/75">
+        <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
           {t("newPassword.redirecting")}
         </p>
       </div>
@@ -229,18 +229,18 @@ export function ForgotPasswordForm() {
 
   if (phase === "otp") {
     return (
-      <form onSubmit={onVerify} className="mazed-frame-gold relative p-6 text-center">
-        <span className="mazed-monogram mazed-monogram-filled mx-auto mb-3 size-12 text-[18px]">
+      <form onSubmit={onVerify} className="mazed-band-warm relative rounded-[var(--radius-2xl)] p-6 text-center ring-1 ring-border">
+        <span className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-foreground text-[var(--background)] shadow-[var(--shadow-card)]">
           <Smartphone className="size-5" strokeWidth={1.75} />
         </span>
-        <h2 className="mazed-serif text-[18px] font-semibold text-mazed-cream">
+        <h2 className="mazed-h2 text-[20px] text-foreground">
           {t("otp.title")}
         </h2>
-        <p className="mt-2 text-sm text-mazed-cream/75">
+        <p className="mt-2 text-[13.5px] leading-relaxed text-muted">
           {t.rich("otp.sentTo", {
             phone: phone ?? "",
             b: (chunks) => (
-              <span className="font-bold text-mazed-cream">
+              <span className="font-bold text-foreground">
                 <Ltr>{chunks}</Ltr>
               </span>
             ),
@@ -257,7 +257,7 @@ export function ForgotPasswordForm() {
           <button
             type="submit"
             disabled={isPending || otpCode.replace(/\D/g, "").length !== 6}
-            className="mazed-btn-luxe tap-target w-full px-5 py-3 text-[13px] disabled:opacity-50"
+            className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
           >
             {isPending ? (
               <><Loader2 className="inline size-4 animate-spin" /> {t("otp.verifying")}</>
@@ -269,14 +269,14 @@ export function ForgotPasswordForm() {
             type="button"
             onClick={resend}
             disabled={cooldown > 0 || isPending}
-            className="mazed-btn-ghost-gold tap-target w-full px-5 py-3 text-[13px] disabled:opacity-50"
+            className="mazed-btn-quiet tap-target flex h-12 w-full items-center justify-center rounded-full text-[14px] disabled:opacity-50"
           >
             {cooldown > 0 ? t("otp.resendIn", { seconds: cooldown }) : t("otp.resend")}
           </button>
           <button
             type="button"
             onClick={() => { setPhase("phone"); setError(null); setOtpCode(""); }}
-            className="text-[12px] text-mazed-cream/70 hover:text-gold-bright"
+            className="text-[12.5px] font-semibold text-muted underline-offset-4 hover:text-foreground hover:underline"
           >
             {t("otp.changeNumber")}
           </button>
@@ -298,7 +298,7 @@ export function ForgotPasswordForm() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 px-4 py-2.5 text-sm text-mazed-cream focus:border-mazed-gold focus:outline-none focus:ring-1 focus:ring-mazed-gold/40"
+            className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
           />
         </label>
         <label className="block">
@@ -310,7 +310,7 @@ export function ForgotPasswordForm() {
             autoComplete="new-password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 px-4 py-2.5 text-sm text-mazed-cream focus:border-mazed-gold focus:outline-none focus:ring-1 focus:ring-mazed-gold/40"
+            className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
           />
         </label>
         {error && (
@@ -319,7 +319,7 @@ export function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="mazed-btn-luxe tap-target w-full px-5 py-3 text-[13.5px] disabled:opacity-50"
+          className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
         >
           {isPending ? (
             <><Loader2 className="inline size-4 animate-spin" /> {t("newPassword.updating")}</>
@@ -350,7 +350,7 @@ export function ForgotPasswordForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="mazed-btn-luxe tap-target w-full px-5 py-3 text-[13.5px] disabled:opacity-50"
+        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
       >
         {isPending ? (
           <><Loader2 className="inline size-4 animate-spin" /> {t("forgot.sending")}</>

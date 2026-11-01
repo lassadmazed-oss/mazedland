@@ -42,7 +42,7 @@ export function OtpCodeInput({
       onChange={(e) => onChange(otpEntry(e.target.value))}
       placeholder="••••••"
       aria-label={ariaLabel}
-      className="mt-5 w-full rounded-xl border border-mazed-gold/25 bg-mazed-surface-2 px-4 py-3 text-center text-[22px] font-bold tracking-[0.4em] text-mazed-cream placeholder:text-mazed-muted focus:border-mazed-gold focus:outline-none focus:ring-1 focus:ring-mazed-gold/40"
+      className="mt-5 h-14 w-full rounded-xl border border-border bg-surface px-4 text-center text-[24px] font-extrabold tracking-[0.4em] text-foreground placeholder:text-muted transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
     />
   );
 }

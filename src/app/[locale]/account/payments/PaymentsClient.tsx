@@ -302,7 +302,8 @@ export function PaymentsClient({
       )}
 
       {/* ── Filter tabs ── */}
-      <div className="-mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:px-0">
+      <div className="-mx-4 mt-6 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:px-0">
+        <div role="tablist" className="mazed-segment min-w-max">
         {TABS.map(({ key, label }) => {
           const on = filter === key;
           const count = counts[key];
@@ -310,21 +311,16 @@ export function PaymentsClient({
             <button
               key={key}
               type="button"
+              role="tab"
               onClick={() => setFilter(key)}
-              aria-pressed={on}
-              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-bold transition-all lg:text-[13px] ${
-                on
-                  ? "bg-foreground text-[var(--background)]"
-                  : "bg-surface-2 text-muted ring-1 ring-border hover:text-foreground"
-              }`}
+              aria-selected={on}
+              className="gap-1.5 whitespace-nowrap"
             >
               {key === "all" && <ListFilter className="size-3.5" strokeWidth={2.5} />}
               {label}
               {count > 0 && (
                 <span
-                  className={`mazed-tabular ms-0.5 rounded-full px-1.5 text-[10px] font-extrabold ${
-                    on ? "bg-white/20" : "bg-surface text-foreground/70"
-                  }`}
+                  className={`mazed-tabular text-[11px] font-extrabold ${on ? "text-foreground" : "text-muted"}`}
                 >
                   {count}
                 </span>
@@ -332,12 +328,15 @@ export function PaymentsClient({
             </button>
           );
         })}
+        </div>
       </div>
 
       {/* ── Rows ── */}
       {visible.length === 0 ? (
-        <div className="mazed-frame-gold relative mt-5 px-6 py-10 text-center">
-          <Wallet className="mx-auto size-8 text-gold" strokeWidth={2} />
+        <div className="mazed-band-warm relative mt-5 rounded-[var(--radius-3xl)] px-6 py-10 text-center">
+          <span className="mx-auto grid size-12 place-items-center rounded-full bg-surface text-foreground shadow-[var(--shadow-card)]">
+            <Wallet className="size-5" strokeWidth={2} />
+          </span>
           <p className="mt-3 text-[13px] text-muted">{t("emptyFilter")}</p>
         </div>
       ) : (
@@ -386,12 +385,12 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-2xl p-3.5 ring-1 lg:p-5 ${
+      className={`rounded-[var(--radius-2xl)] p-3.5 ring-1 lg:p-5 ${
         highlight ? "bg-amber-500/10 ring-amber-500/30" : "bg-surface ring-border"
       }`}
     >
       <span
-        className={`inline-flex size-8 items-center justify-center rounded-xl bg-surface-2 ring-1 ring-border lg:size-10 ${tone}`}
+        className={`inline-grid size-8 place-items-center rounded-full bg-surface-2 lg:size-10 ${tone}`}
       >
         <Icon className="size-4 lg:size-5" strokeWidth={2.2} />
       </span>
@@ -440,9 +439,9 @@ function PaymentRow({
   const showFooter = (canResume && aHref) || closedHere || canCancel || p.receiptUrl || entityHref || p.invoice || p.creditNote;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl bg-surface ring-1 ring-border">
+    <div className="flex h-full flex-col overflow-hidden rounded-[var(--radius-2xl)] bg-surface ring-1 ring-border">
       <div className="flex items-start gap-3 p-4">
-        {(p.coverUrl || p.title) && <Thumb url={p.coverUrl} className="size-14 rounded-xl" />}
+        {(p.coverUrl || p.title) && <Thumb url={p.coverUrl} className="aspect-[4/3] w-[76px] rounded-[var(--radius-lg)]" />}
 
         <div className="min-w-0 flex-1">
           <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">
@@ -492,7 +491,7 @@ function PaymentRow({
           {canResume && aHref && (
             <Link
               href={aHref as "/payment/checkout"}
-              className="mazed-btn-luxe tap-target gap-1 rounded-full px-3 py-1.5 text-[11px] uppercase tracking-[0.12em]"
+              className="mazed-btn-luxe tap-target h-9 gap-1 rounded-full px-3.5 text-[12px]"
             >
               {actionLabel(t, p)}
               <ArrowRight className="size-3 rtl:-scale-x-100" strokeWidth={2.5} />
@@ -549,7 +548,7 @@ function PaymentRow({
               href={p.receiptUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="tap-target inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-[11px] font-semibold text-foreground hover:border-gold-soft/50"
+              className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 rounded-full px-3 text-[11.5px]"
             >
               <FileText className="size-3" strokeWidth={2} />
               {t("receipt")}
@@ -558,7 +557,7 @@ function PaymentRow({
           {p.invoice && (
             <Link
               href={`/factures/${p.invoice.id}` as never}
-              className="tap-target inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-[11px] font-semibold text-foreground hover:border-gold-soft/50"
+              className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 rounded-full px-3 text-[11.5px]"
             >
               <FileText className="size-3" strokeWidth={2} />
               {t(p.invoice.type === "invoice" ? "invoice" : "invoiceReceipt")}
@@ -567,7 +566,7 @@ function PaymentRow({
           {p.creditNote && (
             <Link
               href={`/factures/${p.creditNote.id}` as never}
-              className="tap-target inline-flex items-center gap-1 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-[11px] font-semibold text-foreground hover:border-gold-soft/50"
+              className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 rounded-full px-3 text-[11.5px]"
             >
               <FileText className="size-3" strokeWidth={2} />
               {t("creditNote")}

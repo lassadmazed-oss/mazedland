@@ -94,13 +94,13 @@ export default async function MyRequestsPage() {
     <main className="mx-auto max-w-2xl px-4 py-6 lg:max-w-3xl lg:py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[24px] font-extrabold tracking-tight">{t("listTitle")}</h1>
+          <h1 className="mazed-h2 text-[26px] text-foreground lg:text-[32px]">{t("listTitle")}</h1>
           <p className="mt-1 text-[13px] text-muted">{t("listSubtitle", { count: requests.length })}</p>
         </div>
         {on && (
           <Link
             href={"/demandes/nouvelle" as never}
-            className="mazed-btn-luxe tap-target inline-flex items-center gap-1.5 px-4 py-2.5 text-[13px]"
+            className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-[13px]"
           >
             <Plus className="size-4" /> {t("newRequest")}
           </Link>
@@ -108,15 +108,15 @@ export default async function MyRequestsPage() {
       </div>
 
       {requests.length === 0 ? (
-        <section className="mt-6 rounded-2xl border border-dashed border-border bg-surface-2/40 p-8 text-center">
+        <section className="mazed-band-warm mt-6 rounded-[var(--radius-3xl)] p-8 text-center lg:p-12">
           <p className="text-[14px] font-bold text-foreground">{t("emptyTitle")}</p>
           <p className="mx-auto mt-1 max-w-md text-[12.5px] leading-relaxed text-muted">{t("emptyBody")}</p>
           {on && (
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-              <Link href={"/demandes/nouvelle?deal=sale" as never} className="tap-target inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12.5px] font-bold text-[var(--background)]">
+              <Link href={"/demandes/nouvelle?deal=sale" as never} className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-[13px]">
                 <Search className="size-3.5" /> {t("newBuy")}
               </Link>
-              <Link href={"/demandes/nouvelle?deal=rent" as never} className="tap-target inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12.5px] font-bold text-[var(--background)]">
+              <Link href={"/demandes/nouvelle?deal=rent" as never} className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-[13px]">
                 <KeyRound className="size-3.5" /> {t("newRent")}
               </Link>
             </div>
@@ -146,10 +146,10 @@ export default async function MyRequestsPage() {
             ].filter(Boolean);
             const matches = matchCount.get(r.id) ?? 0;
             return (
-              <li key={r.id} className="rounded-2xl border border-border bg-surface p-4">
+              <li key={r.id} className="rounded-[var(--radius-2xl)] bg-surface p-4 ring-1 ring-border">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-gold">
+                    <p className="mazed-eyebrow">
                       {t(rent ? "kindRent" : "kindBuy")}
                     </p>
                     <p className="mt-0.5 text-[15px] font-extrabold leading-snug text-foreground">
@@ -184,14 +184,14 @@ export default async function MyRequestsPage() {
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Link
                     href={catalogueQueryFor(toMatchable(r), slugById) as never}
-                    className="tap-target inline-flex items-center gap-1.5 rounded-full bg-gold-faint px-3 py-1.5 text-[12px] font-bold text-gold ring-1 ring-gold-soft"
+                    className="mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12px]"
                   >
                     <Search className="size-3.5" /> {t("seeListings")}
                   </Link>
                   {on && (
                     <Link
                       href={`/demandes/nouvelle?id=${r.id}` as never}
-                      className="tap-target inline-flex items-center rounded-full px-3 py-1.5 text-[12px] font-bold text-muted ring-1 ring-border hover:text-foreground"
+                      className="mazed-btn-quiet tap-target inline-flex h-9 items-center rounded-full px-3.5 text-[12px]"
                     >
                       {t("edit")}
                     </Link>

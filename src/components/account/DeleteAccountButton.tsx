@@ -86,7 +86,7 @@ export function DeleteAccountButton({ label }: { label: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="tap-target w-full px-5 py-3 text-[13px] font-semibold text-[var(--danger)] hover:bg-[var(--danger)]/10 rounded-xl transition-colors inline-flex items-center justify-center gap-2"
+        className="tap-target inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-5 text-[13px] font-semibold text-[var(--danger)] transition-colors hover:bg-[var(--danger)]/10"
       >
         <Trash2 className="size-4" strokeWidth={2} />
         {label}
@@ -118,7 +118,7 @@ export function DeleteAccountButton({ label }: { label: string }) {
         placeholder={CONFIRM_WORD}
         autoComplete="off"
         autoCapitalize="characters"
-        className="mt-3 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-[14px] text-foreground outline-none focus:border-[var(--danger)]"
+        className="mt-3 h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-[15px] text-foreground outline-none focus:border-[var(--danger)]"
       />
 
       <div className="mt-3 flex gap-2">
@@ -129,7 +129,7 @@ export function DeleteAccountButton({ label }: { label: string }) {
             setConfirmText("");
           }}
           disabled={pending}
-          className="mazed-btn-ghost-gold tap-target flex-1 px-4 py-2.5 text-[13px] disabled:opacity-50"
+          className="mazed-btn-quiet tap-target flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[13px] disabled:opacity-50"
         >
           {t("cancel")}
         </button>
@@ -137,7 +137,7 @@ export function DeleteAccountButton({ label }: { label: string }) {
           type="button"
           onClick={onDelete}
           disabled={pending || confirmText.trim().toUpperCase() !== CONFIRM_WORD}
-          className="tap-target flex-1 rounded-xl bg-[var(--danger)] px-4 py-2.5 text-[13px] font-bold text-white transition-opacity disabled:opacity-40"
+          className="tap-target flex h-11 flex-1 items-center justify-center rounded-full bg-[var(--danger)] px-4 text-[13px] font-bold text-white transition-opacity disabled:opacity-40"
         >
           {pending ? t("deleting") : t("delete")}
         </button>

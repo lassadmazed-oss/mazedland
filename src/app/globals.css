@@ -1374,7 +1374,11 @@ html[dir="rtl"] .mazed-h2 {
   transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
 }
 .mazed-segment > [aria-selected="true"],
-.mazed-segment > [aria-current="page"] {
+.mazed-segment > [aria-current="page"],
+/* The forms ask one-of-these questions with the same control (a radio group:
+   « Résidentiel · Terrains · Professionnel ») and press toggles in it. */
+.mazed-segment > [aria-checked="true"],
+.mazed-segment > [aria-pressed="true"] {
   background: var(--surface);
   color: var(--foreground);
   box-shadow: 0 1px 2px rgba(17, 17, 19, 0.10), 0 0 0 1px rgba(17, 17, 19, 0.06);

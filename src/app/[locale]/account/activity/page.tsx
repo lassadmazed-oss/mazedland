@@ -7,6 +7,7 @@ import { categoryLabel } from "@/lib/i18n";
 import { governorateLabel } from "@/lib/tunisia";
 import { asDealType } from "@/lib/listings/deal";
 import { savedVisibility } from "@/lib/listings/saved";
+import { getSettings } from "@/lib/settings/server";
 import { FavoritesList, type SavedItem } from "./FavoritesList";
 
 export const dynamic = "force-dynamic";
@@ -68,6 +69,9 @@ export default async function ActivityPage() {
   // Read through the service role for the join (listing columns are
   // column-granted), but scoped to this user's own watchlist rows.
   const db = getServiceSupabase() ?? supabase;
+  // The cards are the catalogue's, in the catalogue's phone columns (1 or 2,
+  // the console's `catalogue_phone_columns`).
+  const settings = await getSettings();
   const { data } = await db
     .from("watchlist")
     .select(
@@ -118,7 +122,7 @@ export default async function ActivityPage() {
     // on a monitor that is a thin column of 80px thumbnails down the middle of
     // an empty screen — a phone list stretched, not a page.
     <main className="mx-auto max-w-2xl px-4 py-6 lg:max-w-6xl lg:px-6 lg:py-10">
-      <FavoritesList items={items} />
+      <FavoritesList items={items} phoneCols={settings.catalogue_phone_columns} />
     </main>
   );
 }

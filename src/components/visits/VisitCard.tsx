@@ -29,9 +29,9 @@ export async function VisitCard({ visit, side, locale, highlight = false }: { vi
   const slotLabels = visit.slots.map(say);
 
   return (
-    <article id={`v-${visit.id}`} className={`scroll-mt-24 rounded-2xl bg-surface p-4 ring-1 ${highlight ? "ring-[var(--gold)]" : "ring-border"}`}>
+    <article id={`v-${visit.id}`} className={`scroll-mt-24 rounded-[var(--radius-2xl)] bg-surface p-4 ${highlight ? "ring-2 ring-foreground" : "ring-1 ring-border"}`}>
       <div className="flex items-start gap-3">
-        <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border">
+        <span className="grid aspect-[4/3] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[var(--radius-lg)] bg-surface-2 ring-1 ring-border">
           {visit.listing?.photo ? (
             // eslint-disable-next-line @next/next/no-img-element -- a small thumbnail
             <img src={propertyPhotoUrl(visit.listing.photo, { transform: { width: 120, quality: 70 } })} alt="" className="size-full object-cover" />
@@ -55,7 +55,7 @@ export async function VisitCard({ visit, side, locale, highlight = false }: { vi
       <div className="mt-3 space-y-1.5 text-[12.5px]">
         {visit.status === "confirmed" || visit.status === "done" ? (
           <p className="flex items-start gap-2 font-bold text-foreground">
-            <CalendarDays className="mt-0.5 size-4 shrink-0 text-gold" />
+            <CalendarDays className="mt-0.5 size-4 shrink-0 text-foreground" />
             {visit.confirmed_slot ? say(visit.confirmed_slot) : slotLabels[0]}
           </p>
         ) : (
@@ -90,7 +90,7 @@ export async function VisitCard({ visit, side, locale, highlight = false }: { vi
           </p>
         )}
         {visit.seller_note && (
-          <p className="rounded-xl bg-surface-2 px-3 py-2 text-foreground ring-1 ring-border" dir="auto">
+          <p className="mazed-band-warm rounded-xl px-3 py-2 text-foreground ring-1 ring-border" dir="auto">
             <span className="font-bold">{t(side === "seller" ? "yourNote" : "sellerNote")} </span>
             {visit.seller_note}
           </p>
