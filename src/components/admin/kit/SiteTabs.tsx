@@ -6,7 +6,7 @@ import { NavIcon } from "./LinkPending";
 import { useCanOpen } from "../AdminScopes";
 import type { ConsoleSection } from "@/lib/admin/sections";
 import {
-  LayoutTemplate, MessageSquare, FileText, Bell, Settings2, Activity, UsersRound,
+  LayoutTemplate, MessageSquare, FileText, Bell, Settings2, Activity, UsersRound, CreditCard,
   type LucideIcon,
 } from "lucide-react";
 
@@ -31,6 +31,7 @@ export const SITE_TABS: Tab[] = [
   { key: "documents", href: "/admin/legal-docs", Icon: FileText, section: "legal-docs" },
   { key: "broadcasts", href: "/admin/notifications", Icon: Bell, section: "notifications" },
   { key: "settings", href: "/admin/settings", Icon: Settings2, section: "settings" },
+  { key: "services", href: "/admin/abonnements", Icon: CreditCard, section: "abonnements" },
   { key: "journal", href: "/admin/activity", Icon: Activity, section: "activity" },
   { key: "team", href: "/admin/equipe", Icon: UsersRound, section: "equipe" },
 ];

@@ -6,7 +6,7 @@ import { formatNumber } from "@/lib/utils";
 import { AdminPage, EYEBROW } from "@/components/admin/kit";
 import { canOpen, type ConsoleSection } from "@/lib/admin/sections";
 import {
-  LayoutTemplate, MessageSquare, FileText, Bell, Settings2, Activity, UsersRound,
+  LayoutTemplate, MessageSquare, FileText, Bell, Settings2, Activity, UsersRound, CreditCard,
   ArrowRight, type LucideIcon,
 } from "lucide-react";
 
@@ -23,7 +23,7 @@ export const revalidate = 0;
 
 /** Each card's words live under `adminSite.cards.<key>`. */
 type Card = {
-  key: "home" | "popups" | "legalDocs" | "notifications" | "settings" | "activity" | "team";
+  key: "home" | "popups" | "legalDocs" | "notifications" | "settings" | "services" | "activity" | "team";
   href: string;
   Icon: LucideIcon;
   /** The team section it belongs to; a member sees only theirs. */
@@ -59,6 +59,7 @@ export default async function AdminSiteHub() {
     { key: "legalDocs", href: "/admin/legal-docs", Icon: FileText, count: n(docs), section: "legal-docs" },
     { key: "notifications", href: "/admin/notifications", Icon: Bell, count: n(notifs), section: "notifications" },
     { key: "settings", href: "/admin/settings", Icon: Settings2, section: "settings" },
+    { key: "services", href: "/admin/abonnements", Icon: CreditCard, section: "abonnements" },
     { key: "activity", href: "/admin/activity", Icon: Activity, section: "activity" },
     { key: "team", href: "/admin/equipe", Icon: UsersRound, section: "equipe" },
   ] satisfies Card[]).filter((c) => canOpen(scopes, c.section));
