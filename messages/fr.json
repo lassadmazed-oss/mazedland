@@ -4558,6 +4558,13 @@
         "price_low": "Prix très bas ({value} TND) : vérifiez qu'il ne manque pas de zéros.",
         "price_high": "Loyer très élevé ({value} TND par mois) : vérifiez-le."
       }
+    },
+    "founding": {
+      "eyebrow": "Offre de lancement",
+      "headline": "{months, plural, one {# mois du plan Pro offert} other {# mois du plan Pro offerts}} aux {total} premières agences de {place}",
+      "headlineAny": "{months, plural, one {# mois du plan Pro offert} other {# mois du plan Pro offerts}} aux {total} premières agences",
+      "left": "{left, plural, one {Plus qu'une place} other {Plus que # places}} sur {total}",
+      "how": "Ouvrez votre agence ci-dessous : nous vous écrivons pour confirmer votre place."
     }
   },
   "proApi": {
@@ -4767,7 +4774,9 @@
     "receiptN": "Reçu {n}",
     "requestInPayments": "Voir dans Paiements",
     "requestFixAsked": "À corriger, en attente du propriétaire : {reason}",
-    "fixChip": "à corriger"
+    "fixChip": "à corriger",
+    "offerSeats": "{left, plural, one {# place fondatrice restante} other {# places fondatrices restantes}} sur {total}.",
+    "offerSeatsNone": "Les {total} places fondatrices sont toutes prises : cette agence passerait en plus."
   },
   "visits": {
     "parts": {
@@ -5548,6 +5557,18 @@
     "agency_strip_reactive_first": {
       "label": "Agences réactives en premier",
       "hint": "Dans le bandeau des agences recommandées, celles qui ont le badge passent devant ; l'ordre tourne chaque jour dans chaque groupe."
+    },
+    "feature_founding_counter": {
+      "label": "Compteur des agences fondatrices",
+      "hint": "Sur la page Pro : l'offre de lancement et le nombre de places restantes, compté sur les périodes offertes par la console. Il disparaît quand il n'y a plus de place."
+    },
+    "founding_seats": {
+      "label": "Places fondatrices",
+      "hint": "Le nombre d'agences à qui la console offre la période gratuite. Une place est prise dès qu'une période est offerte."
+    },
+    "founding_offer_place": {
+      "label": "Lieu de l'offre fondatrice",
+      "hint": "La ville ou la région citée dans l'offre (« les 10 premières agences de Sfax »). Vide : « les 10 premières agences »."
     }
   },
   "ads": {
