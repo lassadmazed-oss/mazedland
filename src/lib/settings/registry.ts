@@ -69,6 +69,9 @@ export const SETTINGS = {
   // « Agences fondatrices : X places sur 10 » on the Pro page: the places the
   // console has not yet given a free period to (src/lib/pro/founding.ts).
   feature_founding_counter: { group: "features", type: "bool", default: true, href: "/admin/agences" },
+  // « Ouvrir » on an agence with no plan gives it the founding offer by itself while places last;
+  // off: such an agence must pay (or be given its period by hand) before it opens.
+  feature_founding_auto: { group: "features", type: "bool", default: true, href: "/admin/agences" },
   // « Importer plusieurs annonces » in the agence's dashboard: a CSV (or lines
   // pasted from Excel) becomes drafts (src/lib/listings/importRows.ts).
   feature_listing_import: { group: "features", type: "bool", default: true },
@@ -132,8 +135,11 @@ export const SETTINGS = {
   founding_offer_months: { group: "publication", type: "int", default: 3, min: 1, max: 12, unit: "months", choices: [1, 2, 3, 6, 12] },
   // How many agences the founding offer is for, and where (« les 10 premières
   // agences de Sfax »); an empty place says « les 10 premières agences ».
-  founding_seats: { group: "publication", type: "int", default: 10, min: 1, max: 100, choices: [5, 10, 15, 20] },
-  founding_offer_place: { group: "publication", type: "text", default: "Sfax", max: 40 },
+  founding_seats: { group: "publication", type: "int", default: 50, min: 1, max: 200, choices: [10, 20, 50, 100] },
+  founding_offer_place: { group: "publication", type: "text", default: "", max: 40 },
+  // The plan the offer gives (the slug of an offer on sale). With feature_founding_auto, « Ouvrir »
+  // gives it by itself to an agence that has no plan, while places last (src/lib/pro/founding.ts).
+  founding_offer_plan: { group: "publication", type: "text", default: "pro-pro", max: 40, ltr: true },
   // « Envoyer sans payer » under the agence request: the agence comes alone,
   // for the founding offer the console then gives (« Offrir une période »).
   pro_signup_pay_later: { group: "publication", type: "bool", default: true },
