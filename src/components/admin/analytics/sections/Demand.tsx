@@ -8,14 +8,19 @@ import { rate } from "@/lib/analytics/shape";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
 import { BarList } from "../Charts";
-import { Card, Facts, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
+import { Card, ErrorNote, errorText, Facts, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
 
 /** The demand: what people search, open, ask for — and how fast agences answer. */
 export async function Demand({ admin, period, settings, locale }: { admin: SupabaseClient; period: Period; settings: Settings; locale: string }) {
   const t = await getTranslations("adminAnalytics");
   const f = formatters(locale, t("common.tnd"));
   const rules = reactiveRules(settings);
-  const d = await q.demand(admin, period, settings.analytics_top_limit, rules.hours);
+  let d: q.Demand;
+  try {
+    d = await q.demand(admin, period, settings.analytics_top_limit, rules.hours);
+  } catch (e) {
+    return <ErrorNote text={t("error", { message: errorText(e) })} />;
+  }
   const row = (key: string, cells: Record<string, React.ReactNode>, csv: (string | number | null)[]): TableRow => ({ _key: key, _csv: csv, ...cells });
   const understoodTotal = d.understood.yes + d.understood.no;
   const filterName = (k: string) => (t.has(`demand.filterNames.${k}`) ? t(`demand.filterNames.${k}`) : k);

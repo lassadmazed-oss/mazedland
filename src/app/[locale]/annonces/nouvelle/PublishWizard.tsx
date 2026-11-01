@@ -12,7 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { formatTND, formatDate, formatNumber, cn } from "@/lib/utils";
 import { chipClass } from "@/lib/chips";
-import { trackEvent } from "@/lib/analytics/events";
+import { flushFirstParty, trackEvent } from "@/lib/analytics/events";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { canonicalDelegation, delegationLabel, delegationsOf } from "@/lib/delegations";
 import {
@@ -799,17 +799,27 @@ export function PublishWizard({
     if (editing) return;
     trackEvent("publish_step", { step: FUNNEL_STEPS[step], index: step, method: "form" });
   }, [step, editing]);
+  // The abandon from an unmount waits a tick: React (StrictMode, in
+  // development) runs an effect, cleans it up and runs it again at mount,
+  // and that cleanup is not someone leaving. The real unload is `pagehide`,
+  // where the batch is sent at once — nothing scheduled runs in a page going.
+  const abandonTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (editing) return;
+    if (abandonTimer.current) {
+      clearTimeout(abandonTimer.current);
+      abandonTimer.current = null;
+    }
     const abandon = () => {
       if (funnelDone.current) return;
       funnelDone.current = true;
       trackEvent("publish_abandon", { step: FUNNEL_STEPS[stepRef.current], index: stepRef.current, method: "form" });
+      flushFirstParty();
     };
     window.addEventListener("pagehide", abandon);
     return () => {
       window.removeEventListener("pagehide", abandon);
-      abandon();
+      abandonTimer.current = setTimeout(abandon, 0);
     };
   }, [editing]);
 

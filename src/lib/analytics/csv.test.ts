@@ -16,9 +16,12 @@ describe("csv", () => {
     expect(csvCell(true)).toBe("1");
   });
 
-  it("neutralises a cell Excel would run as a formula", () => {
+  it("neutralises a text Excel would run as a formula, and leaves a number a number", () => {
     expect(csvCell("=HYPERLINK(1)")).toBe("'=HYPERLINK(1)");
     expect(csvCell("-5 DT")).toBe("'-5 DT");
+    expect(csvCell("\tcmd")).toBe("'\tcmd");
+    expect(csvCell(-5)).toBe("-5");
+    expect(csvCell(-209.5)).toBe("-209,5");
   });
 
   it("starts with the byte-order mark and ends each line with CRLF", () => {

@@ -46,11 +46,14 @@ export function LineChart({
   series,
   height = 180,
   format = (n) => String(n),
+  label,
 }: {
   labels: readonly string[];
   series: readonly Series[];
   height?: number;
   format?: (n: number) => string;
+  /** What the chart shows, for a screen reader. */
+  label: string;
 }) {
   const width = 640;
   const left = 44;
@@ -61,10 +64,11 @@ export function LineChart({
   const h = height - top - bottom;
   const step = labels.length > 1 ? w / (labels.length - 1) : 0;
   const yOf = (v: number) => top + h - (v / max) * h;
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f));
+  // Small maxima round to the same tick twice: each value once.
+  const ticks = [...new Set([0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f)))];
   const named = [0, Math.floor((labels.length - 1) / 2), labels.length - 1].filter((i, k, a) => a.indexOf(i) === k);
   return (
-    <svg style={{ direction: "ltr" }} viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" role="img">
+    <svg style={{ direction: "ltr" }} viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" role="img" aria-label={label}>
       {ticks.map((v) => (
         <g key={v}>
           <line x1={left} x2={width - 8} y1={yOf(v)} y2={yOf(v)} stroke={RULE} strokeWidth={1} />
@@ -99,7 +103,7 @@ export function LineChart({
 }
 
 /** Vertical bars, one per day; the tallest names its value. */
-export function Bars({ labels, values, height = 140, format = (n) => String(n) }: { labels: readonly string[]; values: readonly number[]; height?: number; format?: (n: number) => string }) {
+export function Bars({ labels, values, height = 140, format = (n) => String(n), label }: { labels: readonly string[]; values: readonly number[]; height?: number; format?: (n: number) => string; label: string }) {
   const width = 640;
   const left = 8;
   const bottom = 20;
@@ -112,7 +116,7 @@ export function Bars({ labels, values, height = 140, format = (n) => String(n) }
   const peak = values.indexOf(max);
   const named = [0, Math.floor((labels.length - 1) / 2), labels.length - 1].filter((i, k, a) => a.indexOf(i) === k);
   return (
-    <svg style={{ direction: "ltr" }} viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" role="img">
+    <svg style={{ direction: "ltr" }} viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" role="img" aria-label={label}>
       <line x1={left} x2={width - left} y1={top + h} y2={top + h} stroke={RULE} />
       {values.map((v, i) => {
         const bh = (v / max) * h;
@@ -132,7 +136,7 @@ export function Bars({ labels, values, height = 140, format = (n) => String(n) }
 export type Stack = { name: string; values: readonly number[]; opacity?: number };
 
 /** Parts of a whole, day by day: each stack a shade of the same ink. */
-export function StackedBars({ labels, stacks, height = 150, format = (n) => String(n) }: { labels: readonly string[]; stacks: readonly Stack[]; height?: number; format?: (n: number) => string }) {
+export function StackedBars({ labels, stacks, height = 150, format = (n) => String(n), label }: { labels: readonly string[]; stacks: readonly Stack[]; height?: number; format?: (n: number) => string; label: string }) {
   const width = 640;
   const left = 8;
   const bottom = 20;
@@ -147,7 +151,7 @@ export function StackedBars({ labels, stacks, height = 150, format = (n) => Stri
   const named = [0, Math.floor((labels.length - 1) / 2), labels.length - 1].filter((i, k, a) => a.indexOf(i) === k);
   return (
     <div>
-      <svg style={{ direction: "ltr" }} viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" role="img">
+      <svg style={{ direction: "ltr" }} viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" role="img" aria-label={label}>
         <line x1={left} x2={width - left} y1={top + h} y2={top + h} stroke={RULE} />
         {labels.map((_, i) => {
           let acc = 0;
@@ -185,7 +189,7 @@ export function StackedBars({ labels, stacks, height = 150, format = (n) => Stri
 export type FunnelStepView = { label: string; value: string; share: number; drop: string | null };
 
 /** The steps of a form as bars that narrow, each with what the step before lost. */
-export function Funnel({ steps }: { steps: readonly FunnelStepView[] }) {
+export function Funnel({ steps, label }: { steps: readonly FunnelStepView[]; label: string }) {
   const rowH = 34;
   const width = 640;
   const labelW = 170;
@@ -193,7 +197,7 @@ export function Funnel({ steps }: { steps: readonly FunnelStepView[] }) {
   const barW = width - labelW - valueW - 70;
   const height = steps.length * rowH;
   return (
-    <svg style={{ direction: "ltr" }} viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" role="img">
+    <svg style={{ direction: "ltr" }} viewBox={`0 0 ${width} ${height}`} className="block h-auto w-full" role="img" aria-label={label}>
       {steps.map((s, i) => {
         const y = i * rowH;
         const bw = Math.max(2, (s.share / 100) * barW);

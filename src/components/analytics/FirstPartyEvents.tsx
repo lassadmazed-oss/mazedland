@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { isConsolePath } from "@/lib/analytics/ga";
-import { configureFirstParty, isUuid, trackEvent, type EventName } from "@/lib/analytics/events";
+import { configureFirstParty, isUuid, resetImpressions, trackEvent, type EventName } from "@/lib/analytics/events";
 import { EVENT_NAMES } from "@/lib/analytics/events";
 import { useAnalytics } from "./GoogleAnalytics";
 
@@ -30,6 +30,8 @@ export function FirstPartyEvents() {
 
   useEffect(() => {
     if (!enabled || isConsolePath(pathname)) return;
+    // A new page: what it shows is shown anew, even an annonce seen a page ago.
+    resetImpressions();
     trackEvent("page_view", {}, {}, { ga: false });
   }, [pathname, enabled]);
 

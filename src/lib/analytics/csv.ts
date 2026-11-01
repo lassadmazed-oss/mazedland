@@ -10,9 +10,11 @@ const SEPARATOR = ";";
 
 export function csvCell(v: CsvCell): string {
   if (v === null || v === undefined) return "";
-  let s = typeof v === "number" ? String(v).replace(".", ",") : typeof v === "boolean" ? (v ? "1" : "0") : v;
-  // A cell starting with =, +, - or @ is read by Excel as a formula: neutralise it.
-  if (/^[=+\-@]/.test(s)) s = `'${s}`;
+  if (typeof v === "number") return String(v).replace(".", ",");
+  if (typeof v === "boolean") return v ? "1" : "0";
+  // A text starting with =, +, -, @, a tab or a return is read by Excel as a
+  // formula: neutralised. A number stays a number (a negative amount above).
+  const s = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
   return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

@@ -330,14 +330,16 @@ export default async function ShopPage({ params, searchParams }: { params: Promi
             {listings.length === 0 ? (
               <p className="mt-5 rounded-3xl border border-dashed border-border px-6 py-12 text-center text-[13.5px] text-muted">{t("noListings")}</p>
             ) : (
-              <ul className={`mt-5 grid gap-x-4 gap-y-7 ${phoneCols} sm:grid-cols-2 lg:grid-cols-3`}>
-                {listings.map((l, i) => (
-                  <li key={l.id}>
-                    <AnnonceCard listing={l} loggedIn={!!user} priority={i < 3} sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 92vw" />
-                  </li>
-                ))}
+              <>
                 <Impressions ids={listings.map((l) => l.id)} surface="agence" />
-              </ul>
+                <ul className={`mt-5 grid gap-x-4 gap-y-7 ${phoneCols} sm:grid-cols-2 lg:grid-cols-3`}>
+                  {listings.map((l, i) => (
+                    <li key={l.id}>
+                      <AnnonceCard listing={l} loggedIn={!!user} priority={i < 3} sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 92vw" />
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
             {lastPage > 1 && (
               <nav className="mt-8 flex items-center justify-center gap-2" aria-label={tc("pagination")}>

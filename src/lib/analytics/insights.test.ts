@@ -4,14 +4,16 @@ import { buildInsights, insightRules, meanAndSd, type InsightInput, type Kpis } 
 const rules = insightRules(
   {
     analytics_mover_min_percent: 20,
+    analytics_mover_min_count: 5,
+    analytics_baseline_weeks: 8,
     analytics_anomaly_sigma: 2,
     analytics_zero_search_min: 3,
     analytics_no_contact_min_views: 30,
     analytics_gov_demand_min: 20,
     analytics_gov_low_supply: 5,
+    analytics_insights_limit: 10,
   },
   { hours: 24, days: 90, minRequests: 3, minRate: 80 },
-  10,
 );
 
 const week = (over: Partial<Kpis> = {}): Kpis => ({
@@ -68,7 +70,19 @@ describe("buildInsights", () => {
     // signups fell 11 % week over week (below the mover bar) but 9 σ below the baseline.
     expect(out.map((i) => i.kind)).toEqual(["anomaly_low"]);
     expect(out[0].values.mean).toBe(100);
+    expect(out[0].values.weeks).toBe(8);
     expect(out[0].tone).toBe("bad");
+  });
+
+  it("judges no figure against the weeks before the site counted it", () => {
+    // Five empty weeks, then three lived-in ones: too young a habit for a verdict.
+    const young = [0, 0, 0, 0, 0, 120, 100, 110].map((v) => week({ page_views: v }));
+    expect(buildInsights({ ...quiet(), baseline: young, thisWeek: week({ page_views: 300 }), lastWeek: week({ page_views: 310 }) })).toEqual([]);
+    // Four lived-in weeks are enough, and the empty ones before them are left out of the average.
+    const lived = [0, 0, 0, 0, 120, 100, 110, 105].map((v) => week({ page_views: v }));
+    const out = buildInsights({ ...quiet(), baseline: lived, thisWeek: week({ page_views: 300 }), lastWeek: week({ page_views: 310 }) });
+    expect(out.map((i) => [i.kind, i.subject])).toEqual([["anomaly_high", "page_views"]]);
+    expect(out[0].values).toMatchObject({ mean: 109, weeks: 4 });
   });
 
   it("does not repeat an anomaly already told as a mover", () => {
@@ -110,6 +124,7 @@ describe("buildInsights", () => {
     });
     expect(out.map((i) => i.subject)).toEqual(["s1"]);
     expect(out[0].values).toMatchObject({ name: "Immo Sud", rate: 40, hours: 24 });
+    expect(out[0].href).toBe("/admin/agences?id=s1");
   });
 
   it("names a governorate with demand and few annonces", () => {
@@ -122,7 +137,7 @@ describe("buildInsights", () => {
       ],
     });
     expect(out.map((i) => i.subject)).toEqual(["Gabès"]);
-    expect(out[0].href).toBe("/admin/demandes?gov=Gab%C3%A8s");
+    expect(out[0].href).toBe("/admin/annonces?status=published&gov=Gab%C3%A8s");
   });
 
   it("puts waiting receipts above an expiring annonce and keeps to the limit", () => {

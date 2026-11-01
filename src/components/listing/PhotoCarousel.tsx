@@ -113,7 +113,10 @@ export function PhotoCarousel({
   }
 
   // A photo a reader chose to look at, once each per annonce (not the autoplay).
+  // The index through a ref: the keyboard handler below keeps the first `go`.
   const looked = useRef(new Set<number>());
+  const indexRef = useRef(index);
+  indexRef.current = index;
   function lookedAt(i: number) {
     if (!listingId || count < 2) return;
     const at = ((i % count) + count) % count;
@@ -126,7 +129,7 @@ export function PhotoCarousel({
     if (!loop) return;
     pauseUntil.current = Date.now() + USER_NAV_PAUSE_MS;
     setAnim(true);
-    lookedAt(index + delta);
+    lookedAt(indexRef.current + delta);
     setIndex((i) => {
       const n = i + delta;
       if (n < 0) return count - 1;

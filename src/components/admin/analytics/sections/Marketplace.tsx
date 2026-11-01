@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/utils";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
 import { BarList, Funnel, StackedBars } from "../Charts";
-import { Card, Empty, Facts, Grid, Section, Table, type TableRow } from "../ui";
+import { Card, Empty, ErrorNote, errorText, Facts, Grid, Section, Table, type TableRow } from "../ui";
 
 const STATUSES = ["published", "pending_review", "pending_payment", "draft", "rejected", "expired", "archived", "sold", "rented"] as const;
 
@@ -16,7 +16,13 @@ const STATUSES = ["published", "pending_review", "pending_payment", "draft", "re
 export async function Marketplace({ admin, period, settings, locale }: { admin: SupabaseClient; period: Period; settings: Settings; locale: string }) {
   const t = await getTranslations("adminAnalytics");
   const f = formatters(locale, t("common.tnd"));
-  const [m, series] = await Promise.all([q.marketplace(admin, period, settings.analytics_expiring_days), q.series(admin, period)]);
+  let data: [q.Marketplace, q.DayPoint[]];
+  try {
+    data = await Promise.all([q.marketplace(admin, period, settings.analytics_expiring_days), q.series(admin, period)]);
+  } catch (e) {
+    return <ErrorNote text={t("error", { message: errorText(e) })} />;
+  }
+  const [m, series] = data;
   const row = (key: string, cells: Record<string, React.ReactNode>, csv: (string | number | null)[]): TableRow => ({ _key: key, _csv: csv, ...cells });
   const catLabel = (c: { label_fr: string; label_ar: string | null }) => (locale === "ar" && c.label_ar ? c.label_ar : c.label_fr);
   const bands = bandTable(m.price_bands);
@@ -46,7 +52,7 @@ export async function Marketplace({ admin, period, settings, locale }: { admin: 
             <Card>
               <p className="text-[12px] font-semibold text-muted">{t("kpi.publishes")} · {t("kpi.listings_new")}</p>
               <div className="mt-2">
-                <StackedBars labels={series.map((d) => f.day(d.day))} stacks={[{ name: t("kpi.publishes"), values: series.map((d) => d.publishes) }, { name: t("kpi.listings_new"), values: series.map((d) => Math.max(0, d.listings_new - d.publishes)) }]} format={f.n} />
+                <StackedBars label={`${t("kpi.publishes")} · ${t("kpi.listings_new")}`} labels={series.map((d) => f.day(d.day))} stacks={[{ name: t("kpi.publishes"), values: series.map((d) => d.publishes) }, { name: t("kpi.listings_new"), values: series.map((d) => Math.max(0, d.listings_new - d.publishes)) }]} format={f.n} />
               </div>
             </Card>
           </div>
@@ -122,7 +128,7 @@ export async function Marketplace({ admin, period, settings, locale }: { admin: 
 
       <Section title={t("marketplace.funnel")} hint={t("marketplace.funnelNote", { abandoned: f.n(m.funnel.abandoned), drafts: f.n(m.funnel.drafts) })}>
         <Card>
-          <Funnel steps={steps.map((s) => ({ label: t(`marketplace.funnelSteps.${s.key}`), value: f.n(s.value), share: s.share, drop: s.drop === null ? null : t("marketplace.drop", { pct: s.drop }) }))} />
+          <Funnel label={t("marketplace.funnel")} steps={steps.map((s) => ({ label: t(`marketplace.funnelSteps.${s.key}`), value: f.n(s.value), share: s.share, drop: s.drop === null ? null : t("marketplace.drop", { pct: s.drop }) }))} />
         </Card>
       </Section>
 

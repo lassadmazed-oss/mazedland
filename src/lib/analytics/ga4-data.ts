@@ -13,6 +13,7 @@
  * tested; the network calls take a `fetch` they can be given a fake of.
  */
 import { createSign } from "node:crypto";
+import { tunisDay } from "./period";
 
 export type ServiceAccount = { client_email: string; private_key: string; token_uri: string };
 
@@ -152,8 +153,15 @@ function totalsOf(rows: ShapedRow[]): Ga4Totals {
   return { users: m[0] ?? 0, newUsers: m[1] ?? 0, sessions: m[2] ?? 0, pageViews: m[3] ?? 0, engagedSessions: m[4] ?? 0, avgSessionSeconds: Math.round(m[5] ?? 0) };
 }
 
-/** "2026-11-01" for Google's date ranges. */
-const day = (d: Date) => d.toISOString().slice(0, 10);
+/** "2026-11-01" for Google's date ranges: the owner's days, in Tunis (the period's bounds are Tunis midnights). */
+const day = (d: Date) => tunisDay(d);
+
+/** Runs tasks a few at a time: the Data API allows ten concurrent reports per property. */
+export async function inBatches<T>(tasks: readonly (() => Promise<T>)[], size: number): Promise<T[]> {
+  const out: T[] = [];
+  for (let i = 0; i < tasks.length; i += size) out.push(...(await Promise.all(tasks.slice(i, i + size).map((t) => t()))));
+  return out;
+}
 
 /**
  * Every report the Traffic section shows, in parallel; a section Google
@@ -181,18 +189,20 @@ export async function fetchGa4Data(
   const dims = (names: string[]) => names.map((name) => ({ name }));
   const byMetricDesc = (name: string) => [{ metric: { metricName: name }, desc: true }];
 
-  const [totals, previous, daily, topPages, sources, devices, countries, cities, languages, landingPages, searchTerms] = await Promise.all([
-    report("totals", { dateRanges: [cur], metrics: metrics(TOTAL_METRICS) }),
-    report("previous", { dateRanges: [prev], metrics: metrics(TOTAL_METRICS) }),
-    report("daily", { dateRanges: [cur], dimensions: dims(["date"]), metrics: metrics(["totalUsers", "sessions", "screenPageViews"]), orderBys: [{ dimension: { dimensionName: "date" } }], limit: 400 }),
-    report("topPages", { dateRanges: [cur], dimensions: dims(["pagePath"]), metrics: metrics(["screenPageViews", "totalUsers"]), orderBys: byMetricDesc("screenPageViews"), limit }),
-    report("sources", { dateRanges: [cur], dimensions: dims(["sessionSource", "sessionMedium"]), metrics: metrics(["sessions", "totalUsers"]), orderBys: byMetricDesc("sessions"), limit }),
-    report("devices", { dateRanges: [cur], dimensions: dims(["deviceCategory"]), metrics: metrics(["totalUsers", "sessions"]), orderBys: byMetricDesc("totalUsers"), limit: 5 }),
-    report("countries", { dateRanges: [cur], dimensions: dims(["country"]), metrics: metrics(["totalUsers"]), orderBys: byMetricDesc("totalUsers"), limit }),
-    report("cities", { dateRanges: [cur], dimensions: dims(["city"]), metrics: metrics(["totalUsers"]), orderBys: byMetricDesc("totalUsers"), limit }),
-    report("languages", { dateRanges: [cur], dimensions: dims(["language"]), metrics: metrics(["totalUsers"]), orderBys: byMetricDesc("totalUsers"), limit }),
-    report("landingPages", { dateRanges: [cur], dimensions: dims(["landingPage"]), metrics: metrics(["sessions"]), orderBys: byMetricDesc("sessions"), limit }),
-    report("searchTerms", {
+  // Four at a time: Google allows ten concurrent reports per property, and a
+  // 429 would be cached for the whole TTL.
+  const [totals, previous, daily, topPages, sources, devices, countries, cities, languages, landingPages, searchTerms] = await inBatches([
+    () => report("totals", { dateRanges: [cur], metrics: metrics(TOTAL_METRICS) }),
+    () => report("previous", { dateRanges: [prev], metrics: metrics(TOTAL_METRICS) }),
+    () => report("daily", { dateRanges: [cur], dimensions: dims(["date"]), metrics: metrics(["totalUsers", "sessions", "screenPageViews"]), orderBys: [{ dimension: { dimensionName: "date" } }], limit: 400 }),
+    () => report("topPages", { dateRanges: [cur], dimensions: dims(["pagePath"]), metrics: metrics(["screenPageViews", "totalUsers"]), orderBys: byMetricDesc("screenPageViews"), limit }),
+    () => report("sources", { dateRanges: [cur], dimensions: dims(["sessionSource", "sessionMedium"]), metrics: metrics(["sessions", "totalUsers"]), orderBys: byMetricDesc("sessions"), limit }),
+    () => report("devices", { dateRanges: [cur], dimensions: dims(["deviceCategory"]), metrics: metrics(["totalUsers", "sessions"]), orderBys: byMetricDesc("totalUsers"), limit: 5 }),
+    () => report("countries", { dateRanges: [cur], dimensions: dims(["country"]), metrics: metrics(["totalUsers"]), orderBys: byMetricDesc("totalUsers"), limit }),
+    () => report("cities", { dateRanges: [cur], dimensions: dims(["city"]), metrics: metrics(["totalUsers"]), orderBys: byMetricDesc("totalUsers"), limit }),
+    () => report("languages", { dateRanges: [cur], dimensions: dims(["language"]), metrics: metrics(["totalUsers"]), orderBys: byMetricDesc("totalUsers"), limit }),
+    () => report("landingPages", { dateRanges: [cur], dimensions: dims(["landingPage"]), metrics: metrics(["sessions"]), orderBys: byMetricDesc("sessions"), limit }),
+    () => report("searchTerms", {
       dateRanges: [cur],
       dimensions: dims(["customEvent:search_term"]),
       metrics: metrics(["eventCount"]),
@@ -200,7 +210,7 @@ export async function fetchGa4Data(
       orderBys: byMetricDesc("eventCount"),
       limit,
     }),
-  ]);
+  ], 4);
 
   const ymd = (s: string) => (s.length === 8 ? `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}` : s);
   return {

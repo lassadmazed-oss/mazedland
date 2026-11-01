@@ -78,10 +78,18 @@ describe("a report", () => {
 
   it("fetches every section, keeping the ones Google refuses out with their reason", async () => {
     forgetToken();
+    const ranges: { startDate: string; endDate: string }[][] = [];
+    let inFlight = 0;
+    let peak = 0;
     const fake = (async (url: string | URL | Request, init?: RequestInit) => {
       const u = String(url);
       if (u.includes("oauth2")) return json({ access_token: "tok", expires_in: 3600 });
-      const body = JSON.parse(String(init?.body)) as { dimensions?: { name: string }[]; metrics: { name: string }[] };
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      await new Promise((r) => setTimeout(r, 2));
+      inFlight -= 1;
+      const body = JSON.parse(String(init?.body)) as { dateRanges: { startDate: string; endDate: string }[]; dimensions?: { name: string }[]; metrics: { name: string }[] };
+      ranges.push(body.dateRanges);
       const dim = body.dimensions?.[0]?.name;
       if (dim === "customEvent:search_term") return json({ error: { message: "Field customEvent:search_term is not a valid dimension." } }, 400);
       if (!dim) return json({ rows: [{ metricValues: [{ value: "100" }, { value: "60" }, { value: "120" }, { value: "300" }, { value: "80" }, { value: "95.4" }] }] });
@@ -92,6 +100,11 @@ describe("a report", () => {
       { propertyId: "123456", account, from: new Date("2026-10-25T23:00:00Z"), to: new Date("2026-11-01T15:00:00Z"), prevFrom: new Date("2026-10-18T23:00:00Z"), prevTo: new Date("2026-10-25T23:00:00Z") },
       fake,
     );
+    // Tunis days, the last day included, the previous range ending the day before the current one starts.
+    expect(ranges[0]).toEqual([{ startDate: "2026-10-26", endDate: "2026-11-01" }]);
+    expect(ranges[1]).toEqual([{ startDate: "2026-10-19", endDate: "2026-10-25" }]);
+    expect(ranges.every((r) => r[0].endDate <= "2026-11-01")).toBe(true);
+    expect(peak).toBeLessThanOrEqual(4);
     expect(data.totals).toEqual({ users: 100, newUsers: 60, sessions: 120, pageViews: 300, engagedSessions: 80, avgSessionSeconds: 95 });
     expect(data.daily).toEqual([{ day: "2026-11-01", users: 10, sessions: 12, pageViews: 30 }]);
     expect(data.sources[0]).toEqual({ source: "a", medium: "b", sessions: 5, users: 4 });

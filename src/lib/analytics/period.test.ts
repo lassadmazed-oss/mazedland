@@ -44,16 +44,28 @@ describe("resolvePeriod", () => {
     expect(p.to.toISOString()).toBe("2026-10-15T23:00:00.000Z");
   });
 
-  it("falls back to 30 days on a bad custom period", () => {
-    expect(resolvePeriod({ p: "custom", from: "2026-10-15", to: "2026-10-01" }, NOW).key).toBe("30");
-    expect(resolvePeriod({ p: "custom", from: "2020-01-01", to: "2026-10-01" }, NOW).key).toBe("30");
-    expect(resolvePeriod({ p: "custom" }, NOW).key).toBe("30");
-    expect(resolvePeriod({ p: "365" }, NOW).key).toBe("30");
+  it("falls back to 30 days on a bad custom period, and says so", () => {
+    for (const sp of [
+      { p: "custom", from: "2026-10-15", to: "2026-10-01" },
+      { p: "custom", from: "2020-01-01", to: "2026-10-01" },
+      { p: "custom", from: "2026-11-05", to: "2026-11-09" },
+      { p: "custom" },
+    ]) {
+      const p = resolvePeriod(sp, NOW);
+      expect(p.key, JSON.stringify(sp)).toBe("30");
+      expect(p.fellBack, JSON.stringify(sp)).toBe(true);
+    }
+    expect(resolvePeriod({ p: "365" }, NOW)).toMatchObject({ key: "30", fellBack: false });
+    expect(resolvePeriod({ p: "custom", from: "2026-10-01", to: "2026-10-15" }, NOW).fellBack).toBe(false);
   });
 
-  it("never shows the future in a custom period", () => {
+  it("ends a custom period at the end of today in Tunis at the latest", () => {
     const p = resolvePeriod({ p: "custom", from: "2026-10-30", to: "2026-12-31" }, NOW);
-    expect(p.to.getTime()).toBeLessThanOrEqual(NOW.getTime() + 86_400_000);
+    expect(p.to.toISOString()).toBe("2026-11-01T23:00:00.000Z");
+    expect(p.toDay).toBe("2026-11-01");
+    expect(p.days).toBe(3);
+    expect(p.prevTo).toEqual(p.from);
+    expect(p.prevFrom.toISOString()).toBe("2026-10-26T23:00:00.000Z");
   });
 });
 

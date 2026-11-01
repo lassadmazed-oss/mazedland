@@ -227,9 +227,10 @@ export const SETTINGS = {
   //    kept in the database, exact and per annonce, beside Google's sampled
   //    and consent-gated figures. No name, number, e-mail or address.
   analytics_events_enabled: { group: "analytics", type: "bool", default: true, client: true },
-  // On: the site's own count waits for the visitor's yes too (when asked).
-  // Off: it counts everyone, with a key that changes every day.
-  analytics_events_consent: { group: "analytics", type: "bool", default: false, client: true },
+  // On: the site's own count waits for the visitor's yes too (when asked):
+  // nothing leaves the browser before « Accepter ». Off: it counts everyone,
+  // pseudonymously, with a key that changes every day and no cookie.
+  analytics_events_consent: { group: "analytics", type: "bool", default: true, client: true },
   // How long an event is kept before the nightly job deletes it.
   analytics_events_days: { group: "analytics", type: "int", default: 365, min: 30, max: 730, unit: "days", choices: [90, 180, 365, 730] },
   // What one browser may send in an hour: a reader opens a few dozen annonces in an evening.
@@ -245,10 +246,16 @@ export const SETTINGS = {
   analytics_top_limit: { group: "analytics", type: "int", default: 10, min: 5, max: 100, choices: [5, 10, 20, 50] },
   // An annonce « expiring soon » ends within this many days.
   analytics_expiring_days: { group: "analytics", type: "int", default: 7, min: 1, max: 60, unit: "days", choices: [3, 7, 14, 30] },
-  // Insights: a figure this many standard deviations from its 8-week average is an anomaly.
+  // Insights: how many sentences « À retenir » shows at most.
+  analytics_insights_limit: { group: "analytics", type: "int", default: 8, min: 3, max: 20, choices: [5, 8, 12] },
+  // Insights: the weeks before the latest one a figure is compared with.
+  analytics_baseline_weeks: { group: "analytics", type: "int", default: 8, min: 4, max: 26, choices: [4, 8, 12] },
+  // Insights: a figure this many standard deviations from its baseline average is an anomaly.
   analytics_anomaly_sigma: { group: "analytics", type: "number", default: 2, min: 1, max: 4, step: 0.5, choices: [1.5, 2, 2.5, 3] },
-  // Insights: a figure that moved by at least this much week over week is a mover.
+  // Insights: a figure that moved by at least this much week over week is a mover…
   analytics_mover_min_percent: { group: "analytics", type: "int", default: 20, min: 5, max: 100, unit: "percent", choices: [10, 20, 30, 50] },
+  // …as long as one of the two weeks reached this many (two to three is no news).
+  analytics_mover_min_count: { group: "analytics", type: "int", default: 5, min: 1, max: 1000, choices: [5, 10, 20] },
   // Insights: a search with no result repeated this many times deserves a look.
   analytics_zero_search_min: { group: "analytics", type: "int", default: 3, min: 1, max: 100, choices: [2, 3, 5, 10] },
   // Insights: an annonce seen this many times without one contact is flagged.

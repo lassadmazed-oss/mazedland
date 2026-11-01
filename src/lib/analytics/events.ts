@@ -92,7 +92,9 @@ export type QueuedEvent = {
 };
 
 export const MAX_BATCH = 25;
-export const MAX_PARAM_BYTES = 2000;
+export const MAX_PARAM_BYTES = 3000;
+/** The most ids one impression carries: a catalogue page holds 60 at most. */
+export const MAX_LIST = 60;
 const MAX_QUEUE = 60;
 const FLUSH_MS = 2500;
 
@@ -133,7 +135,7 @@ export function cleanParams(params: EventParams | Record<string, unknown> | unde
     } else if (typeof v === "boolean") {
       out[k] = v;
     } else if (Array.isArray(v)) {
-      const list = v.filter((x): x is string => typeof x === "string").map((x) => cleanText(x, 60)).filter(Boolean).slice(0, 40);
+      const list = v.filter((x): x is string => typeof x === "string").map((x) => cleanText(x, 60)).filter(Boolean).slice(0, MAX_LIST);
       if (list.length) out[k] = list;
     }
     if (JSON.stringify(out).length > MAX_PARAM_BYTES) {
@@ -218,6 +220,15 @@ function hookUnload() {
   };
   document.addEventListener("visibilitychange", onHide);
   window.addEventListener("pagehide", () => flushFirstParty());
+}
+
+/** A « no » after a yes: the browser's id goes, so a later yes starts a new visitor. */
+export function forgetClientId(): void {
+  try {
+    localStorage.removeItem("mazed-cid");
+  } catch {
+    /* nothing kept */
+  }
 }
 
 /** A random id this browser keeps once the visitor accepted analytics; null otherwise. */

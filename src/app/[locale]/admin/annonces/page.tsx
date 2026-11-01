@@ -16,7 +16,7 @@ import { ListingDetail, type PanelListing } from "./ListingDetail";
 import { formatDate, formatTND } from "@/lib/utils";
 import { asDealType, firstMonthCost } from "@/lib/listings/deal";
 import { categoryLabel } from "@/lib/i18n";
-import { governorateLabel } from "@/lib/tunisia";
+import { governorateLabel, TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
 import { Inbox, Plus } from "lucide-react";
 import { asPendingEdit, changedKeys } from "@/lib/listings/edit";
 
@@ -102,12 +102,16 @@ export async function generateMetadata() {
 export default async function AdminAnnoncesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; page?: string; a?: string; deal?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; page?: string; a?: string; deal?: string; gov?: string; cat?: string }>;
 }) {
   await requireAdmin("annonces");
   const sp = await searchParams;
   // Sale, rent or both (0166): the same queue, narrowed to one deal.
   const deal = sp.deal === "sale" || sp.deal === "rent" ? sp.deal : null;
+  // A governorate and a category (the Statistiques links): a name off the
+  // list or an unknown slug filters nothing rather than everything.
+  const gov = (TUNISIAN_GOVERNORATES as readonly string[]).includes(sp.gov ?? "") ? (sp.gov as string) : null;
+  const catSlug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(sp.cat ?? "") ? (sp.cat as string) : null;
   const admin = getServiceSupabase();
   // One binding per line, not a destructured Promise.all: scripts/i18n-check
   // only sees `const t = await getTranslations(…)`.
@@ -156,9 +160,16 @@ export default async function AdminAnnoncesPage({
    * become a `group by status` RPC. It is one query either way — the point is
    * that it stops being seven.
    */
+  // The category's id, when one is asked for; an unknown slug matches no row.
+  const catId = catSlug
+    ? ((await admin.from("categories").select("id").eq("slug", catSlug).maybeSingle()).data?.id as string | undefined) ?? "00000000-0000-0000-0000-000000000000"
+    : null;
+
   const countsQuery = () => {
     let query = admin.from("listings").select("status, expires_at, pending_edit_at");
     if (deal) query = query.eq("deal_type", deal);
+    if (gov) query = query.eq("governorate", gov);
+    if (catId) query = query.eq("category_id", catId);
     if (q) query = query.or(OR);
     return query;
   };
@@ -166,6 +177,8 @@ export default async function AdminAnnoncesPage({
   const listQuery = () => {
     let query = admin.from("listings").select(LIST_SELECT, { count: "exact" });
     if (deal) query = query.eq("deal_type", deal);
+    if (gov) query = query.eq("governorate", gov);
+    if (catId) query = query.eq("category_id", catId);
     for (const f of tabFilters(tab)) {
       if (f.op === "eq") query = query.eq(f.col, f.val);
       else if (f.op === "gte") query = query.gte(f.col, f.val);
@@ -276,6 +289,8 @@ export default async function AdminAnnoncesPage({
   if (sp.status) base.set("status", sp.status);
   if (sp.q) base.set("q", sp.q);
   if (deal) base.set("deal", deal);
+  if (gov) base.set("gov", gov);
+  if (catSlug) base.set("cat", catSlug);
   if (sp.page) base.set("page", sp.page);
 
   /** The deal switch keeps the tab and the search, and starts at page 1. */
@@ -284,6 +299,8 @@ export default async function AdminAnnoncesPage({
     if (sp.status) p.set("status", sp.status);
     if (sp.q) p.set("q", sp.q);
     if (k !== "all") p.set("deal", k);
+    if (gov) p.set("gov", gov);
+    if (catSlug) p.set("cat", catSlug);
     return `/admin/annonces${p.toString() ? `?${p.toString()}` : ""}`;
   };
   const hrefBase = `/admin/annonces?${base.toString()}${base.toString() ? "&" : ""}`;

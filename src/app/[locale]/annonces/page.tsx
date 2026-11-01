@@ -1049,6 +1049,8 @@ export default async function AnnoncesPage({
           )}
         </div>
       ) : (
+        <>
+        <Impressions ids={rows.map((r) => r.id)} surface="catalogue" />
         <ul className={`mt-4 grid gap-x-3 gap-y-7 ${phoneCols} sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-5 lg:gap-y-9 xl:grid-cols-4`}>
           {rows.map((r, i) => (
             <Fragment key={r.id}>
@@ -1070,8 +1072,8 @@ export default async function AnnoncesPage({
               )}
             </Fragment>
           ))}
-          <Impressions ids={rows.map((r) => r.id)} surface="catalogue" />
         </ul>
+        </>
       )}
 
       {/* Nothing here, or nothing right: keep the search as a demande and be

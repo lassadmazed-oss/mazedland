@@ -23,6 +23,8 @@ export type Period = {
   /** The dates as the picker shows them, YYYY-MM-DD in Tunis. */
   fromDay: string;
   toDay: string;
+  /** The dates asked for could not be read (reversed, too long, in the future): 30 days shown instead. */
+  fellBack: boolean;
 };
 
 const TUNIS_OFFSET_MS = 3_600_000;
@@ -55,28 +57,29 @@ export function isPeriodKey(v: unknown): v is PeriodKey {
  */
 export function resolvePeriod(sp: { p?: string; from?: string; to?: string }, now: Date = new Date()): Period {
   const key: PeriodKey = isPeriodKey(sp.p) ? sp.p : "30";
+  const todayStart = tunisMidnight(tunisDay(now))!;
   if (key === "custom") {
     const from = tunisMidnight(sp.from);
     const toStart = tunisMidnight(sp.to);
-    if (from && toStart && toStart.getTime() >= from.getTime()) {
-      const to = new Date(Math.min(toStart.getTime() + DAY_MS, now.getTime() + DAY_MS));
+    if (from && toStart && toStart.getTime() >= from.getTime() && from.getTime() <= todayStart.getTime()) {
+      // Never past the end of today (Tunis): a day that has not come is no bucket.
+      const to = new Date(Math.min(toStart.getTime(), todayStart.getTime()) + DAY_MS);
       const days = Math.round((to.getTime() - from.getTime()) / DAY_MS);
-      if (days >= 1 && days <= 366) return build("custom", from, to, days);
+      if (days >= 1 && days <= 366) return build("custom", from, to, days, false);
     }
-    return resolvePeriod({ p: "30" }, now);
+    return { ...resolvePeriod({ p: "30" }, now), fellBack: true };
   }
   const days = Number(key);
-  const todayStart = tunisMidnight(tunisDay(now))!;
   const from = new Date(todayStart.getTime() - (days - 1) * DAY_MS);
-  return build(key, from, now, days);
+  return build(key, from, now, days, false);
 }
 
-function build(key: PeriodKey, from: Date, to: Date, days: number): Period {
+function build(key: PeriodKey, from: Date, to: Date, days: number, fellBack: boolean): Period {
   const length = to.getTime() - from.getTime();
   const prevTo = from;
   const prevFrom = new Date(from.getTime() - length);
   return {
-    key, from, to, prevFrom, prevTo, days,
+    key, from, to, prevFrom, prevTo, days, fellBack,
     fromDay: tunisDay(from),
     toDay: tunisDay(new Date(to.getTime() - 1)),
   };

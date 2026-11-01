@@ -317,6 +317,7 @@ export default async function LandingPage({
             href={explore.href}
             seeAllLabel={t("home.seeAll")}
           />
+          <Impressions ids={explore.rows.map((a) => a.id)} surface="home_explore" />
           <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 px-4">
             {explore.rows.map((a) => (
               <AnnonceCard
@@ -327,7 +328,6 @@ export default async function LandingPage({
                 sizes="45vw"
               />
             ))}
-            <Impressions ids={explore.rows.map((a) => a.id)} surface="home_explore" />
           </div>
         </section>
       )}

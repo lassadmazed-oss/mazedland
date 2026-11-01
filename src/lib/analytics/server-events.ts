@@ -1,20 +1,24 @@
 import { createHash } from "node:crypto";
-import type { NextRequest } from "next/server";
+import { after, type NextRequest } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
+import { TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
 import { cleanParams, cleanPath, EVENT_NAME_PATTERN, isUuid, MAX_BATCH, type EventName, type QueuedEvent } from "./events";
 
 /**
  * The server side of the site's own count (0204 site_events).
  *
- * `recordServerEvents` is what /api/events calls with a browser's batch;
+ * `rowsFromBatch` turns what /api/events received into rows;
  * `recordServerEvent` is for a route that knows a fact the browser does not
  * send twice — a sign-up, a login, a receipt handed in — so it is counted
  * once, from the server, whatever the browser did.
  *
  * Nothing personal lands in the table: the browser string becomes a device
  * class, the address a key that changes every day (salted and hashed), and
- * the path loses its query string. Every insert is fire-and-forget.
+ * the path loses its query string. What the aggregations group or cast is
+ * checked here — a governorate off the list, a deal that is neither sale nor
+ * rent, a result count that is not a number, are dropped from the event.
+ * Every insert is fire-and-forget.
  */
 const eLog = log.scope("events");
 
@@ -39,7 +43,7 @@ export function localeOf(path: string | null | undefined): "fr" | "ar" | null {
 /**
  * A visitor's key for one day: the address and the browser, salted with a
  * server secret and the day, hashed. The same person is the same key until
- * midnight (UTC) and nobody can turn it back into an address.
+ * midnight and nobody can turn it back into an address.
  */
 export function dailyVisitorKey(ip: string, ua: string | null | undefined, day: string, salt: string): string {
   const h = createHash("sha256").update(`${salt}:${day}:${ip}:${ua ?? ""}`).digest("base64url");
@@ -69,6 +73,28 @@ export function readBatch(body: unknown): { cid: string | null; events: QueuedEv
   return { cid, events };
 }
 
+const GOVERNORATES: ReadonlySet<string> = new Set(TUNISIAN_GOVERNORATES);
+const MAX_RESULTS = 1_000_000;
+
+/**
+ * The parameters the aggregations group or cast, checked: `results` a whole
+ * number (0 to a million), `gov` a governorate of the list, `deal` sale or
+ * rent, `cat` a category slug when the list is known. An unknown value is
+ * dropped; the event stays. Pure.
+ */
+export function cleanServerParams(params: QueuedEvent["p"], categories?: ReadonlySet<string>): QueuedEvent["p"] {
+  const out: QueuedEvent["p"] = { ...params };
+  if ("results" in out) {
+    const n = Number(out.results);
+    if (Number.isInteger(n) && n >= 0 && n <= MAX_RESULTS) out.results = n;
+    else delete out.results;
+  }
+  if ("gov" in out && !(typeof out.gov === "string" && GOVERNORATES.has(out.gov))) delete out.gov;
+  if ("deal" in out && out.deal !== "sale" && out.deal !== "rent") delete out.deal;
+  if ("cat" in out && categories && !(typeof out.cat === "string" && categories.has(out.cat))) delete out.cat;
+  return out;
+}
+
 export type EventRow = {
   name: string;
   listing_id: string | null;
@@ -85,7 +111,7 @@ export type EventRow = {
 /** A batch's events as rows, with the server-side facts filled in. Pure. */
 export function rowsFromBatch(
   events: readonly QueuedEvent[],
-  ctx: { userId: string | null; visitorKey: string | null; device: Device; now: number },
+  ctx: { userId: string | null; visitorKey: string | null; device: Device; now: number; categories?: ReadonlySet<string> },
 ): EventRow[] {
   return events.map((e) => ({
     name: e.n,
@@ -96,7 +122,7 @@ export function rowsFromBatch(
     locale: localeOf(e.path),
     device: ctx.device,
     path: cleanPath(e.path ?? "/"),
-    params: cleanParams(e.p),
+    params: cleanServerParams(cleanParams(e.p), ctx.categories),
     // `t` is how long before the batch left the browser; 0 is the send itself.
     created_at: new Date(ctx.now - Math.min(Math.max(0, Number(e.t) || 0), 600_000)).toISOString(),
   }));
@@ -109,6 +135,18 @@ export async function insertEventRows(rows: readonly EventRow[]): Promise<void> 
   if (!admin) return;
   const { error } = await admin.from("site_events").insert(rows as EventRow[]);
   if (error) eLog.warn(`insert failed: ${error.message}`);
+}
+
+/**
+ * Runs the insert once the response is out, so the function is not frozen
+ * before the row lands — `after()` inside a request, a plain promise elsewhere.
+ */
+function later(work: () => Promise<void>): void {
+  try {
+    after(work);
+  } catch {
+    void work();
+  }
 }
 
 /**
@@ -143,7 +181,7 @@ export function recordServerEvent(
     locale: localeOf(path),
     device,
     path: path ? cleanPath(path) : null,
-    params: cleanParams(input.params),
+    params: cleanServerParams(cleanParams(input.params)),
   };
-  void insertEventRows([row]);
+  later(() => insertEventRows([row]));
 }

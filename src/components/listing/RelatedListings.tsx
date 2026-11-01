@@ -208,6 +208,7 @@ export async function RelatedListings({
       {/* A phone scrolls sideways through them; a desktop has the room to lay
           them out and should use it. */}
       <div className="mt-4 lg:hidden">
+        <Impressions ids={scored.map((r) => r.id)} surface="related" />
         <TrendingRail>
           {scored.map((r) => (
             <div key={r.id} className="w-[240px] shrink-0 snap-start">
@@ -215,15 +216,14 @@ export async function RelatedListings({
             </div>
           ))}
           <div className="w-1 shrink-0" />
-          <Impressions ids={scored.map((r) => r.id)} surface="related" />
         </TrendingRail>
       </div>
 
+      <Impressions ids={scored.map((r) => r.id)} surface="related" />
       <div className="mt-5 hidden gap-5 lg:grid lg:grid-cols-4">
         {scored.map((r) => (
           <Card key={r.id} listing={r} badged={badged.has(r.seller_id)} locale={locale} />
         ))}
-        <Impressions ids={scored.map((r) => r.id)} surface="related" />
       </div>
     </section>
   );

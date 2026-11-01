@@ -6,13 +6,19 @@ import type { Period } from "@/lib/analytics/period";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
 import { BarList, Bars } from "../Charts";
-import { Card, Facts, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
+import { Card, ErrorNote, errorText, Facts, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
 
 /** Pro & revenue: the agences by plan, the money in, the documents, the offers. */
 export async function ProRevenue({ admin, period, locale }: { admin: SupabaseClient; period: Period; settings: Settings; locale: string }) {
   const t = await getTranslations("adminAnalytics");
   const f = formatters(locale, t("common.tnd"));
-  const [p, series] = await Promise.all([q.pro(admin, period), q.series(admin, period)]);
+  let data: [q.Pro, q.DayPoint[]];
+  try {
+    data = await Promise.all([q.pro(admin, period), q.series(admin, period)]);
+  } catch (e) {
+    return <ErrorNote text={t("error", { message: errorText(e) })} />;
+  }
+  const [p, series] = data;
   const row = (key: string, cells: Record<string, React.ReactNode>, csv: (string | number | null)[]): TableRow => ({ _key: key, _csv: csv, ...cells });
   const planName = (x: { name_fr: string; name_ar: string | null }) => (locale === "ar" && x.name_ar ? x.name_ar : x.name_fr);
   const label = (ns: string, k: string) => (t.has(`pro.${ns}.${k}`) ? t(`pro.${ns}.${k}`) : k);
@@ -48,7 +54,7 @@ export async function ProRevenue({ admin, period, locale }: { admin: SupabaseCli
 
       <Section title={t("kpi.revenue")} hint={t("charts.daily")}>
         <Card>
-          <Bars labels={series.map((d) => f.day(d.day))} values={series.map((d) => d.revenue)} format={f.n} />
+          <Bars label={`${t("kpi.revenue")} · ${t("charts.daily")}`} labels={series.map((d) => f.day(d.day))} values={series.map((d) => d.revenue)} format={f.n} />
         </Card>
       </Section>
 

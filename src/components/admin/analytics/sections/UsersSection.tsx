@@ -6,13 +6,18 @@ import { rate, retention } from "@/lib/analytics/shape";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
 import { BarList, StackedBars } from "../Charts";
-import { Card, Facts, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
+import { Card, ErrorNote, errorText, Facts, Grid, KpiTile, Section, Table, type TableRow } from "../ui";
 
 /** The accounts: who signs up, from where, and whether they come back. */
 export async function UsersSection({ admin, period, locale }: { admin: SupabaseClient; period: Period; settings: Settings; locale: string }) {
   const t = await getTranslations("adminAnalytics");
   const f = formatters(locale, t("common.tnd"));
-  const u = await q.users(admin, period);
+  let u: q.Users;
+  try {
+    u = await q.users(admin, period);
+  } catch (e) {
+    return <ErrorNote text={t("error", { message: errorText(e) })} />;
+  }
   const row = (key: string, cells: Record<string, React.ReactNode>, csv: (string | number | null)[]): TableRow => ({ _key: key, _csv: csv, ...cells });
   const name = (ns: "locales" | "devices" | "roles", k: string) => (t.has(`users.${ns}.${k}`) ? t(`users.${ns}.${k}`) : k);
   const consentRate = rate(u.consent.granted, u.consent.granted + u.consent.denied);
@@ -32,7 +37,7 @@ export async function UsersSection({ admin, period, locale }: { admin: SupabaseC
       <Section title={t("users.byDay")}>
         <Card>
           {u.signups_by_day.length === 0 ? <p className="text-[13px] text-muted">{t("common.empty")}</p> : (
-            <StackedBars labels={u.signups_by_day.map((d) => f.day(d.day))} stacks={[{ name: t("users.cols.fr"), values: u.signups_by_day.map((d) => d.fr) }, { name: t("users.cols.ar"), values: u.signups_by_day.map((d) => d.ar) }, { name: t("users.cols.other"), values: u.signups_by_day.map((d) => d.other) }]} format={f.n} />
+            <StackedBars label={t("users.byDay")} labels={u.signups_by_day.map((d) => f.day(d.day))} stacks={[{ name: t("users.cols.fr"), values: u.signups_by_day.map((d) => d.fr) }, { name: t("users.cols.ar"), values: u.signups_by_day.map((d) => d.ar) }, { name: t("users.cols.other"), values: u.signups_by_day.map((d) => d.other) }]} format={f.n} />
           )}
         </Card>
       </Section>

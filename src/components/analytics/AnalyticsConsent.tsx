@@ -4,13 +4,29 @@ import { useTranslations } from "next-intl";
 import { BarChart3 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { writeConsent, type Consent } from "@/lib/analytics/ga";
-import { trackEvent } from "@/lib/analytics/events";
+import { forgetClientId, trackEvent } from "@/lib/analytics/events";
+import { useSetting } from "@/components/settings/SettingsProvider";
 import { useAnalytics } from "./GoogleAnalytics";
 
-/** The answer, kept, and counted (a no reaches Google never, the site's count only when it counts everyone). */
+/**
+ * The answer, kept. A yes is counted; a no is not (nothing may leave after
+ * it) and drops the browser's id, so a later yes is a new visitor.
+ */
 function answer(v: Consent) {
   writeConsent(v);
-  trackEvent("consent", { answer: v });
+  if (v === "granted") trackEvent("consent", { answer: "granted" });
+  else forgetClientId();
+}
+
+/**
+ * Whether there is something to accept or refuse: Google switched on with an
+ * ID, or the site's own count waiting for the yes (analytics_events_consent).
+ */
+function useNeedsAnswer(): boolean {
+  const { active, askConsent } = useAnalytics();
+  const eventsOn = useSetting("analytics_events_enabled");
+  const eventsWait = useSetting("analytics_events_consent");
+  return active || (eventsOn && eventsWait && askConsent);
 }
 
 /**
@@ -22,8 +38,9 @@ function answer(v: Consent) {
  */
 export function AnalyticsConsentBar() {
   const t = useTranslations("analyticsConsent");
-  const { active, askConsent, consent } = useAnalytics();
-  if (!active || !askConsent || consent !== null) return null;
+  const { askConsent, consent } = useAnalytics();
+  const needsAnswer = useNeedsAnswer();
+  if (!needsAnswer || !askConsent || consent !== null) return null;
 
   return (
     <div
@@ -67,8 +84,11 @@ export function AnalyticsConsentBar() {
  */
 export function AnalyticsChoice() {
   const t = useTranslations("analyticsConsent");
-  const { active, askConsent, consent, allowed, known } = useAnalytics();
-  if (!active || !known) return null;
+  const { active, askConsent, consent, allowed: gaAllowed, known } = useAnalytics();
+  const needsAnswer = useNeedsAnswer();
+  if (!needsAnswer || !known) return null;
+  // With Google off, the site's own count is what the answer governs.
+  const allowed = active ? gaAllowed : askConsent ? consent === "granted" : consent !== "denied";
 
   const status =
     consent === "granted"

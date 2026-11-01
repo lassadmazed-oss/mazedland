@@ -16,13 +16,28 @@ API with a service account: `GA4_SERVICE_ACCOUNT_JSON` in the environment
 settings; `src/lib/analytics/ga4-data.ts`, cached in `analytics_cache` for
 `analytics_ga_cache_minutes`.
 
-## 2. The site's own count (`site_events`, migration 0204)
+## 2. The site's own count (`site_events`, migrations 0204 and 0206)
 
 `src/lib/analytics/events.ts` → `POST /api/events` (batches of 25, sent by
 `sendBeacon`) → `public.site_events`, append-only, pruned nightly after
-`analytics_events_days`. Switched by `analytics_events_enabled`; waits for the
-visitor's yes when `analytics_events_consent` is on. One browser may send
-`analytics_events_per_hour` events an hour.
+`analytics_events_days`. Switched by `analytics_events_enabled`.
+
+**Consent.** `analytics_events_consent` is on by default: while the consent
+card is asked (`analytics_ask_consent`), nothing leaves the browser before
+the visitor's « Accepter », and the card shows even with Google switched
+off. A « Refuser » sends nothing and drops the browser's id. The owner can
+switch `analytics_events_consent` off to count everyone pseudonymously (a
+daily key, no cookie, no id).
+
+One browser (address + user agent) may send `analytics_events_per_hour`
+events an hour (`check_rate_limit_n`, 0206). The server keeps only what the
+aggregations can group: `results` a whole number, `gov` a governorate of the
+list, `deal` sale or rent, `cat` a known category slug; anything else is
+dropped from the event. `listing_id` / `shop_id` are uuids the browser sent,
+not verified against the tables (inherent to a public beacon): the counts
+per annonce and per agence in the Demande tab come from them, while the
+real `listing_views`, `contact_reveals`, `visit_requests` and `watchlist`
+tables stay untouched by this layer.
 
 A visitor is `u:<account id>` when signed in, `c:<random id>` when they
 accepted analytics (the browser keeps the id in `localStorage` as

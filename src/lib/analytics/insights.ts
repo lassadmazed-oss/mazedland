@@ -43,6 +43,10 @@ export type Insight = {
 export type InsightRules = {
   /** analytics_mover_min_percent */
   moverMinPercent: number;
+  /** analytics_mover_min_count: one of the two weeks must reach it (two to three is no news). */
+  moverMinCount: number;
+  /** analytics_baseline_weeks: the weeks a figure is compared with, for the sentence. */
+  baselineWeeks: number;
   /** analytics_anomaly_sigma */
   anomalySigma: number;
   /** analytics_zero_search_min */
@@ -58,6 +62,9 @@ export type InsightRules = {
   /** How many insights at most. */
   limit: number;
 };
+
+/** Fewer lived-in weeks than this say nothing about a habit. */
+export const MIN_BASELINE_WEEKS = 4;
 
 /** The KPIs the movers and anomalies watch, in the order they are reported. */
 export const WATCHED_KPIS = [
@@ -112,7 +119,7 @@ export function buildInsights(input: InsightInput): Insight[] {
     const pct = Math.round(((cur - prev) / prev) * 100);
     if (Math.abs(pct) < rules.moverMinPercent) continue;
     // A move from two to three is not news.
-    if (Math.max(cur, prev) < 5) continue;
+    if (Math.max(cur, prev) < rules.moverMinCount) continue;
     out.push({
       kind: pct > 0 ? "mover_up" : "mover_down",
       tone: pct > 0 ? "good" : "warn",
@@ -123,9 +130,15 @@ export function buildInsights(input: InsightInput): Insight[] {
     });
   }
 
-  // Anomalies: the latest week against its 8-week baseline.
+  // Anomalies: the latest week against its baseline. The weeks before the
+  // site counted anything are exact zeros, not a habit: the leading ones are
+  // dropped, and a figure with fewer than four lived-in weeks is not judged.
   for (const key of WATCHED_KPIS) {
-    const stats = meanAndSd(input.baseline.map((w) => Number(w[key] ?? 0)));
+    const history = input.baseline.map((w) => Number(w[key] ?? 0));
+    const firstLive = history.findIndex((v) => v > 0);
+    const lived = firstLive < 0 ? [] : history.slice(firstLive);
+    if (lived.filter((v) => v > 0).length < MIN_BASELINE_WEEKS) continue;
+    const stats = meanAndSd(lived);
     if (!stats || stats.sd === 0) continue;
     const cur = Number(input.thisWeek[key] ?? 0);
     const z = (cur - stats.mean) / stats.sd;
@@ -135,7 +148,7 @@ export function buildInsights(input: InsightInput): Insight[] {
       kind: z > 0 ? "anomaly_high" : "anomaly_low",
       tone: z > 0 ? "good" : "bad",
       subject: key,
-      values: { value: cur, mean: Math.round(stats.mean), sigma: Math.round(Math.abs(z) * 10) / 10 },
+      values: { value: cur, mean: Math.round(stats.mean), sigma: Math.round(Math.abs(z) * 10) / 10, weeks: lived.length },
       href: `${HREF.analytics}?p=90`,
       weight: 60 + Math.min(40, Math.abs(z) * 10),
     });
@@ -178,7 +191,7 @@ export function buildInsights(input: InsightInput): Insight[] {
       tone: "bad",
       subject: a.id,
       values: { name: a.name, rate, hours: rules.reactive.hours, late: a.late, avgHours: a.avg_hours ?? 0 },
-      href: `${HREF.agences}?q=${encodeURIComponent(a.slug)}`,
+      href: `${HREF.agences}?id=${encodeURIComponent(a.id)}`,
       weight: 50 + (rules.reactive.minRate - rate),
     });
   }
@@ -192,7 +205,8 @@ export function buildInsights(input: InsightInput): Insight[] {
       tone: "warn",
       subject: g.gov,
       values: { gov: g.gov, searches: g.searches, demandes: g.demandes, online: g.online },
-      href: `${HREF.demandes}?gov=${encodeURIComponent(g.gov)}`,
+      // The annonces of that governorate, online: what there is to offer.
+      href: `${HREF.listings}?status=published&gov=${encodeURIComponent(g.gov)}`,
       weight: 35 + Math.min(40, demand / 2),
     });
   }
@@ -214,23 +228,27 @@ export function buildInsights(input: InsightInput): Insight[] {
 export function insightRules(
   s: {
     analytics_mover_min_percent: number;
+    analytics_mover_min_count: number;
+    analytics_baseline_weeks: number;
     analytics_anomaly_sigma: number;
     analytics_zero_search_min: number;
     analytics_no_contact_min_views: number;
     analytics_gov_demand_min: number;
     analytics_gov_low_supply: number;
+    analytics_insights_limit: number;
   },
   reactive: ReactiveRules,
-  limit = 8,
 ): InsightRules {
   return {
     moverMinPercent: s.analytics_mover_min_percent,
+    moverMinCount: s.analytics_mover_min_count,
+    baselineWeeks: s.analytics_baseline_weeks,
     anomalySigma: s.analytics_anomaly_sigma,
     zeroSearchMin: s.analytics_zero_search_min,
     noContactMinViews: s.analytics_no_contact_min_views,
     govDemandMin: s.analytics_gov_demand_min,
     govLowSupply: s.analytics_gov_low_supply,
     reactive,
-    limit,
+    limit: s.analytics_insights_limit,
   };
 }

@@ -5630,7 +5630,7 @@
     },
     "analytics_events_consent": {
       "label": "Attendre le oui du visiteur",
-      "hint": "Activé : le compte du site attend aussi la réponse « Accepter » quand elle est demandée. Désactivé : il compte tout le monde, avec une clé qui change chaque jour (pas de cookie)."
+      "hint": "Activé (par défaut) : rien ne part du navigateur avant « Accepter » quand la réponse est demandée. Désactivé : le site compte tout le monde, de façon pseudonyme, avec une clé qui change chaque jour et sans cookie."
     },
     "analytics_events_days": {
       "label": "Conservation des événements",
@@ -5658,7 +5658,7 @@
     },
     "analytics_anomaly_sigma": {
       "label": "Seuil d'anomalie (écarts-types)",
-      "hint": "Un chiffre de la semaine éloigné de la moyenne des 8 semaines précédentes d'autant d'écarts-types est signalé."
+      "hint": "Un chiffre de la semaine éloigné de la moyenne des semaines de référence d'autant d'écarts-types est signalé."
     },
     "analytics_mover_min_percent": {
       "label": "Variation à signaler",
@@ -5679,6 +5679,18 @@
     "analytics_gov_low_supply": {
       "label": "… avec peu d'annonces",
       "hint": "… et qui a moins d'annonces en ligne que ce nombre manque d'offre : c'est signalé."
+    },
+    "analytics_insights_limit": {
+      "label": "Phrases dans « À retenir »",
+      "hint": "Combien de constats la page montre au plus, les plus importants d'abord."
+    },
+    "analytics_baseline_weeks": {
+      "label": "Semaines de référence",
+      "hint": "Les semaines précédentes auxquelles le chiffre de la semaine est comparé pour repérer une anomalie."
+    },
+    "analytics_mover_min_count": {
+      "label": "Minimum pour une variation",
+      "hint": "Une variation n'est signalée que si l'une des deux semaines atteint ce nombre : passer de deux à trois n'est pas une nouvelle."
     }
   },
   "ads": {
@@ -6294,7 +6306,8 @@
       "to": "Au",
       "apply": "Appliquer",
       "compared": "comparé aux {days} jours précédents",
-      "range": "du {from} au {to}"
+      "range": "du {from} au {to}",
+      "fallback": "Les dates demandées n'ont pas pu être lues (inversées, dans le futur ou plus d'un an) : les 30 derniers jours sont affichés."
     },
     "tabs": {
       "label": "Parties des statistiques",
@@ -6373,8 +6386,8 @@
       "empty": "Rien d'inhabituel cette semaine : les chiffres suivent leur cours.",
       "mover_up": "{metric} : {value} cette semaine, +{pct} % par rapport à la précédente ({previous}).",
       "mover_down": "{metric} : {value} cette semaine, −{pct} % par rapport à la précédente ({previous}).",
-      "anomaly_high": "{metric} : {value}, bien au-dessus de l'habitude des 8 dernières semaines ({mean} en moyenne, {sigma} écarts-types).",
-      "anomaly_low": "{metric} : {value}, bien en dessous de l'habitude des 8 dernières semaines ({mean} en moyenne, {sigma} écarts-types).",
+      "anomaly_high": "{metric} : {value}, bien au-dessus de l'habitude des {weeks} dernières semaines ({mean} en moyenne, {sigma} écarts-types).",
+      "anomaly_low": "{metric} : {value}, bien en dessous de l'habitude des {weeks} dernières semaines ({mean} en moyenne, {sigma} écarts-types).",
       "zero_search": "« {query} » cherché {count} fois sans résultat : une catégorie, un lieu ou une orthographe à ajouter.",
       "no_contact": "{title} ({reference}) : {views} vues et aucun contact. Prix ou photos à revoir.",
       "slow_agence": "{name} répond à {rate} % des demandes de visite en moins de {hours} h ({late} en attente). Sous la barre du badge « Agence réactive ».",

@@ -10,7 +10,7 @@ import { funnelSteps, pick, rate } from "@/lib/analytics/shape";
 import * as q from "@/lib/analytics/queries";
 import { formatters } from "../format";
 import { Funnel, LineChart } from "../Charts";
-import { Card, Grid, KpiTile, Section } from "../ui";
+import { Card, ErrorNote, errorText, Grid, KpiTile, Section } from "../ui";
 
 /**
  * The first tab: what to retain, the figures of the period against the
@@ -19,15 +19,22 @@ import { Card, Grid, KpiTile, Section } from "../ui";
 export async function Overview({ admin, period, settings, locale }: { admin: SupabaseClient; period: Period; settings: Settings; locale: string }) {
   const t = await getTranslations("adminAnalytics");
   const f = formatters(locale, t("common.tnd"));
-  const [cur, prev, series, weeks, market, demand, pro] = await Promise.all([
-    q.kpis(admin, period.from, period.to),
-    q.kpis(admin, period.prevFrom, period.prevTo),
-    q.series(admin, period),
-    q.weekly(admin, period.to, 10),
-    q.marketplace(admin, period, settings.analytics_expiring_days),
-    q.demand(admin, period, settings.analytics_top_limit, settings.reactive_hours),
-    q.pro(admin, period),
-  ]);
+  let data: [q.Kpis, q.Kpis, q.DayPoint[], q.WeekPoint[], q.Marketplace, q.Demand, q.Pro];
+  try {
+    data = await Promise.all([
+      q.kpis(admin, period.from, period.to),
+      q.kpis(admin, period.prevFrom, period.prevTo),
+      q.series(admin, period),
+      // The latest week, the one before, and the baseline weeks behind them.
+      q.weekly(admin, period.to, settings.analytics_baseline_weeks + 2),
+      q.marketplace(admin, period, settings.analytics_expiring_days),
+      q.demand(admin, period, settings.analytics_top_limit, settings.reactive_hours),
+      q.pro(admin, period),
+    ]);
+  } catch (e) {
+    return <ErrorNote text={t("error", { message: errorText(e) })} />;
+  }
+  const [cur, prev, series, weeks, market, demand, pro] = data;
 
   // ── Insights ──
   const thisWeek = weeks[weeks.length - 1] ?? {};
@@ -42,7 +49,7 @@ export async function Overview({ admin, period, settings, locale }: { admin: Sup
     expiring: market.quality.expiring,
     pendingPayments: pro.pending_now,
     noPhoto: market.quality.no_photo,
-    rules: insightRules(settings, reactiveRules(settings), 8),
+    rules: insightRules(settings, reactiveRules(settings)),
   });
   const sentence = (i: Insight): string => {
     const v: Record<string, string | number> = {};
@@ -147,13 +154,13 @@ export async function Overview({ admin, period, settings, locale }: { admin: Sup
           <Card>
             <p className="text-[12px] font-semibold text-muted">{t("kpi.visitors")} · {t("kpi.page_views")}</p>
             <div className="mt-2">
-              <LineChart labels={days} series={[{ name: t("kpi.page_views"), values: spark("page_views") }, { name: t("kpi.visitors"), values: spark("visitors"), muted: true }]} format={f.n} />
+              <LineChart label={`${t("kpi.visitors")} · ${t("kpi.page_views")}`} labels={days} series={[{ name: t("kpi.page_views"), values: spark("page_views") }, { name: t("kpi.visitors"), values: spark("visitors"), muted: true }]} format={f.n} />
             </div>
           </Card>
           <Card>
             <p className="text-[12px] font-semibold text-muted">{t("kpi.listing_views")} · {t("kpi.reveals")}</p>
             <div className="mt-2">
-              <LineChart labels={days} series={[{ name: t("kpi.listing_views"), values: spark("listing_views") }, { name: t("kpi.reveals"), values: spark("reveals"), muted: true }]} format={f.n} />
+              <LineChart label={`${t("kpi.listing_views")} · ${t("kpi.reveals")}`} labels={days} series={[{ name: t("kpi.listing_views"), values: spark("listing_views") }, { name: t("kpi.reveals"), values: spark("reveals"), muted: true }]} format={f.n} />
             </div>
           </Card>
         </Grid>
@@ -161,7 +168,7 @@ export async function Overview({ admin, period, settings, locale }: { admin: Sup
 
       <Section title={t("overview.funnelTitle")} hint={t("marketplace.funnelNote", { abandoned: f.n(market.funnel.abandoned), drafts: f.n(market.funnel.drafts) })}>
         <Card>
-          <Funnel steps={steps.map((s) => ({ label: t(`marketplace.funnelSteps.${s.key}`), value: f.n(s.value), share: s.share, drop: s.drop === null ? null : t("marketplace.drop", { pct: s.drop }) }))} />
+          <Funnel label={t("overview.funnelTitle")} steps={steps.map((s) => ({ label: t(`marketplace.funnelSteps.${s.key}`), value: f.n(s.value), share: s.share, drop: s.drop === null ? null : t("marketplace.drop", { pct: s.drop }) }))} />
         </Card>
       </Section>
     </>

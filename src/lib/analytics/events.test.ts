@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   EVENT_NAMES,
   EVENT_NAME_PATTERN,
+  MAX_PARAM_BYTES,
   buildBatch,
   cleanParams,
   cleanPath,
@@ -15,7 +16,7 @@ import {
   trackEvent,
   trackImpressions,
 } from "./events";
-import { dailyVisitorKey, deviceOf, localeOf, readBatch, rowsFromBatch } from "./server-events";
+import { cleanServerParams, dailyVisitorKey, deviceOf, localeOf, readBatch, rowsFromBatch } from "./server-events";
 
 describe("the names", () => {
   it("are all of the shape the table accepts, each once", () => {
@@ -41,7 +42,10 @@ describe("what an event may carry", () => {
 
   it("stops before the size cap", () => {
     const big = Object.fromEntries(Array.from({ length: 60 }, (_, i) => [`k${i}`, "x".repeat(90)]));
-    expect(JSON.stringify(cleanParams(big)).length).toBeLessThanOrEqual(2000);
+    expect(JSON.stringify(cleanParams(big)).length).toBeLessThanOrEqual(MAX_PARAM_BYTES);
+    // Sixty annonce ids fit: a catalogue page holds that many.
+    const ids = Array.from({ length: 60 }, (_, i) => `2eeeed01-2ea2-411b-9279-6a8b368264${String(i).padStart(2, "0")}`);
+    expect(cleanParams({ surface: "catalogue", ids }).ids).toHaveLength(60);
   });
 
   it("gives Google lists as text", () => {
@@ -200,10 +204,23 @@ describe("the server side", () => {
     expect(dailyVisitorKey("41.230.1.1", "UA", "2026-11-01", "salt")).toBe(k1);
   });
 
+  it("keeps only what the aggregations can group or cast", () => {
+    expect(cleanServerParams({ results: "x" })).toEqual({});
+    expect(cleanServerParams({ results: 1.5 })).toEqual({});
+    expect(cleanServerParams({ results: 3e9 })).toEqual({});
+    expect(cleanServerParams({ results: "12" })).toEqual({ results: 12 });
+    expect(cleanServerParams({ results: 0, gov: "Sfax", deal: "rent" })).toEqual({ results: 0, gov: "Sfax", deal: "rent" });
+    expect(cleanServerParams({ gov: "Atlantis", deal: "swap", q: "villa" })).toEqual({ q: "villa" });
+    expect(cleanServerParams({ cat: "villas" }, new Set(["villas"]))).toEqual({ cat: "villas" });
+    expect(cleanServerParams({ cat: "yachts" }, new Set(["villas"]))).toEqual({});
+    // Without the list, a category is kept as sent (the route passes the list when a batch names one).
+    expect(cleanServerParams({ cat: "yachts" })).toEqual({ cat: "yachts" });
+  });
+
   it("turns a batch into rows with the server's facts and the events' timing", () => {
     const rows = rowsFromBatch(
       [
-        { n: "search", p: { q: "villa 20 123 456", results: 3 }, t: 2_000, path: "/ar/annonces?q=villa", listing: "x" },
+        { n: "search", p: { q: "villa 20 123 456", results: 3, gov: "Nowhere" }, t: 2_000, path: "/ar/annonces?q=villa", listing: "x" },
         { n: "listing_view", p: {}, t: 0, path: "/fr/annonces/abc", listing: "2eeeed01-2ea2-411b-9279-6a8b36826475" },
       ],
       { userId: null, visitorKey: "a:k", device: "phone", now: Date.parse("2026-11-01T12:00:00.000Z") },

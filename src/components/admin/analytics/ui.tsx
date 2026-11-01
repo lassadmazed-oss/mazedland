@@ -35,6 +35,20 @@ export function Empty({ text }: { text: string }) {
   return <p className="rounded-2xl border border-dashed border-border px-4 py-6 text-center text-[12.5px] text-muted">{text}</p>;
 }
 
+/** A section whose figures could not be read: said in its place, the rest of the page intact. */
+export function ErrorNote({ text }: { text: string }) {
+  return (
+    <p role="alert" className="mt-6 rounded-2xl bg-[var(--tone-bad-bg)] px-4 py-3 text-[12.5px] font-semibold text-[var(--tone-bad)] ring-1 ring-[var(--tone-bad-ring)]">
+      {text}
+    </p>
+  );
+}
+
+/** What went wrong, in a sentence, for the note. */
+export function errorText(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 /** A figure, its label, its change against the previous period and its days. */
 export function KpiTile({
   label,
@@ -67,7 +81,7 @@ export function KpiTile({
       <p className="truncate text-[11.5px] font-semibold text-muted">{label}</p>
       <div className="mt-1 flex items-end justify-between gap-2">
         <p className="mazed-tabular text-[24px] font-extrabold leading-none text-foreground">{value}</p>
-        {spark && spark.length > 1 && <Sparkline values={spark} width={88} height={26} />}
+        {spark && spark.length > 1 && <Sparkline values={spark} width={88} height={26} label={label} />}
       </div>
       {delta !== undefined && (
         <p className={`mazed-tabular mt-1.5 inline-flex items-center gap-1 text-[11.5px] font-semibold ${tone}`}>

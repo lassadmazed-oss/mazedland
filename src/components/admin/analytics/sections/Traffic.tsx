@@ -39,7 +39,10 @@ export async function Traffic({ admin, period, settings, locale }: { admin: Supa
     <KpiTile label={label} value={format(cur)} delta={pctChange(cur, prev)} deltaLabel={t("common.previous")} formatDelta={f.delta} />
   );
   const row = (key: string, cells: Record<string, React.ReactNode>, csv: (string | number)[]): TableRow => ({ _key: key, _csv: csv, ...cells });
-  const refused = Object.keys(g.errors).filter((k) => k !== "searchTerms");
+  // The reports Google refused, named as the page names them.
+  const reportName = (k: string) =>
+    k === "totals" ? t("traffic.users") : k === "previous" ? t("common.previous") : k === "daily" ? t("charts.daily") : t.has(`traffic.${k}`) ? t(`traffic.${k}`) : k;
+  const refused = Object.keys(g.errors).filter((k) => k !== "searchTerms").map(reportName);
 
   return (
     <>
@@ -60,7 +63,7 @@ export async function Traffic({ admin, period, settings, locale }: { admin: Supa
         <Card className="mt-4">
           <p className="text-[12px] font-semibold text-muted">{t("charts.daily")}</p>
           <div className="mt-2">
-            <LineChart labels={g.daily.map((d) => f.day(d.day))} series={[{ name: t("traffic.pageViews"), values: g.daily.map((d) => d.pageViews) }, { name: t("traffic.users"), values: g.daily.map((d) => d.users), muted: true }]} format={f.n} />
+            <LineChart label={`${t("traffic.pageViews")} · ${t("traffic.users")}`} labels={g.daily.map((d) => f.day(d.day))} series={[{ name: t("traffic.pageViews"), values: g.daily.map((d) => d.pageViews) }, { name: t("traffic.users"), values: g.daily.map((d) => d.users), muted: true }]} format={f.n} />
           </div>
         </Card>
       )}

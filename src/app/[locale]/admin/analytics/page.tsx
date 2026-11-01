@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { getSettings } from "@/lib/settings/server";
 import { formatDate } from "@/lib/utils";
-import { periodQuery, resolvePeriod } from "@/lib/analytics/period";
+import { periodQuery, resolvePeriod, tunisDay } from "@/lib/analytics/period";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { PeriodPicker } from "@/components/admin/analytics/PeriodPicker";
 import { Overview } from "@/components/admin/analytics/sections/Overview";
@@ -54,11 +54,16 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
       <AdminPageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("description")} />
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <PeriodPicker current={period.key} fromDay={period.fromDay} toDay={period.toDay} tab={tab} />
+        <PeriodPicker current={period.key} fromDay={period.fromDay} toDay={period.toDay} today={tunisDay(new Date())} tab={tab} />
         <p className="mazed-tabular text-[12px] text-subtle">
           {range} · {t("period.compared", { days: period.days })}
         </p>
       </div>
+      {period.fellBack && (
+        <p role="status" className="mt-3 rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2 text-[12px] font-semibold text-[var(--tone-warn)] ring-1 ring-[var(--tone-warn-ring)]">
+          {t("period.fallback")}
+        </p>
+      )}
 
       <nav aria-label={t("tabs.label")} className="-mx-5 mt-4 flex items-center gap-4 overflow-x-auto border-b border-border px-5 lg:-mx-8 lg:px-8">
         {TABS.map((k) => (
