@@ -10,7 +10,8 @@
     "info": "Informations",
     "language": "Langue",
     "rights": "© {year} {name}. Tous droits réservés.",
-    "country": "Tunisie"
+    "country": "Tunisie",
+    "guides": "Guides pratiques"
   },
   "brand": {
     "name": "Mazed Immo",
@@ -71,7 +72,8 @@
       "partners": "Banques & agences",
       "sell": "Tableau du vendeur",
       "admin": "Console admin",
-      "payment": "Paiement"
+      "payment": "Paiement",
+      "guides": "Guides"
     },
     "mainNav": "Navigation principale",
     "offline": "Hors ligne — reconnexion automatique…",
@@ -2861,7 +2863,9 @@
       "ads": "Publicités",
       "adsHint": "Bannières des annonceurs : campagnes, vues, clics",
       "analytics": "Statistiques",
-      "analyticsHint": "Visiteurs, recherches, annonces, agences et revenus, en chiffres"
+      "analyticsHint": "Visiteurs, recherches, annonces, agences et revenus, en chiffres",
+      "content": "Guides",
+      "contentHint": "Articles et informations pratiques publiés sur le site"
     },
     "siteTabs": {
       "label": "Sections du site",
@@ -3398,7 +3402,21 @@
     "admin_shop_offer_plan": "Période offerte à une agence",
     "admin_shop_request_receipt": "Reçu d'une demande d'agence refusé",
     "admin_shop_request_fix": "Demande d'agence renvoyée pour correction",
-    "shop_import": "Annonces importées par une agence"
+    "shop_import": "Annonces importées par une agence",
+    "article_create": "Guide créé",
+    "admin_article_create": "Guide créé",
+    "article_update": "Guide modifié",
+    "admin_article_update": "Guide modifié",
+    "article_publish": "Guide publié",
+    "admin_article_publish": "Guide publié",
+    "article_unpublish": "Guide dépublié",
+    "admin_article_unpublish": "Guide dépublié",
+    "article_delete": "Guide supprimé",
+    "admin_article_delete": "Guide supprimé",
+    "article_import": "Guides de départ importés",
+    "admin_article_import": "Guides de départ importés",
+    "admin_article_upload": "Image de guide envoyée",
+    "admin_article_assist": "Aide à la rédaction utilisée"
   },
   "adminApi": {
     "bulk": {
@@ -5695,6 +5713,30 @@
     "analytics_mover_min_count": {
       "label": "Minimum pour une variation",
       "hint": "Une variation n'est signalée que si l'une des deux semaines atteint ce nombre : passer de deux à trois n'est pas une nouvelle."
+    },
+    "guides_enabled": {
+      "label": "Guides pratiques",
+      "hint": "La page /guides, le lien du pied de page et les bandeaux « Guides utiles » sous les annonces. Désactivé : rien ne se voit sur le site, les guides restent dans la console."
+    },
+    "guides_ai_assist": {
+      "label": "Aide à la rédaction (IA)",
+      "hint": "Dans l'éditeur de guides, un bouton rédige une section à relire. Rien n'est publié sans votre main."
+    },
+    "guides_per_page": {
+      "label": "Guides par page",
+      "hint": "Combien de guides une page de /guides affiche avant de passer à la suivante."
+    },
+    "guides_related_count": {
+      "label": "« Guides liés » sous un guide",
+      "hint": "Combien de guides voisins (mêmes thèmes) sont proposés à la fin d'un guide. 0 : aucun."
+    },
+    "guides_strip_count": {
+      "label": "« Guides utiles » sous les annonces",
+      "hint": "Combien de guides apparaissent sous une annonce et sous le catalogue, choisis selon vente / location et le type de bien. 0 : pas de bandeau."
+    },
+    "guides_toc_min": {
+      "label": "Sommaire à partir de",
+      "hint": "Un sommaire s'affiche quand le guide compte au moins ce nombre de titres. 0 : jamais."
     }
   },
   "ads": {
@@ -5895,7 +5937,7 @@
       },
       "content": {
         "label": "Contenu",
-        "hint": "Accueil, publicités, popups, diffusions, documents, catalogue, réseaux."
+        "hint": "Accueil, publicités, popups, diffusions, documents, catalogue, guides, réseaux."
       },
       "custom": {
         "label": "Sur mesure",
@@ -5918,7 +5960,8 @@
       "legal-docs": "Documents légaux",
       "catalogue": "Catalogue",
       "activity": "Journal d'activité",
-      "analytics": "Statistiques"
+      "analytics": "Statistiques",
+      "content": "Guides"
     },
     "members": {
       "title": "Membres de la console",
@@ -6798,6 +6841,238 @@
         "ar": "Arabe",
         "other": "Autre"
       }
+    }
+  },
+  "guides": {
+    "metaTitle": "Guides pratiques de l'immobilier en Tunisie",
+    "metaTitleTag": "Guides — {tag}",
+    "metaDescription": "Acheter, vendre ou louer un bien en Tunisie : les étapes, les documents, les frais, les pièges à éviter. Des guides clairs, écrits par Mazed Immo.",
+    "eyebrow": "Informations pratiques",
+    "title": "Guides",
+    "intro": "Acheter, vendre ou louer un bien en Tunisie, étape par étape : les documents à vérifier, les frais à prévoir, les erreurs à éviter. Des guides courts, écrits pour vous.",
+    "breadcrumb": "Fil d'Ariane",
+    "breadcrumbHome": "Accueil",
+    "tagFilterLabel": "Filtrer par thème",
+    "allTags": "Tous",
+    "tags": {
+      "acheter": "Acheter",
+      "vendre": "Vendre",
+      "louer": "Louer",
+      "financement": "Crédit & financement",
+      "juridique": "Juridique & notaire",
+      "promoteur": "Neuf & promoteurs",
+      "annonce": "Réussir son annonce",
+      "securite": "Sécurité",
+      "appartement": "Appartements",
+      "maison": "Maisons & villas",
+      "terrain": "Terrains",
+      "professionnel": "Locaux professionnels"
+    },
+    "readGuide": "Lire le guide",
+    "readMinutes": "{minutes, plural, one {# min de lecture} other {# min de lecture}}",
+    "publishedOn": "Publié le {date}",
+    "updatedOn": "Mis à jour le {date}",
+    "emptyTitle": "Pas encore de guide ici",
+    "emptyBody": "Les guides arrivent au fil des semaines. Revenez bientôt.",
+    "pagination": "Pages",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "notFound": "Guide introuvable",
+    "draftBanner": "Brouillon — visible seulement par l'équipe de la console. Publiez-le depuis « Guides » pour le mettre en ligne.",
+    "toc": "Sommaire",
+    "otherLanguage": {
+      "fr": "Ce guide n'existe qu'en français pour le moment.",
+      "ar": "Ce guide n'existe qu'en arabe pour le moment."
+    },
+    "cardLang": {
+      "fr": "En français",
+      "ar": "En arabe"
+    },
+    "related": {
+      "eyebrow": "Pour aller plus loin",
+      "title": "Guides liés"
+    },
+    "strip": {
+      "eyebrow": "Informations pratiques",
+      "title": "Guides utiles",
+      "all": "Tous les guides"
+    },
+    "cta": {
+      "buy": {
+        "title": "Prêt à chercher ?",
+        "body": "Des annonces vérifiées avant publication, partout en Tunisie : appartements, maisons, terrains, locaux.",
+        "button": "Voir les annonces à vendre"
+      },
+      "rent": {
+        "title": "Vous cherchez une location ?",
+        "body": "Appartements, maisons et studios à louer, avec le prix affiché et le propriétaire au bout du fil.",
+        "button": "Voir les annonces à louer"
+      },
+      "publish": {
+        "title": "Vous vendez ou louez un bien ?",
+        "body": "Publiez votre annonce en quelques minutes : vos photos, votre prix. Elle est vérifiée avant publication.",
+        "button": "Publier mon annonce"
+      }
+    }
+  },
+  "adminContent": {
+    "title": "Guides",
+    "unavailable": "Les guides sont indisponibles pour le moment.",
+    "summary": "{published, plural, =0 {Aucun guide en ligne} one {# guide en ligne} other {# guides en ligne}} · {total} au total",
+    "newGuide": "Nouveau guide",
+    "featureOff": "Les guides sont désactivés : la page /guides et les bandeaux ne se voient pas.",
+    "featureOffLink": "Activer dans les réglages",
+    "tabs": {
+      "all": "Tous",
+      "draft": "Brouillons",
+      "published": "En ligne"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "published": "En ligne"
+    },
+    "langs": {
+      "fr": "FR",
+      "ar": "AR"
+    },
+    "langState": {
+      "complete": "Complet : titre et texte",
+      "partial": "Commencé",
+      "empty": "Vide"
+    },
+    "emptyTitle": "Aucun guide pour l'instant",
+    "emptyHint": "Importez les guides de départ, ou écrivez le premier avec « Nouveau guide ».",
+    "emptyTab": "Aucun guide dans cet onglet.",
+    "pickOne": "Choisissez un guide dans la liste.",
+    "pickOneHint": "Ou créez-en un avec « Nouveau guide ».",
+    "updated": "Modifié le {date}",
+    "publishedOn": "Publié le {date}",
+    "import": {
+      "button": "{count, plural, =0 {Guides de départ importés} one {Importer # guide de départ} other {Importer les # guides de départ}}",
+      "buttonShort": "Importer",
+      "allDone": "Les guides de départ sont déjà tous importés.",
+      "confirmTitle": "Importer les guides de départ ?",
+      "confirmBody": "{count, plural, one {Un guide écrit pour la Tunisie arrive} other {# guides écrits pour la Tunisie arrivent}} en brouillon, en français et en arabe. Rien n'est publié : vous relisez chacun, vous le modifiez, puis vous le publiez.",
+      "confirm": "Importer en brouillon",
+      "done": "{imported, plural, =0 {Aucun guide importé} one {# guide importé} other {# guides importés}}{skipped, plural, =0 {} one { · # déjà présent} other { · # déjà présents}}."
+    },
+    "editor": {
+      "newTitle": "Nouveau guide",
+      "back": "Retour",
+      "language": "Langue",
+      "langTab": {
+        "fr": "Français",
+        "ar": "العربية"
+      },
+      "title": "Titre",
+      "titlePlaceholder": {
+        "fr": "Acheter un bien en Tunisie : les étapes",
+        "ar": "شراء عقار في تونس: الخطوات"
+      },
+      "slug": "Adresse",
+      "slugPlaceholder": "acheter-un-bien-les-etapes",
+      "slugInvalid": "Lettres minuscules, chiffres et tirets seulement (3 à 80 caractères).",
+      "excerpt": "Résumé",
+      "excerptHint": "Deux phrases, sous le titre et sur la carte.",
+      "excerptPlaceholder": {
+        "fr": "Ce qu'il faut savoir avant de signer…",
+        "ar": "ما يجب معرفته قبل الإمضاء…"
+      },
+      "body": "Texte",
+      "bodyHint": "Markdown : « ## » pour un titre de section, « - » pour une liste, « **gras** », « > » pour un encadré. Jamais de numéro de téléphone.",
+      "bodyPlaceholder": {
+        "fr": "## Les étapes\n\n1. …",
+        "ar": "## الخطوات\n\n1. …"
+      },
+      "preview": "Aperçu",
+      "hidePreview": "Masquer l'aperçu",
+      "previewEmpty": "L'aperçu s'affiche dès que vous écrivez.",
+      "tools": {
+        "h2": "Titre de section",
+        "bold": "Gras",
+        "list": "Liste",
+        "quote": "Encadré",
+        "link": "Lien",
+        "boldSample": "important",
+        "linkSample": "texte du lien"
+      },
+      "tags": "Thèmes",
+      "tagsHint": "Ce dont parle le guide. « Acheter », « Louer » et les types de bien décident aussi sous quelles annonces il apparaît.",
+      "cover": "Image de couverture",
+      "coverHint": "{width} × {height} px conseillé (16:9). JPG, PNG ou WebP, {max} Mo au plus. Facultative.",
+      "choose": "Choisir une image",
+      "replace": "Remplacer",
+      "remove": "Retirer",
+      "uploading": "Envoi…",
+      "uploadFailed": "L'image n'a pas pu être envoyée. Réessayez.",
+      "tooBig": "Image trop lourde : {max} Mo au plus.",
+      "badType": "JPG, PNG ou WebP seulement.",
+      "seo": "Référencement",
+      "seoHint": "Ce que Google affiche. Vide : le titre et le résumé servent.",
+      "seoTitle": "Titre pour Google",
+      "seoDescription": "Description pour Google",
+      "counter": "{n} / {max}",
+      "counterAdvice": "{n} / {max} · conseillé : {advice} au plus",
+      "assist": {
+        "button": "Aide à la rédaction",
+        "title": "Rédiger une section avec l'assistant",
+        "hint": "Un brouillon à relire : l'assistant écrit à partir du titre et de ce qui est déjà là, sans inventer de chiffre. Rien n'est publié sans vous.",
+        "heading": "Section",
+        "headingPlaceholder": "Ou tapez le titre de la section…",
+        "instructionPlaceholder": "Précisions (facultatif) : « pour un premier achat », « côté locataire »…",
+        "writeSection": "Rédiger la section",
+        "writeAll": "Rédiger tout le guide",
+        "pending": "Rédaction en cours…",
+        "inserted": "Brouillon inséré — relisez avant de publier.",
+        "failed": "L'assistant n'a pas répondu. Réessayez, ou écrivez la section.",
+        "needTitle": "Donnez d'abord un titre au guide.",
+        "needHeading": "Choisissez ou tapez le titre de la section.",
+        "close": "Fermer"
+      },
+      "create": "Créer le guide",
+      "save": "Enregistrer",
+      "publish": "Publier",
+      "unpublish": "Dépublier",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer ce guide ?",
+      "deleteBody": "Le guide disparaît du site et de la console. Le journal en garde la trace.",
+      "created": "Guide créé en brouillon.",
+      "saved": "Guide enregistré.",
+      "publishedToast": "Guide en ligne.",
+      "unpublishedToast": "Guide retiré du site.",
+      "deleted": "Guide supprimé.",
+      "missing": {
+        "slug": "Donnez une adresse valable au guide.",
+        "uploading": "Attendez la fin de l'envoi de l'image.",
+        "complete": "Pour publier : un titre et un texte dans au moins une langue."
+      }
+    },
+    "assist": {
+      "api": {
+        "language": "Langue inconnue.",
+        "title": "Donnez d'abord un titre au guide.",
+        "heading": "Le titre de section est trop long.",
+        "instruction": "La précision est trop longue (600 caractères au plus).",
+        "rateLimited": "Trop de demandes en peu de temps. Réessayez dans une heure.",
+        "unavailable": "L'assistant n'est pas disponible pour le moment (clé, budget ou réglage).",
+        "refused": "L'assistant a refusé d'écrire sur ce sujet.",
+        "failed": "L'assistant n'a pas répondu. Réessayez."
+      }
+    },
+    "api": {
+      "slug": "Adresse invalide : lettres minuscules, chiffres et tirets (3 à 80 caractères).",
+      "title": "Le titre fait 160 caractères au plus.",
+      "excerpt": "Le résumé fait 400 caractères au plus.",
+      "body": "Le texte fait 60 000 caractères au plus.",
+      "tags": "Un thème n'est pas dans la liste.",
+      "seo": "Le titre Google fait 120 caractères au plus, la description 300.",
+      "cover": "L'image de couverture n'est pas valable : renvoyez-la.",
+      "slugTaken": "Cette adresse est déjà prise par un autre guide.",
+      "status": "L'état doit être brouillon ou en ligne.",
+      "cannotPublish": "Pour publier, il faut un titre et un texte dans au moins une langue.",
+      "imageType": "JPG, PNG ou WebP seulement.",
+      "imageSize": "Image trop lourde : {max} Mo au plus."
     }
   }
 }

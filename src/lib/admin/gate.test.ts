@@ -29,6 +29,9 @@ function pages(dir: string): string[] {
 /** `await requireAdmin()` or `await requireAdmin("section")`, its result kept or not. */
 const GATE = /^(?:const \{[^}]*\} = )?await requireAdmin\((?:"([a-z-]+)")?\);$/;
 
+/** Page folders named otherwise than their section: /admin/contenu is the « content » section (0208). */
+const PAGE_SECTION: Record<string, string> = { contenu: "content" };
+
 function firstStatement(file: string): string | undefined {
   const src = fs.readFileSync(file, "utf8");
   const body = src.slice(src.indexOf("export default async function"));
@@ -51,7 +54,8 @@ describe("admin pages", () => {
 
   it("each name the section of the folder they are in", () => {
     const wrong = all.filter((file) => {
-      const folder = path.relative(ADMIN, file).split(path.sep)[0];
+      const dir = path.relative(ADMIN, file).split(path.sep)[0];
+      const folder = PAGE_SECTION[dir] ?? dir;
       const named = GATE.exec(firstStatement(file) ?? "")?.[1];
       const isSection = isAdminSection(folder) || isOwnerSection(folder);
       return isSection ? named !== folder : named !== undefined;

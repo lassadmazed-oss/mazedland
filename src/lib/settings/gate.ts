@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
 import { getSettings } from "./server";
 import type { SettingKey } from "./registry";
 
-type FeatureKey = Extract<SettingKey, `feature_${string}` | "social_enabled" | "ai_enabled">;
+type FeatureKey = Extract<SettingKey, `feature_${string}` | "social_enabled" | "ai_enabled" | "guides_enabled" | "guides_ai_assist">;
 
 export async function featureOff(key: FeatureKey): Promise<NextResponse | null> {
   const s = await getSettings();

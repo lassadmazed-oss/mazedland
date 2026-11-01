@@ -30,6 +30,9 @@ export const ADMIN_SECTIONS = [
   "notifications",
   "legal-docs",
   "catalogue",
+  // The guides (0208), written in /admin/contenu — the one section whose URL
+  // segment is the French word, so the gate test maps it (PAGE_SECTION).
+  "content",
   "activity",
 ] as const;
 export type AdminSection = (typeof ADMIN_SECTIONS)[number];
@@ -52,7 +55,7 @@ export type AdminScopes = readonly AdminSection[] | null;
 export const ROLE_PRESETS = {
   moderation: ["annonces", "demandes", "vendeurs", "agences", "social"],
   finance: ["paiements", "offres", "resultats"],
-  content: ["home", "publicites", "popups", "notifications", "legal-docs", "catalogue", "social"],
+  content: ["home", "publicites", "popups", "notifications", "legal-docs", "catalogue", "content", "social"],
 } as const satisfies Record<string, readonly AdminSection[]>;
 export type RolePreset = keyof typeof ROLE_PRESETS;
 export const ROLE_PRESET_KEYS = Object.keys(ROLE_PRESETS) as RolePreset[];
