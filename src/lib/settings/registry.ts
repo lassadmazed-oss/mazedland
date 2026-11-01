@@ -66,6 +66,9 @@ export const SETTINGS = {
   // « Agence réactive »: the badge an agence earns by answering its visit
   // requests fast (src/lib/pro/reactivity.ts). Off: no badge anywhere.
   feature_agency_reactive: { group: "features", type: "bool", default: true, href: "/admin/agences" },
+  // « Agences fondatrices : X places sur 10 » on the Pro page: the places the
+  // console has not yet given a free period to (src/lib/pro/founding.ts).
+  feature_founding_counter: { group: "features", type: "bool", default: true, href: "/admin/agences" },
   // « Importer plusieurs annonces » in the agence's dashboard: a CSV (or lines
   // pasted from Excel) becomes drafts (src/lib/listings/importRows.ts).
   feature_listing_import: { group: "features", type: "bool", default: true },
@@ -117,6 +120,10 @@ export const SETTINGS = {
   import_max_rows: { group: "publication", type: "int", default: 60, min: 5, max: 300, choices: [30, 60, 120, 300] },
   // « Offrir une période » in the agences console: how long the offered plan runs (src/lib/pro/offer.ts).
   founding_offer_months: { group: "publication", type: "int", default: 3, min: 1, max: 12, unit: "months", choices: [1, 2, 3, 6, 12] },
+  // How many agences the founding offer is for, and where (« les 10 premières
+  // agences de Sfax »); an empty place says « les 10 premières agences ».
+  founding_seats: { group: "publication", type: "int", default: 10, min: 1, max: 100, choices: [5, 10, 15, 20] },
+  founding_offer_place: { group: "publication", type: "text", default: "Sfax", max: 40 },
   // « Envoyer sans payer » under the agence request: the agence comes alone,
   // for the founding offer the console then gives (« Offrir une période »).
   pro_signup_pay_later: { group: "publication", type: "bool", default: true },
@@ -250,6 +257,25 @@ export const SETTINGS = {
   analytics_gov_demand_min: { group: "analytics", type: "int", default: 20, min: 5, max: 1000, choices: [10, 20, 50, 100] },
   // …with fewer annonces online than this lacks supply.
   analytics_gov_low_supply: { group: "analytics", type: "int", default: 5, min: 1, max: 100, choices: [3, 5, 10, 20] },
+
+  // ── Paid services (0203, /admin/abonnements): an SMS before Vercel,
+  //    Supabase, a domain or a credit runs out. The watchdog in the database
+  //    (services_watchdog) reads the same keys with the same defaults.
+  services_alerts_enabled: { group: "services", type: "bool", default: true, href: "/admin/abonnements" },
+  // Who gets them: the owner's number by default (« lassad », 2026-11-01).
+  services_sms_recipients: { group: "services", type: "list", default: ["+216 98 124 111"], maxItems: 5, maxLen: 20 },
+  // The first SMS, this many days before the end; each service may say otherwise.
+  services_lead_days: { group: "services", type: "int", default: 4, min: 1, max: 30, unit: "days", choices: [1, 3, 4, 7, 14] },
+  services_alert_day_before: { group: "services", type: "bool", default: true },
+  services_alert_on_day: { group: "services", type: "bool", default: true },
+  // No reminder between these hours (Tunis time); it goes when they end.
+  services_quiet_start: { group: "services", type: "int", default: 22, min: 0, max: 23, unit: "hour_of_day", choices: [20, 21, 22, 23] },
+  services_quiet_end: { group: "services", type: "int", default: 8, min: 0, max: 23, unit: "hour_of_day", choices: [6, 7, 8, 9, 10] },
+  // A blocked or unreachable site is sent even at night.
+  services_urgent_at_night: { group: "services", type: "bool", default: true },
+  services_sms_arabic: { group: "services", type: "bool", default: true },
+  // Below this many SMS left on WinSMS, one SMS says to top up. 0 = never.
+  services_sms_low_balance: { group: "services", type: "int", default: 200, min: 0, max: 5000, unit: "sms", choices: [100, 200, 500, 1000, 0] },
 } as const satisfies Record<string, SettingDef>;
 
 export type SettingKey = keyof typeof SETTINGS;
@@ -261,7 +287,7 @@ export type ClientSettings = Pick<Settings, ClientSettingKey>;
 
 /** The console's tabs, in order. */
 export const SETTING_GROUPS = [
-  "features", "home", "moderation", "publication", "buyers", "contact", "social", "payment", "company", "limits", "privacy", "analytics",
+  "features", "home", "moderation", "publication", "buyers", "contact", "social", "payment", "company", "limits", "privacy", "analytics", "services",
 ] as const;
 
 export function isSettingKey(k: string): k is SettingKey {

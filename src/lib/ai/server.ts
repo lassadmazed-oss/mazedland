@@ -169,8 +169,16 @@ export async function callJson(opts: {
     await settle({ model: res.model, usage: res.usage, ok: data !== null, error: data === null ? "no_text" : undefined });
     return data === null ? { ok: false, reason: "failed" } : { ok: true, data };
   } catch (e) {
+    // « Your credit balance is too low » is its own code: /admin/abonnements
+    // reads it as the Anthropic credit to top up (src/lib/services/providers.ts).
     const error =
-      e instanceof Anthropic.APIError ? `api_${e.status ?? "error"}` : e instanceof SyntaxError ? "bad_json" : "network";
+      e instanceof Anthropic.APIError
+        ? e.status === 400 && /credit balance/i.test(e.message)
+          ? "api_credit"
+          : `api_${e.status ?? "error"}`
+        : e instanceof SyntaxError
+          ? "bad_json"
+          : "network";
     await settle({ model: AI_MODEL, ok: false, error });
     return { ok: false, reason: "failed" };
   }

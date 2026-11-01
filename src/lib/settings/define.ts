@@ -21,9 +21,12 @@ export type SettingGroup =
   | "company"
   | "limits"
   | "privacy"
-  | "analytics";
+  | "analytics"
+  | "services";
 
-export type SettingUnit = "days" | "months" | "years" | "hours" | "minutes" | "seconds" | "tnd" | "percent" | "photos" | "per_hour" | "per_day";
+export type SettingUnit =
+  | "days" | "months" | "years" | "hours" | "minutes" | "seconds" | "tnd" | "percent" | "photos" | "per_hour" | "per_day"
+  | "hour_of_day" | "sms";
 
 type Common = {
   group: SettingGroup;

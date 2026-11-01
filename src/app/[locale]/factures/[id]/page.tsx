@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
+import { BrandLogo } from "@/components/layout/BrandLogo";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
@@ -103,7 +103,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       <article data-print-area className="rounded-2xl bg-white p-6 text-[#18181b] shadow-sm ring-1 ring-border sm:p-10">
         <header className="flex flex-wrap items-start justify-between gap-6">
           <div>
-            <Image src="/logo-mark.webp" alt="Mazed Immo" width={127} height={160} className="h-10 w-auto" />
+            <BrandLogo eager className="h-20 w-auto" />
             <p className="mt-3 text-[13px] font-extrabold">{inv.issuer.name ?? "Mazed Immo"}</p>
             {inv.issuer.tax_id && <p className="text-[12px]">{t("taxId")} : <Ltr>{inv.issuer.tax_id}</Ltr></p>}
             {inv.issuer.address && <p className="max-w-xs whitespace-pre-line text-[12px]">{inv.issuer.address}</p>}

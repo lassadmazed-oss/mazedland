@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Optional } from "@/components/ui/Optional";
 import { Suspense, useCallback, useEffect, useState } from "react";
@@ -8,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { AccountMenu } from "./AccountMenu";
+import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { InstallButton } from "./InstallButton";
 import { normalizeSearchQuery } from "@/lib/search";
@@ -163,22 +163,9 @@ export function DesktopNav() {
       <div className="mx-auto flex h-full w-full max-w-[var(--max-w-wide)] items-center gap-4 px-6 xl:gap-6 xl:px-8">
         {/* ── Left zone: brand + primary links ── */}
         <div className="flex h-full shrink-0 items-center gap-6">
-          {/* Mark + name, matching the mobile TopBar. The logo file is a
-              portrait lockup whose wordmark is illegible at nav height — see
-              the note in TopBar.tsx. */}
-          <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Mazed Immo">
-            <Image
-              src="/logo-mark.webp"
-              alt=""
-              width={127}
-              height={160}
-              loading="eager"
-              sizes="36px"
-              className="h-10 w-auto"
-            />
-            <span className="text-[17px] font-extrabold tracking-tight text-foreground">
-              Mazed Immo
-            </span>
+          {/* The owner's logo as drawn, filling the bar's height — see BrandLogo. */}
+          <Link href="/" className="flex shrink-0 items-center" aria-label="Mazed Immo">
+            <BrandLogo alt="" eager className="h-[var(--desktop-logo-h)] w-auto" />
           </Link>
 
           {/* The page you are on is underlined, the way a newspaper's section

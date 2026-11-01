@@ -8,6 +8,8 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { formatTND } from "@/lib/utils";
 import { membershipsOf } from "@/lib/pro/shops";
 import { getSettings } from "@/lib/settings/server";
+import { loadFoundingSeats } from "@/lib/pro/founding";
+import { FoundingCounter } from "@/components/agency/FoundingCounter";
 import { BadgeCheck, Check, LayoutGrid, Store, Users, Sparkles, ArrowUpRight } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +58,7 @@ export default async function ProLandingPage() {
   ]);
   const plans = (planRows ?? []) as Plan[];
   const hasShop = memberships.length > 0;
+  const seats = admin && settings.feature_founding_counter ? await loadFoundingSeats(admin, settings.founding_seats) : null;
   const cta = hasShop ? "/pro/dashboard" : user ? "/pro/creer" : `/login?next=${encodeURIComponent(`/${locale}/pro/creer`)}`;
   // New shops switched off in the console: no « Ouvrir ma boutique ». The plans
   // stay on show, and whoever runs a shop still gets to its dashboard.
@@ -80,6 +83,8 @@ export default async function ProLandingPage() {
             <p className="text-[12px] font-extrabold uppercase tracking-[0.16em] text-muted">Mazed Immo Pro</p>
             <h1 className="mazed-display mt-3 max-w-[16ch] text-[32px] text-foreground lg:text-[52px]">{t("title")}</h1>
             <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-muted lg:text-[17px]">{t("subtitle")}</p>
+            {/* The launch offer, and the places the console has left (not for an agence that already runs one). */}
+            {seats && !hasShop && <FoundingCounter seats={seats} months={settings.founding_offer_months} place={settings.founding_offer_place} />}
             <div className="mt-7 flex flex-wrap items-center gap-4">
               {showCta && (
                 <Link href={cta as never} data-track="pro_cta" data-track-cta="hero" className="mazed-btn-luxe tap-target inline-flex h-12 items-center gap-2 px-7 text-[14px]">

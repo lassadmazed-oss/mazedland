@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Optional } from "@/components/ui/Optional";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, Link } from "@/i18n/navigation";
 import { BackButton } from "./BackButton";
+import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { InstallButton } from "./InstallButton";
 import { useSetting } from "@/components/settings/SettingsProvider";
@@ -64,8 +64,8 @@ const TITLE_BY_SEGMENT: Record<string, string> = {
  *   - Plain white with a hairline border, no glass and no gold rule. The
  *     chrome stays out of the way so the page content carries the design
  *     weight.
- *   - Root pages get the tower mark plus the name in plain Jakarta.
- *   - Inner pages get a back button + page title instead.
+ *   - Root pages get the logo.
+ *   - Inner pages get a back button, the logo, and the page title.
  */
 export function TopBar() {
   const t = useTranslations();
@@ -100,6 +100,11 @@ export function TopBar() {
           ) : (
             <>
               <BackButton />
+              {/* The logo on inner pages too — it is on every page — and a
+                  way home in one tap. */}
+              <Link href="/" className="shrink-0" aria-label={t("brand.name")}>
+                <BrandLogo alt="" eager className="h-[var(--topbar-logo-h)] w-auto" />
+              </Link>
               {/* A <p>, not an <h1>: every page below has its own heading, and
                   a listing page ended up with two — "Annonce" in the bar and
                   the annonce's title in the page. */}
@@ -131,33 +136,16 @@ export function TopBar() {
 
 function BrandMark() {
   const t = useTranslations("brand");
-  // The tower, then the name — the same lockup Mazed Auto uses in its bar.
-  //
-  // It was the full logo file at `h-8`. That file is a PORTRAIT lockup: the
-  // tower, a rule, and MAZED underneath. Scaled to fit a 56px bar the whole
-  // wordmark lands at about nine pixels tall, which is a grey smudge, and the
-  // tower loses most of its height paying for it. Splitting the two — the mark
-  // as an image, the name as live type — gives the tower the full 36px and the
-  // name renders at a size somebody can actually read.
+  // The owner's logo as drawn — the tower above MAZED (see BrandLogo). It was
+  // the tower beside « Mazed Immo » in plain type; the owner asked for the
+  // logo itself.
   //
   // Eager, not preloaded: the bar is above the fold on every page that shows
-  // it, and an <img> near the top of the HTML is all the head start a 4 KB
-  // mark needs. (The root layout's preload was for a splash screen's logo,
-  // never this file.)
+  // it, and an <img> near the top of the HTML is all the head start a small
+  // file needs.
   return (
-    <Link href="/" className="flex items-center gap-2" aria-label={t("name")}>
-      <Image
-        src="/logo-mark.webp"
-        alt=""
-        width={127}
-        height={160}
-        loading="eager"
-        sizes="30px"
-        className="h-9 w-auto shrink-0"
-      />
-      <span className="truncate text-[15px] font-bold tracking-tight text-foreground">
-        {t("name")}
-      </span>
+    <Link href="/" className="flex min-w-0 items-center" aria-label={t("name")}>
+      <BrandLogo alt="" eager className="h-[var(--topbar-logo-h)] w-auto shrink-0" />
     </Link>
   );
 }

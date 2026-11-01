@@ -21,13 +21,15 @@ import { REFUSAL_OUTCOMES, type RefusalOutcome } from "@/lib/pro/agenceRequest";
  * outcomes) and why.
  */
 export function BoutiqueActions({
-  shopId, status, verified, plans, offerMonths, request,
+  shopId, status, verified, plans, offerMonths, seats, request,
 }: {
   shopId: string;
   status: string;
   verified: boolean;
   plans: { id: string; label: string }[];
   offerMonths: number;
+  /** The founding places the console has not yet given a free period to. */
+  seats?: { left: number; total: number };
   request?: { plan: string; amount: string } | null;
 }) {
   const t = useTranslations("adminShops");
@@ -95,7 +97,16 @@ export function BoutiqueActions({
         open={offering}
         variant="primary"
         title={t("offerTitle")}
-        body={t("offerBody", { months: offerMonths })}
+        body={
+          <>
+            {t("offerBody", { months: offerMonths })}
+            {seats && (
+              <span className={`mt-2 block font-bold ${seats.left > 0 ? "text-foreground" : "text-[var(--tone-warn)]"}`}>
+                {t(seats.left > 0 ? "offerSeats" : "offerSeatsNone", { left: seats.left, total: seats.total })}
+              </span>
+            )}
+          </>
+        }
         confirmLabel={t("offerPlan")}
         pending={pending}
         choice={{ label: t("offerChoice"), options: plans.map((p) => ({ value: p.id, label: p.label })) }}
