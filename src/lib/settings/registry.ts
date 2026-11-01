@@ -76,6 +76,13 @@ export const SETTINGS = {
   feature_credit_simulator: { group: "features", type: "bool", default: true },
   // The admins hear of a crash in production the first time it happens (0185).
   feature_error_alerts: { group: "features", type: "bool", default: true, href: "/admin/activity?type=error" },
+  // « Guides » (0208): the articles written in /admin/contenu and read on
+  // /guides. Off: the pages answer not found, the footer link and the
+  // « Guides utiles » strips go; what is written stays in the console.
+  guides_enabled: { group: "features", type: "bool", default: true, href: "/admin/contenu" },
+  // « Aide à la rédaction » in the guide editor: the AI drafts a section the
+  // editor reads and changes. Nothing it writes is published by itself.
+  guides_ai_assist: { group: "features", type: "bool", default: true, href: "/admin/contenu" },
 
   // ── Home page: the rails of annonces and the ads move by themselves.
   home_rail_autoplay: { group: "home", type: "bool", default: true, client: true },
@@ -130,6 +137,14 @@ export const SETTINGS = {
   // « Envoyer sans payer » under the agence request: the agence comes alone,
   // for the founding offer the console then gives (« Offrir une période »).
   pro_signup_pay_later: { group: "publication", type: "bool", default: true },
+  // The guides (0208): how many cards a page of /guides holds, how many
+  // « Guides liés » close a guide, how many « Guides utiles » stand beside an
+  // annonce and under the catalogue (0 = no strip), and from how many
+  // headings a guide gets a table of contents (0 = never).
+  guides_per_page: { group: "publication", type: "int", default: 9, min: 3, max: 30, choices: [6, 9, 12, 18, 24] },
+  guides_related_count: { group: "publication", type: "int", default: 3, min: 0, max: 6, choices: [0, 2, 3, 4, 6] },
+  guides_strip_count: { group: "publication", type: "int", default: 3, min: 0, max: 6, choices: [0, 2, 3, 4] },
+  guides_toc_min: { group: "publication", type: "int", default: 3, min: 0, max: 10, choices: [0, 2, 3, 4, 5] },
 
   // ── Buyers: visits, compare, demandes.
   visits_max_slots: { group: "buyers", type: "int", default: 3, min: 1, max: 5, client: true },

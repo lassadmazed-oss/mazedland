@@ -31,6 +31,7 @@ import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
 import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 import { shareText } from "@/lib/share";
 import { RelatedListings } from "@/components/listing/RelatedListings";
+import { GuidesStrip } from "@/components/guides/GuidesStrip";
 import { ViewTracker } from "@/components/listing/ViewTracker";
 import { AdSlot } from "@/components/ads/AdSlot";
 import {
@@ -863,6 +864,12 @@ export default async function AnnoncePage({
         dealType={asDealType(l.deal_type)}
         locale={locale}
       />
+
+      {/* « Guides utiles » (0208): how to buy or rent this kind of property,
+          picked by the deal and the category. Nothing while no guide is online. */}
+      <div className="px-4 lg:px-0">
+        <GuidesStrip deal={asDealType(l.deal_type)} categorySlug={category?.slug ?? null} via="annonce" />
+      </div>
 
       {/* On a phone the seller card sits under the photo, the title and the
           price — below the first screen. This keeps the number one tap away.

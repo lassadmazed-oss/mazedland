@@ -73,6 +73,9 @@ export const EVENT_NAMES = [
   "not_found",
   "client_error",
   "whatsapp_help",
+  // The guides (0208): a guide read, and a guide opened from a strip, a card or the related list.
+  "guide_view",
+  "guide_open",
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 

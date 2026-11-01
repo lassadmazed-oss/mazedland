@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import {
-  BarChart3, BellRing, Megaphone, Store, GalleryHorizontalEnd,
+  BarChart3, BellRing, BookOpen, Megaphone, Store, GalleryHorizontalEnd,
   LayoutDashboard, Inbox, Receipt, Tag, Users, FolderTree,
   SlidersHorizontal, ExternalLink, Menu, X, TrendingUp,
   type LucideIcon,
@@ -59,6 +59,8 @@ const NAV: Item[] = [
   { key: "offers", href: "/admin/offres", Icon: Tag, section: "offres" },
   { key: "sellers", href: "/admin/vendeurs", Icon: Users, section: "vendeurs" },
   { key: "catalogue", href: "/admin/catalogue", Icon: FolderTree, section: "catalogue" },
+  // The guides (0208): articles written here, read on /guides.
+  { key: "content", href: "/admin/contenu", Icon: BookOpen, section: "content" },
 ];
 
 
