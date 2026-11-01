@@ -1318,6 +1318,10 @@
       "withPlan": {
         "title": "Agence ouverte",
         "body": "« {name} » est ouverte avec l'abonnement {plan}, jusqu'au {fullDate}. Votre facture {number} est prête. Vous pouvez publier pour l'agence."
+      },
+      "founding": {
+        "title": "Agence ouverte",
+        "body": "« {name} » est ouverte sur Mazed Immo avec le plan {plan} offert pour {months} mois, jusqu'au {fullDate}. Ensuite, vous choisirez votre abonnement ; un rappel vous prévient avant la fin. Vous pouvez publier pour l'agence."
       }
     },
     "shop_rejected": {
@@ -4589,7 +4593,7 @@
       "headline": "{months, plural, one {# mois du plan Pro offert} other {# mois du plan Pro offerts}} aux {total} premières agences de {place}",
       "headlineAny": "{months, plural, one {# mois du plan Pro offert} other {# mois du plan Pro offerts}} aux {total} premières agences",
       "left": "{left, plural, one {Plus qu'une place} other {Plus que # places}} sur {total}",
-      "how": "Ouvrez votre agence ci-dessous : nous vous écrivons pour confirmer votre place."
+      "how": "Ouvrez votre agence ci-dessous : après un examen rapide, nous l'ouvrons et vos mois offerts démarrent tout seuls. Ensuite, vous choisissez votre abonnement ; nous vous prévenons avant la fin."
     }
   },
   "proApi": {
@@ -4801,7 +4805,8 @@
     "requestFixAsked": "À corriger, en attente du propriétaire : {reason}",
     "fixChip": "à corriger",
     "offerSeats": "{left, plural, one {# place fondatrice restante} other {# places fondatrices restantes}} sur {total}.",
-    "offerSeatsNone": "Les {total} places fondatrices sont toutes prises : cette agence passerait en plus."
+    "offerSeatsNone": "Les {total} places fondatrices sont toutes prises : cette agence passerait en plus.",
+    "approvedFounding": "Agence ouverte, avec le plan {plan} offert pour {months} mois, jusqu'au {date}."
   },
   "visits": {
     "parts": {
@@ -5600,11 +5605,11 @@
     },
     "founding_seats": {
       "label": "Places fondatrices",
-      "hint": "Le nombre d'agences à qui la console offre la période gratuite. Une place est prise dès qu'une période est offerte."
+      "hint": "Le nombre d'agences qui reçoivent la période gratuite, à l'ouverture ou par « Offrir une période ». Une place est prise dès qu'une période est offerte."
     },
     "founding_offer_place": {
-      "label": "Lieu de l'offre fondatrice",
-      "hint": "La ville ou la région citée dans l'offre (« les 10 premières agences de Sfax »). Vide : « les 10 premières agences »."
+      "label": "Lieu cité dans l'offre fondatrice",
+      "hint": "Un texte pour la page Pro (« les 50 premières agences de Sfax »). Vide : « les 50 premières agences ». Il ne limite pas l'offre : elle est donnée à toute agence ouverte tant qu'il reste des places."
     },
     "services_alerts_enabled": {
       "label": "Alertes SMS des abonnements",
@@ -5737,6 +5742,14 @@
     "guides_toc_min": {
       "label": "Sommaire à partir de",
       "hint": "Un sommaire s'affiche quand le guide compte au moins ce nombre de titres. 0 : jamais."
+    },
+    "feature_founding_auto": {
+      "label": "L'offre fondatrice à l'ouverture",
+      "hint": "« Ouvrir » une agence qui n'a aucun plan lui donne tout seul les mois offerts, tant qu'il reste des places : plus de période à offrir à la main, ni de paiement avant l'ouverture. L'agence est prévenue de la date de fin, puis rappelée avant. Éteint : elle doit payer son plan (ou recevoir sa période à la main) pour être ouverte."
+    },
+    "founding_offer_plan": {
+      "label": "Plan de l'offre fondatrice",
+      "hint": "L'identifiant du plan offert (pro-starter, pro-pro, pro-business). Il doit être en vente."
     }
   },
   "ads": {
