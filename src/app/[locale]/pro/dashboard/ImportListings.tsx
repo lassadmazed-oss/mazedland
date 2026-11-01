@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { AlertTriangle, Check, ChevronDown, Download, FileSpreadsheet, Loader2, Upload } from "lucide-react";
 import { MODEL_HEADERS, modelFile, type ColumnKey, type ImportIssue } from "@/lib/listings/importRows";
 import { formatTND } from "@/lib/utils";
-import { track } from "@/lib/analytics/ga";
+import { trackEvent } from "@/lib/analytics/events";
 
 type Row = {
   line: number;
@@ -84,7 +84,8 @@ export function ImportListings({ shopId }: { shopId: string }) {
       if (commit) {
         setCreated(reply.created ?? 0);
         setPhase("done");
-        track("listing_import", { count: reply.created ?? 0 });
+        // Google only: the route counts it for the site (src/lib/analytics/server-events.ts).
+        trackEvent("listing_import", { count: reply.created ?? 0 }, {}, { firstParty: false });
         router.refresh();
       } else setPhase("checked");
     } catch {

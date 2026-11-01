@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AutoRail } from "@/components/landing/AutoRail";
 import { AnnonceCard } from "@/components/listing/AnnonceCard";
+import { Impressions } from "@/components/analytics/Impressions";
 import { isRtl } from "@/lib/i18n";
 import type { HomeRail } from "@/lib/home/rails";
 
@@ -67,6 +68,8 @@ export async function HomeRailSection({
         href={rail.href}
         seeAllLabel={t("home.seeAll")}
       />
+      {/* Before the rail, never inside it: the rail measures its children. */}
+      <Impressions ids={rail.rows.map((a) => a.id)} surface={`home_${rail.key}`} />
       <AutoRail arrows={layout === "desktop"}>
         {rail.rows.map((a) => (
           <div key={a.id} className={`${size.card} shrink-0 snap-start`}>

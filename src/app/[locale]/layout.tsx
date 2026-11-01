@@ -23,6 +23,7 @@ import { ClientErrorReporter } from "@/components/observability/ClientErrorRepor
 import type { Metadata } from "next";
 import { SettingsProvider } from "@/components/settings/SettingsProvider";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { FirstPartyEvents } from "@/components/analytics/FirstPartyEvents";
 import { NoNegativeNumbers } from "@/components/ui/NoNegativeNumbers";
 import { LocalizedValidation } from "@/components/ui/LocalizedValidation";
 import { clientSettings, getSettings } from "@/lib/settings/server";
@@ -154,6 +155,8 @@ export default async function LocaleLayout({
               console, nothing without an ID or, when asked, consent. Before
               the page, so it is ready when the page's first event fires. */}
           <GoogleAnalytics />
+          {/* The site's own count (0204): exact, per annonce, beside Google's. */}
+          <FirstPartyEvents />
           <ToastProvider>
             <NetworkStatus />
             <FavoritesSync />

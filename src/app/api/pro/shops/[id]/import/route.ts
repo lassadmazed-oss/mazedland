@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jsonObject } from "@/lib/http/body";
 import { fail } from "@/lib/http/errors";
 import { logAction } from "@/lib/activity";
+import { recordServerEvent } from "@/lib/analytics/server-events";
 import { apiTranslator, requestLocale } from "@/lib/i18n/server";
 import { getSettings } from "@/lib/settings/server";
 import { suspendedResponse } from "@/lib/moderation/ban";
@@ -124,5 +125,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (error) return fail("import_failed", 500, error);
 
   logAction(req, user, "shop.import", { id, count: created?.length ?? ok.length });
+  recordServerEvent(req, "listing_import", { userId: user.id, shopId: id, params: { count: created?.length ?? ok.length } });
   return NextResponse.json({ ok: true, created: created?.length ?? ok.length, rows: shown, summary });
 }

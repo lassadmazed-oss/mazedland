@@ -2859,7 +2859,9 @@
       "shops": "الوكالات",
       "shopsHint": "وكالات وباعثين: حلّ، وثّق، وقّف",
       "ads": "الإشهار",
-      "adsHint": "بانرات المعلنين: الحملات، المشاهدات، النقرات"
+      "adsHint": "بانرات المعلنين: الحملات، المشاهدات، النقرات",
+      "analytics": "الإحصائيات",
+      "analyticsHint": "الزوّار، البحث، الإعلانات، الوكالات والمداخيل، بالأرقام"
     },
     "siteTabs": {
       "label": "أقسام الموقع",
@@ -5301,7 +5303,8 @@
       "months": "شهر",
       "years": "سنة",
       "hour_of_day": "س",
-      "sms": "SMS"
+      "sms": "SMS",
+      "minutes": "دقيقة"
     },
     "ui": {
       "tabsLabel": "أقسام الإعدادات",
@@ -5620,6 +5623,74 @@
     "services_sms_low_balance": {
       "label": "تنبيه رصيد SMS",
       "hint": "كي يهبط رصيد WinSMS تحت العدد هذا، يخرج SMS يقلك اشحن. أبدًا: ما فماش تنبيه."
+    },
+    "analytics_events_enabled": {
+      "label": "العدّ متاع السيت",
+      "hint": "السيت يحسب بروحو كل بحث، إعلان تحلّ، رقم تبان، مفضّل، مرحلة في الفورم… بالضبط، لكل إعلان ولكل وكالة، بجنب Google. عمرو ما يسجّل إسم ولا رقم ولا إيميل."
+    },
+    "analytics_events_consent": {
+      "label": "نستنّاو موافقة الزائر",
+      "hint": "مفعّل (الافتراضي): حتى شي ما يخرج من المتصفّح قبل «Accepter» وقت نطلبوها. معطّل: السيت يحسب الكل بلا تعريف، بمفتاح يتبدّل كل نهار وبلا كوكي."
+    },
+    "analytics_events_days": {
+      "label": "مدّة حفظ الأحداث",
+      "hint": "بعدها، الخدمة الليلية تفسخ أحداث السيت. الجداول ما يرجعوش أبعد من هكّا."
+    },
+    "analytics_events_per_hour": {
+      "label": "أحداث لكل متصفّح في الساعة",
+      "hint": "فوق هذا، إرسالات نفس المتصفّح تتنحّى في الساعة: القاري يحلّ عشرات الإعلانات، الآلاف معناها سكريبت."
+    },
+    "analytics_ga_property_id": {
+      "label": "معرّف الـ property متاع GA4",
+      "hint": "رقم: Google Analytics ← Admin ← Property settings ← «Property ID». مع مفتاح الـ service account (المتغيّر GA4_SERVICE_ACCOUNT_JSON)، الكونسول تقرا تقارير Google."
+    },
+    "analytics_ga_cache_minutes": {
+      "label": "تحديث تقارير Google",
+      "hint": "التقرير اللي تقرا من Google يتعاود يستعمل في هذه المدّة قبل ما نطلبوه من جديد."
+    },
+    "analytics_top_limit": {
+      "label": "سطور في كل ترتيب",
+      "hint": "قدّاش من إعلان، وكالة، بحث ولا ولاية يبيّن كل ترتيب."
+    },
+    "analytics_expiring_days": {
+      "label": "إعلان «قريب يوفى»",
+      "hint": "الإعلان اللي يوفى في هذه المدّة يتحسب قريب يوفى."
+    },
+    "analytics_anomaly_sigma": {
+      "label": "عتبة الشذوذ (انحراف معياري)",
+      "hint": "رقم الجمعة اللي يبعد على معدّل جمعات المرجع بهذا القدر من الانحرافات يتعلّم عليه."
+    },
+    "analytics_mover_min_percent": {
+      "label": "تغيّر يستحق الذكر",
+      "hint": "الرقم اللي يتحرّك بهذا النسبة على الأقل من جمعة لجمعة يظهر في «اللي يهمّك»."
+    },
+    "analytics_zero_search_min": {
+      "label": "بحث بلا نتيجة متكرّر",
+      "hint": "بحث بلا نتيجة يتعاود على الأقل هذا العدد يتعلّم عليه: صنف، بلاصة ولا كتبة لازم تتزاد."
+    },
+    "analytics_no_contact_min_views": {
+      "label": "مشاهدات بلا اتصال",
+      "hint": "إعلان تشاف على الأقل هذا العدد بلا ما حدّ يطلب الرقم ولا زيارة يتعلّم عليه."
+    },
+    "analytics_gov_demand_min": {
+      "label": "ولاية مطلوبة",
+      "hint": "ولاية تلوّج عليها الناس على الأقل هذا العدد في المدّة…"
+    },
+    "analytics_gov_low_supply": {
+      "label": "… وإعلانات قليلة",
+      "hint": "… وفيها إعلانات منشورة أقل من هذا العدد ناقصها عرض: يتعلّم عليها."
+    },
+    "analytics_insights_limit": {
+      "label": "جمل في «اللي يهمّك»",
+      "hint": "قدّاش من ملاحظة تبيّن الصفحة على الأكثر، الأهمّ الأوّل."
+    },
+    "analytics_baseline_weeks": {
+      "label": "جمعات المرجع",
+      "hint": "الجمعات اللي فاتت اللي نقارنو بيها رقم الجمعة باش نلقاو الشاذ."
+    },
+    "analytics_mover_min_count": {
+      "label": "الحدّ الأدنى للتغيّر",
+      "hint": "التغيّر يتعلّم عليه كان وحدة من الجمعتين وصلت هذا العدد: من زوز لثلاثة موش خبر."
     }
   },
   "ads": {
@@ -5842,7 +5913,8 @@
       "notifications": "الإشعارات",
       "legal-docs": "الوثائق القانونية",
       "catalogue": "الكتالوغ",
-      "activity": "سجلّ النشاط"
+      "activity": "سجلّ النشاط",
+      "analytics": "الإحصائيات"
     },
     "members": {
       "title": "أعضاء اللوحة",
@@ -6215,6 +6287,512 @@
       "action": {
         "auto": "الخلاص أوتوماتيك: ثبّت الكارطة.",
         "manual": "لازم تخلّصو باليد."
+      }
+    }
+  },
+  "adminAnalytics": {
+    "eyebrow": "المتابعة",
+    "title": "الإحصائيات",
+    "description": "كيفاش ماشية السوق: الزوّار، شنوّة يلوّجو عليه، الإعلانات، الوكالات والمداخيل — في المدّة اللي تختارها، مقارنة باللي قبلها.",
+    "unavailable": "الخدمة غير متاحة مؤقتًا.",
+    "error": "الأرقام ما تقراوش: {message}",
+    "period": {
+      "label": "المدّة",
+      "d7": "7 أيام",
+      "d30": "30 يوم",
+      "d90": "90 يوم",
+      "custom": "تواريخ",
+      "from": "من",
+      "to": "إلى",
+      "apply": "طبّق",
+      "compared": "مقارنة بـ {days} يوم اللي قبل",
+      "range": "من {from} إلى {to}",
+      "fallback": "التواريخ اللي طلبتها ما تقراوش (مقلوبة، في المستقبل ولا أكثر من عام): نبيّنو آخر 30 يوم."
+    },
+    "tabs": {
+      "label": "أقسام الإحصائيات",
+      "overview": "نظرة عامة",
+      "traffic": "الزيارات",
+      "marketplace": "السوق",
+      "demand": "الطلب",
+      "pro": "Pro والمداخيل",
+      "users": "الحسابات"
+    },
+    "common": {
+      "export": "تصدير CSV",
+      "exported": "ملف CSV",
+      "empty": "ما فما شي في هذه المدّة.",
+      "previous": "المدّة اللي قبل",
+      "na": "—",
+      "sinceEvents": "السيت يحسب من 1 نوفمبر 2026؛ قبلها، كان جداول العدّاد القديم.",
+      "sale": "بيع",
+      "rent": "كراء",
+      "all": "الكل",
+      "total": "المجموع",
+      "hours": "{count} س",
+      "days": "{count} ي",
+      "tnd": "د.ت",
+      "percent": "{value} %",
+      "count": "{count}",
+      "yes": "إيه",
+      "no": "لا",
+      "unknown": "مش معروف",
+      "of": "من {total}",
+      "open": "حلّ",
+      "deal": "العرض",
+      "category": "الصنف",
+      "governorate": "الولاية",
+      "status": "الحالة",
+      "name": "الإسم",
+      "kind": "النوع",
+      "date": "التاريخ",
+      "none": "حتى شي",
+      "nothingYet": "مازال ما فماش معطيات: السيت يحسب من وقت ما طلع."
+    },
+    "kpi": {
+      "page_views": "صفحات تشافت",
+      "visitors": "زوّار",
+      "listing_views": "إعلانات تحلّت",
+      "searches": "بحوث",
+      "listings_online": "إعلانات منشورة",
+      "listings_new": "إعلانات جديدة",
+      "publishes": "نشرات",
+      "reveals": "أرقام تبانت",
+      "visit_requests": "طلبات زيارة",
+      "favourites": "مفضّلات",
+      "demandes": "طلبات",
+      "signups": "تسجيلات",
+      "agences_new": "وكالات جديدة",
+      "agences_open": "وكالات مفتوحة",
+      "revenue": "مداخيل",
+      "paid_count": "دفعات مأكّدة",
+      "ga_users": "مستعملين (Google)",
+      "ga_sessions": "جلسات (Google)",
+      "ga_page_views": "صفحات تشافت (Google)",
+      "conv_contact": "نسبة الاتصال",
+      "conv_search": "بحث ← إعلان",
+      "conv_publish": "فورم ← نشر"
+    },
+    "kpiHint": {
+      "visitors": "الزائر = مفتاح لكل نهار، ولا معرّف المتصفّح كان قبل الإحصائيات.",
+      "conv_contact": "أرقام تبانت + زيارات تطلبت، لكل 100 إعلان تحلّ.",
+      "conv_search": "إعلانات تحلّت لكل 100 بحث.",
+      "conv_publish": "إعلانات تنشرت لكل 100 فورم تبدا.",
+      "revenue": "دفعات مأكّدة في المدّة، بالدينار."
+    },
+    "insights": {
+      "title": "اللي يهمّك",
+      "sub": "شنوّة تحرّك هذه الجمعة، شنوّة خارج عن العادة، ووين تتصرّف.",
+      "empty": "ما فما شي غريب هذه الجمعة: الأرقام ماشية عادي.",
+      "mover_up": "{metric}: {value} هذه الجمعة، +{pct} % على الجمعة اللي قبلها ({previous}).",
+      "mover_down": "{metric}: {value} هذه الجمعة، −{pct} % على الجمعة اللي قبلها ({previous}).",
+      "anomaly_high": "{metric}: {value}، أعلى برشا من عادة الـ {weeks} جمعات الأخيرة ({mean} كمعدّل، {sigma} انحراف معياري).",
+      "anomaly_low": "{metric}: {value}، أقل برشا من عادة الـ {weeks} جمعات الأخيرة ({mean} كمعدّل، {sigma} انحراف معياري).",
+      "zero_search": "«{query}» تلوّج عليها {count} مرّة بلا نتيجة: صنف، بلاصة ولا كتبة لازم تتزاد.",
+      "no_contact": "{title} ({reference}): {views} مشاهدة وحتى اتصال. السوم ولا التصاور يلزمهم مراجعة.",
+      "slow_agence": "{name} تجاوب على {rate} % من طلبات الزيارة في أقل من {hours} س ({late} تستنّى). تحت عتبة شارة «وكالة سريعة».",
+      "gov_gap": "{gov}: {searches} بحث و{demandes} طلب في المدّة، أما {online} إعلان منشور.",
+      "expiring": "{count} إعلان يوفى في الأيام الجاية.",
+      "pending_payments": "{count} وصل يستنّى قرار ({amount} د.ت).",
+      "no_photo": "{count} إعلان منشور بلا تصويرة."
+    },
+    "charts": {
+      "daily": "نهار بنهار",
+      "current": "هذه المدّة",
+      "previous": "المدّة اللي قبل",
+      "noData": "ما فماش منحنى: حتى شي يترسم."
+    },
+    "overview": {
+      "kpisTitle": "الأرقام",
+      "trendsTitle": "الاتجاهات",
+      "funnelTitle": "من الفورم للنشر",
+      "convTitle": "التحويلات"
+    },
+    "traffic": {
+      "title": "الزيارات (Google Analytics)",
+      "description": "شنوّة يشوف Google: الزوّار منين جايين، على أي أجهزة، أي صفحات. عيّنة، مربوطة بالموافقة، وبنهار تأخير على الأقل — بقية الصفحة تحسب مباشر.",
+      "connect": {
+        "title": "ربط Google Analytics",
+        "intro": "ثلاث خطوات، مرّة وحدة. الصفحة تخدم من غيرها: كان هذا القسم يستنّى Google.",
+        "step1": "في Google Cloud، أعمل service account (IAM ← Service accounts)، وبعد مفتاح بصيغة JSON.",
+        "step2": "في Google Analytics، زيد إيميل الـ service account كـ Viewer على الـ property (Admin ← Property access management).",
+        "step3": "حطّ محتوى ملف الـ JSON في متغيّر البيئة {env} متاع الاستضافة (عمرك في الكود)، وبعد الرقم متاع الـ property في الإعدادات.",
+        "step4": "أعمل redeploy، أرجع لهنا وجرّب الربط.",
+        "noKey": "مفتاح الـ service account ({env}) مش محدّد.",
+        "noProperty": "معرّف الـ property متاع GA4 مش معبّي.",
+        "settings": "حلّ الإعدادات",
+        "test": "جرّب الربط",
+        "testing": "قاعد نجرّب…",
+        "testOk": "الربط نجح: {users} مستعمل في آخر 7 أيام.",
+        "testFail": "ما نجحش: {error}"
+      },
+      "fetchedAt": "تقرير Google تقرا في {time}",
+      "cached": "(من الكاش)",
+      "failed": "Google ما جاوبش: {error}",
+      "partial": "Google رفض جزء: {list}",
+      "users": "مستعملين",
+      "newUsers": "جدد",
+      "sessions": "جلسات",
+      "pageViews": "صفحات تشافت",
+      "engaged": "جلسات متفاعلة",
+      "avgSession": "المدّة المتوسّطة",
+      "seconds": "{count} ث",
+      "topPages": "أكثر الصفحات مشاهدة",
+      "sources": "المصادر",
+      "source": "المصدر",
+      "medium": "القناة",
+      "devices": "الأجهزة",
+      "countries": "البلدان",
+      "cities": "المدن",
+      "languages": "اللغات",
+      "landingPages": "صفحات الدخول",
+      "searchTerms": "البحوث (Google)",
+      "searchTermsHint": "يحتاج الـ custom dimension «search_term» في GA4؛ البحوث بالضبط في قسم الطلب.",
+      "cols": {
+        "page": "الصفحة",
+        "views": "مشاهدات",
+        "users": "مستعملين",
+        "sessions": "جلسات",
+        "device": "الجهاز",
+        "country": "البلاد",
+        "city": "المدينة",
+        "language": "اللغة",
+        "term": "الكلمات",
+        "count": "العدد"
+      }
+    },
+    "marketplace": {
+      "title": "السوق",
+      "byStatus": "الإعلانات حسب الحالة",
+      "byDeal": "بيع وكراء",
+      "byCategory": "حسب الصنف",
+      "byGovernorate": "حسب الولاية",
+      "priceBands": "الأسوام حسب الصنف",
+      "timeToPublish": "مدّة النشر",
+      "funnel": "قمع النشر",
+      "moderation": "المراجعة",
+      "quality": "جودة الإعلانات المنشورة",
+      "statuses": {
+        "draft": "مسودّات",
+        "pending_payment": "في انتظار الخلاص",
+        "pending_review": "للمراجعة",
+        "published": "منشورة",
+        "rejected": "مرفوضة",
+        "expired": "وفات",
+        "archived": "مؤرشفة",
+        "sold": "تباعت",
+        "rented": "تكرات"
+      },
+      "cols": {
+        "online": "منشورة",
+        "published": "تنشرت",
+        "new": "تخلقت",
+        "views": "تحلّت",
+        "reveals": "أرقام",
+        "searches": "بحوث",
+        "demandes": "طلبات",
+        "medianSale": "السوم الوسيط (بيع)",
+        "medianRent": "الكراء الوسيط",
+        "band": "الشريحة",
+        "count": "إعلانات",
+        "expires": "يوفى في",
+        "reference": "مرجع",
+        "title": "الإعلان"
+      },
+      "funnelSteps": {
+        "start": "الفورم تحلّ",
+        "category": "الصنف تختار",
+        "photos": "التصاور",
+        "details": "التفاصيل",
+        "review": "الملخّص",
+        "submitted": "تبعث",
+        "published": "تنشر"
+      },
+      "funnelNote": "أشخاص مختلفين في كل مرحلة. خرجو: {abandoned} · مسودّات تخلقت: {drafts}.",
+      "drop": "−{pct} %",
+      "ttp": {
+        "avg": "المعدّل: {hours} س",
+        "median": "الوسيط: {hours} س",
+        "n": "على {count} نشرة",
+        "none": "ما فماش نشرات في هذه المدّة.",
+        "medianLabel": "المدّة الوسيطة",
+        "avgLabel": "المدّة المتوسّطة"
+      },
+      "moderationKeys": {
+        "submitted": "تبعثت",
+        "auto_published": "تنشرت وحدها",
+        "approved": "تقبلت",
+        "rejected": "ترفضت",
+        "archived": "تأرشفت",
+        "edits_approved": "تعديلات تقبلت",
+        "edits_rejected": "تعديلات ترفضت",
+        "reports": "تبليغات",
+        "pending_now": "تستنّى توّا",
+        "review_median_hours": "المدّة الوسيطة للمراجعة (س)"
+      },
+      "qualityKeys": {
+        "online": "منشورة",
+        "no_photo": "بلا تصويرة",
+        "no_price": "بلا سوم",
+        "expiring": "توفى في أقل من {days} ي"
+      },
+      "expiringList": "قريب توفى"
+    },
+    "demand": {
+      "title": "الطلب",
+      "topSearches": "أكثر البحوث",
+      "zeroSearches": "بحوث بلا نتيجة",
+      "understood": "البحث باللغة الطبيعية",
+      "understoodHint": "نسبة البحوث اللي الكلمات تقراو كفلاتر (عرض، بلاصة، ميزانية…).",
+      "filters": "الفلاتر المستعملة",
+      "sorts": "الترتيب المختار",
+      "topListings": "أكثر الإعلانات تحلّت",
+      "topAgences": "أكثر الوكالات تشافت",
+      "visits": "طلبات الزيارة",
+      "visitsByAgence": "الجواب حسب الوكالة",
+      "favourites": "المفضّلات",
+      "compare": "المقارن",
+      "shares": "المشاركات",
+      "credit": "محاكي القرض",
+      "searchers": "{count} شخص",
+      "searches": "{count} بحث",
+      "zeroTotal": "{count} بلا نتيجة",
+      "catalogueViews": "{count} صفحة كتالوغ مفلترة",
+      "cols": {
+        "query": "الكلمات",
+        "count": "مرّات",
+        "avgResults": "نتائج (معدّل)",
+        "zero": "بلا نتيجة",
+        "filter": "الفلتر",
+        "sort": "الترتيب",
+        "uses": "استعمالات",
+        "views": "تحلّت",
+        "uniqueViewers": "زوّار",
+        "reveals": "أرقام",
+        "favourites": "مفضّلات",
+        "visits": "زيارات",
+        "price": "السوم",
+        "contacts": "اتصالات",
+        "listingsOnline": "إعلانات",
+        "listingViews": "إعلانات تحلّت",
+        "total": "طلبات",
+        "answered": "تجاوبت",
+        "fast": "في أقل من {hours} س",
+        "late": "متأخّرة",
+        "avgHours": "المدّة المتوسّطة (س)",
+        "rate": "النسبة",
+        "badge": "الشارة"
+      },
+      "visitKeys": {
+        "total": "تطلبت",
+        "waiting": "تستنّى",
+        "confirmed": "تأكّدت",
+        "declined": "ترفضت",
+        "cancelled": "تلغات",
+        "done": "تعملت",
+        "answered": "تجاوبت",
+        "fast": "تجاوبت في أقل من {hours} س",
+        "late": "متأخّرة",
+        "avg_answer_hours": "المدّة المتوسّطة (س)",
+        "median_answer_hours": "المدّة الوسيطة (س)"
+      },
+      "compareKeys": {
+        "adds": "إضافات",
+        "users": "أشخاص",
+        "opens": "فتحات"
+      },
+      "creditKeys": {
+        "opens": "فتحات",
+        "uses": "إعدادات تبدّلت"
+      },
+      "reactive": "سريعة",
+      "notReactive": "تحت العتبة",
+      "tooFew": "قليل برشا",
+      "filterNames": {
+        "deal": "العرض",
+        "cat": "الصنف",
+        "gov": "الولاية",
+        "del": "المعتمدية",
+        "min": "أقل سوم",
+        "max": "أعلى سوم",
+        "surface": "المساحة",
+        "rooms": "البيوت",
+        "furnished": "مفروش",
+        "avail": "فاضي قبل"
+      },
+      "sortNames": {
+        "recent": "الجداد",
+        "popular": "الأكثر مشاهدة",
+        "cheap": "السوم تصاعدي",
+        "value": "السوم بالمتر",
+        "dear": "السوم تنازلي",
+        "big": "المساحة"
+      }
+    },
+    "pro": {
+      "title": "Pro والمداخيل",
+      "byPlan": "الوكالات حسب الخطّة",
+      "noPlan": "بلا خطّة شغّالة",
+      "agences": "الوكالات",
+      "mrr": "الدخل الشهري المتكرّر (MRR)",
+      "mrrOffered": "منها هدية: {amount} د.ت",
+      "endingSoon": "{count} خطّة توفى في أقل من 14 يوم بلا تجديد",
+      "payments": "الدفعات في المدّة",
+      "pendingNow": "وصولات تستنّى",
+      "revenueByKind": "المداخيل حسب النوع",
+      "revenueByProvider": "المداخيل حسب الوسيلة",
+      "invoices": "الفواتير والإشعارات الدائنة",
+      "planChanges": "خطط تشترات في المدّة",
+      "offers": "مدد هدية",
+      "imports": "استيراد إعلانات",
+      "social": "Social Publisher",
+      "ai": "المساعد الذكي",
+      "cols": {
+        "plan": "الخطّة",
+        "price": "السوم",
+        "agences": "وكالات",
+        "offered": "هدية",
+        "quota": "إعلانات",
+        "status": "الحالة",
+        "count": "العدد",
+        "amount": "المبلغ",
+        "kind": "النوع",
+        "provider": "الوسيلة",
+        "paid": "مخلّصة",
+        "files": "ملفات",
+        "rows": "سطور",
+        "calls": "طلبات",
+        "failed": "فشلت",
+        "cost": "الكلفة (USD)"
+      },
+      "agenceKeys": {
+        "approved": "مفتوحة",
+        "pending": "تستنّى",
+        "suspended": "موقوفة",
+        "rejected": "مرفوضة",
+        "verified": "موثّقة",
+        "new": "جديدة"
+      },
+      "kinds": {
+        "agency": "وكالات",
+        "promoter": "باعثين",
+        "land_developer": "مقسّمين",
+        "property_manager": "مسيّرين"
+      },
+      "paymentStatus": {
+        "pending": "للخلاص",
+        "pending_review": "وصل للمراجعة",
+        "authorized": "مرخّصة",
+        "captured": "مأكّدة",
+        "refunded": "مرجّعة",
+        "failed": "مرفوضة"
+      },
+      "paymentKinds": {
+        "listing_fee": "النشر",
+        "listing_pack": "باقات الإعلانات",
+        "promo": "الإبراز",
+        "badge": "شارة التوثيق",
+        "renewal": "التجديد",
+        "subscription": "الاشتراكات"
+      },
+      "providers": {
+        "bank_transfer": "تحويل بنكي",
+        "d17": "D17",
+        "manual": "يدوي",
+        "konnect": "Konnect",
+        "paymee": "Paymee",
+        "flouci": "Flouci"
+      },
+      "invoiceKeys": {
+        "invoices": "فواتير",
+        "invoices_amount": "المبلغ المفوتر",
+        "credit_notes": "إشعارات دائنة",
+        "credit_notes_amount": "مبلغ الإشعارات الدائنة"
+      },
+      "socialStatus": {
+        "draft": "مسودّات",
+        "pending_approval": "للموافقة",
+        "scheduled": "مبرمجة",
+        "published": "منشورة",
+        "failed": "فشلت",
+        "rejected": "مرفوضة",
+        "cancelled": "ملغاة",
+        "withdrawn": "مسحوبة"
+      },
+      "socialRevenue": "تخلّص: {amount} د.ت"
+    },
+    "users": {
+      "title": "الحسابات",
+      "signups": "تسجيلات",
+      "byDay": "التسجيلات نهار بنهار",
+      "byLocale": "حسب اللغة",
+      "byRole": "حسب الدور",
+      "byDevice": "حسب الجهاز (وقت التسجيل)",
+      "logins": "دخولات",
+      "active": "حسابات نشيطة",
+      "activeKeys": {
+        "period": "في المدّة",
+        "d7": "آخر 7 أيام",
+        "d30": "آخر 30 يوم"
+      },
+      "total": "الحسابات الكل",
+      "deleted": "تفسخت في المدّة",
+      "cohorts": "الرجوع حسب جمعة التسجيل",
+      "cohortHint": "الجمعة 1: رجعو بين النهار 7 و14. الجمعة 4: بين النهار 28 و35. «—» ما دام الفترة ما وفاتش.",
+      "cohortCols": {
+        "week": "تسجّلو من",
+        "size": "حسابات",
+        "w1": "الجمعة 1",
+        "w4": "الجمعة 4"
+      },
+      "consent": "الموافقة على الإحصائيات",
+      "consentKeys": {
+        "granted": "قبلو",
+        "denied": "رفضو",
+        "rate": "نسبة القبول"
+      },
+      "install": "تثبيت التطبيق",
+      "installKeys": {
+        "shown": "الزرّ تبيّن",
+        "click": "الزرّ تضغط",
+        "done": "تثبّت",
+        "rate": "نسبة التثبيت"
+      },
+      "languageSwitches": "تبديل اللغة",
+      "errors": "الأخطاء",
+      "errorKeys": {
+        "not_found": "صفحات مش موجودة (404)",
+        "client": "أخطاء المتصفّح",
+        "uploads": "رفع ملفات فشل"
+      },
+      "byLocaleEvents": "صفحات تشافت حسب اللغة",
+      "byDeviceEvents": "صفحات تشافت حسب الجهاز",
+      "locales": {
+        "fr": "فرنسية",
+        "ar": "عربية",
+        "en": "إنجليزية",
+        "other": "أخرى",
+        "unknown": "مش معروفة"
+      },
+      "devices": {
+        "phone": "تليفون",
+        "tablet": "تابلات",
+        "desktop": "كمبيوتر",
+        "unknown": "مش معروف"
+      },
+      "roles": {
+        "individual": "أفراد",
+        "agency": "وكالات",
+        "admin": "أدمين",
+        "bank": "بنوك",
+        "bailiff": "عدول تنفيذ",
+        "inspector": "مفتّشين"
+      },
+      "cols": {
+        "day": "النهار",
+        "fr": "فرنسية",
+        "ar": "عربية",
+        "other": "أخرى"
       }
     }
   }

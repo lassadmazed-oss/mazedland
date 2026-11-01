@@ -14,7 +14,7 @@ import { speechLang } from "@/components/search/speech";
 import { appliesTo } from "@/lib/listings/deal";
 import { governorateLabel } from "@/lib/tunisia";
 import { formatTND, cn } from "@/lib/utils";
-import { track } from "@/lib/analytics/ga";
+import { trackEvent } from "@/lib/analytics/events";
 import { CHAT_MAX_MESSAGE_CHARS, CHAT_MAX_TURN_CHARS, type ChatTurn, type ListingDraft } from "@/lib/ai/listing";
 import { SELLER_ATTESTATION_VERSION, typedAttributes, type AttributeDef } from "../PublishWizard";
 
@@ -141,6 +141,8 @@ export function ChatPublisher({
     // the microphone stops at this length, so nothing dictated is dropped.
     const words = text.trim().slice(0, CHAT_MAX_MESSAGE_CHARS);
     if (!words) return;
+    // The first thing said is the start of the conversation (Statistiques).
+    if (!linesRef.current.some((l) => l.role === "seller")) trackEvent("voice_publish_start", { method: "chat" });
     const next: Line[] = [...linesRef.current, { role: "seller", text: words }];
     linesRef.current = next;
     setLines(next);
@@ -264,7 +266,8 @@ export function ChatPublisher({
         return;
       }
       setSheetOpen(false);
-      track("publish_listing", { method: "chat", mode: "new", status: j.status ?? "pending_review" });
+      trackEvent("publish_listing", { method: "chat", mode: "new", status: j.status ?? "pending_review" }, { listing: id });
+      trackEvent("voice_publish_finish", { method: "chat", status: j.status ?? "pending_review" }, { listing: id });
       setDone({ status: j.status ?? "pending_review", id, paidWith: j.paidWith, remaining: j.remaining, freeLeft: j.freeLeft });
     } catch {
       toast(t("offline"), "error");

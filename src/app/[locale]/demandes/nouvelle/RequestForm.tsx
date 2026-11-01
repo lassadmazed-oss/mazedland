@@ -23,6 +23,7 @@ import { dayMonthLabel, firstsOfMonth } from "@/lib/dayChips";
 import { tunisDay } from "@/lib/visits";
 import { hasPhrase, togglePhrase } from "@/lib/phrases";
 import { chipClass } from "@/lib/chips";
+import { trackEvent } from "@/lib/analytics/events";
 import { Bell, Check, KeyRound, ListChecks, Loader2, MapPin, Plus, Search } from "lucide-react";
 
 const MAX_GOVERNORATES = 5;
@@ -170,6 +171,7 @@ export function RequestForm({
         return;
       }
       toast(t("saved"), "success");
+      trackEvent("demande_create", { deal: v.deal_type, govs: v.governorates.length, mode: id ? "edit" : "new" });
       router.push("/account/requests" as never);
     } catch {
       toast(t("saveFailed"), "error");

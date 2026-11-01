@@ -225,6 +225,10 @@ function measure(rail: HTMLElement) {
   const pad = parseFloat(style.scrollPaddingInlineStart) || 0;
   const box = rail.getBoundingClientRect();
   const scroll = logicalScroll(rail.scrollLeft, rtl);
-  const targets = Array.from(rail.children, (card) => logicalStart(card.getBoundingClientRect(), box, scroll, rtl) - pad);
+  // Cards only: a hidden or zero-width child (a marker, a spacer) has no
+  // start of its own and would read as « reached » at every scroll.
+  const targets = Array.from(rail.children)
+    .filter((card) => !(card as HTMLElement).hidden && card.getBoundingClientRect().width > 0)
+    .map((card) => logicalStart(card.getBoundingClientRect(), box, scroll, rtl) - pad);
   return { rtl, targets, scroll, maxScroll: rail.scrollWidth - rail.clientWidth };
 }

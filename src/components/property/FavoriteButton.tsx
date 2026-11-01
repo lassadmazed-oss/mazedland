@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { Heart, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics/events";
 import {
   getWatchlistState,
   subscribeWatchlist,
@@ -119,6 +120,8 @@ export function FavoriteButton({
           res.status === 401 ? t("sessionExpired") : t("saveFailed"),
           res.status === 401 ? "warning" : "error",
         );
+      } else {
+        trackEvent(next ? "favourite_add" : "favourite_remove", {}, { listing: listingId });
       }
     } catch {
       setSaved(!next);

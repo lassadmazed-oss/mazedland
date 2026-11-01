@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics/events";
 
 /**
  * « Installer l'app » — the site, or the console, as an app on the phone or
@@ -29,6 +30,7 @@ type InstallPromptEvent = Event & {
 // is caught however early it fires.
 let deferred: InstallPromptEvent | null = null;
 let installed = false;
+let shownCounted = false;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -81,9 +83,18 @@ export function InstallButton({
   const [hint, setHint] = useState(false);
   const [done, setDone] = useState(false);
 
+  // The button shown, once per visit, on the public site (Statistiques).
+  useEffect(() => {
+    if (scope === "site" && state !== "hidden" && !shownCounted) {
+      shownCounted = true;
+      trackEvent("install_shown", { state });
+    }
+  }, [scope, state]);
+
   if (state === "hidden" && !done) return null;
 
   async function install() {
+    if (scope === "site") trackEvent("install_click", { state });
     if (state === "ios" || state === "manual") {
       setHint((h) => !h);
       return;
@@ -94,7 +105,10 @@ export function InstallButton({
     const { outcome } = await e.userChoice;
     // The event can be used once; a dismissed prompt comes back on a later visit.
     deferred = null;
-    if (outcome === "accepted") setDone(true);
+    if (outcome === "accepted") {
+      setDone(true);
+      if (scope === "site") trackEvent("install_done");
+    }
     emit();
   }
 

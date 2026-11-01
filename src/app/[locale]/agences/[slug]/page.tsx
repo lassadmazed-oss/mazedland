@@ -20,6 +20,8 @@ import { BadgeCheck, Building2, ChevronLeft, ChevronRight, Clock, Globe, Mail, M
 import { listingDescription } from "@/lib/seo";
 import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
+import { TrackEvent } from "@/components/analytics/TrackEvent";
+import { Impressions } from "@/components/analytics/Impressions";
 
 export const dynamic = "force-dynamic";
 
@@ -192,6 +194,8 @@ export default async function ShopPage({ params, searchParams }: { params: Promi
 
   return (
     <main className="mx-auto max-w-[var(--max-w-wide)] pb-10 lg:px-8">
+      {/* The agence page opened: which agence, of which kind, where (Statistiques). */}
+      <TrackEvent name="agence_view" shop={shop.id} params={{ kind: shop.kind, gov: shop.governorate }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
 
       {/* The banner — the agence's own, or the mark on warm paper. */}
@@ -243,23 +247,24 @@ export default async function ShopPage({ params, searchParams }: { params: Promi
           {/* How to reach them — the thing a visitor came for, in the header. */}
           {(shop.phone || shop.email || shop.website) && (
             <nav aria-label={t("contactTitle")} className="flex flex-wrap gap-2 lg:justify-end lg:pb-1">
+              {/* data-track: counted by FirstPartyEvents without a client component. */}
               {shop.phone && (
-                <a href={`tel:${shop.phone.replace(/[^\d+]/g, "")}`} className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-2 px-5 text-[13px]">
+                <a href={`tel:${shop.phone.replace(/[^\d+]/g, "")}`} data-track="agence_contact" data-track-via="call" data-track-shop={shop.id} className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-2 px-5 text-[13px]">
                   <Phone className="size-4" strokeWidth={2.4} aria-hidden /> {t("actions.call")}
                 </a>
               )}
               {shop.phone && (
-                <a href={whatsappLink(shop.phone)} target="_blank" rel="noreferrer" className={action}>
+                <a href={whatsappLink(shop.phone)} target="_blank" rel="noreferrer" data-track="agence_contact" data-track-via="whatsapp" data-track-shop={shop.id} className={action}>
                   <MessageCircle className="size-4 text-[#25D366]" strokeWidth={2.2} aria-hidden /> {t("actions.whatsapp")}
                 </a>
               )}
               {shop.email && (
-                <a href={`mailto:${shop.email}`} className={action}>
+                <a href={`mailto:${shop.email}`} data-track="agence_contact" data-track-via="email" data-track-shop={shop.id} className={action}>
                   <Mail className="size-4 text-muted" strokeWidth={2.2} aria-hidden /> {t("actions.email")}
                 </a>
               )}
               {shop.website && (
-                <a href={shop.website} target="_blank" rel="noreferrer nofollow" className={action}>
+                <a href={shop.website} target="_blank" rel="noreferrer nofollow" data-track="agence_contact" data-track-via="site" data-track-shop={shop.id} className={action}>
                   <Globe className="size-4 text-muted" strokeWidth={2.2} aria-hidden /> {t("actions.website")}
                 </a>
               )}
@@ -325,13 +330,16 @@ export default async function ShopPage({ params, searchParams }: { params: Promi
             {listings.length === 0 ? (
               <p className="mt-5 rounded-3xl border border-dashed border-border px-6 py-12 text-center text-[13.5px] text-muted">{t("noListings")}</p>
             ) : (
-              <ul className={`mt-5 grid gap-x-4 gap-y-7 ${phoneCols} sm:grid-cols-2 lg:grid-cols-3`}>
-                {listings.map((l, i) => (
-                  <li key={l.id}>
-                    <AnnonceCard listing={l} loggedIn={!!user} priority={i < 3} sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 92vw" />
-                  </li>
-                ))}
-              </ul>
+              <>
+                <Impressions ids={listings.map((l) => l.id)} surface="agence" />
+                <ul className={`mt-5 grid gap-x-4 gap-y-7 ${phoneCols} sm:grid-cols-2 lg:grid-cols-3`}>
+                  {listings.map((l, i) => (
+                    <li key={l.id}>
+                      <AnnonceCard listing={l} loggedIn={!!user} priority={i < 3} sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 92vw" />
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
             {lastPage > 1 && (
               <nav className="mt-8 flex items-center justify-center gap-2" aria-label={tc("pagination")}>

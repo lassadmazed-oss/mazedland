@@ -7,7 +7,7 @@ import { useApiError } from "@/lib/useApiError";
 import { Ltr } from "@/components/ui/Ltr";
 import { Phone, MessageCircle, Loader2 } from "lucide-react";
 import { recordSocialContact, recordSocialVisit } from "@/lib/social/visit";
-import { track } from "@/lib/analytics/ga";
+import { trackEvent } from "@/lib/analytics/events";
 
 export type RevealedContact = { phone: string; whatsapp: string | null };
 
@@ -66,7 +66,7 @@ export function useContactReveal(listingId: string) {
       if (!revealed.has(listingId)) {
         revealed.set(listingId, { phone: j.phone, whatsapp: j.whatsapp ?? null });
         recordSocialContact(listingId);
-        track("phone_reveal", { listing_id: listingId });
+        trackEvent("phone_reveal", {}, { listing: listingId });
         for (const fn of listeners) fn();
       }
     } catch {
@@ -82,7 +82,7 @@ export function useContactReveal(listingId: string) {
 
 /** A tap on « Appeler » or WhatsApp once the number shows (GA; the number itself is never sent). */
 export function trackContact(listingId: string, via: "call" | "whatsapp") {
-  track(via === "call" ? "contact_call" : "contact_whatsapp", { listing_id: listingId });
+  trackEvent(via === "call" ? "contact_call" : "contact_whatsapp", {}, { listing: listingId });
 }
 
 /** The links a revealed number opens: tel: and wa.me. */

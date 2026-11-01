@@ -9,6 +9,7 @@ import { HeroPhoto } from "@/components/landing/HeroPhoto";
 import { SellBand, WhyBand } from "@/components/landing/HomeBands";
 import { LG_UP } from "@/components/ui/HiddenAt";
 import { AnnonceCard } from "@/components/listing/AnnonceCard";
+import { Impressions } from "@/components/analytics/Impressions";
 import { isRtl } from "@/lib/i18n";
 import { getHomeFeed } from "@/lib/home/feed";
 import { homeRailOptions, planHomeRails, splitAtMiddle, type HomeRail } from "@/lib/home/rails";
@@ -316,6 +317,7 @@ export default async function LandingPage({
             href={explore.href}
             seeAllLabel={t("home.seeAll")}
           />
+          <Impressions ids={explore.rows.map((a) => a.id)} surface="home_explore" />
           <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 px-4">
             {explore.rows.map((a) => (
               <AnnonceCard

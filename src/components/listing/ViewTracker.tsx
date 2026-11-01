@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { trackEvent } from "@/lib/analytics/events";
 
 /**
  * Tells the server this annonce was actually looked at.
@@ -16,8 +17,24 @@ import { useEffect } from "react";
  *
  * `keepalive` so the count survives a reader who opens the page and immediately
  * taps a photo or navigates away — which is exactly the reader worth counting.
+ *
+ * The same moment is the `listing_view` event (Google and the site's own
+ * count, src/lib/analytics/events.ts): what the annonce is — its deal, its
+ * category, its governorate, its agence — never who reads it.
  */
-export function ViewTracker({ listingId }: { listingId: string }) {
+export function ViewTracker({
+  listingId,
+  deal,
+  category,
+  governorate,
+  shopId,
+}: {
+  listingId: string;
+  deal?: string | null;
+  category?: string | null;
+  governorate?: string | null;
+  shopId?: string | null;
+}) {
   useEffect(() => {
     const key = `v:${listingId}`;
     try {
@@ -45,10 +62,15 @@ export function ViewTracker({ listingId }: { listingId: string }) {
         method: "POST",
         keepalive: true,
       }).catch(() => {});
+      trackEvent(
+        "listing_view",
+        { deal: deal ?? undefined, cat: category ?? undefined, gov: governorate ?? undefined },
+        { listing: listingId, shop: shopId },
+      );
     }, 1500);
 
     return () => window.clearTimeout(timer);
-  }, [listingId]);
+  }, [listingId, deal, category, governorate, shopId]);
 
   return null;
 }

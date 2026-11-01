@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Images, X } from "lucide-react";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { trackEvent } from "@/lib/analytics/events";
 import { IMAGE_BLUR_MAP } from "@/lib/imageBlurMap";
 import { HiddenAt, BELOW_LG } from "@/components/ui/HiddenAt";
 import { PhotoCarousel } from "./PhotoCarousel";
@@ -19,10 +20,15 @@ type Photo = { id: string; storage_path: string };
  * gallery at that photo. Hidden under lg, where the page shows the swipe
  * carousel instead; the first photo is not downloaded there (HiddenAt).
  */
-export function GalleryMosaic({ photos, alt }: { photos: Photo[]; alt: string }) {
+export function GalleryMosaic({ photos, alt, listingId }: { photos: Photo[]; alt: string; listingId?: string }) {
   const t = useTranslations("listing.gallery");
   const tg = useTranslations("gallery");
-  const [openAt, setOpenAt] = useState<number | null>(null);
+  const [openAt, setOpenAtState] = useState<number | null>(null);
+  // Opening the full-screen gallery is counted (which photo it started on).
+  const setOpenAt = (i: number | null) => {
+    if (i !== null) trackEvent("gallery_open", { index: i, of: photos.length }, { listing: listingId });
+    setOpenAtState(i);
+  };
   const n = photos.length;
   if (n === 0) return null;
 
@@ -59,7 +65,7 @@ export function GalleryMosaic({ photos, alt }: { photos: Photo[]; alt: string })
       </div>
 
       {openAt !== null && (
-        <GalleryModal photos={photos} alt={alt} startIndex={openAt} onClose={() => setOpenAt(null)} closeLabel={t("close")} />
+        <GalleryModal photos={photos} alt={alt} startIndex={openAt} onClose={() => setOpenAt(null)} closeLabel={t("close")} listingId={listingId} />
       )}
     </div>
   );
@@ -123,12 +129,14 @@ function GalleryModal({
   startIndex,
   onClose,
   closeLabel,
+  listingId,
 }: {
   photos: Photo[];
   alt: string;
   startIndex: number;
   onClose: () => void;
   closeLabel: string;
+  listingId?: string;
 }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -154,7 +162,7 @@ function GalleryModal({
         <X className="size-5" strokeWidth={2.4} />
       </button>
       <div className="mx-auto w-full max-w-6xl">
-        <PhotoCarousel photos={photos} alt={alt} autoplay={false} counter startIndex={startIndex} variant="modal" />
+        <PhotoCarousel photos={photos} alt={alt} autoplay={false} counter startIndex={startIndex} variant="modal" listingId={listingId} />
       </div>
     </div>,
     document.body,

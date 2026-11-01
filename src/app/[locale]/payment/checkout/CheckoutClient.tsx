@@ -2,7 +2,7 @@
 
 import { WhatsAppHelp } from "@/components/ui/WhatsAppHelp";
 import Image from "next/image";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Check,
@@ -23,6 +23,7 @@ import { MAX_RECEIPTS, MAX_RECEIPT_MB, RECEIPT_TYPES, receiptProblem } from "@/l
 import { removeReceipts, uploadReceipts } from "@/lib/payments/receiptUpload";
 import { PayeeFields, PayMethodPicker } from "@/components/payments/PayeeInstructions";
 import { pickedBeforeReady } from "@/lib/pickedBeforeReady";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface Props {
   paymentId: string;
@@ -83,10 +84,19 @@ export function CheckoutClient({
   const [cancelling, setCancelling] = useState(false);
   const [cancelled, setCancelled] = useState(false);
 
+  // The checkout opened for this payment: the start of the payment funnel.
+  useEffect(() => {
+    if (receiptUnderReview) return;
+    trackEvent("payment_start", { kind: subject?.kind ?? "fee", amount, payment: paymentId });
+    // Once per payment shown, not on every re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentId]);
+
   async function cancelPayment() {
     if (cancelling) return;
     const ok = window.confirm(t("cancelConfirm"));
     if (!ok) return;
+    trackEvent("payment_cancel", { kind: subject?.kind ?? "fee", payment: paymentId });
     setCancelling(true);
     try {
       const res = await fetch(`/api/payments/${paymentId}/cancel`, {
@@ -159,6 +169,7 @@ export function CheckoutClient({
     const up = await uploadReceipts(list, paymentId);
     if (!up.ok) {
       toast(t(up.reason === "session" ? "sessionExpired" : up.reason === "upload" ? "uploadFailed" : "networkError"), "error");
+      trackEvent("upload_failed", { kind: "receipt", reason: up.reason });
       setSubmitting(false);
       return;
     }
@@ -175,6 +186,8 @@ export function CheckoutClient({
         setSubmitting(false);
         return;
       }
+      // Google only: the route counts it for the site (src/lib/analytics/server-events.ts).
+      trackEvent("payment_submit", { kind: subject?.kind ?? "fee", method: provider, amount, payment: paymentId }, {}, { firstParty: false });
       setSubmitted(true);
       setSentHere(true);
     } catch {

@@ -222,6 +222,49 @@ export const SETTINGS = {
   // after a no). Off: it loads for everyone, with advertising signals denied.
   analytics_ask_consent: { group: "analytics", type: "bool", default: true, client: true },
 
+  // ── The site's own count (0204 site_events, src/lib/analytics/events.ts):
+  //    every search, annonce opened, number shown, step of the publish form…
+  //    kept in the database, exact and per annonce, beside Google's sampled
+  //    and consent-gated figures. No name, number, e-mail or address.
+  analytics_events_enabled: { group: "analytics", type: "bool", default: true, client: true },
+  // On: the site's own count waits for the visitor's yes too (when asked):
+  // nothing leaves the browser before « Accepter ». Off: it counts everyone,
+  // pseudonymously, with a key that changes every day and no cookie.
+  analytics_events_consent: { group: "analytics", type: "bool", default: true, client: true },
+  // How long an event is kept before the nightly job deletes it.
+  analytics_events_days: { group: "analytics", type: "int", default: 365, min: 30, max: 730, unit: "days", choices: [90, 180, 365, 730] },
+  // What one browser may send in an hour: a reader opens a few dozen annonces in an evening.
+  analytics_events_per_hour: { group: "analytics", type: "int", default: 600, min: 100, max: 5000, unit: "per_hour", choices: [200, 600, 1200, 3000] },
+  // The GA4 property the console reads reports from (Administration → Paramètres
+  // de la propriété → « ID de la propriété », a number). The service account's
+  // key is the GA4_SERVICE_ACCOUNT_JSON environment variable, never a setting.
+  analytics_ga_property_id: { group: "analytics", type: "text", default: "", max: 20, ltr: true, pattern: /^[0-9]{5,15}$/ },
+  // A report fetched from Google is reused for this long before it is asked again.
+  analytics_ga_cache_minutes: { group: "analytics", type: "int", default: 60, min: 5, max: 1440, unit: "minutes", choices: [15, 30, 60, 180, 360, 1440] },
+  // ── The page's rules (/admin/analytics).
+  // How many rows each ranking shows (annonces, agences, searches, governorates).
+  analytics_top_limit: { group: "analytics", type: "int", default: 10, min: 5, max: 100, choices: [5, 10, 20, 50] },
+  // An annonce « expiring soon » ends within this many days.
+  analytics_expiring_days: { group: "analytics", type: "int", default: 7, min: 1, max: 60, unit: "days", choices: [3, 7, 14, 30] },
+  // Insights: how many sentences « À retenir » shows at most.
+  analytics_insights_limit: { group: "analytics", type: "int", default: 8, min: 3, max: 20, choices: [5, 8, 12] },
+  // Insights: the weeks before the latest one a figure is compared with.
+  analytics_baseline_weeks: { group: "analytics", type: "int", default: 8, min: 4, max: 26, choices: [4, 8, 12] },
+  // Insights: a figure this many standard deviations from its baseline average is an anomaly.
+  analytics_anomaly_sigma: { group: "analytics", type: "number", default: 2, min: 1, max: 4, step: 0.5, choices: [1.5, 2, 2.5, 3] },
+  // Insights: a figure that moved by at least this much week over week is a mover…
+  analytics_mover_min_percent: { group: "analytics", type: "int", default: 20, min: 5, max: 100, unit: "percent", choices: [10, 20, 30, 50] },
+  // …as long as one of the two weeks reached this many (two to three is no news).
+  analytics_mover_min_count: { group: "analytics", type: "int", default: 5, min: 1, max: 1000, choices: [5, 10, 20] },
+  // Insights: a search with no result repeated this many times deserves a look.
+  analytics_zero_search_min: { group: "analytics", type: "int", default: 3, min: 1, max: 100, choices: [2, 3, 5, 10] },
+  // Insights: an annonce seen this many times without one contact is flagged.
+  analytics_no_contact_min_views: { group: "analytics", type: "int", default: 30, min: 5, max: 1000, choices: [10, 20, 30, 50, 100] },
+  // Insights: a governorate searched at least this often…
+  analytics_gov_demand_min: { group: "analytics", type: "int", default: 20, min: 5, max: 1000, choices: [10, 20, 50, 100] },
+  // …with fewer annonces online than this lacks supply.
+  analytics_gov_low_supply: { group: "analytics", type: "int", default: 5, min: 1, max: 100, choices: [3, 5, 10, 20] },
+
   // ── Paid services (0203, /admin/abonnements): an SMS before Vercel,
   //    Supabase, a domain or a credit runs out. The watchdog in the database
   //    (services_watchdog) reads the same keys with the same defaults.

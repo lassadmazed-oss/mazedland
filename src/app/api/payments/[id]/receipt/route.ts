@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase/server";
+import { recordServerEvent } from "@/lib/analytics/server-events";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { jsonObject } from "@/lib/http/body";
@@ -80,7 +81,7 @@ export async function POST(
   // so a forged paymentId belonging to another user just 404s.
   const { data: pay, error: payErr } = await supabase
     .from("payments")
-    .select("id, user_id, status, reviewer_id")
+    .select("id, user_id, status, reviewer_id, kind")
     .eq("id", paymentId)
     .single();
   if (payErr || !pay) {
@@ -147,5 +148,7 @@ export async function POST(
     );
   }
 
+  // Counted here, once, whatever the browser did (Statistiques).
+  recordServerEvent(req, "payment_submit", { userId: user.id, params: { method: provider, kind: String(pay.kind ?? ""), again: refused } });
   return NextResponse.json({ ok: true });
 }

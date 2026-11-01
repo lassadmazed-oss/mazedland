@@ -12,7 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { formatTND, formatDate, formatNumber, cn } from "@/lib/utils";
 import { chipClass } from "@/lib/chips";
-import { track } from "@/lib/analytics/ga";
+import { flushFirstParty, trackEvent } from "@/lib/analytics/events";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { canonicalDelegation, delegationLabel, delegationsOf } from "@/lib/delegations";
 import {
@@ -131,6 +131,8 @@ export type WizardCategory = {
 };
 
 const STEPS = ["where", "photos", "details", "review"] as const;
+/** The same steps as the Statistiques funnel names them (0204 analytics_marketplace). */
+const FUNNEL_STEPS = ["category", "photos", "details", "review"] as const;
 type Step = WizardStep;
 
 /** One question, as `/admin/catalogue` defines it. */
@@ -782,6 +784,45 @@ export function PublishWizard({
     }, 60);
   }
 
+  // ── The publish funnel (Statistiques): a start, each step reached, the end
+  //    or the abandon. The site's own count keeps one per visitor and step.
+  const funnelDone = useRef(false);
+  const stepRef = useRef<Step>(step);
+  stepRef.current = step;
+  useEffect(() => {
+    if (editing) return;
+    if (!d?.id) trackEvent("publish_start", { method: "form" });
+    // Once, when the form opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (editing) return;
+    trackEvent("publish_step", { step: FUNNEL_STEPS[step], index: step, method: "form" });
+  }, [step, editing]);
+  // The abandon from an unmount waits a tick: React (StrictMode, in
+  // development) runs an effect, cleans it up and runs it again at mount,
+  // and that cleanup is not someone leaving. The real unload is `pagehide`,
+  // where the batch is sent at once — nothing scheduled runs in a page going.
+  const abandonTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (editing) return;
+    if (abandonTimer.current) {
+      clearTimeout(abandonTimer.current);
+      abandonTimer.current = null;
+    }
+    const abandon = () => {
+      if (funnelDone.current) return;
+      funnelDone.current = true;
+      trackEvent("publish_abandon", { step: FUNNEL_STEPS[stepRef.current], index: stepRef.current, method: "form" });
+      flushFirstParty();
+    };
+    window.addEventListener("pagehide", abandon);
+    return () => {
+      window.removeEventListener("pagehide", abandon);
+      abandonTimer.current = setTimeout(abandon, 0);
+    };
+  }, [editing]);
+
   function goToStep(s: Step) {
     setStep(s);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -801,6 +842,7 @@ export function PublishWizard({
       );
       return;
     }
+    if (step === 1) trackEvent("publish_photos", { count: photos.length, method: "form" }, { listing: listingId });
     goToStep(Math.min(3, step + 1) as Step);
   }
 
@@ -1081,6 +1123,7 @@ export function PublishWizard({
         toast(apiError(j, t("editFailed")), "error");
         return;
       }
+      trackEvent("publish_listing", { method: "form", mode: "edit", status: j.status ?? "pending" }, { listing: listingId });
       setDone({ paidWith: "none", status: j.status ?? "pending", id: listingId });
       if (j.status === "published") setWaiting(false);
     } finally {
@@ -1120,7 +1163,8 @@ export function PublishWizard({
         toast(apiError(j, t("submitFailed")), "error");
         return;
       }
-      track("publish_listing", { method: "form", mode: editing ? "edit" : "new", status: j.status ?? "pending_review" });
+      funnelDone.current = true;
+      trackEvent("publish_listing", { method: "form", mode: editing ? "edit" : "new", status: j.status ?? "pending_review" }, { listing: id });
       setDone({
         paidWith: j.paidWith ?? "free_quota",
         remaining: j.remaining,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { logAction } from "@/lib/activity";
+import { recordServerEvent } from "@/lib/analytics/server-events";
 
 /**
  * Server-side sign-out — clears the Supabase auth cookie via the SSR
@@ -21,7 +22,10 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await getServerSupabase();
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) logAction(req, user, "logout");
+    if (user) {
+      logAction(req, user, "logout");
+      recordServerEvent(req, "logout", { userId: user.id });
+    }
     await supabase.auth.signOut();
   } catch {
     // Even if signOut fails (no env, stale session) we still want the

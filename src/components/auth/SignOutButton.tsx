@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useLocale } from "next-intl";
 import { getBrowserSupabase } from "@/lib/supabase/client";
+import { trackEvent } from "@/lib/analytics/events";
 import { LogOut } from "lucide-react";
 
 /**
@@ -20,6 +21,8 @@ export function SignOutButton({ label }: { label: string }) {
 
   function onClick() {
     start(async () => {
+      // Google only: the route counts it for the site itself.
+      trackEvent("logout", {}, {}, { firstParty: false });
       const supabase = getBrowserSupabase();
       await Promise.all([
         supabase.auth.signOut(),
