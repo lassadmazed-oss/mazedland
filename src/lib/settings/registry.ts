@@ -95,6 +95,9 @@ export const SETTINGS = {
   home_rail_terrain: { group: "home", type: "bool", default: true },
   home_rail_explore: { group: "home", type: "bool", default: true },
   ads_rotate_seconds: { group: "home", type: "int", default: 6, min: 3, max: 30, unit: "seconds", client: true },
+  // Off: the banners always turn (asked 2026-11-01). On: they hold still under
+  // the pointer, the keyboard, or a device asking for reduced motion.
+  ads_rotate_pause: { group: "home", type: "bool", default: false, client: true },
 
   // ── Moderation: how much of the site runs by itself.
   free_listing_limit: { group: "moderation", type: "int", default: 2, min: 0, max: 50 },
