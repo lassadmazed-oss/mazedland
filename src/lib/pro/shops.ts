@@ -9,7 +9,7 @@
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { addMonths, monthsOf, quotePlanChange, type PlanPeriod, type PlanQuote } from "./planChange";
 import { TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
-import { offeredPeriod } from "./offer";
+import { offeredPeriod, shiftedGifts } from "./offer";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -365,6 +365,9 @@ export async function grantPlanPeriod(
     .select("id, listing_quota, starts_at, ends_at")
     .eq("shop_id", g.shopId)
     .eq("status", "active")
+    // Paid time only: a gift (no payment behind it) is never cut or cancelled by a
+    // purchase — it moves after the new period instead (shiftedGifts, below).
+    .not("payment_id", "is", null)
     .lt("listing_quota", g.quota)
     .gt("ends_at", starts.toISOString());
   const replaced = (smaller ?? []).map((p) => ({
@@ -407,6 +410,28 @@ export async function grantPlanPeriod(
   }
   if (carry.cancel.length) {
     const { error: e } = await admin.from("shop_subscriptions").update({ status: "cancelled", replaced_by: g.paymentId }).in("id", carry.cancel);
+    if (e) return { error: e };
+  }
+  // The free months of a founding agence queued for later start after this period, not inside it.
+  const { data: gifts, error: giftErr } = await admin
+    .from("shop_subscriptions")
+    .select("id, starts_at, ends_at")
+    .eq("shop_id", g.shopId)
+    .eq("status", "active")
+    .is("payment_id", null)
+    .gte("starts_at", starts.toISOString())
+    .lt("starts_at", ends.toISOString());
+  if (giftErr) return { error: giftErr };
+  const moved = shiftedGifts({
+    gifts: (gifts ?? []).map((r) => ({ id: r.id as string, startsAt: new Date(r.starts_at as string), endsAt: new Date(r.ends_at as string) })),
+    from: starts,
+    to: ends,
+  });
+  for (const m of moved) {
+    const { error: e } = await admin
+      .from("shop_subscriptions")
+      .update({ starts_at: m.startsAt.toISOString(), ends_at: m.endsAt.toISOString() })
+      .eq("id", m.id);
     if (e) return { error: e };
   }
   return { startsAt: starts, endsAt: ends, carriedDays: Math.round(carry.carriedMs / 86_400_000) };
