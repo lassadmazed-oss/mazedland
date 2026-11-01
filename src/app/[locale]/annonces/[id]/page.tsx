@@ -839,7 +839,7 @@ export default async function AnnoncePage({
         {/* ── Right: what you do about it. It follows you down the page because
                the decision to call is made while reading the caractéristiques,
                not after scrolling back up to find the button. ── */}
-        <aside className="hidden lg:sticky lg:top-24 lg:block">
+        <aside className="hidden lg:sticky lg:top-[calc(var(--desktop-nav-h)+1.5rem)] lg:block">
           <div className="mazed-float p-5">
             {priceBlock}
             <div className="mt-5 border-t border-border pt-5">{ownerCard ?? sellerBlock}</div>

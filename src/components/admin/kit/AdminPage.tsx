@@ -25,7 +25,7 @@ export function AdminPage({
 
 export function FullBleed({ children }: { children: React.ReactNode }) {
   return (
-    <div className="-mx-5 -my-6 flex h-[calc(100dvh-48px)] flex-col overflow-hidden lg:-mx-8 lg:-my-7 lg:h-dvh">
+    <div className="-mx-5 -my-6 flex h-[calc(100dvh-64px)] flex-col overflow-hidden lg:-mx-8 lg:-my-7 lg:h-dvh">
       {children}
     </div>
   );

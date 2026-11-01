@@ -64,8 +64,8 @@ const TITLE_BY_SEGMENT: Record<string, string> = {
  *   - Plain white with a hairline border, no glass and no gold rule. The
  *     chrome stays out of the way so the page content carries the design
  *     weight.
- *   - Root pages get the logo (the tower and MAZED, side by side).
- *   - Inner pages get a back button, the tower, and the page title.
+ *   - Root pages get the logo.
+ *   - Inner pages get a back button, the logo, and the page title.
  */
 export function TopBar() {
   const t = useTranslations();
@@ -100,10 +100,10 @@ export function TopBar() {
           ) : (
             <>
               <BackButton />
-              {/* The tower on inner pages too — the logo is on every page —
-                  and a way home in one tap. */}
+              {/* The logo on inner pages too — it is on every page — and a
+                  way home in one tap. */}
               <Link href="/" className="shrink-0" aria-label={t("brand.name")}>
-                <BrandLogo variant="mark" alt="" eager className="h-8 w-auto" />
+                <BrandLogo alt="" eager className="h-[var(--topbar-logo-h)] w-auto" />
               </Link>
               {/* A <p>, not an <h1>: every page below has its own heading, and
                   a listing page ended up with two — "Annonce" in the bar and
@@ -136,16 +136,16 @@ export function TopBar() {
 
 function BrandMark() {
   const t = useTranslations("brand");
-  // The owner's logo, laid out sideways: the tower, then MAZED between its
-  // gold rules (see BrandLogo). It was the tower beside « Mazed Immo » in
-  // plain type; the owner asked for the logo itself.
+  // The owner's logo as drawn — the tower above MAZED (see BrandLogo). It was
+  // the tower beside « Mazed Immo » in plain type; the owner asked for the
+  // logo itself.
   //
   // Eager, not preloaded: the bar is above the fold on every page that shows
   // it, and an <img> near the top of the HTML is all the head start a small
   // file needs.
   return (
     <Link href="/" className="flex min-w-0 items-center" aria-label={t("name")}>
-      <BrandLogo variant="lockup" alt="" eager className="h-10 w-auto shrink-0" />
+      <BrandLogo alt="" eager className="h-[var(--topbar-logo-h)] w-auto shrink-0" />
     </Link>
   );
 }
