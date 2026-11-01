@@ -1,50 +1,27 @@
 import { getTranslations, getLocale } from "next-intl/server";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { Link } from "@/i18n/navigation";
-import { HeroShowcase, type ShowcaseSlide } from "@/components/landing/HeroShowcase";
 import { BELOW_LG } from "@/components/ui/HiddenAt";
-import { HeroBanner, type HeroSlide } from "@/components/landing/HeroBanner";
 import { HomeRailSection } from "@/components/landing/HomeRail";
 import { HomeSearch } from "@/components/landing/HomeSearch";
 import { IntentChooser } from "@/components/landing/IntentChooser";
-import { propertyPhotoUrl } from "@/lib/imageUrl";
-import { formatNumber, formatTND } from "@/lib/utils";
+import { HeroPhoto } from "@/components/landing/HeroPhoto";
+import { SellBand, WhyBand } from "@/components/landing/HomeBands";
 import { isRtl } from "@/lib/i18n";
-import { governorateLabel } from "@/lib/tunisia";
-import { shownDelegation } from "@/lib/delegations";
-import type { HomeListingRow } from "@/lib/home/feed";
 import type { HomeRail } from "@/lib/home/rails";
 import { catalogueHrefForType } from "@/lib/catalog/browse";
-import { asDealType } from "@/lib/listings/deal";
-import {
-  ArrowUpRight,
-  ChevronRight,
-  ChevronLeft,
-  Home,
-  ShieldCheck,
-  ClipboardCheck,
-  Scale,
-  Lock,
-  CalendarClock,
-  MapPin,
-  Zap,
-  Users,
-} from "lucide-react";
+import { ArrowUpRight, ChevronRight, ChevronLeft, ShieldCheck, Lock, Scale } from "lucide-react";
 
 /**
- * Desktop (lg+) home surface — a ground-up layout for mouse + wide
- * viewports, kept in its own file so the mobile tree in the route's
- * page.tsx is never touched. Rendered behind `hidden lg:block`, so it
+ * Desktop (lg+) home surface, kept in its own file so the mobile tree in the
+ * route's page.tsx is never touched. Rendered behind `hidden lg:block`, so it
  * costs nothing on phones.
  *
- * Design language:
- *   - A CENTERED hero: brand headline + a prominent one-row search +
- *     a centered live-stats strip. No off-center side boxes.
- *   - Every listing section is an AUTO-SLIDING carousel (AutoRail, through
- *     HomeRailSection), not a static grid — the page breathes and rotates on
- *     its own. The rails are the phone page's, in the same order.
- *   - Editorial bands (how-it-works, trust, activity, closing spread)
- *     close the page.
+ * The 2026-10-31 redesign: a full-width photographic hero with the headline,
+ * the search card floating off its lower edge, the three intents and the
+ * three trust points on one line under it; then the rails (the same list as
+ * the phone's, each an auto-sliding carousel with arrows), the type tiles and
+ * price shortcuts, and the two closing bands.
  */
 
 // Labels come from i18n (`property.types.<key>`); the tile art is a
@@ -72,33 +49,15 @@ const PRICE_BUCKETS: { key: string; labelKey: string; query: string }[] = [
   { key: "1m-plus",    labelKey: "over1m",         query: "deal=sale&min=1000000" },
 ];
 
-const TRUST_PILLARS: {
-  key: string;
-  titleKey: string;
-  bodyKey: string;
-  Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-}[] = [
-  { key: "escrow",     titleKey: "home.trustEscrowTitle",     bodyKey: "home.trustEscrowBody",     Icon: Lock },
-  { key: "kyc",        titleKey: "home.trustKycTitle",        bodyKey: "home.trustKycBody",        Icon: ShieldCheck },
-  { key: "inspection", titleKey: "home.trustInspectionTitle", bodyKey: "home.trustInspectionBody", Icon: ClipboardCheck },
-  { key: "legal",      titleKey: "home.trustLegalTitle",      bodyKey: "home.trustLegalBody",      Icon: Scale },
-];
-
 export async function HomeDesktop({
-  trending,
   railsAbove,
   railsBelow,
   explore,
   savedIds,
   loggedIn,
   liveCount,
-  newThisWeek,
-  coverageGovs,
-  endingSoonSlides = [],
   alwaysVisible = false,
 }: {
-  /** The published slice, paid placement first: the hero showcase opens on it. */
-  trending: HomeListingRow[];
   /** The rails of annonces (`planHomeRails`), on either side of the middle
    *  advertising space. */
   railsAbove: HomeRail[];
@@ -107,12 +66,8 @@ export async function HomeDesktop({
   explore: HomeRail | null;
   savedIds: Set<string>;
   loggedIn: boolean;
+  /** How many annonces are online: the hero's eyebrow. */
   liveCount: number;
-  newThisWeek: number;
-  coverageGovs: number;
-  /** "Ending soon" hero carousel slides — the second hero that used to be
-   *  mobile-only. Empty array hides it. */
-  endingSoonSlides?: HeroSlide[];
   /** When true the root drops its `hidden lg:block` gate and renders at
    *  all widths — set by the home page when it has already decided (via
    *  UA) to send only the desktop tree. */
@@ -121,233 +76,63 @@ export async function HomeDesktop({
   const t = await getTranslations();
   const locale = await getLocale();
   const isRTL = isRtl(locale);
+  const arabic = isRTL ? "font-arabic" : "";
   const ChevronEnd = isRTL ? ChevronLeft : ChevronRight;
+  const eyebrow = liveCount > 0 ? t("home.heroBrandEyebrow", { count: liveCount }) : t("home.heroKicker");
 
-  // Stats strip. Cohesive navy/gold treatment, and — critically — it never
-  // surfaces a sad "0": the middle slot degrades from "new this week" to a
-  // qualitative "100% vérifiées" so a young catalogue still reads as alive.
-  //
-  // These counted auctions: lots live now, lots coming, lots sold this month.
-  // A fixed-price catalogue has no clock, so the figures are the ones a buyer
-  // can actually use — how much is on offer, how fresh it is, and how far it
-  // reaches.
-  const fmt = (n: number) => formatNumber(n, locale);
-  // The figure and its label are rendered as two blocks. Where the label's
-  // grammar depends on the number (Arabic agrees the noun with it), both come
-  // from one plural message, and its <n>/<l> tags place each part.
-  const secondStat =
-    newThisWeek > 0
-      ? {
-          key: "new",
-          body: (
-            <>
-              <StatFigure live={false}>{fmt(newThisWeek)}</StatFigure>
-              <StatLabel>{t("home.statNewThisWeek")}</StatLabel>
-            </>
-          ),
-          sub: t("home.statNewThisWeekSub"),
-          Icon: CalendarClock,
-        }
-      : {
-          key: "verified",
-          body: (
-            <>
-              <StatFigure live={false}>100%</StatFigure>
-              <StatLabel>{t("home.verifiedTitle")}</StatLabel>
-            </>
-          ),
-          sub: t("home.verifiedSub"),
-          Icon: ShieldCheck,
-        };
-  const stats: { key: string; body: React.ReactNode; sub: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }> }[] = [
-    {
-      key: "live",
-      body: (
-        <>
-          <StatFigure live>{fmt(liveCount)}</StatFigure>
-          <StatLabel>{t("home.statLive", { count: liveCount })}</StatLabel>
-        </>
-      ),
-      sub: t("home.statLiveSub"),
-      Icon: Home,
-    },
-    secondStat,
-    {
-      key: "governorates",
-      body: t.rich("home.statGovernorates", {
-        count: coverageGovs,
-        n: (chunks) => <StatFigure live={false}>{chunks}</StatFigure>,
-        l: (chunks) => <StatLabel>{chunks}</StatLabel>,
-      }),
-      sub: coverageGovs >= 24 ? t("home.statGovernoratesNational") : t("home.statGovernoratesPartial"),
-      Icon: MapPin,
-    },
+  // What the product actually promises, on one quiet line under the search.
+  const trust = [
+    { key: "verified", Icon: ShieldCheck, title: t("home.verifiedTitle") },
+    { key: "number",   Icon: Lock,        title: t("home.protectedNumberTitle") },
+    { key: "nofee",    Icon: Scale,       title: t("home.trustLegalTitle") },
   ];
 
-  // Featured showcase — the newest annonces, as a single auto-advancing card
-  // on the hero's right.
-  //
-  // `endsAt`/`isLive` drove a countdown chip on the panel. A fixed price has
-  // no deadline, so both are null/false and HeroShowcase simply does not paint
-  // the chip. Deliberate: a clock that counts down to nothing is worse than
-  // an empty corner.
-  const showcaseSlides: ShowcaseSlide[] = trending
-    .slice(0, 5)
-    .map((l): ShowcaseSlide | null => {
-      const photo = (l.photos ?? []).slice().sort((p, q) => p.sort_order - q.sort_order)[0];
-      if (!photo) return null;
-      return {
-        id: l.id,
-        imageUrl: propertyPhotoUrl(photo.storage_path),
-        href: `/annonces/${l.id}`,
-        governorate: shownDelegation(l.governorate, l.delegation, locale) ?? governorateLabel(l.governorate, locale),
-        title: l.title,
-        priceLabel:
-          l.price_on_request || l.price == null
-            ? t("home.priceOnRequest")
-            : formatTND(Number(l.price), locale),
-        dealType: asDealType(l.deal_type),
-        endsAt: null,
-        isLive: false,
-      };
-    })
-    .filter((s): s is ShowcaseSlide => s !== null);
-
   return (
-    <div className={`${alwaysVisible ? "block" : "hidden lg:block"} mx-auto max-w-[var(--max-w-wide)] px-8 pb-24`}>
-      {/* ─── SPLIT HERO — copy + search left, lot imagery right ─── */}
-      {/* The soft brand bloom is painted as the section's own background (not a
-          -z child) so it lifts the hero off flat white WITHOUT creating a
-          stacking context — an `isolate`/`-z` wrapper here would trap the
-          search dropdowns (z-50) inside the hero and let the live ticker below
-          paint through them. */}
+    <div className={`${alwaysVisible ? "block" : "hidden lg:block"} mx-auto max-w-[var(--max-w-wide)] px-8 pb-4`}>
+      {/* ─── HERO — the photograph, the headline, the search ─── */}
       <section
-        className="relative pt-8"
-        style={{
-          backgroundImage:
-            "radial-gradient(46% 52% at 82% 4%, var(--gold-faint) 0%, transparent 66%), radial-gradient(38% 46% at 4% 36%, var(--gold-faint) 0%, transparent 70%)",
-          backgroundRepeat: "no-repeat",
-        }}
+        className="relative mt-5 overflow-hidden rounded-[var(--radius-3xl)] bg-[#1b2a36]"
+        aria-labelledby="home-hero-desktop"
       >
-        <div className="grid grid-cols-12 items-center gap-10">
-          {/* LEFT — brand copy + trust pillars */}
-          <div className="col-span-6">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3.5 py-1.5 text-[12px] font-bold shadow-sm">
-              <span
-                aria-hidden
-                className="mazed-pulse-dot size-2 rounded-full bg-[var(--accent)] text-[var(--accent)]/40"
-              />
-              <span className="uppercase tracking-[0.08em] text-[var(--accent)]">{t("home.heroLive")}</span>
-              <span className="text-muted">
-                {t("home.liveBadge", { count: liveCount })}
-              </span>
-            </span>
-
-            <h1
-              className={`mt-6 text-balance text-[clamp(32px,3vw,46px)] font-extrabold leading-[1.08] tracking-tight text-foreground ${
-                isRTL ? "font-arabic" : ""
-              }`}
-            >
-              {(() => {
-                const title = t("home.heroBrandTitle");
-                const idx = title.lastIndexOf(" ");
-                const head = idx > 0 ? title.slice(0, idx) : title;
-                const last = idx > 0 ? title.slice(idx + 1) : "";
-                return (
-                  <>
-                    {head} <span className="gradient-gold-text">{last}.</span>
-                  </>
-                );
-              })()}
-            </h1>
-
-            <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted">
-              {t("brand.slogan")}
-            </p>
-
-            {/* Primary action: sell, buy or rent. It replaces « Explorer » and
-                « Vendre un bien » — buying is the catalogue narrowed to sales,
-                selling is the same publish form — and adds the third reason
-                people come, which had no door at all. */}
-            <div className="mt-8 max-w-xl">
-              <IntentChooser layout="hero" />
-            </div>
-
-            {/* Trust signals — separated by a hairline so they read as proof,
-                not part of the action row. */}
-            <div className="mt-8 flex flex-wrap gap-x-7 gap-y-4 border-t border-border pt-6">
-              {[
-                // What the product actually does. It said "100% sécurisé —
-                // Transactions vérifiées", and the site never sees the
-                // transaction: buyers telephone sellers directly.
-                { key: "verified", Icon: ShieldCheck, title: t("home.verifiedTitle"),        sub: t("home.verifiedSub") },
-                { key: "nofee",    Icon: Zap,         title: t("home.trustLegalTitle"),      sub: t("home.noFeeSub") },
-                { key: "number",   Icon: Users,       title: t("home.protectedNumberTitle"), sub: t("home.protectedNumberSub") },
-              ].map((it) => (
-                <div key={it.key} className="flex items-center gap-2.5">
-                  <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold-faint text-gold ring-1 ring-gold/15">
-                    <it.Icon className="size-4" strokeWidth={2} />
-                  </span>
-                  <div>
-                    <div className="text-[13px] font-bold leading-tight text-foreground">{it.title}</div>
-                    <div className="text-[11px] text-muted">{it.sub}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* RIGHT — featured-lot showcase: a single auto-advancing lot
-              card with a structured info panel + live countdown, replacing
-              the raw photo carousel (which surfaced source-photo watermarks
-              and a colliding corner badge). */}
-          <div className="col-span-6">
-            <HeroShowcase
-              slides={showcaseSlides}
-              isRTL={isRTL}
-              priority
-              hiddenAt={alwaysVisible ? undefined : BELOW_LG}
-              brand={{
-                title: t("home.heroBrandTitle"),
-                slogan: t("brand.slogan"),
-                cta: t("home.heroBrowseCta"),
-                href: "/annonces",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Search — full width under the split */}
-        <div className="mt-8">
-          <HomeSearch isRTL={isRTL} layout="bar" />
-        </div>
-
-        {/* Live-stats strip — cohesive navy/gold metrics bar with a gold top
-            hairline and gradient figures. No more clashing red/green/violet. */}
-        <div className="relative mt-6 overflow-hidden rounded-2xl bg-surface ring-1 ring-border shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-          <span
-            aria-hidden
-            className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-soft/45 to-transparent"
-          />
-          <div className="grid grid-cols-3 divide-x divide-border rtl:divide-x-reverse">
-            {stats.map(({ key, body, sub, Icon }) => (
-              <div key={key} className="group flex items-center gap-3.5 px-6 py-5">
-                <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-gold-faint text-gold ring-1 ring-gold/15 transition group-hover:ring-gold/30">
-                  <Icon className="size-5" strokeWidth={2} />
-                </span>
-                <div className="min-w-0">
-                  {body}
-                  <div className="text-[10.5px] text-muted">{sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <HeroPhoto hiddenAt={alwaysVisible ? "not all" : BELOW_LG} className="absolute inset-0" />
+        <div className="mazed-hero-scrim absolute inset-0" aria-hidden />
+        <div className="relative px-12 pb-24 pt-16 text-white xl:px-16 xl:pt-20">
+          <p className="inline-flex items-center gap-2 rounded-full bg-black/30 px-3.5 py-1.5 text-[12px] font-bold ring-1 ring-white/25 backdrop-blur-sm">
+            {liveCount > 0 && <span aria-hidden className="size-1.5 rounded-full bg-[var(--accent)]" />}
+            {eyebrow}
+          </p>
+          <h1
+            id="home-hero-desktop"
+            className={`mazed-display mt-5 max-w-[15ch] text-[clamp(40px,4.4vw,60px)] text-white drop-shadow-sm ${arabic}`}
+          >
+            {t("home.heroBrandTitle")}
+          </h1>
+          <p className={`mt-4 max-w-md text-[17px] font-medium leading-snug text-white/85 ${arabic}`}>{t("brand.slogan")}</p>
         </div>
       </section>
 
+      {/* The search card, over the photo's lower edge. `relative z-10` so its
+          dropdowns open above what follows. */}
+      <div className="relative z-10 -mt-12 px-8 xl:px-12">
+        <HomeSearch isRTL={isRTL} layout="hero" />
+      </div>
+
+      {/* The three intents, and what the site promises, on one line. */}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-x-8 gap-y-3 px-8 xl:px-12">
+        <IntentChooser layout="row" />
+        <ul className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          {trust.map((it) => (
+            <li key={it.key} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted">
+              <it.Icon className="size-4 text-foreground" strokeWidth={2} aria-hidden />
+              {it.title}
+            </li>
+          ))}
+        </ul>
+      </div>
+
       {/* The hero is the intent and the search; an advertiser's banner
           (/admin/publicites) under it, above the first rail. */}
-      <AdSlot placement="home_top" className="mt-10" sizes="(min-width: 1280px) 1200px, 100vw" />
+      <AdSlot placement="home_top" className="mt-12" sizes="(min-width: 1280px) 1200px, 100vw" />
 
       {/* THE RAILS — the phone page's list (`planHomeRails`), each one an
           auto-sliding carousel with arrows. */}
@@ -356,45 +141,37 @@ export async function HomeDesktop({
       ))}
 
       {/* A second banner, halfway down the rails. */}
-      <AdSlot placement="home_middle" className="mt-12" sizes="(min-width: 1280px) 1200px, 100vw" />
+      <AdSlot placement="home_middle" className="mt-14" sizes="(min-width: 1280px) 1200px, 100vw" />
 
       {railsBelow.map((rail) => (
         <HomeRailSection key={rail.key} rail={rail} layout="desktop" savedIds={savedIds} loggedIn={loggedIn} />
       ))}
 
-      {/* SECOND HERO — "ending soon" carousel (was mobile-only). */}
-      {endingSoonSlides.length > 0 && (
-        <section className="mt-12">
-          <HeroBanner slides={endingSoonSlides} isRTL={isRTL} />
-        </section>
-      )}
-
-
       {/* PARCOURIR — category tiles (one row) + price pills */}
-      <section className="mt-14">
+      <section className="mazed-section" aria-labelledby="home-browse-desktop">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <span className="mazed-eyebrow">{t("home.browseEyebrow")}</span>
-            <h3 className="mt-1.5 text-[22px] font-extrabold leading-tight tracking-tight">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-subtle">{t("home.browseEyebrow")}</p>
+            <h2 id="home-browse-desktop" className={`mazed-h2 mt-1.5 text-[24px] text-foreground ${arabic}`}>
               {t("home.browseTitle")}
-            </h3>
+            </h2>
           </div>
           <Link
             href="/annonces"
-            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface px-3.5 py-1.5 text-[11.5px] font-semibold text-muted transition-colors hover:border-gold-soft/40 hover:text-gold"
+            className="inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 text-[13px] font-bold text-foreground underline-offset-4 transition hover:underline"
           >
             {t("home.seeAll")}
-            <ChevronEnd className="size-3" />
+            <ChevronEnd className="size-4" strokeWidth={2.4} aria-hidden />
           </Link>
         </div>
 
-        {/* Type — six compact category tiles across one row. */}
-        <div className="mt-6 grid grid-cols-4 gap-3">
+        {/* Type — eight tiles across one row. */}
+        <div className="mt-6 grid grid-cols-4 gap-3 xl:grid-cols-8">
           {PROPERTY_TYPES.map((pt) => (
             <Link
               key={pt.key}
               href={catalogueHrefForType(pt.key) as `/annonces`}
-              className="group flex flex-col items-center gap-2 rounded-2xl bg-surface px-3 py-5 ring-1 ring-border transition hover:-translate-y-0.5 hover:bg-surface-2 hover:ring-gold-soft/50"
+              className="group flex flex-col items-center gap-2 rounded-2xl bg-surface px-3 py-5 ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)] hover:ring-foreground/30"
             >
               <picture>
                 <source srcSet={`/icons/${pt.icon}.avif`} type="image/avif" />
@@ -406,12 +183,10 @@ export async function HomeDesktop({
                   height={64}
                   loading="lazy"
                   decoding="async"
-                  className="size-16 transition-transform duration-300 group-hover:scale-105"
+                  className="size-14 transition-transform duration-300 group-hover:scale-105"
                 />
               </picture>
-              <span className="text-[12.5px] font-bold text-foreground">
-                {t(`property.types.${pt.key}`)}
-              </span>
+              <span className={`text-[13px] font-bold text-foreground ${arabic}`}>{t(`property.types.${pt.key}`)}</span>
             </Link>
           ))}
         </div>
@@ -422,13 +197,10 @@ export async function HomeDesktop({
             <Link
               key={b.key}
               href={`/annonces?${b.query}` as `/annonces`}
-              className="group flex items-center justify-between rounded-2xl bg-surface px-5 py-3.5 ring-1 ring-border transition hover:bg-gold-faint hover:ring-gold-soft/50"
+              className="group flex items-center justify-between rounded-2xl bg-surface px-5 py-3.5 ring-1 ring-border transition hover:ring-foreground/30"
             >
-              <span className="text-[13px] font-bold text-foreground">{t(`home.priceBuckets.${b.labelKey}`)}</span>
-              <ArrowUpRight
-                className="size-4 text-muted transition group-hover:text-gold-bright rtl:-scale-x-100"
-                strokeWidth={2.2}
-              />
+              <span className="text-[13.5px] font-bold text-foreground">{t(`home.priceBuckets.${b.labelKey}`)}</span>
+              <ArrowUpRight className="size-4 text-subtle transition group-hover:text-foreground rtl:-scale-x-100" strokeWidth={2.2} aria-hidden />
             </Link>
           ))}
         </div>
@@ -437,98 +209,9 @@ export async function HomeDesktop({
       {/* MORE TO EXPLORE — what no rail above shows, auto-sliding too */}
       {explore && <HomeRailSection rail={explore} layout="desktop" savedIds={savedIds} loggedIn={loggedIn} />}
 
-      {/* ─── POURQUOI MAZED IMMO — one consolidated trust + CTA band ───
-              Replaces the old how-it-works / trust / activity / closing
-              stack: a single navy value panel + the four trust pillars. */}
-      <section className="mt-16">
-        <div className="overflow-hidden rounded-3xl ring-1 ring-gold/25">
-          <div className="grid grid-cols-12">
-            {/* Value prop + CTA */}
-            <div className="mazed-surface-navy-luxe relative col-span-5 flex flex-col justify-center p-10">
-              <span className="mazed-eyebrow">{t("home.trustEyebrow")}</span>
-              <h2 className="mt-3 text-[28px] font-extrabold leading-[1.12] tracking-tight">
-                {t("home.trustTitle")}
-              </h2>
-              <p className="mt-4 max-w-sm text-[13.5px] leading-relaxed text-muted">
-                {t("home.trustEscrowBody")}
-              </p>
-              <div className="mt-7 flex items-center gap-3">
-                <Link
-                  href="/annonces"
-                  className="mazed-gold-fill inline-flex items-center gap-2 rounded-full px-5 py-3 text-[12.5px] font-extrabold uppercase tracking-[0.14em] shadow-[var(--shadow-gold)] transition active:scale-[0.99]"
-                >
-                  {t("home.heroBrowseCta")}
-                  <ArrowUpRight className="size-4 rtl:-scale-x-100" strokeWidth={2.5} />
-                </Link>
-                <Link
-                  href="/annonces/nouvelle"
-                  className="inline-flex items-center gap-2 rounded-full border border-gold/30 px-5 py-3 text-[12.5px] font-bold text-foreground transition hover:border-gold-soft/60 hover:bg-gold-faint"
-                >
-                  {t("home.sellShort")}
-                </Link>
-              </div>
-            </div>
-
-            {/* Four trust pillars — 2×2, hairline-divided. */}
-            <div className="col-span-7 grid grid-cols-2 gap-px bg-border">
-              {TRUST_PILLARS.map((p) => (
-                <div key={p.key} className="flex flex-col gap-2.5 bg-surface p-7">
-                  <span className="mazed-monogram mazed-monogram-filled size-11 text-gold">
-                    <p.Icon className="size-4" strokeWidth={2.2} />
-                  </span>
-                  <div className="text-[14.5px] font-bold leading-tight text-foreground">
-                    {t(p.titleKey)}
-                  </div>
-                  <p className="text-[12px] leading-relaxed text-muted">
-                    {t(p.bodyKey)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <section className="mt-12">
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-muted">
-          <Link href="/terms" className="hover:text-gold-bright">
-            {t("landing.footerLinks.terms")}
-          </Link>
-          <span className="text-subtle">·</span>
-          <Link href="/privacy" className="hover:text-gold-bright">
-            {t("landing.footerLinks.privacy")}
-          </Link>
-          <span className="text-subtle">·</span>
-          <Link href="/contact" className="hover:text-gold-bright">
-            {t("landing.footerLinks.contact")}
-          </Link>
-          <span className="text-subtle">·</span>
-          <span className="text-subtle">© {new Date().getFullYear()} {t("brand.name")}</span>
-        </div>
-      </section>
+      {/* Why Mazed Immo, how it works, and the call to publish. */}
+      <WhyBand layout="desktop" />
+      <SellBand layout="desktop" />
     </div>
   );
-}
-
-/** The big gradient figure of a stats-strip cell, with the live dot when it counts what is online. */
-function StatFigure({ live, children }: { live: boolean; children: React.ReactNode }) {
-  return (
-    <div className="flex items-baseline gap-1.5">
-      <span className="mazed-tabular gradient-gold-text text-[28px] font-extrabold leading-none">
-        {children}
-      </span>
-      {live && (
-        <span
-          aria-hidden
-          className="mazed-pulse-dot size-2 rounded-full bg-[var(--accent)] text-[var(--accent)]/40"
-        />
-      )}
-    </div>
-  );
-}
-
-/** The label under a stats-strip figure. */
-function StatLabel({ children }: { children: React.ReactNode }) {
-  return <div className="mt-1.5 text-[12.5px] font-bold leading-tight text-foreground">{children}</div>;
 }

@@ -18,20 +18,22 @@ import type { HomeRail } from "@/lib/home/rails";
 
 type Layout = "phone" | "desktop";
 
-const SIZES: Record<Layout, { section: string; card: string; title: string; sub: string; cta: string }> = {
+const SIZES: Record<Layout, { section: string; card: string; title: string; sub: string; pad: string }> = {
   phone: {
-    section: "mt-7",
-    card: "w-[230px]",
-    title: "text-[19px]",
-    sub: "text-[12px]",
-    cta: "px-3 text-[11px]",
+    section: "mt-10",
+    // Wide enough for the 4:3 photo to be a photo (260 × 195) and for the
+    // next card to peek in from the edge, which is what says « swipe ».
+    card: "w-[264px]",
+    title: "text-[21px]",
+    sub: "text-[12.5px]",
+    pad: "px-4",
   },
   desktop: {
-    section: "mt-12",
+    section: "mt-16",
     card: "w-[300px]",
-    title: "text-[20px]",
-    sub: "text-[13px]",
-    cta: "px-3.5 text-[11.5px]",
+    title: "text-[24px]",
+    sub: "text-[13.5px]",
+    pad: "px-0",
   },
 };
 
@@ -68,7 +70,12 @@ export async function HomeRailSection({
       <AutoRail arrows={layout === "desktop"}>
         {rail.rows.map((a) => (
           <div key={a.id} className={`${size.card} shrink-0 snap-start`}>
-            <AnnonceCard listing={a} saved={savedIds.has(a.id)} loggedIn={loggedIn} />
+            <AnnonceCard
+              listing={a}
+              saved={savedIds.has(a.id)}
+              loggedIn={loggedIn}
+              sizes={layout === "desktop" ? "300px" : "264px"}
+            />
           </div>
         ))}
         {/* Room after the last card, so it does not sit on the screen's edge. */}
@@ -79,8 +86,8 @@ export async function HomeRailSection({
 }
 
 /**
- * A rail's heading: gold eyebrow, title with its count, a small line under it,
- * and « Tout voir » at the end. Also heads the phone's « À découvrir » grid.
+ * A rail's heading: a small eyebrow, the title with its count, a line under
+ * it, and « Tout voir » at the end. Also heads the phone's « À découvrir » grid.
  */
 export function RailHeading({
   id,
@@ -107,35 +114,27 @@ export function RailHeading({
   const size = SIZES[layout];
   const arabic = isRTL ? "font-arabic" : "";
   return (
-    <div className="flex items-end justify-between gap-3 px-4">
+    <div className={`flex items-end justify-between gap-3 ${size.pad}`}>
       <div className="min-w-0">
         {eyebrow && (
-          <div className="mb-1.5 flex items-center gap-2">
-            <span className="mazed-gold-rule-short" />
-            <span className={`mazed-eyebrow ${isRTL ? "font-arabic tracking-[0.18em]" : ""}`}>{eyebrow}</span>
-          </div>
+          <p className={`mb-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-subtle ${isRTL ? "font-arabic" : ""}`}>
+            {eyebrow}
+          </p>
         )}
-        <h3
-          id={id}
-          className={`inline-flex items-center gap-2 ${size.title} font-extrabold leading-tight tracking-tight ${arabic}`}
-        >
+        <h2 id={id} className={`mazed-h2 inline-flex items-baseline gap-2 text-foreground ${size.title} ${arabic}`}>
           {title}
           {count !== undefined && (
-            // Count as a soft gold chip rather than naked parens — reads as
-            // "7 of these" instead of debug metadata.
-            <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-gold-faint px-2.5 text-[11px] font-extrabold tracking-wider text-gold-bright">
-              {count}
-            </span>
+            <span className="mazed-tabular text-[13px] font-bold text-subtle">{count}</span>
           )}
-        </h3>
+        </h2>
         {sub && <p className={`mt-1 ${size.sub} leading-snug text-muted ${arabic}`}>{sub}</p>}
       </div>
       <Link
         href={href as "/annonces"}
-        className={`inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-surface py-1.5 font-semibold text-muted transition-colors hover:border-gold-soft/40 hover:text-gold ${size.cta}`}
+        className="tap-target inline-flex shrink-0 items-center gap-0.5 self-end whitespace-nowrap rounded-full px-2 text-[13px] font-bold text-foreground underline-offset-4 transition hover:underline"
       >
         {seeAllLabel}
-        <ChevronRight className="size-3 rtl:-scale-x-100" />
+        <ChevronRight className="size-4 rtl:-scale-x-100" strokeWidth={2.4} aria-hidden />
       </Link>
     </div>
   );

@@ -126,7 +126,8 @@ export function FavoritesList({ items }: { items: SavedItem[] }) {
                 </div>
 
                 <div className="self-start">
-                  <FavoriteButton listingId={i.id} initialSaved loggedIn size="sm" onSavedChange={follow(i.id)} />
+                  {/* On a white row, not a photo: a hairline keeps the chip visible. */}
+                  <FavoriteButton listingId={i.id} initialSaved loggedIn size="sm" className="ring-1 ring-border" onSavedChange={follow(i.id)} />
                 </div>
               </article>
             ))}

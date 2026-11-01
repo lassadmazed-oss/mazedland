@@ -5,7 +5,7 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { governorateLabel } from "@/lib/tunisia";
 import { delegationLabel } from "@/lib/delegations";
-import { BadgeCheck, Store } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, Store } from "lucide-react";
 import { getSettings } from "@/lib/settings/server";
 import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
@@ -51,46 +51,49 @@ export default async function ShopsPage() {
   const reactivity = settings.feature_agency_reactive ? await loadReactivity(admin, shops.map((s) => s.id), reactiveRules(settings)) : new Map();
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 lg:py-10">
+    <main className="mx-auto max-w-[var(--max-w-wide)] px-4 py-6 lg:px-8 lg:py-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[24px] font-extrabold tracking-tight lg:text-[30px]">{t("title")}</h1>
-          <p className="mt-1 text-[13px] text-muted">{t("subtitle")}</p>
+          <h1 className="mazed-h2 text-[26px] text-foreground lg:text-[34px]">{t("title")}</h1>
+          <p className="mt-1.5 text-[14px] text-muted">{t("subtitle")}</p>
         </div>
-        <Link href="/pro" className="text-[12.5px] font-bold text-gold hover:underline">{t("openYours")}</Link>
+        <Link href="/pro" className="inline-flex items-center gap-1 rounded-full bg-surface px-4 py-2 text-[12.5px] font-bold text-foreground ring-1 ring-border transition hover:ring-foreground/40">
+          {t("openYours")} <ArrowUpRight className="size-3.5 rtl:-scale-x-100" strokeWidth={2.4} aria-hidden />
+        </Link>
       </div>
 
       {shops.length === 0 ? (
-        <p className="mt-8 rounded-2xl border border-dashed border-border p-10 text-center text-[13px] text-muted">{t("empty")}</p>
+        <p className="mt-8 rounded-3xl border border-dashed border-border px-6 py-12 text-center text-[13.5px] text-muted">{t("empty")}</p>
       ) : (
-        <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-4">
           {shops.map((s) => (
             <li key={s.id}>
               <Link
                 href={`/agences/${s.slug}` as never}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 transition hover:border-gold-soft"
+                className="group flex items-center gap-4 rounded-2xl border border-border bg-surface p-4 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)] hover:border-foreground/30"
               >
-                <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border">
+                <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-surface-2 ring-1 ring-border">
                   {s.logo_path ? (
                     // eslint-disable-next-line @next/next/no-img-element -- a small logo
-                    <img src={propertyPhotoUrl(s.logo_path, { transform: { width: 120, quality: 70 } })} alt="" className="size-full object-cover" />
+                    <img src={propertyPhotoUrl(s.logo_path, { transform: { width: 128, quality: 70 } })} alt="" className="size-full object-cover" />
                   ) : (
                     <Store className="size-6 text-muted" />
                   )}
                 </span>
-                <span className="min-w-0">
-                  <span className="flex items-center gap-1.5 truncate text-[14.5px] font-extrabold text-foreground" dir="auto">
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 truncate text-[15px] font-extrabold text-foreground" dir="auto">
                     {s.name}
-                    {s.verified_at && <BadgeCheck className="size-4 shrink-0 text-gold" aria-label={t("verified")} />}
+                    {s.verified_at && <BadgeCheck className="size-4 shrink-0 text-foreground" strokeWidth={2.4} aria-label={t("verified")} />}
                   </span>
-                  <span className="block truncate text-[12px] text-muted">
+                  <span className="mt-0.5 block truncate text-[12.5px] text-muted">
                     {tKinds(s.kind)} · {s.city ? `${delegationLabel(s.city, locale)}, ` : ""}{governorateLabel(s.governorate, locale)}
                   </span>
-                  <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-bold text-gold">
+                  <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] font-bold text-foreground">
                     {t("listingsCount", { count: counts.get(s.id) ?? 0 })}
                     <ReactiveBadge reactivity={reactivity.get(s.id)} />
                   </span>
                 </span>
+                <ArrowUpRight className="size-4 shrink-0 text-subtle transition group-hover:text-foreground rtl:-scale-x-100" strokeWidth={2.2} aria-hidden />
               </Link>
             </li>
           ))}

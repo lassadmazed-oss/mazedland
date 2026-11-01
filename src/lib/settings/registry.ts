@@ -104,6 +104,10 @@ export const SETTINGS = {
   listing_default_days: { group: "publication", type: "int", default: 30, min: 1, max: 365, unit: "days" },
   listing_max_photos: { group: "publication", type: "int", default: 12, min: 1, max: 30, unit: "photos", client: true },
   catalogue_page_size: { group: "publication", type: "int", default: 24, min: 12, max: 60 },
+  // How many annonces side by side on a phone's catalogue: one, with big
+  // photos (Idealista, Rightmove), or two, denser (Tayara). Tablets and up
+  // always lay out three or four.
+  catalogue_phone_columns: { group: "publication", type: "int", default: 1, min: 1, max: 2, choices: [1, 2] },
   // A project goes public only while its agence has a running plan.
   projects_need_plan: { group: "publication", type: "bool", default: true },
   projects_max_units: { group: "publication", type: "int", default: 300, min: 10, max: 2000 },

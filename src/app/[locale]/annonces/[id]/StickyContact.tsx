@@ -59,7 +59,7 @@ export function StickyContact({
   const links = contact ? contactLinks(contact) : null;
   const bar = (
     <div
-      className="fixed inset-x-0 z-20 border-t border-border bg-background/95 px-4 py-2.5 backdrop-blur-md lg:hidden"
+      className="fixed inset-x-0 z-20 border-t border-border bg-background/95 px-4 py-2.5 shadow-[0_-8px_24px_-16px_rgba(17,17,19,0.25)] backdrop-blur-md lg:hidden"
       style={{
         bottom: trayUp
           ? "calc(var(--mazed-bottombar-h) + env(safe-area-inset-bottom) + 56px)"

@@ -44,7 +44,15 @@ function isFlowRoute(pathname: string): boolean {
   );
 }
 
-export function MobileShell({ children }: { children: React.ReactNode }) {
+export function MobileShell({
+  children,
+  footer,
+}: {
+  children: React.ReactNode;
+  /** The site footer (a server component, handed in by the layout): on every
+   *  page with the chrome, never on a flow route. */
+  footer?: React.ReactNode;
+}) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const flow = isFlowRoute(pathname);
@@ -85,6 +93,7 @@ export function MobileShell({ children }: { children: React.ReactNode }) {
           {/* Signed in and the CGU / privacy policy in force not accepted yet (0182). */}
           <LegalUpdateBanner />
           {children}
+          {footer}
         </main>
       </PullToRefresh>
       <BottomTabBar />
