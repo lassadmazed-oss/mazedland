@@ -27,6 +27,7 @@ import { FirstPartyEvents } from "@/components/analytics/FirstPartyEvents";
 import { NoNegativeNumbers } from "@/components/ui/NoNegativeNumbers";
 import { LocalizedValidation } from "@/components/ui/LocalizedValidation";
 import { clientSettings, getSettings } from "@/lib/settings/server";
+import { guidesListed } from "@/lib/guides/server";
 
 // The settings an admin changes reach every page (feature switches, limits).
 // Pages rendered ahead of time (terms, contact…) are rebuilt at most a minute
@@ -101,6 +102,9 @@ export default async function LocaleLayout({
   const messages = publicMessages(await getMessages());
   const t = await getTranslations("shell");
   const settings = clientSettings(await getSettings());
+  // « Guides » in the desktop nav, once there is one to read (the footer's
+  // own link asks the same; one query per request, shared).
+  const guides = await guidesListed();
 
   // Origin of the Supabase project so the browser can warm a TLS +
   // HTTP/2 connection before we issue the first auth/db/storage call.
@@ -160,7 +164,7 @@ export default async function LocaleLayout({
           <ToastProvider>
             <NetworkStatus />
             <FavoritesSync />
-            <MobileShell footer={<SiteFooter />}>{children}</MobileShell>
+            <MobileShell footer={<SiteFooter />} guides={guides}>{children}</MobileShell>
             {/* Site-wide admin-managed popup surface. Lazy-loaded (ssr:false)
                 so its JS + /api/popups/match fetch stay off the critical path.
                 Self-skips admin routes so previews don't compete with live

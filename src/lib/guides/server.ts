@@ -5,6 +5,7 @@
  */
 import { cache } from "react";
 import { getServiceSupabase } from "@/lib/supabase/admin";
+import { getSettings } from "@/lib/settings/server";
 import { log } from "@/lib/log";
 import type { Article, ArticleSummary } from "./articles";
 
@@ -29,6 +30,16 @@ export const publishedGuides = cache(async (): Promise<ArticleSummary[]> => {
   }
   return (data ?? []) as ArticleSummary[];
 });
+
+/**
+ * Whether the site points at /guides at all — the feature on and one guide
+ * to read. The desktop nav and the footer ask the same question, so a link
+ * never leads to an empty page.
+ */
+export async function guidesListed(): Promise<boolean> {
+  const settings = await getSettings();
+  return settings.guides_enabled && (await publishedGuides()).length > 0;
+}
 
 /** One guide by its address, whatever its status: the page decides who may see a draft. */
 export const loadGuide = cache(async (slug: string): Promise<Article | null> => {

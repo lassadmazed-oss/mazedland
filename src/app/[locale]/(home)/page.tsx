@@ -7,6 +7,7 @@ import { HomeSearch } from "@/components/landing/HomeSearch";
 import { IntentChooser } from "@/components/landing/IntentChooser";
 import { HeroPhoto } from "@/components/landing/HeroPhoto";
 import { SellBand, WhyBand } from "@/components/landing/HomeBands";
+import { GuidesStrip } from "@/components/guides/GuidesStrip";
 import { LG_UP } from "@/components/ui/HiddenAt";
 import { AnnonceCard } from "@/components/listing/AnnonceCard";
 import { Impressions } from "@/components/analytics/Impressions";
@@ -331,6 +332,11 @@ export default async function LandingPage({
           </div>
         </section>
       )}
+
+      {/* « Guides utiles » — the newest guides, while there is one to read
+          (the console's `guides_strip_count`, 0 = none). On a phone this is
+          the way to them: the bottom bar has no room for a sixth tab. */}
+      <GuidesStrip via="home" headingId="guides-strip-home-phone" className="px-4" />
 
       {/* Why Mazed Immo, how it works, and the call to publish. */}
       <WhyBand layout="phone" />

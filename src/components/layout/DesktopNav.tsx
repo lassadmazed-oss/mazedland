@@ -53,16 +53,18 @@ const NotificationBell = dynamic(
  */
 /**
  * The links a property site is navigated by: what you came to do (buy, rent),
- * who sells (the agences) and the offer for them (Pro). « Accueil » is the
+ * who sells (the agences), what to know before you sign (the guides, while
+ * there is one to read) and the offer for agences (Pro). « Accueil » is the
  * logo, « Explorer » is the search box beside these, and « Favoris » stays in
  * the account menu and on the phone's bar — the three used to take the nav's
  * whole width and said nothing a visitor does not already know.
  */
-type NavLink = { key: "buy" | "rent" | "agencies" | "pro"; href: string; deal?: "sale" | "rent" };
+type NavLink = { key: "buy" | "rent" | "agencies" | "guides" | "pro"; href: string; deal?: "sale" | "rent" };
 const LINKS: NavLink[] = [
   { key: "buy", href: "/annonces?deal=sale", deal: "sale" },
   { key: "rent", href: "/annonces?deal=rent", deal: "rent" },
   { key: "agencies", href: "/agences" },
+  { key: "guides", href: "/guides" },
   { key: "pro", href: "/pro" },
 ];
 
@@ -103,7 +105,7 @@ function QueryFromUrl({ onQuery }: { onQuery: (q: string, deal: string | null) =
   return null;
 }
 
-export function DesktopNav() {
+export function DesktopNav({ guides = false }: { guides?: boolean }) {
   const t = useTranslations("shell.tabs");
   const ts = useTranslations("search");
   const tShell = useTranslations("shell");
@@ -158,8 +160,10 @@ export function DesktopNav() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 hidden h-[var(--desktop-nav-h)] items-center border-b border-border bg-white lg:flex">
-      {/* Tighter at lg (1024–1279px), where four links, the search and the
-          button share 960px; the search keeps a floor so it never collapses. */}
+      {/* Tighter at lg (1024–1279px), where five links, the search and the
+          button share 960px; the search keeps a floor so it never collapses,
+          and the links' padding is what gives way (« Guides » made it 10px
+          too wide in French for a visitor not signed in). */}
       <div className="mx-auto flex h-full w-full max-w-[var(--max-w-wide)] items-center gap-4 px-6 xl:gap-6 xl:px-8">
         {/* ── Left zone: brand + primary links ── */}
         <div className="flex h-full shrink-0 items-center gap-6">
@@ -171,14 +175,14 @@ export function DesktopNav() {
           {/* The page you are on is underlined, the way a newspaper's section
               is: an ink rule under the word, not a tinted pill around it. */}
           <nav className="flex h-full items-stretch gap-0.5" aria-label={tShell("mainNav")}>
-            {LINKS.map((l) => {
+            {LINKS.filter((l) => l.key !== "guides" || guides).map((l) => {
               const active = isActive(pathname, l, deal);
               return (
                 <Link
                   key={l.key}
                   href={l.href as never}
                   aria-current={active ? "page" : undefined}
-                  className={`inline-flex items-center whitespace-nowrap border-b-2 px-2.5 pt-0.5 text-[13.5px] font-semibold transition-colors xl:px-3 ${
+                  className={`inline-flex items-center whitespace-nowrap border-b-2 px-2 pt-0.5 text-[13.5px] font-semibold transition-colors xl:px-3 ${
                     active
                       ? "border-foreground text-foreground"
                       : "border-transparent text-[var(--foreground-muted)] hover:text-[var(--foreground)]"

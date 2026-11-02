@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getSettings } from "@/lib/settings/server";
-import { publishedGuides } from "@/lib/guides/server";
+import { guidesListed } from "@/lib/guides/server";
 import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
@@ -24,7 +24,7 @@ export async function SiteFooter() {
   // « Le marché en chiffres » is listed while the console keeps the page on;
   // « Guides » (0208) once there is one to read and the feature is on.
   const settings = await getSettings();
-  const hasGuides = settings.guides_enabled && (await publishedGuides()).length > 0;
+  const hasGuides = await guidesListed();
 
   const columns: { key: string; title: string; links: { href: string; label: string }[] }[] = [
     {

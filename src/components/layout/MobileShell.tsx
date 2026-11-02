@@ -48,11 +48,14 @@ function isFlowRoute(pathname: string): boolean {
 export function MobileShell({
   children,
   footer,
+  guides = false,
 }: {
   children: React.ReactNode;
   /** The site footer (a server component, handed in by the layout): on every
    *  page with the chrome, never on a flow route. */
   footer?: React.ReactNode;
+  /** Whether the desktop nav offers « Guides » (`guidesListed`). */
+  guides?: boolean;
 }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
@@ -101,7 +104,7 @@ export function MobileShell({
     <>
       <ScrollToTop />
       <TopBar />
-      <DesktopNav />
+      <DesktopNav guides={guides} />
       <PullToRefresh>
         <main id="main-content" tabIndex={-1} className="mazed-shell-main">
           {/* Signed in and the CGU / privacy policy in force not accepted yet (0182). */}
