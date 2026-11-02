@@ -6,7 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { useApiError } from "@/lib/useApiError";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
-import { Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { chipClass } from "@/lib/chips";
 
 /**
@@ -63,7 +63,7 @@ export function ProfileForm({
 
   const label = "text-[10.5px] font-extrabold uppercase tracking-[0.12em] text-muted";
   const field =
-    "mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-3.5 text-[15px] text-foreground outline-none transition focus:border-foreground focus:ring-2 focus:ring-foreground/10";
+    "h-12 w-full rounded-xl border border-border bg-surface px-3.5 text-[15px] text-foreground outline-none transition focus:border-foreground focus:ring-2 focus:ring-foreground/10";
 
   return (
     <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
@@ -75,18 +75,23 @@ export function ProfileForm({
           maxLength={80}
           dir="auto"
           autoComplete="name"
-          className={field}
+          className={`${field} mt-1.5`}
         />
       </label>
       <div>
         <label className={label}>
           {t("governorateLabel")}
-          <select value={gov} onChange={(e) => setGov(e.target.value)} autoComplete="address-level1" className={`${field} appearance-none`}>
-            <option value="">{t("governorateNone")}</option>
-            {TUNISIAN_GOVERNORATES.map((g) => (
-              <option key={g} value={g}>{governorateLabel(g, locale)}</option>
-            ))}
-          </select>
+          {/* The browser's arrow goes with `appearance-none`; drawn back, so
+              the list reads as a list. */}
+          <span className="relative mt-1.5 block">
+            <select value={gov} onChange={(e) => setGov(e.target.value)} autoComplete="address-level1" className={`${field} appearance-none pe-10`}>
+              <option value="">{t("governorateNone")}</option>
+              {TUNISIAN_GOVERNORATES.map((g) => (
+                <option key={g} value={g}>{governorateLabel(g, locale)}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" strokeWidth={2.4} aria-hidden />
+          </span>
         </label>
         {!gov && suggestion && (
           <button
@@ -103,7 +108,7 @@ export function ProfileForm({
         <button
           type="submit"
           disabled={busy || !dirty}
-          className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-2 rounded-full px-5 text-[13px] disabled:opacity-50"
+          className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-2 px-5 text-[13px] disabled:opacity-50"
         >
           {busy && <Loader2 className="size-4 animate-spin" />}
           {t("save")}

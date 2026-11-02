@@ -47,10 +47,10 @@ export function SkeletonPropertyCard() {
 }
 
 /**
- * Centered auth-form placeholder — brand mark + N field rows +
- * primary CTA + optional footer link. Mirrors the LoginForm /
- * SignupForm / forgot-password / reset-password footprint so the
- * card doesn't shift when real content swaps in.
+ * Auth-screen placeholder — the footprint of AuthScreen (src/components/auth):
+ * on a phone the dark photo band with the logo tile and the title, the card
+ * floating off its lower edge; from lg the split screen. N field rows and
+ * the primary CTA inside the card, so nothing shifts when the page swaps in.
  */
 export function AuthFormSkeleton({
   fields = 2,
@@ -58,60 +58,44 @@ export function AuthFormSkeleton({
 }: {
   /** Number of input rows to render. Login = 2, Signup = 5, etc. */
   fields?: number;
-  /** Renders the secondary "Pas encore de compte ?" footer band. */
+  /** Renders the "Pas encore de compte ?" line under the card. */
   withFooter?: boolean;
 }) {
-  // The form card is identical on both breakpoints — render once.
-  const card = (
-    <div className="relative w-full max-w-sm">
-      <div className="mazed-float relative overflow-hidden">
-        <div className="p-7 sm:p-8">
-          <div className="flex flex-col items-center text-center">
-            <div className="mazed-skeleton size-20 rounded-2xl" />
-            <div className="mt-5 w-2/3">
-              <SkeletonBar height="h-6" width="w-full" />
-            </div>
-            <div className="mt-2 w-3/4">
-              <SkeletonBar height="h-3" width="w-full" />
-            </div>
-          </div>
-          <div className="mt-7 space-y-4">
-            {Array.from({ length: fields }).map((_, i) => (
-              <div key={i} className="space-y-1.5">
-                <SkeletonBar height="h-2.5" width="w-1/4" />
-                <SkeletonBar height="h-11" width="w-full" />
-              </div>
-            ))}
-            <SkeletonBar height="h-11" width="w-full" />
-          </div>
-        </div>
-        {withFooter && (
-          <div className="border-t border-border bg-surface-2 px-7 py-4 text-center sm:px-8">
-            <div className="mx-auto w-2/3">
-              <SkeletonBar height="h-3" width="w-full" />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
   return (
     <>
       <DesktopLoadingSpinner />
-      {/* MOBILE / tablet (< lg) — centered card, mirrors the real page. */}
-      <div className="lg:hidden mx-auto flex min-h-[calc(100dvh-9rem)] max-w-[var(--max-w)] flex-col items-center justify-center px-6">
-        {card}
-      </div>
+      <div className="lg:grid lg:h-[100dvh] lg:grid-cols-[1.05fr_0.95fr] lg:overflow-hidden">
+        {/* Phone: the photo band's footprint — same paddings as AuthScreen. */}
+        <div className="bg-[#1b2a36] px-5 pb-14 pt-[4.5rem] lg:hidden" aria-hidden>
+          <div className="h-[84px] w-[68px] rounded-2xl bg-white/10" />
+          <div className="mt-3 h-8 w-2/3 rounded-full bg-white/15" />
+        </div>
+        {/* Desktop: the photo panel's footprint. */}
+        <div className="hidden h-full w-full bg-[#1b2a36] lg:block" />
 
-      {/* DESKTOP (lg+) — split screen: hero panel + form card, so login /
-          signup don't tear into a different shape while loading. */}
-      <div className="hidden h-[100dvh] overflow-hidden lg:grid lg:grid-cols-[1.05fr_0.95fr]">
-        {/* Hero side — solid navy block (the real AuthHeroPanel photo). */}
-        <div className="h-full w-full bg-[#1b2a36]" />
-        {/* Form side */}
-        <div className="flex h-[100dvh] items-center justify-center bg-paper-warm px-8 py-10">
-          <div className="w-full max-w-md">{card}</div>
+        <div className="relative z-10 -mt-8 px-4 pb-10 lg:mt-0 lg:flex lg:h-[100dvh] lg:flex-col lg:overflow-y-auto lg:bg-paper-warm lg:px-8 lg:py-10">
+          <div className="mazed-float p-5 lg:mx-auto lg:my-auto lg:w-full lg:max-w-md lg:p-8">
+            <div className="hidden flex-col items-center lg:flex">
+              <div className="mazed-skeleton h-24 w-[72px] rounded-2xl" />
+              <div className="mt-5 w-2/3">
+                <SkeletonBar height="h-6" width="w-full" />
+              </div>
+            </div>
+            <div className="space-y-4 lg:mt-7">
+              {Array.from({ length: fields }).map((_, i) => (
+                <div key={i} className="space-y-1.5">
+                  <SkeletonBar height="h-2.5" width="w-1/4" />
+                  <SkeletonBar height="h-12" width="w-full" />
+                </div>
+              ))}
+              <SkeletonBar height="h-12" width="w-full" />
+            </div>
+          </div>
+          {withFooter && (
+            <div className="mx-auto mt-5 w-2/3 lg:hidden">
+              <SkeletonBar height="h-3" width="w-full" />
+            </div>
+          )}
         </div>
       </div>
     </>

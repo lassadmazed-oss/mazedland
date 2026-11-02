@@ -70,7 +70,7 @@ export function DeleteDraftButton({ listingId, block = false }: { listingId: str
             type="button"
             disabled={busy}
             onClick={() => setAsking(false)}
-            className="mazed-btn-quiet tap-target flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[13px] disabled:opacity-60"
+            className="mazed-btn-quiet tap-target flex h-11 flex-1 items-center justify-center px-4 text-[13px] disabled:opacity-60"
           >
             {tActions("cancel")}
           </button>

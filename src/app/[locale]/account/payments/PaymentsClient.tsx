@@ -303,7 +303,7 @@ export function PaymentsClient({
 
       {/* ── Filter tabs ── */}
       <div className="-mx-4 mt-6 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:px-0">
-        <div role="tablist" className="mazed-segment min-w-max">
+        <div className="mazed-segment min-w-max">
         {TABS.map(({ key, label }) => {
           const on = filter === key;
           const count = counts[key];
@@ -311,10 +311,9 @@ export function PaymentsClient({
             <button
               key={key}
               type="button"
-              role="tab"
               onClick={() => setFilter(key)}
-              aria-selected={on}
-              className="gap-1.5 whitespace-nowrap"
+              aria-pressed={on}
+              className="tap-target gap-1.5 whitespace-nowrap"
             >
               {key === "all" && <ListFilter className="size-3.5" strokeWidth={2.5} />}
               {label}
@@ -491,7 +490,7 @@ function PaymentRow({
           {canResume && aHref && (
             <Link
               href={aHref as "/payment/checkout"}
-              className="mazed-btn-luxe tap-target h-9 gap-1 rounded-full px-3.5 text-[12px]"
+              className="mazed-btn-luxe tap-target h-9 gap-1 px-3.5 text-[12px]"
             >
               {actionLabel(t, p)}
               <ArrowRight className="size-3 rtl:-scale-x-100" strokeWidth={2.5} />
@@ -548,7 +547,7 @@ function PaymentRow({
               href={p.receiptUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 rounded-full px-3 text-[11.5px]"
+              className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 px-3 text-[11.5px]"
             >
               <FileText className="size-3" strokeWidth={2} />
               {t("receipt")}
@@ -557,7 +556,7 @@ function PaymentRow({
           {p.invoice && (
             <Link
               href={`/factures/${p.invoice.id}` as never}
-              className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 rounded-full px-3 text-[11.5px]"
+              className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 px-3 text-[11.5px]"
             >
               <FileText className="size-3" strokeWidth={2} />
               {t(p.invoice.type === "invoice" ? "invoice" : "invoiceReceipt")}
@@ -566,7 +565,7 @@ function PaymentRow({
           {p.creditNote && (
             <Link
               href={`/factures/${p.creditNote.id}` as never}
-              className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 rounded-full px-3 text-[11.5px]"
+              className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 px-3 text-[11.5px]"
             >
               <FileText className="size-3" strokeWidth={2} />
               {t("creditNote")}

@@ -66,8 +66,8 @@ export function PaySubmitButton({
       disabled={busy}
       className={
         block
-          ? "mazed-btn-luxe tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
-          : "mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12px]"
+          ? "mazed-btn-luxe tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 px-4 text-[13px]"
+          : "mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 whitespace-nowrap px-3.5 text-[12px]"
       }
     >
       {busy ? <Loader2 className="size-3.5 animate-spin" /> : <CreditCard className="size-3.5" />}

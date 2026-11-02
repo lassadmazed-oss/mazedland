@@ -257,7 +257,7 @@ export function ForgotPasswordForm() {
           <button
             type="submit"
             disabled={isPending || otpCode.replace(/\D/g, "").length !== 6}
-            className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
+            className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 text-[14px] disabled:opacity-50"
           >
             {isPending ? (
               <><Loader2 className="inline size-4 animate-spin" /> {t("otp.verifying")}</>
@@ -269,7 +269,7 @@ export function ForgotPasswordForm() {
             type="button"
             onClick={resend}
             disabled={cooldown > 0 || isPending}
-            className="mazed-btn-quiet tap-target flex h-12 w-full items-center justify-center rounded-full text-[14px] disabled:opacity-50"
+            className="mazed-btn-quiet tap-target flex h-12 w-full items-center justify-center text-[14px] disabled:opacity-50"
           >
             {cooldown > 0 ? t("otp.resendIn", { seconds: cooldown }) : t("otp.resend")}
           </button>
@@ -319,7 +319,7 @@ export function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
+          className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 text-[14px] disabled:opacity-50"
         >
           {isPending ? (
             <><Loader2 className="inline size-4 animate-spin" /> {t("newPassword.updating")}</>
@@ -350,7 +350,7 @@ export function ForgotPasswordForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
+        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 text-[14px] disabled:opacity-50"
       >
         {isPending ? (
           <><Loader2 className="inline size-4 animate-spin" /> {t("forgot.sending")}</>

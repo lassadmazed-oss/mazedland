@@ -1,6 +1,7 @@
 import { ShieldCheck, Eye, Zap, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { BELOW_LG, EMPTY_GIF } from "@/components/ui/HiddenAt";
+import { HeroPhoto } from "@/components/landing/HeroPhoto";
+import { BELOW_LG } from "@/components/ui/HiddenAt";
 
 /**
  * Desktop-only half of the auth screens: the brand photograph that opens the
@@ -22,18 +23,7 @@ export function AuthHeroPanel() {
   const t = useTranslations("auth.hero");
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#1b2a36]">
-      <picture>
-        <source media={BELOW_LG} srcSet={EMPTY_GIF} />
-        <source srcSet="/auth-hero.avif" type="image/avif" />
-        <source srcSet="/auth-hero.webp" type="image/webp" />
-        <img
-          src="/auth-hero.webp"
-          alt=""
-          fetchPriority="high"
-          decoding="async"
-          className="absolute inset-0 h-full w-full object-cover object-[50%_62%]"
-        />
-      </picture>
+      <HeroPhoto hiddenAt={BELOW_LG} className="absolute inset-0" />
       {/* The home hero's scrim, and a little more at the foot: three lines of
           small white type sit there. */}
       <div className="mazed-hero-scrim absolute inset-0" aria-hidden />

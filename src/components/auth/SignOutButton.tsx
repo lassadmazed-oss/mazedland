@@ -45,7 +45,7 @@ export function SignOutButton({ label }: { label: string }) {
       type="button"
       onClick={onClick}
       disabled={pending}
-      className="mazed-btn-quiet tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full px-5 text-[13.5px] disabled:opacity-50"
+      className="mazed-btn-quiet tap-target flex h-12 w-full items-center justify-center gap-2 px-5 text-[13.5px] disabled:opacity-50"
     >
       <LogOut className="size-4" strokeWidth={2} />
       {pending ? "…" : label}

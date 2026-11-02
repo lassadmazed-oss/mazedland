@@ -100,7 +100,7 @@ export default async function MyRequestsPage() {
         {on && (
           <Link
             href={"/demandes/nouvelle" as never}
-            className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-[13px]"
+            className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-1.5 px-5 text-[13px]"
           >
             <Plus className="size-4" /> {t("newRequest")}
           </Link>
@@ -113,10 +113,10 @@ export default async function MyRequestsPage() {
           <p className="mx-auto mt-1 max-w-md text-[12.5px] leading-relaxed text-muted">{t("emptyBody")}</p>
           {on && (
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-              <Link href={"/demandes/nouvelle?deal=sale" as never} className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-[13px]">
+              <Link href={"/demandes/nouvelle?deal=sale" as never} className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-1.5 px-5 text-[13px]">
                 <Search className="size-3.5" /> {t("newBuy")}
               </Link>
-              <Link href={"/demandes/nouvelle?deal=rent" as never} className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-1.5 rounded-full px-5 text-[13px]">
+              <Link href={"/demandes/nouvelle?deal=rent" as never} className="mazed-btn-luxe tap-target inline-flex h-11 items-center gap-1.5 px-5 text-[13px]">
                 <KeyRound className="size-3.5" /> {t("newRent")}
               </Link>
             </div>
@@ -184,14 +184,14 @@ export default async function MyRequestsPage() {
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Link
                     href={catalogueQueryFor(toMatchable(r), slugById) as never}
-                    className="mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12px]"
+                    className="mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 px-3.5 text-[12px]"
                   >
                     <Search className="size-3.5" /> {t("seeListings")}
                   </Link>
                   {on && (
                     <Link
                       href={`/demandes/nouvelle?id=${r.id}` as never}
-                      className="mazed-btn-quiet tap-target inline-flex h-9 items-center rounded-full px-3.5 text-[12px]"
+                      className="mazed-btn-quiet tap-target inline-flex h-9 items-center px-3.5 text-[12px]"
                     >
                       {t("edit")}
                     </Link>

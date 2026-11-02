@@ -32,7 +32,6 @@ export default async function SignupPage({
 
   return (
     <AuthScreen
-      labelledBy="signup-title"
       title={t("nav.signup")}
       footer={
         <>

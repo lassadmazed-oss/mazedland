@@ -82,7 +82,7 @@ export function FavoritesList({ items, phoneCols = 1 }: { items: SavedItem[]; ph
           <p className="mx-auto mt-4 max-w-sm text-[14px] leading-relaxed text-muted">{t("emptyBody")}</p>
           <Link
             href={"/annonces" as never}
-            className="mazed-btn-luxe tap-target mt-6 inline-flex h-12 items-center gap-2 rounded-full px-6 text-[14px]"
+            className="mazed-btn-luxe tap-target mt-6 inline-flex h-12 items-center gap-2 px-6 text-[14px]"
           >
             <Search className="size-4" aria-hidden /> {t("browse")}
           </Link>
@@ -103,7 +103,7 @@ export function FavoritesList({ items, phoneCols = 1 }: { items: SavedItem[]; ph
                       <ListingImage
                         path={i.coverPath}
                         alt=""
-                        sizes="(min-width: 1280px) 300px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+                        sizes={`(min-width: 1280px) 300px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, ${phoneCols === 2 ? "46vw" : "92vw"}`}
                         fit="cover"
                       />
                     ) : (
@@ -117,7 +117,7 @@ export function FavoritesList({ items, phoneCols = 1 }: { items: SavedItem[]; ph
                       </div>
                     )}
                     {/* « plus disponible », on the photo where « À louer » would be read. */}
-                    {i.gone && (
+                    {i.gone && !i.withheld && (
                       <span className="mazed-chip-photo mazed-chip-photo-ink pointer-events-none absolute bottom-2.5 start-2.5 z-[2]">
                         {t("unavailable")}
                       </span>
@@ -155,7 +155,7 @@ export function FavoritesList({ items, phoneCols = 1 }: { items: SavedItem[]; ph
 
                   {/* Stretched link — the whole card opens the annonce without
                       wrapping the heart's <button> in an <a>. */}
-                  <Link href={`/annonces/${i.id}` as never} aria-label={title} className="absolute inset-0 z-10 rounded-2xl">
+                  <Link href={`/annonces/${i.id}` as never} className="absolute inset-0 z-10 rounded-2xl">
                     <span className="sr-only">{title}</span>
                   </Link>
                 </article>

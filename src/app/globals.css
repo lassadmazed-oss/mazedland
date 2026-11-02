@@ -260,22 +260,13 @@ html[dir="rtl"] .font-arabic {
   font-family: var(--font-cairo), var(--font-jakarta), system-ui, sans-serif;
 }
 
-.mazed-serif {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  letter-spacing: -0.015em;
-}
-html[dir="rtl"] .mazed-serif { font-family: var(--font-cairo), var(--font-jakarta), system-ui, sans-serif; }
-
 /* Arabic is a joined script: letter-spacing pulls its letters apart, so the
-   eyebrow / pill / heading tracking and every tracking-* utility is reset on
+   eyebrow / heading tracking and every tracking-* utility is reset on
    RTL pages. (Latin words on those pages lose their tracking too — harmless.) */
 html[dir="rtl"] [class*="tracking-"],
-html[dir="rtl"] .mazed-serif,
 html[dir="rtl"] .mazed-gradient-gold-text,
 html[dir="rtl"] .mazed-eyebrow,
-html[dir="rtl"] .mazed-eyebrow-muted,
-html[dir="rtl"] .mazed-pill-gold {
+html[dir="rtl"] .mazed-eyebrow-muted {
   letter-spacing: 0;
 }
 
@@ -423,23 +414,6 @@ html, body { overscroll-behavior-y: contain; }
   color: #fafafa;
 }
 
-/* Decorative gradient halo — drop two of these inside a relative
-   container with `overflow-hidden` for the soft-bubble depth
-   effect from the favorites empty-state. Pair with `-translate`
-   classes to position them. */
-.mazed-gradient-blob {
-  position: absolute;
-  pointer-events: none;
-  border-radius: 9999px;
-  /* Gold, not white. A white halo on a white page is nothing at all —
-     the class rendered but could not be seen. */
-  background: rgba(184, 130, 54, 0.16);
-  filter: blur(60px);
-  z-index: 0;
-}
-.mazed-gradient-blob-sm { width: 14rem; height: 14rem; }
-.mazed-gradient-blob-lg { width: 18rem; height: 18rem; background: rgba(184, 130, 54, 0.10); }
-
 /* Glass — translucent white over blurred content, for the BottomTabBar
    and any chrome that hovers over the page. */
 .glass,
@@ -580,26 +554,15 @@ textarea.mazed-input {
   color: var(--foreground);
 }
 
-/* Primary pill — small uppercase chip in blue. */
-.mazed-pill-gold {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.25rem 0.625rem;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  border-radius: 9999px;
-  background: var(--gold-faint);
-  color: var(--gold-deep);
-  border: 1px solid rgba(168, 111, 34, 0.28);
-}
-.mazed-pill-gold-on-navy { /* alias retained */ }
-
 /* ============================================
    Buttons
    ============================================ */
+
+/* These component rules are UNLAYERED while Tailwind's utilities live in
+   `@layer utilities`, so a utility on the same element never overrides what
+   they set: `rounded-full`, `gap-2` or `flex` beside `mazed-btn-luxe` do
+   nothing (the 2026-11-01 restyle learnt it from its own screenshots). What
+   a button is — its display, gap and radius — is decided here, once. */
 
 /* Primary CTA.
    It was a metallic ramp with a gold outer glow, and Auto reached the same
@@ -664,30 +627,6 @@ textarea.mazed-input {
   .mazed-btn-quiet:hover {
     background: rgba(0, 0, 0, 0.05);
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
-  }
-}
-
-/* Ghost / outlined CTA — primary blue, transparent fill. */
-.mazed-btn-ghost-gold {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: transparent;
-  color: var(--gold-deep);
-  border: 1px solid var(--gold-soft);
-  font-weight: 600;
-  border-radius: var(--radius);
-  transition: background 160ms ease, border-color 160ms ease;
-}
-.mazed-btn-ghost-gold:active {
-  background: var(--gold-faint);
-  border-color: var(--gold);
-}
-@media (hover: hover) {
-  .mazed-btn-ghost-gold:hover {
-    background: var(--gold-faint);
-    border-color: var(--gold);
   }
 }
 
@@ -1386,6 +1325,16 @@ html[dir="rtl"] .mazed-h2 {
   background: var(--surface);
   color: var(--foreground);
   box-shadow: 0 1px 2px rgba(17, 17, 19, 0.10), 0 0 0 1px rgba(17, 17, 19, 0.06);
+}
+/* A segment whose words differ in length (« Résidentiel · Terrains ·
+   Professionnel »): each cell takes its word, the room left is shared, and
+   the words are never clipped — equal 1fr cells cut « Professionnel » at both
+   ends on a 390 px phone. Put it in an overflow-x-auto box for the narrowest
+   screens. */
+.mazed-segment-fit { grid-auto-columns: auto; }
+.mazed-segment-fit > * {
+  padding-inline: 0.625rem;
+  white-space: nowrap;
 }
 
 /* Vertical rhythm of the public pages: one value, so the sections of the

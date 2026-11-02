@@ -25,7 +25,7 @@ export default async function ResetPasswordPage() {
   const t = await getTranslations();
 
   return (
-    <AuthScreen labelledBy="reset-title" title={t("auth.reset.title")} intro={t("auth.reset.intro")}>
+    <AuthScreen title={t("auth.reset.title")} intro={t("auth.reset.intro")}>
       <ResetPasswordForm />
     </AuthScreen>
   );

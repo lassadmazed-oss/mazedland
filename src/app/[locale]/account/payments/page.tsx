@@ -40,7 +40,8 @@ const SPEND_KINDS = new Set(["listing_fee", "renewal", "promo", "listing_pack", 
 
 function coverFrom(photos: Photo[] | null | undefined): string | null {
   const cover = (photos ?? []).slice().sort((a, b) => a.sort_order - b.sort_order)[0];
-  return cover ? propertyPhotoUrl(cover.storage_path) : null;
+  // Sized for the 76 px thumbnail at 3×, not the 1600 px upload.
+  return cover ? propertyPhotoUrl(cover.storage_path, { transform: { width: 240, quality: 70 } }) : null;
 }
 
 /** The tab's title: every page of this section used to carry the site's home title. */
@@ -90,7 +91,7 @@ export default async function MyPaymentsPage({
           <p className="mt-3 text-[13px] text-muted">{t("empty")}</p>
           <Link
             href="/annonces"
-            className="mazed-btn-luxe tap-target mt-6 inline-flex h-12 items-center rounded-full px-6 text-[14px]"
+            className="mazed-btn-luxe tap-target mt-6 inline-flex h-12 items-center px-6 text-[14px]"
           >
             {t("browse")}
           </Link>

@@ -34,7 +34,7 @@ export async function VisitCard({ visit, side, locale, highlight = false }: { vi
         <span className="grid aspect-[4/3] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[var(--radius-lg)] bg-surface-2 ring-1 ring-border">
           {visit.listing?.photo ? (
             // eslint-disable-next-line @next/next/no-img-element -- a small thumbnail
-            <img src={propertyPhotoUrl(visit.listing.photo, { transform: { width: 120, quality: 70 } })} alt="" className="size-full object-cover" />
+            <img src={propertyPhotoUrl(visit.listing.photo, { transform: { width: 240, quality: 70 } })} alt="" className="size-full object-cover" />
           ) : (
             <Home className="size-5 text-muted" />
           )}
