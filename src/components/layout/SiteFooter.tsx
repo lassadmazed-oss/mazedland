@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
+import { getSettings } from "@/lib/settings/server";
 
 /**
  * The site's footer, on every public page.
@@ -16,9 +17,20 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
  * MobileShell, which leaves it out of the flow routes (auth, payment, the
  * console).
  */
+/** TikTok icon — not in lucide-react. */
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" />
+    </svg>
+  );
+}
+
 export async function SiteFooter() {
   const t = await getTranslations();
+  const s = await getSettings();
   const year = String(new Date().getFullYear());
+  const tiktok = s.contact_tiktok;
 
   const columns: { key: string; title: string; links: { href: string; label: string }[] }[] = [
     {
@@ -88,6 +100,17 @@ export async function SiteFooter() {
             {t("footer.rights", { year, name: t("brand.name") })} · {t("footer.country")}
           </p>
           <div className="flex items-center gap-3">
+            {tiktok && (
+              <a
+                href={`https://www.tiktok.com/@${tiktok}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok"
+                className="inline-flex size-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+              >
+                <TikTokIcon className="size-4" />
+              </a>
+            )}
             <span>{t("footer.language")}</span>
             <LocaleSwitcher />
           </div>

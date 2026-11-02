@@ -2025,7 +2025,8 @@
     "hours": "Horaires",
     "hoursValue": "Lun – Ven, 9h – 17h",
     "whatsapp": "WhatsApp",
-    "whatsappNote": "Messages uniquement — pas d'appels"
+    "whatsappNote": "Messages uniquement — pas d'appels",
+    "tiktok": "TikTok"
   },
   "errors": {
     "boundary": {

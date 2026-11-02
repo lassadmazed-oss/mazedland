@@ -3,7 +3,7 @@ import { pageAlternates } from "@/lib/seo";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { Ltr } from "@/components/ui/Ltr";
-import { Mail, Phone, MapPin, Clock, MessageCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, MessageCircle, Music2 } from "lucide-react";
 import { whatsappHref } from "@/lib/contact";
 import { getSettings } from "@/lib/settings/server";
 
@@ -31,7 +31,7 @@ const telHref = (v: string) => `tel:${v.replace(/[^\d+]/g, "")}`;
  */
 type Item = {
   Icon: typeof Mail;
-  labelKey: "whatsapp" | "email" | "phone" | "address" | "hours";
+  labelKey: "whatsapp" | "email" | "phone" | "address" | "hours" | "tiktok";
   /** A line under the value (« messages uniquement »). */
   noteKey?: "whatsappNote";
   external?: boolean;
@@ -81,6 +81,9 @@ export default async function ContactPage({
       : []),
     ...(email ? [{ Icon: Mail, labelKey: "email", value: email, href: `mailto:${email}` } satisfies Item] : []),
     ...(phone ? [{ Icon: Phone, labelKey: "phone", value: phone, href: telHref(phone) } satisfies Item] : []),
+    ...(s.contact_tiktok
+      ? [{ Icon: Music2, labelKey: "tiktok", value: `@${s.contact_tiktok}`, href: `https://www.tiktok.com/@${s.contact_tiktok}`, external: true } satisfies Item]
+      : []),
     { Icon: MapPin, labelKey: "address", valueKey: "addressValue", href: null },
     { Icon: Clock, labelKey: "hours", valueKey: "hoursValue", href: null },
   ];
