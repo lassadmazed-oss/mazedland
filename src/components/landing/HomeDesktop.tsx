@@ -7,6 +7,7 @@ import { HomeSearch } from "@/components/landing/HomeSearch";
 import { IntentChooser } from "@/components/landing/IntentChooser";
 import { HeroPhoto } from "@/components/landing/HeroPhoto";
 import { SellBand, WhyBand } from "@/components/landing/HomeBands";
+import { GuidesStrip } from "@/components/guides/GuidesStrip";
 import { isRtl } from "@/lib/i18n";
 import type { HomeRail } from "@/lib/home/rails";
 import { catalogueHrefForType } from "@/lib/catalog/browse";
@@ -208,6 +209,9 @@ export async function HomeDesktop({
 
       {/* MORE TO EXPLORE — what no rail above shows, auto-sliding too */}
       {explore && <HomeRailSection rail={explore} layout="desktop" savedIds={savedIds} loggedIn={loggedIn} />}
+
+      {/* « Guides utiles » — the newest guides, while there is one to read. */}
+      <GuidesStrip via="home" headingId="guides-strip-home-desktop" />
 
       {/* Why Mazed Immo, how it works, and the call to publish. */}
       <WhyBand layout="desktop" />

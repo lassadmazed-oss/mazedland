@@ -8,7 +8,8 @@ import { GuideCard } from "./GuideCard";
 import { ArrowRight } from "lucide-react";
 
 /**
- * « Guides utiles » — a few guides beside an annonce or under the catalogue,
+ * « Guides utiles » — a few guides beside an annonce, under the catalogue and
+ * near the end of the home page (there, with nothing to go by, the newest),
  * picked by what the reader is doing (buying, renting) and what they are
  * looking at (a flat, a plot): src/lib/guides/articles.ts decides, the
  * console's `guides_strip_count` says how many (0 = no strip). Nothing is
@@ -18,12 +19,15 @@ export async function GuidesStrip({
   deal,
   categorySlug,
   via,
+  headingId = `guides-strip-${via}`,
   className = "",
 }: {
   deal?: DealType | null;
   categorySlug?: string | null;
   /** Where the strip stands, for the count. */
   via: "annonce" | "catalogue" | "home";
+  /** The home page renders its phone and desktop trees side by side: one id each. */
+  headingId?: string;
   className?: string;
 }) {
   const settings = await getSettings();
@@ -33,11 +37,11 @@ export async function GuidesStrip({
   const t = await getTranslations("guides.strip");
 
   return (
-    <section className={`mt-12 ${className}`} aria-labelledby={`guides-strip-${via}`}>
+    <section className={`mt-12 ${className}`} aria-labelledby={headingId}>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
           <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-subtle">{t("eyebrow")}</p>
-          <h2 id={`guides-strip-${via}`} className="mazed-h2 mt-1 text-[22px] text-foreground lg:text-[26px]">
+          <h2 id={headingId} className="mazed-h2 mt-1 text-[22px] text-foreground lg:text-[26px]">
             {t("title")}
           </h2>
         </div>
