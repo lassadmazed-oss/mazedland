@@ -1,16 +1,31 @@
 "use client";
 
 import { useEffect } from "react";
-import { track, type EventParams } from "@/lib/analytics/ga";
+import { trackEvent, type EventName } from "@/lib/analytics/events";
+
+type Params = Record<string, string | number | boolean | string[] | undefined>;
 
 /**
- * Sends one GA event when a server-rendered page shows — again only when what
- * it says changes (a new search on the same page). Renders nothing.
+ * Sends one event when a server-rendered page shows — again only when what
+ * it says changes (a new search on the same page). Google and the site's own
+ * count both get it; `listing` / `shop` name what it is about. Renders nothing.
  */
-export function TrackEvent({ name, params }: { name: string; params?: EventParams }) {
+export function TrackEvent({
+  name,
+  params,
+  listing,
+  shop,
+  firstParty = true,
+}: {
+  name: EventName;
+  params?: Params;
+  listing?: string | null;
+  shop?: string | null;
+  firstParty?: boolean;
+}) {
   const key = JSON.stringify(params ?? {});
   useEffect(() => {
-    track(name, JSON.parse(key) as EventParams);
-  }, [name, key]);
+    trackEvent(name, JSON.parse(key) as Params, { listing, shop }, { firstParty });
+  }, [name, key, listing, shop, firstParty]);
   return null;
 }

@@ -138,6 +138,37 @@ export function organizationLd(origin: string, name: string, opts: { whatsapp?: 
   };
 }
 
+/** A guide (0208), as Google reads an article: who wrote it, when, in which language. */
+export function articleLd(input: {
+  url: string;
+  headline: string;
+  description: string;
+  image?: string | null;
+  datePublished: string;
+  dateModified: string;
+  inLanguage: string;
+  publisher: string;
+  origin: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    mainEntityOfPage: input.url,
+    headline: input.headline,
+    description: input.description,
+    ...(input.image ? { image: [input.image] } : {}),
+    datePublished: input.datePublished,
+    dateModified: input.dateModified,
+    inLanguage: input.inLanguage,
+    author: { "@type": "Organization", name: input.publisher, url: input.origin },
+    publisher: {
+      "@type": "Organization",
+      name: input.publisher,
+      logo: { "@type": "ImageObject", url: `${input.origin}/logo-square.png` },
+    },
+  };
+}
+
 /** The annonces a catalogue page shows, in order. */
 export function itemListLd(urls: readonly string[]) {
   return {

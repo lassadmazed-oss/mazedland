@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getServerSupabase } from "@/lib/supabase/server";
+import { recordServerEvent } from "@/lib/analytics/server-events";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { assertSupabaseRef } from "@/lib/supabase/guard";
 import { clientIp } from "@/lib/clientIp";
@@ -186,5 +187,6 @@ export async function POST(req: NextRequest) {
   }
   // Consume the verification proof so it can't be reused for another signup.
   await admin.from("phone_otps").delete().eq("phone", phone);
+  recordServerEvent(req, "sign_up", { userId: created.user?.id, params: { method: "phone" } });
   return NextResponse.json({ ok: true });
 }

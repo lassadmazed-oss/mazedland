@@ -6,6 +6,7 @@ import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator, requestLocale } from "@/lib/i18n/server";
 import { activePlan, offerPlanPeriod } from "@/lib/pro/shops";
+import { foundingOffer } from "@/lib/pro/founding";
 import { audit } from "@/lib/admin/audit";
 import { canOpen } from "@/lib/admin/sections";
 import { claimDecision, decidePayment, OPEN, releaseDecision, type PaymentRow } from "@/lib/payments/decision";
@@ -164,6 +165,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   let update: Record<string, unknown>;
   let notice: { kind: string; title: string; body: string; vars: Record<string, string> } | null = null;
+  // What the founding offer gave an agence opened with no plan (the response says so).
+  let offered: { plan: string; months: number; until: string } | null = null;
   switch (action) {
     case "approve": {
       // The request's plan, its receipt waiting: accepted first, by the
@@ -186,7 +189,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // owner's rule, 2026-10-28): with no running plan there is nothing to
       // open, and the button used to open it anyway.
       if (!accepted && !(await activePlan(admin, id))) {
-        return NextResponse.json({ error: "plan_required", detail: t("errors.planRequired") }, { status: 409 });
+        // …unless the founding offer is on and has a place left (2026-11-01): the agence then
+        // opens on the free months, and is told when they end and what comes after.
+        const s = await getSettings();
+        offered = await foundingOffer(admin, {
+          shopId: id,
+          grantedBy: by,
+          enabled: s.feature_founding_auto,
+          seats: s.founding_seats,
+          months: s.founding_offer_months,
+          planSlug: s.founding_offer_plan,
+        });
+        if (!offered) return NextResponse.json({ error: "plan_required", detail: t("errors.planRequired") }, { status: 409 });
       }
       update = { status: "approved", rejection_reason: null, reviewed_by: by, reviewed_at: now };
       notice = accepted
@@ -197,7 +211,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             // expires_at: the notice prints it as the reader's date (render.ts).
             vars: { variant: "withPlan", name: shop.name, plan: accepted.plan, expires_at: accepted.until, number: accepted.invoice ?? "—" },
           }
-        : { kind: "shop_approved", title: "Boutique ouverte", body: `« ${shop.name} » est ouverte sur Mazed Immo.`, vars: { name: shop.name } };
+        : offered
+          ? {
+              kind: "shop_approved",
+              title: "Agence ouverte",
+              body: `« ${shop.name} » est ouverte sur Mazed Immo avec le plan ${offered.plan} offert pour ${offered.months} mois, jusqu'au ${offered.until.slice(0, 10)}. Ensuite, vous choisirez votre abonnement ; un rappel vous prévient avant la fin.`,
+              vars: { variant: "founding", name: shop.name, plan: offered.plan, months: String(offered.months), expires_at: offered.until },
+            }
+          : { kind: "shop_approved", title: "Boutique ouverte", body: `« ${shop.name} » est ouverte sur Mazed Immo.`, vars: { name: shop.name } };
       break;
     }
     case "reject":
@@ -311,7 +332,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .then(() => {}, () => {});
   }
   logAction(req, gate.user, `admin.shop.${action}`, { id });
-  return NextResponse.json({ ok: true });
+  if (offered) {
+    await audit(admin, by, {
+      action: "shop.offer_plan",
+      targetType: "shop",
+      targetId: id,
+      after: { name_fr: offered.plan, months: offered.months, ends_at: offered.until.slice(0, 10) },
+      note: "offre fondatrice donnée à l'ouverture",
+    });
+  }
+  return NextResponse.json({ ok: true, ...(offered ? { offered } : {}) });
 }
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;

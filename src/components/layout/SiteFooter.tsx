@@ -1,8 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { getSettings } from "@/lib/settings/server";
+import { guidesListed } from "@/lib/guides/server";
 import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
-import { getSettings } from "@/lib/settings/server";
 import { facebookHref, tiktokHref } from "@/lib/contact";
 
 /** TikTok icon — not in lucide-react. */
@@ -39,10 +40,13 @@ function FacebookIcon({ className }: { className?: string }) {
  */
 export async function SiteFooter() {
   const t = await getTranslations();
-  const s = await getSettings();
   const year = String(new Date().getFullYear());
-  const tiktok = s.contact_tiktok;
-  const facebook = s.contact_facebook;
+  // « Le marché en chiffres » is listed while the console keeps the page on;
+  // « Guides » (0208) once there is one to read and the feature is on.
+  const settings = await getSettings();
+  const hasGuides = await guidesListed();
+  const tiktok = settings.contact_tiktok;
+  const facebook = settings.contact_facebook;
 
   const columns: { key: string; title: string; links: { href: string; label: string }[] }[] = [
     {
@@ -52,6 +56,7 @@ export async function SiteFooter() {
         { href: "/annonces?deal=sale", label: t("footer.buy") },
         { href: "/annonces?deal=rent", label: t("footer.rent") },
         { href: "/agences", label: t("footer.agencies") },
+        ...(settings.public_stats_enabled ? [{ href: "/marche", label: t("footer.market") }] : []),
         { href: "/annonces/nouvelle", label: t("footer.publish") },
       ],
     },
@@ -67,6 +72,7 @@ export async function SiteFooter() {
       key: "info",
       title: t("footer.info"),
       links: [
+        ...(hasGuides ? [{ href: "/guides", label: t("footer.guides") }] : []),
         { href: "/terms", label: t("landing.footerLinks.terms") },
         { href: "/privacy", label: t("landing.footerLinks.privacy") },
       ],

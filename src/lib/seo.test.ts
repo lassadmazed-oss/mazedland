@@ -1,8 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { catalogueIndexing, catalogueLandings, clip, itemListLd, listingDescription, organizationLd, pageAlternates, websiteLd } from "./seo";
+import { articleLd, catalogueIndexing, catalogueLandings, clip, itemListLd, listingDescription, organizationLd, pageAlternates, websiteLd } from "./seo";
 import { jsonLdSafe } from "./jsonld";
 
 describe("seo", () => {
+  it("describes a guide as an article by the site, in its language, safe inside a script", () => {
+    const ld = articleLd({
+      url: "https://www.mazed.immo/fr/guides/x",
+      headline: "Acheter </script> un bien",
+      description: "d",
+      image: null,
+      datePublished: "2026-11-01T10:00:00Z",
+      dateModified: "2026-11-02T10:00:00Z",
+      inLanguage: "fr",
+      publisher: "Mazed Immo",
+      origin: "https://www.mazed.immo",
+    });
+    expect(ld).toMatchObject({ "@type": "Article", inLanguage: "fr", author: { "@type": "Organization", name: "Mazed Immo" } });
+    expect(ld).not.toHaveProperty("image");
+    expect(jsonLdSafe(ld)).not.toContain("</script>");
+    expect(articleLd({ url: "u", headline: "h", description: "d", image: "https://i/x.jpg", datePublished: "a", dateModified: "b", inLanguage: "ar", publisher: "p", origin: "o" })).toMatchObject({ image: ["https://i/x.jpg"] });
+  });
+
   it("names the page itself and its twin, never the home page", () => {
     expect(pageAlternates("ar", "/annonces", "cat=terrains&gov=Sfax")).toEqual({
       canonical: "/ar/annonces?cat=terrains&gov=Sfax",

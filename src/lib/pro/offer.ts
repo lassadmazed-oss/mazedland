@@ -19,3 +19,29 @@ export function offeredPeriod(input: {
   const startsAt = ahead.length ? new Date(Math.max(...ahead.map((d) => d.getTime()))) : input.now;
   return { startsAt, endsAt: addMonths(startsAt, Math.max(1, Math.floor(input.months))) };
 }
+
+/**
+ * A gift is not lost to a purchase (2026-11-01). Buying a bigger plan used to
+ * cancel every smaller period still ahead — and a founding agency's free
+ * months, queued behind its paid Starter, are exactly that: paying for the
+ * upgrade it chose would have silently taken the three months back (and freed
+ * the founding place).
+ *
+ * A gift that has not started when the new paid period begins, and would
+ * begin before that period ends, now starts when it ends — the same length,
+ * after what was paid for. A gift already running is left alone (its months
+ * are being used), and one that starts after the new period anyway does not
+ * move.
+ */
+export function shiftedGifts(input: {
+  gifts: readonly { id: string; startsAt: Date; endsAt: Date }[];
+  /** When the new paid period starts, and when it ends. */
+  from: Date;
+  to: Date;
+}): { id: string; startsAt: Date; endsAt: Date }[] {
+  const from = input.from.getTime();
+  const to = input.to.getTime();
+  return input.gifts
+    .filter((g) => g.startsAt.getTime() >= from && g.startsAt.getTime() < to)
+    .map((g) => ({ id: g.id, startsAt: new Date(to), endsAt: new Date(to + (g.endsAt.getTime() - g.startsAt.getTime())) }));
+}

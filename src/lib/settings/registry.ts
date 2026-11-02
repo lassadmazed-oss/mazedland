@@ -69,6 +69,9 @@ export const SETTINGS = {
   // « Agences fondatrices : X places sur 10 » on the Pro page: the places the
   // console has not yet given a free period to (src/lib/pro/founding.ts).
   feature_founding_counter: { group: "features", type: "bool", default: true, href: "/admin/agences" },
+  // « Ouvrir » on an agence with no plan gives it the founding offer by itself while places last;
+  // off: such an agence must pay (or be given its period by hand) before it opens.
+  feature_founding_auto: { group: "features", type: "bool", default: true, href: "/admin/agences" },
   // « Importer plusieurs annonces » in the agence's dashboard: a CSV (or lines
   // pasted from Excel) becomes drafts (src/lib/listings/importRows.ts).
   feature_listing_import: { group: "features", type: "bool", default: true },
@@ -76,6 +79,17 @@ export const SETTINGS = {
   feature_credit_simulator: { group: "features", type: "bool", default: true },
   // The admins hear of a crash in production the first time it happens (0185).
   feature_error_alerts: { group: "features", type: "bool", default: true, href: "/admin/activity?type=error" },
+  // « Le marché en chiffres » (/marche): the site's own figures, public —
+  // asking prices, supply and demand by governorate (src/lib/market/stats.ts).
+  // Off: the page answers 404 and every link to it disappears.
+  public_stats_enabled: { group: "features", type: "bool", default: true },
+  // « Guides » (0208): the articles written in /admin/contenu and read on
+  // /guides. Off: the pages answer not found, the footer link and the
+  // « Guides utiles » strips go; what is written stays in the console.
+  guides_enabled: { group: "features", type: "bool", default: true, href: "/admin/contenu" },
+  // « Aide à la rédaction » in the guide editor: the AI drafts a section the
+  // editor reads and changes. Nothing it writes is published by itself.
+  guides_ai_assist: { group: "features", type: "bool", default: true, href: "/admin/contenu" },
 
   // ── Home page: the rails of annonces and the ads move by themselves.
   home_rail_autoplay: { group: "home", type: "bool", default: true, client: true },
@@ -95,6 +109,9 @@ export const SETTINGS = {
   home_rail_terrain: { group: "home", type: "bool", default: true },
   home_rail_explore: { group: "home", type: "bool", default: true },
   ads_rotate_seconds: { group: "home", type: "int", default: 6, min: 3, max: 30, unit: "seconds", client: true },
+  // Off: the banners always turn (asked 2026-11-01). On: they hold still under
+  // the pointer, the keyboard, or a device asking for reduced motion.
+  ads_rotate_pause: { group: "home", type: "bool", default: false, client: true },
 
   // ── Moderation: how much of the site runs by itself.
   free_listing_limit: { group: "moderation", type: "int", default: 2, min: 0, max: 50 },
@@ -122,11 +139,22 @@ export const SETTINGS = {
   founding_offer_months: { group: "publication", type: "int", default: 3, min: 1, max: 12, unit: "months", choices: [1, 2, 3, 6, 12] },
   // How many agences the founding offer is for, and where (« les 10 premières
   // agences de Sfax »); an empty place says « les 10 premières agences ».
-  founding_seats: { group: "publication", type: "int", default: 10, min: 1, max: 100, choices: [5, 10, 15, 20] },
-  founding_offer_place: { group: "publication", type: "text", default: "Sfax", max: 40 },
+  founding_seats: { group: "publication", type: "int", default: 50, min: 1, max: 200, choices: [10, 20, 50, 100] },
+  founding_offer_place: { group: "publication", type: "text", default: "", max: 40 },
+  // The plan the offer gives (the slug of an offer on sale). With feature_founding_auto, « Ouvrir »
+  // gives it by itself to an agence that has no plan, while places last (src/lib/pro/founding.ts).
+  founding_offer_plan: { group: "publication", type: "text", default: "pro-pro", max: 40, ltr: true },
   // « Envoyer sans payer » under the agence request: the agence comes alone,
   // for the founding offer the console then gives (« Offrir une période »).
   pro_signup_pay_later: { group: "publication", type: "bool", default: true },
+  // The guides (0208): how many cards a page of /guides holds, how many
+  // « Guides liés » close a guide, how many « Guides utiles » stand beside an
+  // annonce and under the catalogue (0 = no strip), and from how many
+  // headings a guide gets a table of contents (0 = never).
+  guides_per_page: { group: "publication", type: "int", default: 9, min: 3, max: 30, choices: [6, 9, 12, 18, 24] },
+  guides_related_count: { group: "publication", type: "int", default: 3, min: 0, max: 6, choices: [0, 2, 3, 4, 6] },
+  guides_strip_count: { group: "publication", type: "int", default: 3, min: 0, max: 6, choices: [0, 2, 3, 4] },
+  guides_toc_min: { group: "publication", type: "int", default: 3, min: 0, max: 10, choices: [0, 2, 3, 4, 5] },
 
   // ── Buyers: visits, compare, demandes.
   visits_max_slots: { group: "buyers", type: "int", default: 3, min: 1, max: 5, client: true },
@@ -223,6 +251,56 @@ export const SETTINGS = {
   // On: Google loads only once the visitor said yes to the bar (and never
   // after a no). Off: it loads for everyone, with advertising signals denied.
   analytics_ask_consent: { group: "analytics", type: "bool", default: true, client: true },
+
+  // ── The site's own count (0204 site_events, src/lib/analytics/events.ts):
+  //    every search, annonce opened, number shown, step of the publish form…
+  //    kept in the database, exact and per annonce, beside Google's sampled
+  //    and consent-gated figures. No name, number, e-mail or address.
+  analytics_events_enabled: { group: "analytics", type: "bool", default: true, client: true },
+  // On: the site's own count waits for the visitor's yes too (when asked):
+  // nothing leaves the browser before « Accepter ». Off: it counts everyone,
+  // pseudonymously, with a key that changes every day and no cookie.
+  analytics_events_consent: { group: "analytics", type: "bool", default: true, client: true },
+  // How long an event is kept before the nightly job deletes it.
+  analytics_events_days: { group: "analytics", type: "int", default: 365, min: 30, max: 730, unit: "days", choices: [90, 180, 365, 730] },
+  // What one browser may send in an hour: a reader opens a few dozen annonces in an evening.
+  analytics_events_per_hour: { group: "analytics", type: "int", default: 600, min: 100, max: 5000, unit: "per_hour", choices: [200, 600, 1200, 3000] },
+  // The GA4 property the console reads reports from (Administration → Paramètres
+  // de la propriété → « ID de la propriété », a number). The service account's
+  // key is the GA4_SERVICE_ACCOUNT_JSON environment variable, never a setting.
+  analytics_ga_property_id: { group: "analytics", type: "text", default: "", max: 20, ltr: true, pattern: /^[0-9]{5,15}$/ },
+  // A report fetched from Google is reused for this long before it is asked again.
+  analytics_ga_cache_minutes: { group: "analytics", type: "int", default: 60, min: 5, max: 1440, unit: "minutes", choices: [15, 30, 60, 180, 360, 1440] },
+  // ── The page's rules (/admin/analytics).
+  // How many rows each ranking shows (annonces, agences, searches, governorates).
+  analytics_top_limit: { group: "analytics", type: "int", default: 10, min: 5, max: 100, choices: [5, 10, 20, 50] },
+  // An annonce « expiring soon » ends within this many days.
+  analytics_expiring_days: { group: "analytics", type: "int", default: 7, min: 1, max: 60, unit: "days", choices: [3, 7, 14, 30] },
+  // Insights: how many sentences « À retenir » shows at most.
+  analytics_insights_limit: { group: "analytics", type: "int", default: 8, min: 3, max: 20, choices: [5, 8, 12] },
+  // Insights: the weeks before the latest one a figure is compared with.
+  analytics_baseline_weeks: { group: "analytics", type: "int", default: 8, min: 4, max: 26, choices: [4, 8, 12] },
+  // Insights: a figure this many standard deviations from its baseline average is an anomaly.
+  analytics_anomaly_sigma: { group: "analytics", type: "number", default: 2, min: 1, max: 4, step: 0.5, choices: [1.5, 2, 2.5, 3] },
+  // Insights: a figure that moved by at least this much week over week is a mover…
+  analytics_mover_min_percent: { group: "analytics", type: "int", default: 20, min: 5, max: 100, unit: "percent", choices: [10, 20, 30, 50] },
+  // …as long as one of the two weeks reached this many (two to three is no news).
+  analytics_mover_min_count: { group: "analytics", type: "int", default: 5, min: 1, max: 1000, choices: [5, 10, 20] },
+  // Insights: a search with no result repeated this many times deserves a look.
+  analytics_zero_search_min: { group: "analytics", type: "int", default: 3, min: 1, max: 100, choices: [2, 3, 5, 10] },
+  // Insights: an annonce seen this many times without one contact is flagged.
+  analytics_no_contact_min_views: { group: "analytics", type: "int", default: 30, min: 5, max: 1000, choices: [10, 20, 30, 50, 100] },
+  // Insights: a governorate searched at least this often…
+  analytics_gov_demand_min: { group: "analytics", type: "int", default: 20, min: 5, max: 1000, choices: [10, 20, 50, 100] },
+  // …with fewer annonces online than this lacks supply.
+  analytics_gov_low_supply: { group: "analytics", type: "int", default: 5, min: 1, max: 100, choices: [3, 5, 10, 20] },
+  // ── « Le marché en chiffres » (/marche, src/lib/market/stats.ts).
+  // A median or a demand figure is shown only when at least this many
+  // annonces (or searches, visits, demandes) are behind it — 0207 applies the
+  // rule in SQL; under it the page says there is not enough data yet.
+  public_stats_min_sample: { group: "analytics", type: "int", default: 5, min: 2, max: 100, choices: [3, 5, 10, 20] },
+  // The page's figures are computed again at most this often (kept in analytics_cache).
+  public_stats_cache_minutes: { group: "analytics", type: "int", default: 60, min: 5, max: 1440, unit: "minutes", choices: [15, 30, 60, 180, 360, 1440] },
 
   // ── Paid services (0203, /admin/abonnements): an SMS before Vercel,
   //    Supabase, a domain or a credit runs out. The watchdog in the database

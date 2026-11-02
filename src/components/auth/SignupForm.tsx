@@ -12,6 +12,7 @@ import { Loader2, Smartphone } from "lucide-react";
 import { TUNISIAN_GOVERNORATES, governorateLabel, normalizeE164, validatePhone } from "@/lib/tunisia";
 import { Modal } from "@/components/ui/Modal";
 import { Ltr } from "@/components/ui/Ltr";
+import { trackEvent } from "@/lib/analytics/events";
 import { TermsContent, PrivacyContent } from "@/components/legal/LegalContent";
 
 // Signup is intentionally identity-only. Role elevation (agency, bank,
@@ -114,6 +115,8 @@ export function SignupForm() {
     // sends visitors through login, whose « Créer un compte » link carries
     // `next` along. Signing up used to drop it and land on /account.
     forgetPhone();
+    // Google only: the route counts the account for the site itself.
+    trackEvent("sign_up", { method: "phone" }, {}, { firstParty: false });
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload so the first render carries the new cookie
     window.location.assign(`/${locale}${next}`);
   }

@@ -12,12 +12,16 @@
 // ink beside them, and their colour un-mixed from the white. Over white the
 // result looks exactly like the JPEG; over ink it has no white fringe.
 //
-// Files (all transparent):
-//   mazed-logo.webp            the whole logo: the tower, then MAZED between its two rules
-//   mazed-mark.webp            the tower alone (arcs, birds, star): small sizes
-//   mazed-lockup.webp / .png   the tower and MAZED side by side, for a bar 40–56 px tall
-//   mazed-lockup-ondark.webp   the same for a dark surface: the black of the
+// The owner wants the logo exactly as sent (« صلحه كيف ما بعثته لك »,
+// 2026-11-01): the tower above, MAZED between its two rules below. A first
+// version split it into a tower and a sideways MAZED for the bars; the owner
+// turned it down. Never recompose it.
+//
+// Files (all transparent, trimmed to the ink):
+//   mazed-logo.webp            the logo
+//   mazed-logo-ondark.webp     the same for a dark surface: the black of the
 //                              « A » and the gavel turned cream
+//   mazed-logo.png             the logo for e-mail
 // and public/og.png, the share picture. src/components/layout/BrandLogo.tsx
 // holds each file's size; its test fails when they drift apart.
 // ============================================================================
@@ -127,65 +131,24 @@ function bbox(y0, y1) {
   return { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
 }
 
-// The tower ends above the first rule; MAZED and its rules are below. The
-// gap between them is the first empty row band under the tower.
-let split = 0;
-{
-  let seen = false;
-  for (let y = 0; y < H; y++) {
-    let any = false;
-    for (let x = 0; x < W && !any; x++) any = rgba[(y * W + x) * 4 + 3] > 10;
-    if (any) seen = true;
-    else if (seen) { split = y; break; }
-  }
-}
 const all = bbox(0, H);
-const mark = bbox(0, split);
-const word = bbox(split, H);
-console.log({ all, mark, word, split });
+console.log({ all });
 
 const layer = (buf) => sharp(buf, { raw: { width: W, height: H, channels: 4 } });
 const crop = (buf, box) => layer(buf).extract(box).png().toBuffer();
 
-/** Pad a transparent PNG by a fraction of its height on every side. */
-async function pad(png, frac) {
-  const m = await sharp(png).metadata();
-  const p = Math.round(m.height * frac);
-  return sharp(png).extend({ top: p, bottom: p, left: p, right: p, background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
-}
-
 const webp = (png, file, height) =>
-  sharp(png).resize({ height, withoutEnlargement: true }).webp({ quality: 86, alphaQuality: 90, effort: 6 }).toFile(path.join(OUT, file));
+  sharp(png).resize({ height }).webp({ quality: 86, alphaQuality: 90, effort: 6 }).toFile(path.join(OUT, file));
 
-// The whole logo.
-await webp(await pad(await crop(rgba, all), 0.02), "mazed-logo.webp", 480);
-
-// The tower alone.
-await webp(await pad(await crop(rgba, mark), 0.02), "mazed-mark.webp", 160);
-
-// The lockup: the tower, then MAZED (with its rules) at a little over half
-// the tower's height, centred on it. Made at 4× a 40 px bar; saved at 3×.
-async function lockup(buf) {
-  const MARK_H = 160;
-  const WORD_H = Math.round(MARK_H * 0.58);
-  const GAP = Math.round(MARK_H * 0.12);
-  const m = await sharp(await crop(buf, mark)).resize({ height: MARK_H }).png().toBuffer();
-  const w = await sharp(await crop(buf, word)).resize({ height: WORD_H }).png().toBuffer();
-  const mw = (await sharp(m).metadata()).width;
-  const ww = (await sharp(w).metadata()).width;
-  return sharp({ create: { width: mw + GAP + ww, height: MARK_H, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
-    .composite([
-      { input: m, left: 0, top: 0 },
-      { input: w, left: mw + GAP, top: Math.round((MARK_H - WORD_H) / 2) },
-    ])
-    .png()
-    .toBuffer();
-}
-const lock = await lockup(rgba);
-await webp(lock, "mazed-lockup.webp", 120);
-await webp(await lockup(rgbaDark), "mazed-lockup-ondark.webp", 120);
-// E-mail clients and print want a PNG.
-await sharp(lock).resize({ height: 96 }).png({ compressionLevel: 9, palette: true, quality: 95, dither: 0.6 }).toFile(path.join(OUT, "mazed-lockup.png"));
+// The logo as the owner drew it — the tower above, MAZED between its rules
+// below, nothing moved — trimmed to the ink. 360 px tall: 3× its largest use.
+await webp(await crop(rgba, all), "mazed-logo.webp", 360);
+await webp(await crop(rgbaDark, all), "mazed-logo-ondark.webp", 240);
+// E-mail clients want a PNG.
+await sharp(await crop(rgba, all))
+  .resize({ height: 216 })
+  .png({ compressionLevel: 9, palette: true, quality: 95, dither: 0.6 })
+  .toFile(path.join(OUT, "mazed-logo.png"));
 
 // The share picture: the whole logo on white, centred, as before — sharper.
 {
@@ -197,7 +160,7 @@ await sharp(lock).resize({ height: 96 }).png({ compressionLevel: 9, palette: tru
     .toFile(path.join("public", "og.png"));
 }
 
-for (const f of ["mazed-logo.webp", "mazed-mark.webp", "mazed-lockup.webp", "mazed-lockup-ondark.webp", "mazed-lockup.png"]) {
+for (const f of ["mazed-logo.webp", "mazed-logo-ondark.webp", "mazed-logo.png"]) {
   const m = await sharp(path.join(OUT, f)).metadata();
   console.log(f, `${m.width}×${m.height}`, `${Math.round(statSync(path.join(OUT, f)).size / 1024)} kB`);
 }

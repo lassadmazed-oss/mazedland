@@ -29,6 +29,23 @@ describe("canOpen", () => {
   it("lets any member through where no section is asked (the dashboard)", () => {
     expect(canOpen([], undefined)).toBe(true);
   });
+
+  it("has the guides as a section of their own (0208), handed out with the content preset", () => {
+    expect(ADMIN_SECTIONS).toContain("content");
+    expect(ROLE_PRESETS.content).toContain("content");
+    expect(canOpen(["content"], "content")).toBe(true);
+    expect(canOpen(["annonces", "paiements"], "content")).toBe(false);
+    expect(canOpen(ROLE_PRESETS.finance, "content")).toBe(false);
+  });
+});
+
+describe("the statistics section", () => {
+  it("is a section of its own, given to no preset by itself", () => {
+    expect(ADMIN_SECTIONS).toContain("analytics");
+    expect(canOpen(["analytics"], "analytics")).toBe(true);
+    expect(canOpen(ROLE_PRESETS.finance, "analytics")).toBe(false);
+    expect(canOpen(ROLE_PRESETS.moderation, "analytics")).toBe(false);
+  });
 });
 
 describe("cleanScopes", () => {

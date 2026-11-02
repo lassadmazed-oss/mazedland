@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import {
-  BarChart3, BellRing, Megaphone, Store, GalleryHorizontalEnd,
+  BarChart3, BellRing, BookOpen, Megaphone, Store, GalleryHorizontalEnd,
   LayoutDashboard, Inbox, Receipt, Tag, Users, FolderTree,
-  SlidersHorizontal, ExternalLink, Menu, X,
+  SlidersHorizontal, ExternalLink, Menu, X, TrendingUp,
   type LucideIcon,
 } from "lucide-react";
 import { NavIcon } from "./kit/LinkPending";
@@ -49,6 +49,7 @@ export type AdminCounts = Partial<Record<CountKey, number>>;
 const NAV: Item[] = [
   { key: "dashboard", href: "/admin", Icon: LayoutDashboard },
   { key: "results", href: "/admin/resultats", Icon: BarChart3, section: "resultats" },
+  { key: "analytics", href: "/admin/analytics", Icon: TrendingUp, section: "analytics" },
   { key: "listings", href: "/admin/annonces", Icon: Inbox, countKey: "annonces", section: "annonces" },
   { key: "demandes", href: "/admin/demandes", Icon: BellRing, section: "demandes" },
   { key: "social", href: "/admin/social", Icon: Megaphone, countKey: "social", section: "social" },
@@ -58,6 +59,8 @@ const NAV: Item[] = [
   { key: "offers", href: "/admin/offres", Icon: Tag, section: "offres" },
   { key: "sellers", href: "/admin/vendeurs", Icon: Users, section: "vendeurs" },
   { key: "catalogue", href: "/admin/catalogue", Icon: FolderTree, section: "catalogue" },
+  // The guides (0208): articles written here, read on /guides.
+  { key: "content", href: "/admin/contenu", Icon: BookOpen, section: "content" },
 ];
 
 
@@ -66,11 +69,10 @@ const SITE: Item = { key: "site", href: "/admin/site", Icon: SlidersHorizontal }
 function BrandMark({ onNavigate }: { onNavigate?: () => void }) {
   const t = useTranslations("admin");
   return (
-    <Link href="/admin" onClick={onNavigate} className="flex min-w-0 items-center gap-2" aria-label={`Mazed Immo ${t("console")}`}>
-      {/* The site's own logo, sideways as in its bars: the console should be
-          recognisably the same product. 28 px tall, so the logo and the
-          label share the 196 px rail. */}
-      <BrandLogo variant="lockup" alt="" eager className="h-7 w-auto shrink-0" />
+    <Link href="/admin" onClick={onNavigate} className="flex min-w-0 items-center gap-2.5" aria-label={`Mazed Immo ${t("console")}`}>
+      {/* The site's own logo, as the owner drew it: the console should be
+          recognisably the same product. The headers holding it are h-16. */}
+      <BrandLogo alt="" eager className="h-14 w-auto shrink-0" />
       <span className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--gold)]">{t("console")}</span>
     </Link>
   );
@@ -159,7 +161,7 @@ function ExitLink({ onNavigate }: { onNavigate?: () => void }) {
 export function AdminRail({ counts }: { counts: AdminCounts }) {
   return (
     <aside className="hidden h-dvh w-[196px] shrink-0 flex-col border-e border-border lg:flex">
-      <header className="flex h-12 items-center border-b border-border px-4">
+      <header className="flex h-16 items-center border-b border-border px-4">
         <BrandMark />
       </header>
       <NavList counts={counts} />
@@ -203,7 +205,7 @@ export function AdminMobileBar({ counts }: { counts: AdminCounts }) {
 
   return (
     <div className="lg:hidden">
-      <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-background px-4">
+      <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-4">
         <BrandMark />
         <div className="flex items-center gap-1">
           <InstallAppButton variant="icon" />
@@ -228,7 +230,7 @@ export function AdminMobileBar({ counts }: { counts: AdminCounts }) {
             aria-hidden
           />
           <div className="absolute inset-y-0 start-0 flex w-[240px] max-w-[85vw] flex-col border-e border-border bg-background animate-fade-in">
-            <header className="flex h-12 items-center justify-between border-b border-border px-4">
+            <header className="flex h-16 items-center justify-between border-b border-border px-4">
               <BrandMark onNavigate={() => setOpen(false)} />
               <button
                 type="button"

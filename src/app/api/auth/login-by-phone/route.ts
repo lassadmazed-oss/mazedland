@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getServerSupabase } from "@/lib/supabase/server";
+import { recordServerEvent } from "@/lib/analytics/server-events";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { clientIp } from "@/lib/clientIp";
 import { assertSupabaseRef } from "@/lib/supabase/guard";
@@ -100,5 +101,6 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ ok: false, error: "invalid_credentials" }, { status: 401 });
   }
+  recordServerEvent(req, "login", { userId: profile?.id, params: { method: "phone" } });
   return NextResponse.json({ ok: true });
 }

@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
   htmlLimitedBots: /.*/,
   // The framework's name is nobody's business.
   poweredByHeader: false,
+  // The starter guides (docs/guides/*.md) are read from disk by « Importer les
+  // guides de départ » (src/lib/guides/starterServer.ts): shipped with that
+  // route, whatever the file tracing makes of a readdir.
+  outputFileTracingIncludes: {
+    "/api/admin/content/import": ["./docs/guides/**/*"],
+  },
   // lucide-react is named-imported across ~125 files. This rewrites those
   // named imports to per-icon deep imports at build time, guaranteeing only
   // the icons actually used are bundled (insurance against the barrel

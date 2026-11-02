@@ -31,6 +31,7 @@ import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
 import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 import { shareText } from "@/lib/share";
 import { RelatedListings } from "@/components/listing/RelatedListings";
+import { GuidesStrip } from "@/components/guides/GuidesStrip";
 import { ViewTracker } from "@/components/listing/ViewTracker";
 import { AdSlot } from "@/components/ads/AdSlot";
 import {
@@ -94,8 +95,8 @@ type Row = {
   reference: string | null;
   seller_id: string;
   category:
-    | { id: string; label_fr: string; label_ar: string | null; kind: string }
-    | { id: string; label_fr: string; label_ar: string | null; kind: string }[]
+    | { id: string; slug: string; label_fr: string; label_ar: string | null; kind: string }
+    | { id: string; slug: string; label_fr: string; label_ar: string | null; kind: string }[]
     | null;
   photos: { storage_path: string; sort_order: number }[] | null;
   deal_type: string | null;
@@ -115,7 +116,7 @@ const SELECT = `
   published_at, expires_at, seller_id, reference, rejection_reason, review_flags,
   deal_type, deposit_amount, charges_amount, furnished, available_from,
   min_lease_months, availability, shop_id,
-  category:categories (id, label_fr, label_ar, kind),
+  category:categories (id, slug, label_fr, label_ar, kind),
   photos:listing_photos (storage_path, sort_order)
 `;
 
@@ -644,7 +645,9 @@ export default async function AnnoncePage({
       {/* Renders nothing; reports from the browser that this page was really
           looked at, rather than merely prefetched. */}
       {/* A seller looking at their own draft is not a view. */}
-      {!isPreview && <ViewTracker listingId={l.id} />}
+      {!isPreview && (
+        <ViewTracker listingId={l.id} deal={l.deal_type} category={category?.slug ?? null} governorate={l.governorate} shopId={l.shop_id} />
+      )}
 
       {isPreview && (
         <div className="mx-4 mt-3 rounded-2xl border border-dashed border-border bg-surface-2 px-4 py-3 lg:mx-0">
@@ -686,9 +689,9 @@ export default async function AnnoncePage({
       {photos.length > 0 && (
         <div className="lg:mt-4">
           <div className="lg:hidden">
-            <PhotoCarousel photos={photos} alt={l.title} autoplay={false} counter hiddenAt={LG_UP} />
+            <PhotoCarousel photos={photos} alt={l.title} autoplay={false} counter hiddenAt={LG_UP} listingId={l.id} />
           </div>
-          <GalleryMosaic photos={photos} alt={l.title} />
+          <GalleryMosaic photos={photos} alt={l.title} listingId={l.id} />
         </div>
       )}
 
@@ -808,6 +811,7 @@ export default async function AnnoncePage({
 
           {creditOn && (
             <CreditSimulator
+              listingId={l.id}
               price={Number(l.price)}
               defaults={{
                 ratePercent: settings.credit_rate_percent,
@@ -839,7 +843,7 @@ export default async function AnnoncePage({
         {/* ── Right: what you do about it. It follows you down the page because
                the decision to call is made while reading the caractéristiques,
                not after scrolling back up to find the button. ── */}
-        <aside className="hidden lg:sticky lg:top-24 lg:block">
+        <aside className="hidden lg:sticky lg:top-[calc(var(--desktop-nav-h)+1.5rem)] lg:block">
           <div className="mazed-float p-5">
             {priceBlock}
             <div className="mt-5 border-t border-border pt-5">{ownerCard ?? sellerBlock}</div>
@@ -860,6 +864,12 @@ export default async function AnnoncePage({
         dealType={asDealType(l.deal_type)}
         locale={locale}
       />
+
+      {/* « Guides utiles » (0208): how to buy or rent this kind of property,
+          picked by the deal and the category. Nothing while no guide is online. */}
+      <div className="px-4 lg:px-0">
+        <GuidesStrip deal={asDealType(l.deal_type)} categorySlug={category?.slug ?? null} via="annonce" />
+      </div>
 
       {/* On a phone the seller card sits under the photo, the title and the
           price — below the first screen. This keeps the number one tap away.

@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Languages } from "lucide-react";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { trackEvent } from "@/lib/analytics/events";
 
 /**
  * FR ⇄ ع. With two languages a menu is one tap too many: the pill shows the
@@ -27,6 +28,7 @@ export function LocaleSwitcher({ className = "", variant = "pill" }: { className
   const target = locale === "ar" ? "fr" : "ar";
 
   const onClick = () => {
+    trackEvent("language_switch", { from: locale, to: target });
     // Remember it on the profile too, so SMS and e-mails follow. A visitor
     // who is not signed in gets a 401 here, which is fine to ignore.
     fetch("/api/account/language", {

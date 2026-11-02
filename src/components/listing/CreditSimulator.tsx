@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Calculator, ChevronDown } from "lucide-react";
 import { rateChoices, simulateCredit } from "@/lib/credit";
 import { formatTND } from "@/lib/utils";
-import { track } from "@/lib/analytics/ga";
+import { trackEvent } from "@/lib/analytics/events";
 
 const DOWN_CHOICES = [10, 20, 30, 40, 50];
 const YEARS_CHOICES = [10, 15, 20, 25];
@@ -22,9 +22,12 @@ const withDefault = (list: number[], value: number) => (list.includes(value) ? l
 export function CreditSimulator({
   price,
   defaults,
+  listingId,
 }: {
   price: number;
   defaults: { ratePercent: number; years: number; downPercent: number };
+  /** For the count of who simulates a loan on which annonce. */
+  listingId?: string;
 }) {
   const t = useTranslations("listing.credit");
   const locale = useLocale();
@@ -47,7 +50,7 @@ export function CreditSimulator({
     <details
       className="group mt-6 rounded-2xl border border-border bg-surface"
       onToggle={(e) => {
-        if ((e.currentTarget as HTMLDetailsElement).open) track("credit_simulator_open");
+        if ((e.currentTarget as HTMLDetailsElement).open) trackEvent("credit_simulator_open", {}, { listing: listingId });
       }}
     >
       <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
@@ -69,7 +72,10 @@ export function CreditSimulator({
               <select
                 id={`${id}-${f.key}`}
                 value={f.value}
-                onChange={(e) => f.set(Number(e.target.value))}
+                onChange={(e) => {
+                  f.set(Number(e.target.value));
+                  trackEvent("credit_simulator_use", { field: f.key, value: Number(e.target.value) }, { listing: listingId });
+                }}
                 className="mt-1 h-10 w-full rounded-lg border border-border bg-surface-2 px-2 text-[13px] font-semibold text-foreground focus:border-gold focus:outline-none"
               >
                 {f.options.map((o) => (

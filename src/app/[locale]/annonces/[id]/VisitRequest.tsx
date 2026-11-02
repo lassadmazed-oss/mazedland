@@ -12,7 +12,7 @@ import { addDays, dayLabel, nextDays } from "@/lib/dayChips";
 import { BUYER_PHRASES, freePart, partTaken, suggestSlot, VISIT_MESSAGE_MAX } from "@/lib/visitChoices";
 import { hasPhrase, togglePhrase } from "@/lib/phrases";
 import { chipClass } from "@/lib/chips";
-import { track } from "@/lib/analytics/ga";
+import { trackEvent } from "@/lib/analytics/events";
 
 /**
  * « Demander une visite » (0174): a few half-days (how many and how far ahead
@@ -93,7 +93,10 @@ export function VisitRequest({
     return (
       <button
         type="button"
-        onClick={() => setForm(true)}
+        onClick={() => {
+          trackEvent("visit_request_open", {}, { listing: listingId });
+          setForm(true);
+        }}
         className="tap-target mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border text-[13.5px] font-bold text-foreground transition hover:bg-surface-2"
       >
         <CalendarCheck className="size-4" /> {t("cta")}
@@ -152,7 +155,7 @@ export function VisitRequest({
       }
       toast(t("sentToast"), "success");
       // GA: which annonce and how many half-days offered — not the name or number typed.
-      track("visit_request", { listing_id: listingId, slots: slots.length });
+      trackEvent("visit_request", { slots: slots.length }, { listing: listingId });
       setSent({ status: "requested", when: null });
     } catch {
       toast(t("failed"), "error");

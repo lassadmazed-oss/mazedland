@@ -10,6 +10,10 @@ node scripts/backup-db.mjs
 
 | Migration | Rollback | What is lost |
 |---|---|---|
+| 0208 articles (guides) | `0208_articles.down.sql` | every guide written in the console, published or draft (export the table first); the covers stay in storage until the nightly sweep |
+| 0207 public market stats | `0207_public_market_stats.down.sql` | nothing: the public aggregation is a read; /marche must be switched off (public_stats_enabled) or the code rolled back first |
+| 0206 analytics fixes | `0206_analytics_fixes.down.sql` | the weighted rate limit (/api/events must call check_rate_limit again); the report cache is no longer pruned; the guarded cast stays |
+| 0204 analytics | `0204_analytics.down.sql` | every site_events row (the site's own counts per annonce and agence), the cached Google reports, the nightly prune; /admin/analytics stops working |
 | 0202 photos create-only | `0202_photos_create_only.down.sql` | the owner may delete (and so swap) their photos again; the activity-only member loses the names |
 | 0201 social job secret in header | `0201_social_job_secret_in_header.down.sql` | the social job carries the key in its URL again (only with code that accepts ?key=) |
 | 0200 cron secret in the Vault | `0200_cron_secret_in_vault.down.sql` | the Vault forgets the secret — only once the jobs carry it in their URL again |

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useSessionCookie } from "@/lib/useSessionCookie";
+import { trackEvent } from "@/lib/analytics/events";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import {
   User, Receipt, Heart, ShieldCheck, Plus, FileText,
@@ -147,6 +148,8 @@ export function AccountMenu() {
     if (loggingOut) return;
     setLoggingOut(true);
     const locale = window.location.pathname.split("/")[1] || "fr";
+    // Google only: the route counts it for the site itself.
+    trackEvent("logout", {}, {}, { firstParty: false });
     try {
       const { getBrowserSupabase } = await import("@/lib/supabase/client");
       const sb = getBrowserSupabase();

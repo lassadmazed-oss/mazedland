@@ -9,6 +9,7 @@ import { FileUp, Loader2, LogOut, Trash2, UserPlus } from "lucide-react";
 import type { ShopRole } from "@/lib/pro/shops";
 import { cn } from "@/lib/utils";
 import { pickedBeforeReady } from "@/lib/pickedBeforeReady";
+import { trackEvent } from "@/lib/analytics/events";
 
 const chip = (on: boolean) =>
   cn(
@@ -155,6 +156,7 @@ export function ChoosePlan({ shopId, plan, label }: { shopId: string; plan: stri
       type="button"
       disabled={busy}
       onClick={async () => {
+        trackEvent("plan_choose", { plan, where: "dashboard" }, { shop: shopId });
         const j = await call(`/api/pro/shops/${shopId}/subscribe`, { method: "POST", body: JSON.stringify({ plan }) }, null);
         if (j?.paymentId) router.push(`/payment/checkout?payment=${j.paymentId}` as never);
       }}

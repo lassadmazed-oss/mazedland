@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Scale, X } from "lucide-react";
 import { Link, usePathname } from "@/i18n/navigation";
+import { trackEvent } from "@/lib/analytics/events";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { useCompare } from "./compareStore";
 
@@ -26,6 +27,7 @@ export function CompareBar() {
         <span className="text-[12.5px] font-bold">{t("picked", { count: ids.length })}</span>
         <Link
           href={`/comparer?ids=${ids.join(",")}` as never}
+          onClick={() => trackEvent("compare_open", { count: ids.length })}
           aria-disabled={ids.length < 2}
           className={`rounded-full bg-[var(--background)] px-3.5 py-1.5 text-[12.5px] font-extrabold text-foreground ${ids.length < 2 ? "pointer-events-none opacity-50" : ""}`}
         >

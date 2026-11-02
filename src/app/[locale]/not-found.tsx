@@ -1,5 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Compass, Home } from "lucide-react";
+import { TrackEvent } from "@/components/analytics/TrackEvent";
 
 /**
  * Locale-segment 404. Rendered when notFound() fires inside [locale]/* or a
@@ -11,6 +12,8 @@ export default function NotFound() {
   const locale = useLocale();
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-9rem)] max-w-md flex-col items-center justify-center px-6 text-center">
+      {/* A dead link, counted with its path (Statistiques → Comptes → erreurs). */}
+      <TrackEvent name="not_found" />
       <div className="flex size-14 items-center justify-center rounded-full bg-gold-faint text-gold ring-1 ring-gold/30">
         <Compass className="size-7" strokeWidth={1.8} />
       </div>

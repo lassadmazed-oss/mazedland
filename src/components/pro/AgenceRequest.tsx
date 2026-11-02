@@ -10,7 +10,7 @@ import { paymentInstructions, type PayeeDetails } from "@/lib/payments";
 import type { PaymentProvider } from "@/lib/payments/types";
 import { MAX_RECEIPTS, MAX_RECEIPT_MB, RECEIPT_TYPES, receiptProblem } from "@/lib/payments/receipts";
 import { removeReceipts, uploadReceipts } from "@/lib/payments/receiptUpload";
-import { track } from "@/lib/analytics/ga";
+import { trackEvent } from "@/lib/analytics/events";
 import { PayeeFields, PayMethodPicker } from "@/components/payments/PayeeInstructions";
 import { ShopFields, shopFormStart, type ShopFormValues } from "./ShopForm";
 import { ArrowRight, Check, FileText, Loader2, Upload, X } from "lucide-react";
@@ -213,11 +213,13 @@ export function AgenceRequest({
         return;
       }
       writeDraft(draftKey, null);
-      track("agence_request", {
+      trackEvent("agence_request", {
         plan: withPayment ? plan ?? undefined : "none",
         method: withPayment ? provider : "none",
         ...(withPayment && chosen ? { value: chosen.price, currency: "TND" } : {}),
       });
+      // The receipt went with the request: a payment handed in, counted here.
+      if (withPayment) trackEvent("payment_submit", { kind: "subscription", method: provider, where: "signup" });
       setSent({ id: j.id, paid: withPayment });
       window.scrollTo({ top: 0 });
     } catch {
@@ -328,7 +330,10 @@ export function AgenceRequest({
                   type="button"
                   role="radio"
                   aria-checked={on}
-                  onClick={() => setPlan(p.slug)}
+                  onClick={() => {
+                    setPlan(p.slug);
+                    trackEvent("plan_choose", { plan: p.slug, where: "signup" });
+                  }}
                   className={cn(
                     "relative flex flex-col rounded-2xl border-2 p-4 text-start transition",
                     on ? "border-[var(--gold)] bg-gold-faint" : "border-border bg-surface hover:border-gold-soft",

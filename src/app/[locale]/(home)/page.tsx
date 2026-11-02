@@ -7,8 +7,10 @@ import { HomeSearch } from "@/components/landing/HomeSearch";
 import { IntentChooser } from "@/components/landing/IntentChooser";
 import { HeroPhoto } from "@/components/landing/HeroPhoto";
 import { SellBand, WhyBand } from "@/components/landing/HomeBands";
+import { GuidesStrip } from "@/components/guides/GuidesStrip";
 import { LG_UP } from "@/components/ui/HiddenAt";
 import { AnnonceCard } from "@/components/listing/AnnonceCard";
+import { Impressions } from "@/components/analytics/Impressions";
 import { isRtl } from "@/lib/i18n";
 import { getHomeFeed } from "@/lib/home/feed";
 import { homeRailOptions, planHomeRails, splitAtMiddle, type HomeRail } from "@/lib/home/rails";
@@ -316,6 +318,7 @@ export default async function LandingPage({
             href={explore.href}
             seeAllLabel={t("home.seeAll")}
           />
+          <Impressions ids={explore.rows.map((a) => a.id)} surface="home_explore" />
           <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 px-4">
             {explore.rows.map((a) => (
               <AnnonceCard
@@ -329,6 +332,11 @@ export default async function LandingPage({
           </div>
         </section>
       )}
+
+      {/* « Guides utiles » — the newest guides, while there is one to read
+          (the console's `guides_strip_count`, 0 = none). On a phone this is
+          the way to them: the bottom bar has no room for a sixth tab. */}
+      <GuidesStrip via="home" headingId="guides-strip-home-phone" className="px-4" />
 
       {/* Why Mazed Immo, how it works, and the call to publish. */}
       <WhyBand layout="phone" />

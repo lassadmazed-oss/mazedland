@@ -5,6 +5,7 @@ import { log } from "@/lib/log";
 import { routing } from "@/i18n/routing";
 import { projectsShown } from "@/lib/pro/projectsServer";
 import { catalogueLandings } from "@/lib/seo";
+import { loadSettings } from "@/lib/settings/server";
 
 const SITE_URL = siteUrl();
 
@@ -54,6 +55,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!sb || !base) return staticRoutes;
 
   try {
+    // « Le marché en chiffres » (/marche), while the console keeps it on.
+    const settings = await loadSettings(sb);
+    const marketRoutes: MetadataRoute.Sitemap = settings.public_stats_enabled
+      ? localized(base, "/marche", { changeFrequency: "daily", priority: 0.5 })
+      : [];
+
     // `auctions` joined to `properties`, filtered to `status = 'ready'`, until
     // migration 0153 dropped both. The catch below swallowed the resulting
     // error and returned only the static routes — so since that migration, not
@@ -125,7 +132,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // Next writes each address into the XML as it is: « & » must arrive escaped.
     ).flatMap((query) => localized(base, `/annonces?${query.replace(/&/g, "&amp;")}`, { changeFrequency: "daily" as const, priority: 0.8 }));
 
-    return [...staticRoutes, ...landingRoutes, ...shopRoutes, ...projectRoutes, ...listingRoutes];
+    // The guides (0208): the index and every published guide, while the
+    // feature is on. Weekly: a guide is written once and touched up.
+    const guideRoutes: MetadataRoute.Sitemap = [];
+    if (settings.guides_enabled) {
+      const { data: guides } = await sb
+        .from("articles")
+        .select("slug, updated_at, published_at")
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(500);
+      if (guides && guides.length > 0) {
+        guideRoutes.push(...localized(base, "/guides", { changeFrequency: "weekly" as const, priority: 0.6 }));
+        for (const g of guides as { slug: string; updated_at: string | null; published_at: string | null }[]) {
+          guideRoutes.push(
+            ...localized(base, `/guides/${g.slug}`, {
+              lastModified: g.updated_at ?? g.published_at ?? undefined,
+              changeFrequency: "weekly" as const,
+              priority: 0.6,
+            }),
+          );
+        }
+      }
+    }
+
+    return [...staticRoutes, ...marketRoutes, ...landingRoutes, ...shopRoutes, ...projectRoutes, ...guideRoutes, ...listingRoutes];
   } catch {
     // Never let a DB hiccup 500 the sitemap — degrade to static routes.
     return staticRoutes;

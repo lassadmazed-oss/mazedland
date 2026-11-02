@@ -20,11 +20,14 @@ export type Banner = {
 /**
  * The banners of one advertising space, one at a time.
  *
- * Crossfades to the next every `ads_rotate_seconds`, and holds still whenever
- * someone is looking closely — the pointer over it, a finger on it, the
- * keyboard in it — and whenever nobody can see it: scrolled away, or in a
- * background tab. With reduced motion asked for, it never moves on its own;
- * the dots and a swipe still do.
+ * Crossfades to the next every `ads_rotate_seconds`, always: the owner wants
+ * the banners turning (2026-11-01), and a pointer resting on one, the
+ * keyboard in it or a device asking for reduced motion (Windows with its
+ * animations off) used to stop it for good. With reduced motion the banner
+ * changes without the fade. It holds still only while a finger is on it (a
+ * swipe in progress) and while nobody can see it — scrolled away, or in a
+ * background tab. `ads_rotate_pause` (Réglages → Accueil) brings back the
+ * pause for the pointer, the keyboard and reduced motion.
  *
  * A view is counted once per banner per page, when at least half of it has
  * been on screen for a second (the usual definition of a viewable ad): the
@@ -82,6 +85,7 @@ export function AdRotator({ banners, sizes = WIDE_SIZES }: { banners: Banner[]; 
   const t = useTranslations("ads");
   const rtl = useLocale() === "ar";
   const seconds = useSetting("ads_rotate_seconds");
+  const pauseOnLook = useSetting("ads_rotate_pause");
   const total = banners.length;
 
   const [index, setIndex] = useState(0);
@@ -89,6 +93,7 @@ export function AdRotator({ banners, sizes = WIDE_SIZES }: { banners: Banner[]; 
   const [focused, setFocused] = useState(false);
   const [touching, setTouching] = useState(false);
   const [inView, setInView] = useState(false);
+  const [onScreen, setOnScreen] = useState(false);
   const pageVisible = usePageVisible();
   const reduced = useReducedMotion();
 
@@ -100,14 +105,20 @@ export function AdRotator({ banners, sizes = WIDE_SIZES }: { banners: Banner[]; 
   const current = banners[Math.min(index, total - 1)];
   const currentId = current?.id;
   const watching = inView && pageVisible;
-  const rotating = total > 1 && !reduced && watching && !hovered && !focused && !touching;
+  // Turning whenever any of it shows: half on screen is the bar for counting
+  // a view, not for moving on.
+  const rotating =
+    total > 1 && onScreen && pageVisible && !touching && (!pauseOnLook || (!hovered && !focused && !reduced));
 
   // « Seen » is half the box on screen.
   useEffect(() => {
     const el = boxRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const io = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting && entry.intersectionRatio >= 0.5),
+      ([entry]) => {
+        setInView(entry.isIntersecting && entry.intersectionRatio >= 0.5);
+        setOnScreen(entry.isIntersecting);
+      },
       { threshold: [0, 0.5] },
     );
     io.observe(el);

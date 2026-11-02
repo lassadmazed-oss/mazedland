@@ -3,8 +3,31 @@
 import { useTranslations } from "next-intl";
 import { BarChart3 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { writeConsent } from "@/lib/analytics/ga";
+import { writeConsent, type Consent } from "@/lib/analytics/ga";
+import { forgetClientId, trackEvent } from "@/lib/analytics/events";
+import { useSetting } from "@/components/settings/SettingsProvider";
 import { useAnalytics } from "./GoogleAnalytics";
+
+/**
+ * The answer, kept. A yes is counted; a no is not (nothing may leave after
+ * it) and drops the browser's id, so a later yes is a new visitor.
+ */
+function answer(v: Consent) {
+  writeConsent(v);
+  if (v === "granted") trackEvent("consent", { answer: "granted" });
+  else forgetClientId();
+}
+
+/**
+ * Whether there is something to accept or refuse: Google switched on with an
+ * ID, or the site's own count waiting for the yes (analytics_events_consent).
+ */
+function useNeedsAnswer(): boolean {
+  const { active, askConsent } = useAnalytics();
+  const eventsOn = useSetting("analytics_events_enabled");
+  const eventsWait = useSetting("analytics_events_consent");
+  return active || (eventsOn && eventsWait && askConsent);
+}
 
 /**
  * « Accepter / Refuser » for Google Analytics, when an admin asked for it
@@ -15,8 +38,9 @@ import { useAnalytics } from "./GoogleAnalytics";
  */
 export function AnalyticsConsentBar() {
   const t = useTranslations("analyticsConsent");
-  const { active, askConsent, consent } = useAnalytics();
-  if (!active || !askConsent || consent !== null) return null;
+  const { askConsent, consent } = useAnalytics();
+  const needsAnswer = useNeedsAnswer();
+  if (!needsAnswer || !askConsent || consent !== null) return null;
 
   return (
     <div
@@ -36,14 +60,14 @@ export function AnalyticsConsentBar() {
       <div className="mt-2.5 flex justify-end gap-2">
         <button
           type="button"
-          onClick={() => writeConsent("denied")}
+          onClick={() => answer("denied")}
           className="tap-target inline-flex items-center justify-center rounded-full border border-border px-4 py-1.5 text-[12.5px] font-bold text-foreground transition hover:bg-surface-2"
         >
           {t("decline")}
         </button>
         <button
           type="button"
-          onClick={() => writeConsent("granted")}
+          onClick={() => answer("granted")}
           className="mazed-btn-luxe tap-target inline-flex items-center justify-center px-4 py-1.5 text-[12.5px]"
         >
           {t("accept")}
@@ -60,8 +84,11 @@ export function AnalyticsConsentBar() {
  */
 export function AnalyticsChoice() {
   const t = useTranslations("analyticsConsent");
-  const { active, askConsent, consent, allowed, known } = useAnalytics();
-  if (!active || !known) return null;
+  const { active, askConsent, consent, allowed: gaAllowed, known } = useAnalytics();
+  const needsAnswer = useNeedsAnswer();
+  if (!needsAnswer || !known) return null;
+  // With Google off, the site's own count is what the answer governs.
+  const allowed = active ? gaAllowed : askConsent ? consent === "granted" : consent !== "denied";
 
   const status =
     consent === "granted"
@@ -78,7 +105,7 @@ export function AnalyticsChoice() {
       <p className="mt-1 text-[13px] leading-relaxed text-foreground/80">{status}</p>
       <button
         type="button"
-        onClick={() => writeConsent(allowed ? "denied" : "granted")}
+        onClick={() => answer(allowed ? "denied" : "granted")}
         className={
           allowed
             ? "tap-target mt-3 inline-flex items-center justify-center rounded-full border border-border bg-surface px-4 py-1.5 text-[12.5px] font-bold text-foreground transition hover:bg-surface-2"

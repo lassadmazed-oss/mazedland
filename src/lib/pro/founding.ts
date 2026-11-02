@@ -1,4 +1,5 @@
 import type { getServiceSupabase } from "@/lib/supabase/admin";
+import { offerPlanPeriod } from "./shops";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -33,4 +34,48 @@ export async function loadFoundingSeats(admin: Admin, total: number): Promise<Fo
   } catch {
     return seatsOf(total, total);
   }
+}
+
+/**
+ * The founding offer, given on its own (the owner, 2026-11-01: « the first 50
+ * agences, and one that opens its agence goes straight in with the offer, with
+ * no payment step »). When the console opens an agence that has no plan, and
+ * the offer is on and has places left, the agence is given its free months of
+ * the offer's plan right there — the same period « Offrir une période » makes
+ * (no payment, no invoice, once per agence), so the place count, the reminder
+ * before it ends and the console's journal all see it.
+ *
+ * Null when there is nothing to give: the offer is off, no place is left, the
+ * plan is not on sale, or the agence has already had its period (then it pays).
+ */
+export async function foundingOffer(
+  admin: Admin,
+  opts: {
+    shopId: string;
+    grantedBy: string;
+    enabled: boolean;
+    seats: number;
+    months: number;
+    planSlug: string;
+  },
+  now: Date = new Date(),
+): Promise<{ plan: string; months: number; until: string } | null> {
+  if (!opts.enabled) return null;
+  if ((await loadFoundingSeats(admin, opts.seats)).left <= 0) return null;
+  const { data: product } = await admin
+    .from("products")
+    .select("id, name_fr, listing_quota")
+    .eq("slug", opts.planSlug)
+    .eq("kind", "subscription")
+    .eq("is_active", true)
+    .maybeSingle();
+  const quota = Number(product?.listing_quota);
+  if (!product || !(Number.isFinite(quota) && quota > 0)) return null;
+  const period = await offerPlanPeriod(
+    admin,
+    { shopId: opts.shopId, productId: product.id as string, quota, months: opts.months, grantedBy: opts.grantedBy },
+    now,
+  );
+  if ("error" in period || "already" in period) return null;
+  return { plan: product.name_fr as string, months: opts.months, until: period.endsAt.toISOString() };
 }
