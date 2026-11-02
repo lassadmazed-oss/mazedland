@@ -2026,7 +2026,8 @@
     "hoursValue": "Lun – Ven, 9h – 17h",
     "whatsapp": "WhatsApp",
     "whatsappNote": "Messages uniquement — pas d'appels",
-    "tiktok": "TikTok"
+    "tiktok": "TikTok",
+    "facebook": "Facebook"
   },
   "errors": {
     "boundary": {
@@ -5197,6 +5198,14 @@
     "contact_phone": {
       "label": "Téléphone",
       "hint": "Affiché sur la page contact. Vide : pas de téléphone affiché."
+    },
+    "contact_tiktok": {
+      "label": "Compte TikTok",
+      "hint": "Le nom du compte, avec ou sans @. Affiché en bas de chaque page et sur la page contact. Vide : pas de TikTok."
+    },
+    "contact_facebook": {
+      "label": "Page Facebook",
+      "hint": "Le nom de la page, son numéro (profile.php?id=…) ou son lien. Affichée en bas de chaque page et sur la page contact. Vide : pas de Facebook."
     },
     "social_price_tnd": {
       "label": "Prix d'une publication sur les réseaux",

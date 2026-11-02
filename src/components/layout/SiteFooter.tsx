@@ -3,6 +3,25 @@ import { Link } from "@/i18n/navigation";
 import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { getSettings } from "@/lib/settings/server";
+import { facebookHref, tiktokHref } from "@/lib/contact";
+
+/** TikTok icon — not in lucide-react. */
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" />
+    </svg>
+  );
+}
+
+/** Facebook's filled mark, to match the TikTok one (lucide's is an outline). */
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
+    </svg>
+  );
+}
 
 /**
  * The site's footer, on every public page.
@@ -15,22 +34,15 @@ import { getSettings } from "@/lib/settings/server";
  * A server component: nothing here changes in the browser except the
  * language switch, which is its own client island. The layout hands it to
  * MobileShell, which leaves it out of the flow routes (auth, payment, the
- * console).
+ * console). The Facebook and TikTok marks follow the `contact_facebook` and
+ * `contact_tiktok` settings; empty, the mark is gone.
  */
-/** TikTok icon — not in lucide-react. */
-function TikTokIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
-      <path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z" />
-    </svg>
-  );
-}
-
 export async function SiteFooter() {
   const t = await getTranslations();
   const s = await getSettings();
   const year = String(new Date().getFullYear());
   const tiktok = s.contact_tiktok;
+  const facebook = s.contact_facebook;
 
   const columns: { key: string; title: string; links: { href: string; label: string }[] }[] = [
     {
@@ -100,9 +112,20 @@ export async function SiteFooter() {
             {t("footer.rights", { year, name: t("brand.name") })} · {t("footer.country")}
           </p>
           <div className="flex items-center gap-3">
+            {facebook && (
+              <a
+                href={facebookHref(facebook)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="inline-flex size-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+              >
+                <FacebookIcon className="size-4" />
+              </a>
+            )}
             {tiktok && (
               <a
-                href={`https://www.tiktok.com/@${tiktok}`}
+                href={tiktokHref(tiktok)}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"

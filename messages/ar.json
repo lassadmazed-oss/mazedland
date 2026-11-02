@@ -2026,7 +2026,8 @@
     "hoursValue": "من الإثنين إلى الجمعة، من 9:00 إلى 17:00",
     "whatsapp": "واتساب",
     "whatsappNote": "مساجات برك — ما فماش مكالمات",
-    "tiktok": "TikTok"
+    "tiktok": "TikTok",
+    "facebook": "Facebook"
   },
   "errors": {
     "boundary": {
@@ -5197,6 +5198,14 @@
     "contact_phone": {
       "label": "التليفون",
       "hint": "يبان في صفحة الاتصال. فارغ: ما يبانش."
+    },
+    "contact_tiktok": {
+      "label": "حساب TikTok",
+      "hint": "اسم الحساب، بـ @ ولا بلاش. يبان في آخر كل صفحة وفي صفحة الاتصال. فارغ: ما يبانش."
+    },
+    "contact_facebook": {
+      "label": "صفحة Facebook",
+      "hint": "اسم الصفحة، الرقم متاعها (profile.php?id=…) ولا الرابط. تبان في آخر كل صفحة وفي صفحة الاتصال. فارغ: ما تبانش."
     },
     "social_price_tnd": {
       "label": "سوم النشر في الشبكات",
