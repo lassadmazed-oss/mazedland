@@ -185,6 +185,8 @@ export const SETTINGS = {
   contact_whatsapp: { group: "contact", type: "text", default: "+216 58 415 510", max: 30, ltr: true, client: true },
   contact_email: { group: "contact", type: "text", default: "contact@mazed.immo", max: 120, ltr: true },
   contact_phone: { group: "contact", type: "text", default: "", max: 30, ltr: true },
+  contact_tiktok: { group: "contact", type: "text", default: "mazedimmo", max: 60, ltr: true },
+  contact_facebook: { group: "contact", type: "text", default: "100057517755322", max: 120, ltr: true },
 
   // ── Social Publisher (0170) and the listing assistant (0169).
   social_price_tnd: { group: "social", type: "number", default: 0, min: 0, max: 1000, unit: "tnd" },
