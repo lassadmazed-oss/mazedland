@@ -129,7 +129,7 @@ export function DeleteAccountButton({ label }: { label: string }) {
             setConfirmText("");
           }}
           disabled={pending}
-          className="mazed-btn-quiet tap-target flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[13px] disabled:opacity-50"
+          className="mazed-btn-quiet tap-target flex h-11 flex-1 items-center justify-center px-4 text-[13px] disabled:opacity-50"
         >
           {t("cancel")}
         </button>

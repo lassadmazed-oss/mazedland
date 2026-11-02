@@ -159,7 +159,7 @@ export function ResetPasswordForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
+        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 text-[14px] disabled:opacity-50"
       >
         {isPending ? t("newPassword.updating") : t("newPassword.update")}
       </button>

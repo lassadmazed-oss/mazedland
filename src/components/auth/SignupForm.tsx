@@ -8,7 +8,7 @@ import { safeInternalPath } from "@/lib/safePath";
 import { PhoneInput } from "./PhoneInput";
 import { OtpCodeInput } from "./OtpCodeInput";
 import { forgetPhone, useRememberedPhone } from "./rememberedPhone";
-import { Loader2, Smartphone } from "lucide-react";
+import { ChevronDown, Loader2, Smartphone } from "lucide-react";
 import { TUNISIAN_GOVERNORATES, governorateLabel, normalizeE164, validatePhone } from "@/lib/tunisia";
 import { Modal } from "@/components/ui/Modal";
 import { Ltr } from "@/components/ui/Ltr";
@@ -301,23 +301,29 @@ export function SignupForm() {
 
       <label className="block">
         <span className="mazed-eyebrow text-[10px]">{t("auth.fields.governorate")}</span>
-        <select
-          value={governorate}
-          onChange={(e) => setGovernorate(e.target.value)}
-          required
-          autoComplete="address-level1"
-          className="mt-1.5 h-12 w-full rounded-xl border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10 appearance-none"
-        >
-          <option value="" disabled>
-            {t("auth.fields.governoratePlaceholder")}
-          </option>
-          {/* The French name stays the stored value; only the label is localized. */}
-          {TUNISIAN_GOVERNORATES.map((g) => (
-            <option key={g} value={g}>
-              {governorateLabel(g, locale)}
+        {/* `appearance-none` drops the browser's arrow with the rest of its
+            styling, so the chevron is drawn back: without it the required
+            picker read as a text box. */}
+        <span className="relative mt-1.5 block">
+          <select
+            value={governorate}
+            onChange={(e) => setGovernorate(e.target.value)}
+            required
+            autoComplete="address-level1"
+            className="h-12 w-full appearance-none rounded-xl border border-border bg-surface ps-4 pe-10 text-[15px] text-foreground transition focus:border-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10"
+          >
+            <option value="" disabled>
+              {t("auth.fields.governoratePlaceholder")}
             </option>
-          ))}
-        </select>
+            {/* The French name stays the stored value; only the label is localized. */}
+            {TUNISIAN_GOVERNORATES.map((g) => (
+              <option key={g} value={g}>
+                {governorateLabel(g, locale)}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute end-4 top-1/2 size-4 -translate-y-1/2 text-muted" strokeWidth={2.4} aria-hidden />
+        </span>
       </label>
 
       <Field
@@ -376,7 +382,7 @@ export function SignupForm() {
         type="submit"
         disabled={isPending || !accepted}
         title={!accepted && !isPending ? t("auth.signup.acceptFirst") : undefined}
-        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
+        className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 text-[14px] disabled:opacity-50"
       >
         {isPending ? (
           <><Loader2 className="inline size-4 animate-spin" /> {t("auth.signup.submitting")}</>
@@ -450,7 +456,7 @@ function PhoneVerify({
         <button
           type="submit"
           disabled={pending || code.replace(/\D/g, "").length !== 6}
-          className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px] disabled:opacity-50"
+          className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center gap-2 text-[14px] disabled:opacity-50"
         >
           {pending ? (
             <><Loader2 className="inline size-4 animate-spin" /> {t("verifying")}</>
@@ -462,7 +468,7 @@ function PhoneVerify({
           type="button"
           onClick={onResend}
           disabled={cooldown > 0 || pending}
-          className="mazed-btn-quiet tap-target flex h-12 w-full items-center justify-center rounded-full text-[14px] disabled:opacity-50"
+          className="mazed-btn-quiet tap-target flex h-12 w-full items-center justify-center text-[14px] disabled:opacity-50"
         >
           {cooldown > 0 ? t("resendIn", { seconds: cooldown }) : t("resend")}
         </button>

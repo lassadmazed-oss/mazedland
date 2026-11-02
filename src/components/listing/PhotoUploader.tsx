@@ -566,7 +566,7 @@ export function PhotoUploader({
                       setPending((s) => s.filter((x) => x.id !== p.id));
                       URL.revokeObjectURL(p.id);
                     }}
-                    className="text-[9.5px] font-bold text-white/70 underline"
+                    className="text-[10.5px] font-bold text-muted underline underline-offset-2"
                   >
                     {t("remove")}
                   </button>

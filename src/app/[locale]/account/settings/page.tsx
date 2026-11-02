@@ -155,7 +155,7 @@ export default async function AccountSettingsPage() {
         <a
           href="/api/account/export"
           download
-          className="mazed-btn-quiet tap-target mt-4 inline-flex h-11 items-center gap-2 rounded-full px-4 text-[13px]"
+          className="mazed-btn-quiet tap-target mt-4 inline-flex h-11 items-center gap-2 px-4 text-[13px]"
         >
           <Download className="size-4" /> {t("dataDownload")}
         </a>

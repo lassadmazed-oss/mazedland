@@ -49,7 +49,7 @@ export function RequestActions({ id, state, days }: { id: string; state: "active
   }
 
   const btn =
-    "mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 rounded-full px-3.5 text-[12px] disabled:opacity-60";
+    "mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1 px-3.5 text-[12px] disabled:opacity-60";
   const spin = (a: string) => busy === a && <Loader2 className="size-3.5 animate-spin" />;
 
   return (

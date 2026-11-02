@@ -276,8 +276,8 @@ export default async function MyListingsPage({
 
   function Action({ l, block = false }: { l: Row; block?: boolean }) {
     const cls = block
-      ? "mazed-btn-luxe tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
-      : "mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12px]";
+      ? "mazed-btn-luxe tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 px-4 text-[13px]"
+      : "mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 whitespace-nowrap px-3.5 text-[12px]";
 
     // Receipt with an admin: the action is to look at it, not to pay again.
     if (l.status === "pending_payment" && reviewFor.has(l.id)) {
@@ -328,7 +328,7 @@ export default async function MyListingsPage({
             href={"/contact" as never}
             className={
               block
-                ? "mazed-btn-quiet tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
+                ? "mazed-btn-quiet tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 px-4 text-[13px]"
                 : "inline-flex items-center gap-1 text-[12.5px] font-bold text-foreground underline underline-offset-4 hover:text-muted"
             }
           >
@@ -353,7 +353,7 @@ export default async function MyListingsPage({
           href={`/annonces/${l.id}` as never}
           className={
             block
-              ? "mazed-btn-quiet tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
+              ? "mazed-btn-quiet tap-target mt-3 flex h-11 w-full items-center justify-center gap-1.5 px-4 text-[13px]"
               : "inline-flex items-center gap-1 text-[12.5px] font-bold text-foreground underline underline-offset-4 hover:text-muted"
           }
         >
@@ -376,7 +376,7 @@ export default async function MyListingsPage({
             href={`/annonces/nouvelle?edit=${l.id}` as never}
             className={
               block
-                ? "mazed-btn-quiet tap-target mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
+                ? "mazed-btn-quiet tap-target mt-2 flex h-11 w-full items-center justify-center gap-1.5 px-4 text-[13px]"
                 : "ms-3 inline-flex items-center gap-1 text-[12.5px] font-bold text-foreground hover:underline"
             }
           >
@@ -465,7 +465,7 @@ export default async function MyListingsPage({
               {t("creditsLeft", { count: creditsLeft })}
             </span>
           )}
-          <Link href={"/annonces/nouvelle" as never} className="mazed-btn-luxe tap-target h-11 gap-1.5 rounded-full px-5 text-[13px]">
+          <Link href={"/annonces/nouvelle" as never} className="mazed-btn-luxe tap-target h-11 gap-1.5 px-5 text-[13px]">
             <Plus className="size-4" /> {t("publish")}
           </Link>
         </div>
@@ -488,7 +488,7 @@ export default async function MyListingsPage({
                   key={tab.key || "all"}
                   href={(tab.key ? `/account/listings?statut=${tab.key}` : "/account/listings") as never}
                   aria-current={on ? "page" : undefined}
-                  className="gap-1.5 whitespace-nowrap"
+                  className="tap-target gap-1.5 whitespace-nowrap"
                 >
                   {t(`tabs.${tab.label}`)}
                   <span className={`mazed-tabular text-[12.5px] font-extrabold ${on ? "text-foreground" : tab.tone}`}>
@@ -513,7 +513,7 @@ export default async function MyListingsPage({
                 <Link
                   href={`/annonces/${l.id}` as never}
                   aria-label={l.title || tAccount("untitledDraft")}
-                  className="mazed-photo-frame aspect-[4/3] w-[108px] shrink-0"
+                  className="mazed-photo-frame aspect-[4/3] w-[108px] shrink-0 self-start"
                 >
                   {cover ? (
                     <ListingImage path={cover.storage_path} alt="" sizes="108px" fit="cover" />
@@ -573,23 +573,15 @@ export default async function MyListingsPage({
           they get columns and aligned numbers rather than a ribbon of cards
           with an ocean of empty space beside it. */}
       <div className="mt-6 hidden overflow-hidden rounded-[var(--radius-2xl)] bg-surface ring-1 ring-border lg:block">
-        {/* A fixed layout: the columns share the width, a long title truncates
-            in its cell and the actions keep their column. Laid out from the
-            content, the title and the hints pushed the table wider than the
-            page and the whole « Action » column was cut off (overflow-hidden). */}
+        {/* The title column gives way (`w-full max-w-0`: it takes what the
+            others leave and truncates in it) and the others size to their
+            content, so no column is ever cut off and no price spills into
+            the next cell. A narrow desktop scrolls the table sideways. */}
         <div className="overflow-x-auto">
-        <table className="w-full table-fixed text-[13px]">
-          <colgroup>
-            <col className="w-[34%]" />
-            <col className="w-[18%]" />
-            <col className="w-[10%]" />
-            <col className="w-[10%]" />
-            <col className="w-[10%]" />
-            <col className="w-[18%]" />
-          </colgroup>
+        <table className="w-full text-[13px]">
           <thead className="bg-paper-warm text-[10px] uppercase tracking-[0.14em] text-muted">
             <tr>
-              <th className="px-5 py-3.5 text-start font-extrabold">{t("columns.listing")}</th>
+              <th className="w-full max-w-0 px-5 py-3.5 text-start font-extrabold">{t("columns.listing")}</th>
               <th className="px-3 py-3.5 text-start font-extrabold">{t("columns.status")}</th>
               <th className="px-3 py-3.5 text-end font-extrabold">{t("columns.price")}</th>
               <th className="px-3 py-3.5 text-start font-extrabold">{t("columns.published")}</th>
@@ -604,7 +596,7 @@ export default async function MyListingsPage({
               const left = daysLeft(l);
               return (
                 <tr key={l.id} className="align-middle transition hover:bg-surface-2/50">
-                  <td className="px-5 py-3.5">
+                  <td className="max-w-0 px-5 py-3.5">
                     <div className="flex items-center gap-3.5">
                       <Link
                         href={`/annonces/${l.id}` as never}
@@ -680,7 +672,7 @@ export default async function MyListingsPage({
               <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-muted">
                 {t("emptyBody")}
               </p>
-              <Link href={"/annonces/nouvelle" as never} className="mazed-btn-luxe tap-target mt-6 inline-flex h-12 items-center gap-2 rounded-full px-6 text-[14px]">
+              <Link href={"/annonces/nouvelle" as never} className="mazed-btn-luxe tap-target mt-6 inline-flex h-12 items-center gap-2 px-6 text-[14px]">
                 <Plus className="size-4" /> {t("publishListing")}
               </Link>
             </>

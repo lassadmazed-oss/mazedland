@@ -87,9 +87,9 @@ export function ListingStatusActions({
 
   const quiet =
     "tap-target inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11.5px] font-bold text-muted transition hover:bg-surface-2 hover:text-foreground";
-  const quietBlock = "mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[12px]";
+  const quietBlock = "mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1.5 whitespace-nowrap px-3 text-[12px]";
   const gold =
-    "mazed-btn-luxe tap-target inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[12.5px]";
+    "mazed-btn-luxe tap-target inline-flex h-10 items-center gap-1.5 whitespace-nowrap px-4 text-[12.5px]";
 
   return (
     <>
@@ -122,7 +122,7 @@ export function ListingStatusActions({
             type="button"
             disabled={busy}
             onClick={() => asking && run(asking)}
-            className="mazed-btn-luxe tap-target flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[13px] disabled:opacity-60"
+            className="mazed-btn-luxe tap-target flex h-11 flex-1 items-center justify-center px-4 text-[13px] disabled:opacity-60"
           >
             {busy && <Loader2 className="size-4 animate-spin" />}
             {asking ? t(`${asking}.confirm`) : ""}
@@ -131,7 +131,7 @@ export function ListingStatusActions({
             type="button"
             disabled={busy}
             onClick={() => setAsking(null)}
-            className="mazed-btn-quiet tap-target flex h-11 flex-1 items-center justify-center rounded-full px-4 text-[13px] disabled:opacity-60"
+            className="mazed-btn-quiet tap-target flex h-11 flex-1 items-center justify-center px-4 text-[13px] disabled:opacity-60"
           >
             {t("cancel")}
           </button>

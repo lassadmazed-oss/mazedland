@@ -25,7 +25,6 @@ export default async function ForgotPasswordPage() {
 
   return (
     <AuthScreen
-      labelledBy="forgot-title"
       title={t("auth.forgot.title")}
       intro={t("auth.forgot.intro")}
       footer={

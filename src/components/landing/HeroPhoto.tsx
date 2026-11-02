@@ -13,10 +13,10 @@ import { EMPTY_GIF } from "@/components/ui/HiddenAt";
  * (see HiddenAt). The visible copy loads eagerly at high priority — it is
  * the page's largest paint.
  */
-export function HeroPhoto({ hiddenAt, className = "" }: { hiddenAt: string; className?: string }) {
+export function HeroPhoto({ hiddenAt, className = "" }: { hiddenAt?: string; className?: string }) {
   return (
     <picture className={className}>
-      <source media={hiddenAt} srcSet={EMPTY_GIF} />
+      {hiddenAt && <source media={hiddenAt} srcSet={EMPTY_GIF} />}
       <source srcSet="/auth-hero.avif" type="image/avif" />
       <source
         srcSet="/auth-hero.w640.webp 640w, /auth-hero.w828.webp 828w, /auth-hero.webp 1100w"

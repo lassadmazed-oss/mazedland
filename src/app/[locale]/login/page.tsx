@@ -33,9 +33,8 @@ export default async function LoginPage({
 
   return (
     <AuthScreen
-      labelledBy="login-title"
       title={t("nav.login")}
-      desktopTitle={t.rich("auth.login.welcome", { brand: (chunks) => <span>{chunks}</span> })}
+      desktopTitle={t.rich("auth.login.welcome", { brand: (chunks) => chunks })}
       below={
         <p className="mt-4 text-center text-[13px]">
           <Link href="/forgot-password" className="font-semibold text-muted transition hover:text-foreground">

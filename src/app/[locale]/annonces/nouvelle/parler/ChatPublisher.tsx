@@ -317,7 +317,7 @@ export function ChatPublisher({
         )}
         <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
           {done.status === "published" && (
-            <Link href={`/annonces/${done.id}` as never} className="mazed-btn-luxe tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]">
+            <Link href={`/annonces/${done.id}` as never} className="mazed-btn-luxe tap-target inline-flex h-12 items-center px-6 text-[13.5px]">
               {tp("seeListing")}
             </Link>
           )}
@@ -325,8 +325,8 @@ export function ChatPublisher({
             href={"/account/listings" as never}
             className={
               done.status === "published"
-                ? "mazed-btn-quiet tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
-                : "mazed-btn-luxe tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
+                ? "mazed-btn-quiet tap-target inline-flex h-12 items-center px-6 text-[13.5px]"
+                : "mazed-btn-luxe tap-target inline-flex h-12 items-center px-6 text-[13.5px]"
             }
           >
             {tp("seeMyListings")}
@@ -373,10 +373,10 @@ export function ChatPublisher({
             <p className="mt-2 text-[11.5px] leading-snug text-muted">{t("stillMissing", { list: toSay.join(", ") })}</p>
           )}
           <div className="mt-2.5 flex flex-wrap gap-2">
-            <button type="button" onClick={() => setPhotosOpen(true)} className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12.5px]">
+            <button type="button" onClick={() => setPhotosOpen(true)} className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1.5 px-3.5 text-[12.5px]">
               <Camera className="size-3.5" /> {t("addPhotos")}
             </button>
-            <button type="button" onClick={() => setSheetOpen(true)} className="mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[12.5px]">
+            <button type="button" onClick={() => setSheetOpen(true)} className="mazed-btn-luxe tap-target inline-flex h-9 items-center gap-1.5 px-4 text-[12.5px]">
               <Sparkles className="size-3.5" /> {t("publish")}
             </button>
           </div>
@@ -426,7 +426,7 @@ export function ChatPublisher({
             <button
               type="button"
               onClick={() => setSheetOpen(true)}
-              className="mazed-btn-luxe tap-target mb-2.5 flex h-12 w-full items-center justify-center gap-2 rounded-full text-[14px]"
+              className="mazed-btn-luxe tap-target mb-2.5 flex h-12 w-full items-center justify-center gap-2 text-[14px]"
             >
               <Check className="size-4" /> {t("publishWhenReady")}
             </button>
@@ -499,7 +499,7 @@ export function ChatPublisher({
                 aria-label={t("type")}
                 className="h-12 min-w-0 flex-1 rounded-full border border-border bg-surface px-4 text-[15px] text-foreground placeholder:text-muted focus:border-foreground focus:outline-none"
               />
-              <button type="submit" disabled={busy || !typed.trim()} aria-label={t("send")} className="mazed-btn-luxe tap-target grid size-12 place-items-center rounded-full disabled:opacity-60">
+              <button type="submit" disabled={busy || !typed.trim()} aria-label={t("send")} className="mazed-btn-luxe tap-target grid size-12 place-items-center disabled:opacity-60">
                 <Send className="size-4 rtl:-scale-x-100" />
               </button>
             </form>
@@ -511,7 +511,7 @@ export function ChatPublisher({
       <Modal open={photosOpen} onClose={() => setPhotosOpen(false)} title={t("addPhotos")} description={t("photosHint")}>
         <PhotoUploader photos={photos} onChange={setPhotos} onPendingChange={setUploading} />
         <div className="mt-4 flex justify-end">
-          <button type="button" onClick={() => setPhotosOpen(false)} className="mazed-btn-luxe tap-target inline-flex h-11 items-center rounded-full px-6 text-[13px]">
+          <button type="button" onClick={() => setPhotosOpen(false)} className="mazed-btn-luxe tap-target inline-flex h-11 items-center px-6 text-[13px]">
             {t("photosDone")}
           </button>
         </div>
@@ -588,7 +588,7 @@ export function ChatPublisher({
                 type="button"
                 onClick={publish}
                 disabled={!ready || publishing}
-                className="mazed-btn-luxe tap-target inline-flex h-12 items-center justify-center gap-2 rounded-full px-8 text-[14px] disabled:opacity-60"
+                className="mazed-btn-luxe tap-target inline-flex h-12 items-center justify-center gap-2 px-8 text-[14px] disabled:opacity-60"
               >
                 {publishing ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
                 {t("publishNow")}

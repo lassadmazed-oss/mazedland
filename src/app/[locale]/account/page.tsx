@@ -100,7 +100,7 @@ export default async function AccountPage() {
     return (
       <div className="mx-auto max-w-[var(--max-w)] pb-12 lg:max-w-lg lg:py-14">
         <section className="relative overflow-hidden bg-[#1b2a36] lg:rounded-[var(--radius-3xl)]" aria-labelledby="account-guest-title">
-          <HeroPhoto hiddenAt="not all" className="absolute inset-0" />
+          <HeroPhoto className="absolute inset-0" />
           <div className="mazed-hero-scrim absolute inset-0" aria-hidden />
           <div className="relative px-5 pb-16 pt-10 text-white lg:px-8 lg:pt-12">
             <p className="inline-flex items-center gap-2 rounded-full bg-black/30 px-3 py-1 text-[11.5px] font-bold ring-1 ring-white/25 backdrop-blur-sm">
@@ -115,10 +115,10 @@ export default async function AccountPage() {
 
         <div className="relative z-10 -mt-9 px-4">
           <div className="mazed-float p-4 sm:p-5">
-            <Link href="/signup" className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center rounded-full text-[14px]">
+            <Link href="/signup" className="mazed-btn-luxe tap-target flex h-12 w-full items-center justify-center text-[14px]">
               {t("signup")}
             </Link>
-            <Link href="/login" className="mazed-btn-quiet tap-target mt-2.5 flex h-12 w-full items-center justify-center rounded-full text-[14px]">
+            <Link href="/login" className="mazed-btn-quiet tap-target mt-2.5 flex h-12 w-full items-center justify-center text-[14px]">
               {t("login")}
             </Link>
           </div>

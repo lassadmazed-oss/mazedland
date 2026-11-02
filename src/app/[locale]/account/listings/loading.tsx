@@ -14,7 +14,7 @@ export default function Loading() {
           <div className="skel h-7 w-52 rounded-full lg:h-9" />
           <div className="skel mt-2 h-3 w-60 max-w-full rounded-full" />
         </div>
-        <div className="skel h-11 w-32 rounded-full" />
+        <div className="skel h-11 w-32 rounded-lg" />
       </div>
 
       {/* Status tabs */}
@@ -36,7 +36,7 @@ export default function Loading() {
                 <div className="skel h-4 w-28 rounded-full" />
               </div>
             </div>
-            <div className="skel mt-3 h-11 w-full rounded-full" />
+            <div className="skel mt-3 h-11 w-full rounded-lg" />
           </div>
         ))}
       </div>

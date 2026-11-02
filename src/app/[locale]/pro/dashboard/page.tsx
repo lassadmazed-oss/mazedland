@@ -159,7 +159,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
         <div className="flex flex-wrap items-center gap-2">
           <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-bold ${STATUS_TONE[shop.status] ?? ""}`}>{tStatus(shop.status)}</span>
           {shop.status === "approved" && (
-            <Link href={`/agences/${shop.slug}` as never} className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[12.5px]">
+            <Link href={`/agences/${shop.slug}` as never} className="mazed-btn-quiet tap-target inline-flex h-9 items-center gap-1.5 px-3.5 text-[12.5px]">
               {t("publicPage")} <ExternalLink className="size-3.5" />
             </Link>
           )}
@@ -175,13 +175,13 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
           <div className="mt-2.5">
             {fixAsked ? (
               can(role, "edit_shop") && (
-                <Link href={href("agence") as never} className="mazed-btn-luxe tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
+                <Link href={href("agence") as never} className="mazed-btn-luxe tap-target inline-flex h-10 items-center px-4 text-[13px]">
                   {t("fixCta")}
                 </Link>
               )
             ) : (
               receiptRefused && can(role, "subscribe") && (
-                <a href={`/${locale}/payment/checkout?payment=${receiptRefused.id}`} className="mazed-btn-luxe tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
+                <a href={`/${locale}/payment/checkout?payment=${receiptRefused.id}`} className="mazed-btn-luxe tap-target inline-flex h-10 items-center px-4 text-[13px]">
                   {t("resendReceipt")}
                 </a>
               )
@@ -205,7 +205,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
               key={k}
               href={href(k) as never}
               aria-current={k === tab ? "page" : undefined}
-              className="whitespace-nowrap"
+              className="tap-target whitespace-nowrap"
             >
               {t(`tabs.${k}`)}
               {k === "visites" && (visitsWaiting ?? 0) > 0 && <span className="mazed-tabular ms-1 text-[11px] text-[var(--tone-warn)]">{visitsWaiting}</span>}
@@ -224,22 +224,22 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
             <p className="text-[13.5px] font-extrabold text-foreground">{t("nextTitle")}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {shop.status === "approved" && can(role, "publish") && (
-                <Link href={`/annonces/nouvelle?shop=${shop.id}` as never} className="mazed-btn-luxe tap-target inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-[13px]">
+                <Link href={`/annonces/nouvelle?shop=${shop.id}` as never} className="mazed-btn-luxe tap-target inline-flex h-10 items-center gap-1.5 px-4 text-[13px]">
                   <Plus className="size-4" /> {t("publishForShop")}
                 </Link>
               )}
               {!plan && !requestSent && can(role, "subscribe") && (shop.status === "approved" || shop.status === "pending") && (
-                <Link href={href("abonnement") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
+                <Link href={href("abonnement") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center px-4 text-[13px]">
                   {t("choosePlan")}
                 </Link>
               )}
               {(visitsWaiting ?? 0) > 0 && (
-                <Link href={href("visites") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
+                <Link href={href("visites") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center px-4 text-[13px]">
                   {t("visitsWaiting", { count: visitsWaiting ?? 0 })}
                 </Link>
               )}
               {can(role, "documents") && !shop.verified_at && (
-                <Link href={href("documents") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
+                <Link href={href("documents") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center px-4 text-[13px]">
                   {t("getVerified")}
                 </Link>
               )}

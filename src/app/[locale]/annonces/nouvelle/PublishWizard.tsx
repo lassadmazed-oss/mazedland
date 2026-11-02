@@ -1240,7 +1240,7 @@ export function PublishWizard({
             <button
               // Already editing it: back to the form as just sent.
               onClick={() => (editing ? setDone(null) : router.push(`/annonces/nouvelle?edit=${done.id}` as never))}
-              className="mazed-btn-quiet tap-target inline-flex h-12 items-center gap-1.5 rounded-full px-6 text-[13.5px]"
+              className="mazed-btn-quiet tap-target inline-flex h-12 items-center gap-1.5 px-6 text-[13.5px]"
             >
               <Pencil className="size-4" /> {t("correct")}
             </button>
@@ -1248,7 +1248,7 @@ export function PublishWizard({
           {(done.status === "published" || done.status === "applied") && (
             <button
               onClick={() => router.push(`/annonces/${done.id}` as never)}
-              className="mazed-btn-luxe tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
+              className="mazed-btn-luxe tap-target inline-flex h-12 items-center px-6 text-[13.5px]"
             >
               {t("seeListing")}
             </button>
@@ -1257,8 +1257,8 @@ export function PublishWizard({
             onClick={() => router.push("/account/listings" as never)}
             className={
               done.status === "published"
-                ? "mazed-btn-quiet tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
-                : "mazed-btn-luxe tap-target inline-flex h-12 items-center rounded-full px-6 text-[13.5px]"
+                ? "mazed-btn-quiet tap-target inline-flex h-12 items-center px-6 text-[13.5px]"
+                : "mazed-btn-luxe tap-target inline-flex h-12 items-center px-6 text-[13.5px]"
             }
           >
             {t("seeMyListings")}
@@ -1330,7 +1330,7 @@ export function PublishWizard({
     <button
       type="button"
       onClick={back}
-      className="mazed-btn-quiet tap-target inline-flex h-12 shrink-0 items-center justify-center gap-1.5 rounded-full px-5 text-[13.5px]"
+      className="mazed-btn-quiet tap-target inline-flex h-12 shrink-0 items-center justify-center gap-1.5 px-5 text-[13.5px]"
     >
       <ArrowLeft className="size-4 rtl:-scale-x-100" />
       {t("back")}
@@ -1342,7 +1342,7 @@ export function PublishWizard({
       <button
         type="button"
         onClick={next}
-        className="mazed-btn-luxe tap-target inline-flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full px-7 text-[14px] lg:flex-none"
+        className="mazed-btn-luxe tap-target inline-flex h-12 flex-1 items-center justify-center gap-1.5 px-7 text-[14px] lg:flex-none"
       >
         {t("next")}
         <ArrowRight className="size-4 rtl:-scale-x-100" />
@@ -1352,7 +1352,7 @@ export function PublishWizard({
         type="button"
         onClick={publishNow}
         disabled={busy || photosUploading > 0}
-        className="mazed-btn-luxe tap-target inline-flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full px-7 text-[14px] disabled:opacity-60 lg:flex-none"
+        className="mazed-btn-luxe tap-target inline-flex h-12 flex-1 items-center justify-center gap-1.5 px-7 text-[14px] disabled:opacity-60 lg:flex-none"
       >
         {busy ? (
           <><Loader2 className="size-4 animate-spin" /> {t("oneMoment")}</>
@@ -1593,10 +1593,11 @@ export function PublishWizard({
                     control — the shape every OS uses to say "one of these" —
                     rather than a grid of tiles, which reads as a multi-select. */}
                 <div className="mt-4">
+                  <div className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none]">
                   <div
                     role="radiogroup"
                     aria-label={t("groupAria")}
-                    className="mazed-segment w-full"
+                    className="mazed-segment mazed-segment-fit w-full"
                   >
                     {groups.map((g) => {
                       const on = groupId === g.id;
@@ -1613,12 +1614,13 @@ export function PublishWizard({
                             // number on a plot of land.
                             if (category && category.groupId !== g.id) setCategoryId(null);
                           }}
-                          className="truncate"
+                          className="tap-target"
                         >
                           {g.label}
                         </button>
                       );
                     })}
+                  </div>
                   </div>
 
                   <div
@@ -2031,7 +2033,7 @@ export function PublishWizard({
                       type="button"
                       onClick={writeForMe}
                       aria-describedby="f-describe-hint"
-                      className="mazed-btn-quiet tap-target inline-flex h-10 items-center gap-2 rounded-full px-4 text-[13px]"
+                      className="mazed-btn-quiet tap-target inline-flex h-10 items-center gap-2 px-4 text-[13px]"
                     >
                       <WandSparkles className="size-4 shrink-0" />
                       {t("describeCta")}
@@ -2047,14 +2049,14 @@ export function PublishWizard({
                         <button
                           type="button"
                           onClick={() => putDescription(appendDescription(description, describePending), describePending)}
-                          className="mazed-btn-luxe tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]"
+                          className="mazed-btn-luxe tap-target inline-flex h-10 items-center px-4 text-[13px]"
                         >
                           {t("describeAppend")}
                         </button>
                         <button
                           type="button"
                           onClick={() => putDescription(replaceDescription(description, describePending, highlightLines), describePending)}
-                          className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]"
+                          className="mazed-btn-quiet tap-target inline-flex h-10 items-center px-4 text-[13px]"
                         >
                           {t("describeReplace")}
                         </button>
@@ -2162,7 +2164,6 @@ export function PublishWizard({
                       <h3 dir="auto" className="mt-1.5 line-clamp-2 text-[14px] font-semibold leading-snug text-foreground">{title || "—"}</h3>
                       <p className="mt-1 flex flex-wrap items-center gap-x-2.5 text-[12.5px] text-muted">
                         <span>{category?.label ?? "—"}</span>
-                        {!rent && <span>{t("dealSale")}</span>}
                       </p>
                       <p className="mt-0.5 flex items-center gap-1 text-[12px] text-muted">
                         <MapPin className="size-3 shrink-0" strokeWidth={2} aria-hidden />
@@ -2281,7 +2282,7 @@ export function PublishWizard({
                         type="button"
                         onClick={() => setContactOpen(true)}
                         aria-label={t("contactEdit")}
-                        className="mazed-btn-quiet tap-target inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[12.5px]"
+                        className="mazed-btn-quiet tap-target inline-flex h-9 shrink-0 items-center gap-1.5 px-3.5 text-[12.5px]"
                       >
                         <Pencil className="size-3.5" />
                         {t("edit")}
@@ -2498,21 +2499,21 @@ export function PublishWizard({
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Link
             href={"/account/listings" as never}
-            className="mazed-btn-quiet tap-target inline-flex h-11 items-center justify-center rounded-full px-5 text-[13px]"
+            className="mazed-btn-quiet tap-target inline-flex h-11 items-center justify-center px-5 text-[13px]"
           >
             {t("seeMyListings")}
           </Link>
           {limitHit?.kind === "plan" ? (
             <Link
               href={"/pro/dashboard?tab=abonnement" as never}
-              className="mazed-btn-luxe tap-target inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-5 text-[13px]"
+              className="mazed-btn-luxe tap-target inline-flex h-11 items-center justify-center gap-1.5 px-5 text-[13px]"
             >
               <Store className="size-4" /> {t("seeSubscription")}
             </Link>
           ) : (
             <Link
               href={"/pro" as never}
-              className="mazed-btn-luxe tap-target inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-5 text-[13px]"
+              className="mazed-btn-luxe tap-target inline-flex h-11 items-center justify-center gap-1.5 px-5 text-[13px]"
             >
               <Store className="size-4" /> {t("seePro")}
             </Link>

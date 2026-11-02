@@ -52,7 +52,7 @@ export default async function MyVisitsPage({ searchParams }: { searchParams: Pro
             key={k}
             href={`/account/visites?tab=${k}` as never}
             aria-current={tab === k ? "page" : undefined}
-            className="gap-1.5"
+            className="tap-target gap-1.5"
           >
             {t(`tabs.${k}`)}
             {k === "received" && waiting > 0 && <span className="mazed-tabular text-[11px] text-[var(--tone-warn)]">{waiting}</span>}
