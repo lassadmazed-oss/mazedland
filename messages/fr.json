@@ -3267,7 +3267,15 @@
       "revokeBody": "Il disparaît immédiatement de toutes ses annonces.",
       "revokeConfirm": "Retirer",
       "revokePlaceholder": "Vérification caduque, plainte…",
-      "badgeRevoked": "Badge retiré."
+      "badgeRevoked": "Badge retiré.",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer ce compte pour de bon ?",
+      "deleteBody": "Le compte est effacé, et avec lui ses annonces ({listings, plural, =0 {aucune annonce} one {# annonce} other {# annonces}}) et leurs photos, ses demandes, ses favoris et ses notifications. Il ne pourra plus se connecter. Impossible à annuler.",
+      "deleteBodyPaid": "Ce compte a des paiements : ils sont conservés, avec ses factures. Ses annonces ({listings, plural, =0 {aucune annonce} one {# annonce} other {# annonces}}) et leurs photos sont supprimées, ses demandes et favoris aussi ; son nom et son numéro sont effacés et il ne pourra plus se connecter. Impossible à annuler.",
+      "deleteConfirm": "Supprimer le compte",
+      "deletePlaceholder": "Compte inactif, aucune annonce depuis…",
+      "deleted": "Compte supprimé, avec {listings, plural, =0 {aucune annonce} one {# annonce} other {# annonces}}.",
+      "deletedAnonymised": "Compte anonymisé ({listings, plural, =0 {aucune annonce} one {# annonce} other {# annonces}} supprimées) : ses factures sont conservées."
     }
   },
   "adminActions": {
@@ -3434,7 +3442,9 @@
     "article_import": "Guides de départ importés",
     "admin_article_import": "Guides de départ importés",
     "admin_article_upload": "Image de guide envoyée",
-    "admin_article_assist": "Aide à la rédaction utilisée"
+    "admin_article_assist": "Aide à la rédaction utilisée",
+    "admin_shop_delete": "Agence supprimée",
+    "admin_user_delete": "Compte supprimé"
   },
   "adminApi": {
     "bulk": {
@@ -3483,7 +3493,13 @@
       "choosePack": "Choisissez un forfait.",
       "packNoQuota": "Ce forfait n'accorde aucune publication.",
       "revokeReasonRequired": "Indiquez pourquoi le badge est retiré.",
-      "lastFullAdmin": "C'est le dernier admin complet : nommez-en un autre d'abord."
+      "lastFullAdmin": "C'est le dernier admin complet : nommez-en un autre d'abord.",
+      "deleteFullAdmin": "Seul un administrateur complet peut supprimer un compte.",
+      "deleteReasonRequired": "Indiquez pourquoi ce compte est supprimé.",
+      "deleteOwnsShop": "Ce compte possède l'agence « {shop} » : supprimez d'abord l'agence.",
+      "deletePaymentPending": "Un paiement de ce compte attend la vérification : décidez-le d'abord.",
+      "deleteSelf": "Vous ne pouvez pas supprimer votre propre compte d'ici.",
+      "deleteAdmin": "Un membre de la console se retire depuis l'écran Équipe."
     }
   },
   "notificationMail": {
@@ -4665,7 +4681,10 @@
       "requestNeedsPayments": "Cette demande comprend un paiement : il faut aussi l'accès « Paiements ».",
       "requestDeciding": "Un autre administrateur traite ce paiement : rechargez la page.",
       "importNotOpen": "L'import n'est possible que pour une agence ouverte.",
-      "importTooManyDrafts": "Trop de brouillons : {drafts} en cours + {count} à créer, pour {capacity} au plus. Envoyez ou supprimez des brouillons d'abord."
+      "importTooManyDrafts": "Trop de brouillons : {drafts} en cours + {count} à créer, pour {capacity} au plus. Envoyez ou supprimez des brouillons d'abord.",
+      "deleteFullAdmin": "Seul un administrateur complet peut supprimer une agence.",
+      "deletePaidPlan": "Cette agence a un abonnement payé jusqu'au {date} : suspendez-la plutôt, ou attendez la fin de la période.",
+      "deletePaymentPending": "Un paiement de cette agence attend la vérification : décidez-le d'abord."
     },
     "leadErrors": {
       "name": "Indiquez un nom (2 lettres au moins).",
@@ -4840,7 +4859,13 @@
     "foundingEyebrow": "Demande — offre fondatrice",
     "foundingLine": "{owner} demande l'agence « {name} » avec l'offre fondatrice : {plan}, {quota} annonces, {months, plural, one {# mois offert} other {# mois offerts}}. Aucun paiement : « Ouvrir » donne ce plan.",
     "foundingSeatsLeft": "{left, plural, one {Plus qu'une place} other {Plus que # places}} sur {total} : la place est prise à l'ouverture.",
-    "foundingSeatsGone": "Les {total} places sont prises : « Ouvrir » demandera un abonnement payé."
+    "foundingSeatsGone": "Les {total} places sont prises : « Ouvrir » demandera un abonnement payé.",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer cette agence pour de bon ?",
+    "deleteBody": "L'agence disparaît du site, et avec elle ses annonces ({listings, plural, =0 {aucune annonce} one {# annonce} other {# annonces}}) et leurs photos, ses projets, ses clients, ses documents, son logo et sa bannière. Une place d'agence fondatrice qu'elle occupait est libérée. Le compte de son propriétaire reste ; ses paiements et factures sont conservés. Impossible à annuler.",
+    "deleteConfirm": "Supprimer l'agence",
+    "deletePlaceholder": "Agence inactive depuis septembre…",
+    "deleted": "Agence supprimée : {listings, plural, =0 {aucune annonce} one {# annonce} other {# annonces}}, {photos, plural, =0 {aucune photo} one {# photo} other {# photos}} en moins."
   },
   "visits": {
     "parts": {
@@ -6088,7 +6113,9 @@
         "invoice_credit_note": "Avoir émis",
         "shop_offer_plan": "Période offerte à une agence",
         "shop_request_fix": "Demande d'agence renvoyée pour correction",
-        "payment_refund_by_hand": "Paiement à rembourser à la main (demande d'agence refusée)"
+        "payment_refund_by_hand": "Paiement à rembourser à la main (demande d'agence refusée)",
+        "shop_delete": "Agence supprimée",
+        "user_delete": "Compte supprimé"
       },
       "fields": {
         "role": "Rôle",

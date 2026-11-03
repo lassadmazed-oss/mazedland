@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { BadgeCheck, Check, Gift, X } from "lucide-react";
+import { BadgeCheck, Check, Gift, Trash2, X } from "lucide-react";
 import { AdminButton } from "@/components/admin/AdminButton";
 import { Confirm } from "@/components/admin/kit";
 import { useAdminAction } from "@/components/admin/kit/useAdminAction";
 import { useToast } from "@/components/ui/Toast";
+import { useRouter } from "@/i18n/navigation";
 import { REFUSAL_OUTCOMES, type RefusalOutcome } from "@/lib/pro/agenceRequest";
 
 /**
@@ -20,9 +21,13 @@ import { REFUSAL_OUTCOMES, type RefusalOutcome } from "@/lib/pro/agenceRequest";
  * invoice and plan — and opens the agence in one decision, after a confirm
  * that says so; « Refuser » asks what happens to the money (the owner's three
  * outcomes) and why.
+ *
+ * « Supprimer » (2026-11-03) deletes it for good, with its `listings`
+ * annonces and its files; the list comes back afterwards, since the panel's
+ * agence is gone.
  */
 export function BoutiqueActions({
-  shopId, status, verified, plans, offerMonths, seats, request,
+  shopId, status, verified, plans, offerMonths, seats, request, listings = 0,
 }: {
   shopId: string;
   status: string;
@@ -32,14 +37,18 @@ export function BoutiqueActions({
   /** The founding places the console has not yet given a free period to. */
   seats?: { left: number; total: number };
   request?: { plan: string; amount: string } | null;
+  /** Its annonces, all statuses: what « Supprimer » takes with it. */
+  listings?: number;
 }) {
   const t = useTranslations("adminShops");
   const locale = useLocale();
+  const router = useRouter();
   const { toast } = useToast();
   const { run, pending } = useAdminAction();
   const [ask, setAsk] = useState<null | "reject" | "suspend">(null);
   const [opening, setOpening] = useState(false);
   const [offering, setOffering] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const act = (action: string, success: string, reason?: string, extra?: Record<string, string>) =>
     run({ url: `/api/admin/boutiques/${shopId}`, method: "POST", body: { action, reason, ...extra }, success });
   // « Ouvrir » on an agence with no plan: the founding offer is given by itself while places last, and the
@@ -100,6 +109,32 @@ export function BoutiqueActions({
           {t("offerPlan")}
         </AdminButton>
       )}
+      <AdminButton variant="danger" className="ms-auto" icon={<Trash2 className="size-3.5" />} onClick={() => setDeleting(true)}>
+        {t("delete")}
+      </AdminButton>
+      <Confirm
+        open={deleting}
+        title={t("deleteTitle")}
+        body={t("deleteBody", { listings })}
+        confirmLabel={t("deleteConfirm")}
+        pending={pending}
+        reason={{ label: t("reason"), placeholder: t("deletePlaceholder"), required: true }}
+        onCancel={() => setDeleting(false)}
+        onConfirm={async (motif) => {
+          const ok = await run({
+            url: `/api/admin/boutiques/${shopId}`,
+            method: "POST",
+            body: { action: "delete", reason: motif },
+            success: null,
+            onSuccess: (data) => {
+              const d = (data as { deleted?: { listings: number; photos: number } }).deleted;
+              toast(t("deleted", { listings: d?.listings ?? 0, photos: d?.photos ?? 0 }), "success");
+              router.push("/admin/agences" as never);
+            },
+          });
+          if (ok) setDeleting(false);
+        }}
+      />
       {request && (
         <Confirm
           open={opening}
