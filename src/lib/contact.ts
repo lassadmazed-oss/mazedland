@@ -37,3 +37,16 @@ export function facebookHref(value: string): string {
   if (/^\d+$/.test(v)) return `https://www.facebook.com/profile.php?id=${v}`;
   return `https://www.facebook.com/${v.replace(/^@/, "")}`;
 }
+
+/**
+ * The `contact_instagram` setting as a bare handle: typed with or without
+ * its « @ », or the profile link pasted from the app (with its trailing
+ * slash or « ?igsh=… »).
+ */
+export function instagramHandle(value: string): string {
+  return value.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/^@/, "").replace(/[/?#].*$/, "");
+}
+
+export function instagramHref(value: string): string {
+  return `https://www.instagram.com/${instagramHandle(value)}/`;
+}
