@@ -8,15 +8,16 @@ import { EMPTY_GIF } from "@/components/ui/HiddenAt";
  * because a seller's phone shot is not a brand.
  *
  * `hiddenAt` is the media query at which CSS hides the tree this sits in
- * (the home renders a phone tree and a desktop tree): the first <source>
- * hands that width an empty GIF, so the hidden copy is never downloaded
- * (see HiddenAt). The visible copy loads eagerly at high priority — it is
- * the page's largest paint.
+ * (the sign-in pages render a phone tree and a desktop tree): the first
+ * <source> hands that width an empty GIF, so the hidden copy is never
+ * downloaded (see HiddenAt). Without it the photo shows at every width, as
+ * on the home page. It loads eagerly at high priority — it is the page's
+ * largest paint.
  */
-export function HeroPhoto({ hiddenAt, className = "" }: { hiddenAt: string; className?: string }) {
+export function HeroPhoto({ hiddenAt, className = "" }: { hiddenAt?: string; className?: string }) {
   return (
     <picture className={className}>
-      <source media={hiddenAt} srcSet={EMPTY_GIF} />
+      {hiddenAt && <source media={hiddenAt} srcSet={EMPTY_GIF} />}
       <source srcSet="/auth-hero.avif" type="image/avif" />
       <source
         srcSet="/auth-hero.w640.webp 640w, /auth-hero.w828.webp 828w, /auth-hero.webp 1100w"

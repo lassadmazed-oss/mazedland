@@ -1,16 +1,12 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { Link } from "@/i18n/navigation";
-import { HomeDesktop } from "@/components/landing/HomeDesktop";
-import { HomeRailSection, RailHeading } from "@/components/landing/HomeRail";
+import { HomeRailSection } from "@/components/landing/HomeRail";
 import { HomeSearch } from "@/components/landing/HomeSearch";
 import { IntentChooser } from "@/components/landing/IntentChooser";
 import { HeroPhoto } from "@/components/landing/HeroPhoto";
 import { SellBand, WhyBand } from "@/components/landing/HomeBands";
 import { GuidesStrip } from "@/components/guides/GuidesStrip";
-import { LG_UP } from "@/components/ui/HiddenAt";
-import { AnnonceCard } from "@/components/listing/AnnonceCard";
-import { Impressions } from "@/components/analytics/Impressions";
 import { isRtl } from "@/lib/i18n";
 import { getHomeFeed } from "@/lib/home/feed";
 import { homeRailOptions, planHomeRails, splitAtMiddle, type HomeRail } from "@/lib/home/rails";
@@ -23,8 +19,14 @@ import { siteUrl, PRODUCTION_ORIGIN } from "@/lib/siteUrl";
 import { organizationLd, pageAlternates, websiteLd } from "@/lib/seo";
 import type { Metadata } from "next";
 import {
+  ArrowUpRight,
   Building2,
+  ChevronLeft,
+  ChevronRight,
   Home,
+  Lock,
+  Scale,
+  ShieldCheck,
   Trees,
   Warehouse,
   Wheat,
@@ -89,8 +91,9 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
  * of the same card the catalogue uses, and the page closes on why to trust
  * the site and the call to publish.
  *
- * Two trees, picked by CSS at the `lg` breakpoint (both are rendered so the
- * page stays static): this file holds the phone's, HomeDesktop the desktop's.
+ * One tree for the phone and the desktop: what differs at the `lg`
+ * breakpoint is CSS, so the page stays static (no device detection on the
+ * server) and a phone builds and hydrates only what it shows.
  */
 export default async function LandingPage({
   params,
@@ -185,7 +188,7 @@ export default async function LandingPage({
     endData();
   }
 
-  // The middle advertising space goes between these two halves, in both layouts.
+  // The middle advertising space goes between these two halves.
   const [railsAbove, railsBelow] = splitAtMiddle(rails);
   // The site and the company, for search engines: the search box Google may
   // show under the result, and how to reach Mazed Immo (Réglages → Contact).
@@ -198,6 +201,14 @@ export default async function LandingPage({
   // « 14 annonces en ligne » — or, with nothing online yet, what the site is.
   const eyebrow = liveCount > 0 ? t("home.heroBrandEyebrow", { count: liveCount }) : t("home.heroKicker");
 
+  // What the product actually promises, on one quiet line beside the intents (lg up).
+  const trust = [
+    { key: "verified", Icon: ShieldCheck, title: t("home.verifiedTitle") },
+    { key: "number",   Icon: Lock,        title: t("home.protectedNumberTitle") },
+    { key: "nofee",    Icon: Scale,       title: t("home.trustLegalTitle") },
+  ];
+  const ChevronEnd = isRTL ? ChevronLeft : ChevronRight;
+
   return (
     <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSafe(siteLd) }} />
@@ -205,66 +216,83 @@ export default async function LandingPage({
         timings to the browser console (scope `perf`). Dev-only unless
         NEXT_PUBLIC_PERF_PROBE=1. Renders nothing. */}
     <PerfProbe tag="home" />
-    {/* ════════════════════════════════════════════════════════════════
-        MOBILE / TABLET TREE (< lg) — CSS-gated with `lg:hidden`; the
-        desktop tree below is `hidden lg:block`. Both are rendered so the
-        page stays static (no server-side device detection); CSS picks one.
-        ════════════════════════════════════════════════════════════════ */}
-    <div className="lg:hidden">
+    {/* ONE TREE for every width. Until 2026-11-03 the phone got its own copy
+        of the page (`lg:hidden`) and the desktop another (`hidden lg:block`):
+        CSS showed one, but a phone downloaded, parsed and hydrated both — five
+        thousand elements and every card twice. Edge to edge on a phone; from
+        lg up, a centred column with the hero and the bands rounded. */}
+    <div className="mx-auto max-w-[var(--max-w-wide)] lg:px-8 lg:pb-4">
       {/* ───── HERO ─────
           The brand photograph, the headline, and the search card floating
-          off its lower edge. The photo is not downloaded at lg+ (HeroPhoto). */}
-      <section className="relative overflow-hidden bg-[#1b2a36]" aria-labelledby="home-hero-phone">
-        <HeroPhoto hiddenAt={LG_UP} className="absolute inset-0" />
+          off its lower edge. */}
+      <section
+        className="relative overflow-hidden bg-[#1b2a36] lg:mt-5 lg:rounded-[var(--radius-3xl)]"
+        aria-labelledby="home-hero"
+      >
+        <HeroPhoto className="absolute inset-0" />
         <div className="mazed-hero-scrim absolute inset-0" aria-hidden />
-        <div className="relative px-5 pb-16 pt-9 text-white">
-          <p className="inline-flex items-center gap-2 rounded-full bg-black/30 px-3 py-1 text-[11.5px] font-bold ring-1 ring-white/25 backdrop-blur-sm">
+        <div className="relative px-5 pb-16 pt-9 text-white lg:px-12 lg:pb-24 lg:pt-16 xl:px-16 xl:pt-20">
+          <p className="inline-flex items-center gap-2 rounded-full bg-black/30 px-3 py-1 text-[11.5px] font-bold ring-1 ring-white/25 backdrop-blur-sm lg:px-3.5 lg:py-1.5 lg:text-[12px]">
             {liveCount > 0 && <span aria-hidden className="size-1.5 rounded-full bg-[var(--accent)]" />}
             {eyebrow}
           </p>
-          <h1 id="home-hero-phone" className={`mazed-display mt-3 max-w-[14ch] text-[30px] text-white drop-shadow-sm ${arabic}`}>
+          <h1
+            id="home-hero"
+            className={`mazed-display mt-3 max-w-[14ch] text-[30px] text-white drop-shadow-sm lg:mt-5 lg:max-w-[15ch] lg:text-[clamp(40px,4.4vw,60px)] ${arabic}`}
+          >
             {t("home.heroBrandTitle")}
           </h1>
-          <p className={`mt-2.5 max-w-xs text-[14px] font-medium leading-snug text-white/85 ${arabic}`}>{t("brand.slogan")}</p>
+          <p className={`mt-2.5 max-w-xs text-[14px] font-medium leading-snug text-white/85 lg:mt-4 lg:max-w-md lg:text-[17px] ${arabic}`}>
+            {t("brand.slogan")}
+          </p>
         </div>
       </section>
 
       {/* The search, over the photo's lower edge. `relative z-10` so its
-          dropdowns open above the intent row. */}
-      <div className="relative z-10 -mt-9 px-4">
+          dropdowns open above what follows. */}
+      <div className="relative z-10 -mt-9 px-4 lg:-mt-12 lg:px-8 xl:px-12">
         <HomeSearch isRTL={isRTL} layout="hero" />
       </div>
 
-      {/* Sell, buy or rent — the three reasons to be here, one line under the search. */}
-      <div className="mt-4 px-4">
+      {/* Sell, buy or rent — the three reasons to be here, one line under the
+          search; from lg up, what the site promises at the end of that line. */}
+      <div className="mt-4 px-4 lg:mt-5 lg:flex lg:flex-wrap lg:items-center lg:justify-between lg:gap-x-8 lg:gap-y-3 lg:px-8 xl:px-12">
         <IntentChooser layout="row" />
+        <ul className="hidden flex-wrap items-center gap-x-5 gap-y-1 lg:flex">
+          {trust.map((it) => (
+            <li key={it.key} className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-muted">
+              <it.Icon className="size-4 text-foreground" strokeWidth={2} aria-hidden />
+              {it.title}
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* An advertiser's banner (/admin/publicites): under the search, above
           the first rail. Nothing when no campaign runs here. */}
-      <AdSlot placement="home_top" className="mt-6 px-4" sizes="100vw" />
+      <AdSlot placement="home_top" className="mt-6 px-4 lg:mt-12 lg:px-0" sizes="(min-width: 1280px) 1200px, 100vw" />
 
       {/* ══════════════════════════════════════════════════════════════
           BROWSE — the page's center of gravity: the rails of annonces,
           each moving by itself (AutoRail), each with its « Tout voir ».
           Which rails, in which order, and when one is left out is
-          `planHomeRails` — the desktop tree renders the same list.
+          `planHomeRails`.
           ══════════════════════════════════════════════════════════════ */}
       {railsAbove.map((rail) => (
-        <HomeRailSection key={rail.key} rail={rail} layout="phone" savedIds={savedIds} loggedIn={loggedIn} />
+        <HomeRailSection key={rail.key} rail={rail} savedIds={savedIds} loggedIn={loggedIn} />
       ))}
 
       {/* A second banner, halfway down the rails. */}
-      <AdSlot placement="home_middle" className="mt-8 px-4" sizes="100vw" />
+      <AdSlot placement="home_middle" className="mt-8 px-4 lg:mt-14 lg:px-0" sizes="(min-width: 1280px) 1200px, 100vw" />
 
       {railsBelow.map((rail) => (
-        <HomeRailSection key={rail.key} rail={rail} layout="phone" savedIds={savedIds} loggedIn={loggedIn} />
+        <HomeRailSection key={rail.key} rail={rail} savedIds={savedIds} loggedIn={loggedIn} />
       ))}
 
       {/* No rail at all — an empty catalogue, or the data phase timed out in
-          development: the shape of a rail, so the page does not open on a gap. */}
+          development: the shape of a rail, so the phone does not open on a gap. */}
       {rails.length === 0 && (
-        <section className="mt-10" aria-hidden>
+        <section className="mt-10 lg:hidden" aria-hidden>
           <div className="hide-scrollbar mt-4 flex gap-3 overflow-x-hidden px-4 pb-2">
             <TrendingSkeleton />
             <TrendingSkeleton />
@@ -273,90 +301,85 @@ export default async function LandingPage({
         </section>
       )}
 
-      {/* Browse by type and by price — chips, in the thumb's rhythm. */}
-      <section className="mt-10 px-4" aria-labelledby="home-type-phone">
-        <h2 id="home-type-phone" className={`mazed-h2 text-[21px] text-foreground ${arabic}`}>
-          {t("home.browseByType")}
-        </h2>
-        <div className="snap-rail hide-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
+      {/* PARCOURIR — by type and by price. On a phone, two rows of chips in
+          the thumb's rhythm, each under its own title; from lg up, one block
+          under « Parcourir »: eight illustrated tiles and four price pills. */}
+      <section className="mt-10 px-4 lg:mt-[4.5rem] lg:px-0" aria-labelledby="home-browse">
+        <div className="hidden items-end justify-between gap-3 lg:flex">
+          <div>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-subtle">{t("home.browseEyebrow")}</p>
+            <h2 id="home-browse" className={`mazed-h2 mt-1.5 text-[24px] text-foreground ${arabic}`}>
+              {t("home.browseTitle")}
+            </h2>
+          </div>
+          <Link
+            href="/annonces"
+            className="inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 text-[13px] font-bold text-foreground underline-offset-4 transition hover:underline"
+          >
+            {t("home.seeAll")}
+            <ChevronEnd className="size-4" strokeWidth={2.4} aria-hidden />
+          </Link>
+        </div>
+
+        <h2 className={`mazed-h2 text-[21px] text-foreground lg:hidden ${arabic}`}>{t("home.browseByType")}</h2>
+        <div className="snap-rail hide-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:mt-6 lg:grid lg:grid-cols-4 lg:gap-3 lg:overflow-visible lg:p-0 xl:grid-cols-8">
           {PROPERTY_TYPES.map((pt) => (
             <Link
               key={pt.key}
               href={catalogueHrefForType(pt.key) as `/annonces`}
-              className="tap-target inline-flex shrink-0 snap-start items-center gap-2 rounded-full bg-surface px-4 py-2.5 ring-1 ring-border transition hover:ring-foreground/40 active:scale-[0.97]"
+              className="tap-target group inline-flex shrink-0 snap-start items-center gap-2 rounded-full bg-surface px-4 py-2.5 ring-1 ring-border transition hover:ring-foreground/40 active:scale-[0.97] lg:flex lg:flex-col lg:rounded-2xl lg:px-3 lg:py-5 lg:hover:-translate-y-0.5 lg:hover:shadow-[var(--shadow-card)] lg:hover:ring-foreground/30 lg:active:scale-100"
             >
-              <pt.Icon className="size-4 text-muted" strokeWidth={2} aria-hidden />
-              <span className={`whitespace-nowrap text-[13px] font-bold leading-none text-foreground ${arabic}`}>
+              <pt.Icon className="size-4 text-muted lg:hidden" strokeWidth={2} aria-hidden />
+              {/* The tile's illustration: lazy, so a phone (where it is
+                  display:none) never downloads it. */}
+              <picture className="hidden lg:block">
+                <source srcSet={`/icons/${pt.img}.avif`} type="image/avif" />
+                <source srcSet={`/icons/${pt.img}.webp`} type="image/webp" />
+                <img
+                  src={`/icons/${pt.img}.webp`}
+                  alt=""
+                  width={64}
+                  height={64}
+                  loading="lazy"
+                  decoding="async"
+                  className="size-14 transition-transform duration-300 group-hover:scale-105"
+                />
+              </picture>
+              <span className={`whitespace-nowrap text-[13px] font-bold leading-none text-foreground lg:whitespace-normal lg:leading-normal ${arabic}`}>
                 {t(`property.types.${pt.key}`)}
               </span>
             </Link>
           ))}
         </div>
-      </section>
 
-      <section className="mt-7 px-4" aria-labelledby="home-price-phone">
-        <h2 id="home-price-phone" className={`mazed-h2 text-[21px] text-foreground ${arabic}`}>
-          {t("home.browseByPrice")}
-        </h2>
-        <div className="snap-rail hide-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
+        <h2 className={`mazed-h2 mt-7 text-[21px] text-foreground lg:hidden ${arabic}`}>{t("home.browseByPrice")}</h2>
+        <div className="snap-rail hide-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-3 lg:overflow-visible lg:p-0">
           {PRICE_BUCKETS.map((b) => (
             <Link
               key={b.key}
               href={`/annonces?${b.query}` as `/annonces`}
-              className="tap-target inline-flex shrink-0 snap-start items-center justify-center whitespace-nowrap rounded-full bg-surface px-4 py-2.5 text-[13px] font-bold leading-none text-foreground ring-1 ring-border transition hover:ring-foreground/40 active:scale-[0.97]"
+              className="tap-target group inline-flex shrink-0 snap-start items-center justify-center whitespace-nowrap rounded-full bg-surface px-4 py-2.5 text-[13px] font-bold leading-none text-foreground ring-1 ring-border transition hover:ring-foreground/40 active:scale-[0.97] lg:flex lg:justify-between lg:rounded-2xl lg:px-5 lg:py-3.5 lg:text-[13.5px] lg:leading-normal lg:hover:ring-foreground/30 lg:active:scale-100"
             >
               {t(`home.priceBuckets.${b.labelKey}`)}
+              <ArrowUpRight className="hidden size-4 text-subtle transition group-hover:text-foreground lg:block rtl:-scale-x-100" strokeWidth={2.2} aria-hidden />
             </Link>
           ))}
         </div>
       </section>
 
-      {/* « À découvrir » — what no rail above shows, on a 2-up grid. */}
-      {explore && (
-        <section className="mt-10" aria-labelledby="home-explore-phone">
-          <RailHeading
-            id="home-explore-phone"
-            layout="phone"
-            isRTL={isRTL}
-            eyebrow={t("home.rails.explore.eyebrow")}
-            title={t("home.rails.explore.title")}
-            sub={t("home.rails.explore.sub")}
-            href={explore.href}
-            seeAllLabel={t("home.seeAll")}
-          />
-          <Impressions ids={explore.rows.map((a) => a.id)} surface="home_explore" />
-          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-5 px-4">
-            {explore.rows.map((a) => (
-              <AnnonceCard
-                key={a.id}
-                listing={a}
-                saved={savedIds.has(a.id)}
-                loggedIn={loggedIn}
-                sizes="45vw"
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* « À découvrir » — what no rail above shows: a 2-up grid on a phone,
+          a rail like the others from lg up. */}
+      {explore && <HomeRailSection rail={explore} savedIds={savedIds} loggedIn={loggedIn} grid />}
 
       {/* « Guides utiles » — the newest guides, while there is one to read
           (the console's `guides_strip_count`, 0 = none). On a phone this is
           the way to them: the bottom bar has no room for a sixth tab. */}
-      <GuidesStrip via="home" headingId="guides-strip-home-phone" className="px-4" />
+      <GuidesStrip via="home" className="px-4 lg:px-0" />
 
       {/* Why Mazed Immo, how it works, and the call to publish. */}
-      <WhyBand layout="phone" />
-      <SellBand layout="phone" />
+      <WhyBand />
+      <SellBand />
     </div>
-
-    <HomeDesktop
-      railsAbove={railsAbove}
-      railsBelow={railsBelow}
-      explore={explore}
-      savedIds={savedIds}
-      loggedIn={loggedIn}
-      liveCount={liveCount}
-    />
     </>
   );
 }
@@ -365,21 +388,25 @@ export default async function LandingPage({
 // Browse-by-type / browse-by-price tables.
 // ──────────────────────────────────────────────────────────────────────
 
-// Labels come from `property.types.<key>`.
+// Labels come from `property.types.<key>`. `Icon` is the phone's chip;
+// `img` names the desktop tile's illustration in /public/icons
+// (`<img>.{avif,webp}`): the set has six, and the two categories added here
+// borrow the closest one rather than ship a broken tile.
 const PROPERTY_TYPES: {
   key: string;
   Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  img: string;
 }[] = [
-  { key: "apartment",  Icon: Building2 },
-  { key: "villa",      Icon: Home },
-  { key: "house",      Icon: Home },
-  { key: "land",       Icon: Trees },
+  { key: "apartment",  Icon: Building2, img: "apartment" },
+  { key: "villa",      Icon: Home,      img: "villa" },
+  { key: "house",      Icon: Home,      img: "house" },
+  { key: "land",       Icon: Trees,     img: "land" },
   // Fermes and Dépôts are categories in the catalogue with chips of their own;
   // the home tiles listed six of the eight, so two were unreachable from here.
-  { key: "farm",       Icon: Wheat },
-  { key: "commercial", Icon: Store },
-  { key: "office",     Icon: Briefcase },
-  { key: "warehouse",  Icon: Warehouse },
+  { key: "farm",       Icon: Wheat,     img: "land" },
+  { key: "commercial", Icon: Store,     img: "commercial" },
+  { key: "office",     Icon: Briefcase, img: "office" },
+  { key: "warehouse",  Icon: Warehouse, img: "commercial" },
 ];
 
 // Labels come from `home.priceBuckets.<labelKey>`.

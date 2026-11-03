@@ -19,15 +19,12 @@ export async function GuidesStrip({
   deal,
   categorySlug,
   via,
-  headingId = `guides-strip-${via}`,
   className = "",
 }: {
   deal?: DealType | null;
   categorySlug?: string | null;
   /** Where the strip stands, for the count. */
   via: "annonce" | "catalogue" | "home";
-  /** The home page renders its phone and desktop trees side by side: one id each. */
-  headingId?: string;
   className?: string;
 }) {
   const settings = await getSettings();
@@ -35,6 +32,7 @@ export async function GuidesStrip({
   const picked = guidesForListing(await publishedGuides(), { deal, categorySlug }, settings.guides_strip_count);
   if (picked.length === 0) return null;
   const t = await getTranslations("guides.strip");
+  const headingId = `guides-strip-${via}`;
 
   return (
     <section className={`mt-12 ${className}`} aria-labelledby={headingId}>

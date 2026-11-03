@@ -6,7 +6,8 @@ import { getSettings } from "@/lib/settings/server";
 import { ArrowUpRight, BarChart3, ClipboardCheck, Lock, Phone, Plus, Scale, Search, ShieldCheck } from "lucide-react";
 
 /**
- * The two bands that close the home page, in both layouts (2026-10-31).
+ * The two bands that close the home page (2026-10-31). One copy at every
+ * width since 2026-11-03: what changes at `lg` is CSS.
  *
  * WhyBand — what protects the visitor, and how the site works: the four
  * pillars and the three steps that used to be five separate sections
@@ -47,33 +48,32 @@ const HOW_IT_WORKS: {
   { key: "publish", eyebrowKey: "home.step3Eyebrow", titleKey: "home.step3Title", bodyKey: "home.step3Body", href: "/annonces/nouvelle", Icon: Plus },
 ];
 
-export async function WhyBand({ layout }: { layout: "phone" | "desktop" }) {
+export async function WhyBand() {
   const t = await getTranslations();
   const arabic = isRtl(await getLocale()) ? "font-arabic" : "";
-  const desktop = layout === "desktop";
   // « Le marché en chiffres » (/marche): the site's own figures, while the console keeps the page on.
   const { public_stats_enabled: marketOn } = await getSettings();
 
   return (
     <section
-      className={`mazed-section mazed-band-warm ${desktop ? "rounded-[var(--radius-3xl)] px-10 py-14" : "px-4 py-10"}`}
-      aria-labelledby={`home-why-${layout}`}
+      className="mazed-section mazed-band-warm px-4 py-10 lg:rounded-[var(--radius-3xl)] lg:px-10 lg:py-14"
+      aria-labelledby="home-why"
     >
       <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-subtle">{t("home.trustEyebrow")}</p>
-      <h2 id={`home-why-${layout}`} className={`mazed-h2 mt-1.5 max-w-xl text-foreground ${desktop ? "text-[32px]" : "text-[24px]"} ${arabic}`}>
+      <h2 id="home-why" className={`mazed-h2 mt-1.5 max-w-xl text-[24px] text-foreground lg:text-[32px] ${arabic}`}>
         {t("home.trustTitle")}
       </h2>
 
-      <ul className={`mt-6 grid gap-3 ${desktop ? "grid-cols-4 gap-4" : "grid-cols-2"}`}>
+      <ul className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         {TRUST_PILLARS.map((p) => (
-          <li key={p.key} className={`rounded-2xl bg-surface ring-1 ring-border ${desktop ? "p-5" : "p-3.5"}`}>
+          <li key={p.key} className="rounded-2xl bg-surface p-3.5 ring-1 ring-border lg:p-5">
             <span className="inline-grid size-9 place-items-center rounded-full bg-foreground text-[var(--background)]">
               <p.Icon className="size-4" strokeWidth={2.2} />
             </span>
-            <p className={`mt-3 font-bold leading-tight text-foreground ${desktop ? "text-[15px]" : "text-[13.5px]"} ${arabic}`}>
+            <p className={`mt-3 text-[13.5px] font-bold leading-tight text-foreground lg:text-[15px] ${arabic}`}>
               {t(p.titleKey)}
             </p>
-            <p className={`mt-1 leading-relaxed text-muted ${desktop ? "text-[13px]" : "text-[12px]"} ${arabic}`}>{t(p.bodyKey)}</p>
+            <p className={`mt-1 text-[12px] leading-relaxed text-muted lg:text-[13px] ${arabic}`}>{t(p.bodyKey)}</p>
           </li>
         ))}
       </ul>
@@ -82,14 +82,14 @@ export async function WhyBand({ layout }: { layout: "phone" | "desktop" }) {
       {marketOn && (
         <Link
           href={"/marche" as never}
-          className={`group mt-3 flex items-center gap-3.5 rounded-2xl bg-surface ring-1 ring-border transition hover:ring-foreground/40 ${desktop ? "mt-4 p-5" : "p-4"}`}
+          className="group mt-3 flex items-center gap-3.5 rounded-2xl bg-surface p-4 ring-1 ring-border transition hover:ring-foreground/40 lg:mt-4 lg:p-5"
         >
           <span className="inline-grid size-9 shrink-0 place-items-center rounded-full bg-foreground text-[var(--background)]">
             <BarChart3 className="size-4" strokeWidth={2.2} aria-hidden />
           </span>
           <span className="min-w-0 flex-1">
-            <span className={`block font-bold leading-tight text-foreground ${desktop ? "text-[15px]" : "text-[14px]"} ${arabic}`}>{t("home.marketTitle")}</span>
-            <span className={`mt-1 block leading-relaxed text-muted ${desktop ? "text-[13px]" : "text-[12px]"} ${arabic}`}>{t("home.marketBody")}</span>
+            <span className={`block text-[14px] font-bold leading-tight text-foreground lg:text-[15px] ${arabic}`}>{t("home.marketTitle")}</span>
+            <span className={`mt-1 block text-[12px] leading-relaxed text-muted lg:text-[13px] ${arabic}`}>{t("home.marketBody")}</span>
           </span>
           <ArrowUpRight className="size-4 shrink-0 text-subtle transition group-hover:text-foreground rtl:-scale-x-100" strokeWidth={2.2} aria-hidden />
         </Link>
@@ -97,8 +97,8 @@ export async function WhyBand({ layout }: { layout: "phone" | "desktop" }) {
 
       {/* The journey, as three numbered rows: the order is the information. */}
       <p className="mt-10 text-[11px] font-extrabold uppercase tracking-[0.14em] text-subtle">{t("home.howItWorksEyebrow")}</p>
-      <h3 className={`mazed-h2 mt-1.5 text-foreground ${desktop ? "text-[24px]" : "text-[20px]"} ${arabic}`}>{t("home.howItWorksTitle")}</h3>
-      <ol className={`mt-5 grid gap-3 ${desktop ? "grid-cols-3 gap-4" : ""}`}>
+      <h3 className={`mazed-h2 mt-1.5 text-[20px] text-foreground lg:text-[24px] ${arabic}`}>{t("home.howItWorksTitle")}</h3>
+      <ol className="mt-5 grid gap-3 lg:grid-cols-3 lg:gap-4">
         {HOW_IT_WORKS.map((step, i) => (
           <li key={step.key}>
             <Link
@@ -121,14 +121,13 @@ export async function WhyBand({ layout }: { layout: "phone" | "desktop" }) {
   );
 }
 
-export async function SellBand({ layout }: { layout: "phone" | "desktop" }) {
+export async function SellBand() {
   const t = await getTranslations();
   const arabic = isRtl(await getLocale()) ? "font-arabic" : "";
-  const desktop = layout === "desktop";
 
   return (
-    <section className={`mazed-section ${desktop ? "" : "px-4"}`} aria-labelledby={`home-sell-${layout}`}>
-      <div className={`mazed-band-ink relative overflow-hidden rounded-[var(--radius-3xl)] ${desktop ? "px-14 py-16" : "px-6 py-10"}`}>
+    <section className="mazed-section px-4 lg:px-0" aria-labelledby="home-sell">
+      <div className="mazed-band-ink relative overflow-hidden rounded-[var(--radius-3xl)] px-6 py-10 lg:px-14 lg:py-16">
         {/* The mark, as a watermark: the one place the logo's gold meets the ink. */}
         <Image
           src="/logo-watermark.webp"
@@ -140,10 +139,10 @@ export async function SellBand({ layout }: { layout: "phone" | "desktop" }) {
         />
         <div className="relative max-w-2xl">
           <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-white/60">{t("home.sellShort")}</p>
-          <h2 id={`home-sell-${layout}`} className={`mazed-h2 mt-2 text-[var(--background)] ${desktop ? "text-[40px]" : "text-[26px]"} ${arabic}`}>
+          <h2 id="home-sell" className={`mazed-h2 mt-2 text-[26px] text-[var(--background)] lg:text-[40px] ${arabic}`}>
             {t("home.sellBandTitle")}
           </h2>
-          <p className={`mt-3 max-w-xl leading-relaxed text-white/75 ${desktop ? "text-[16px]" : "text-[14px]"} ${arabic}`}>
+          <p className={`mt-3 max-w-xl text-[14px] leading-relaxed text-white/75 lg:text-[16px] ${arabic}`}>
             {t("home.sellBandBody")}
           </p>
           <Link
