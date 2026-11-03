@@ -301,7 +301,9 @@ export function ArticleEditor({
               ? t("publishedOn", { date: formatDate(article.published_at, "fr", "medium") })
               : t("updated", { date: formatDate(article.updated_at, "fr", "medium") })}
             {" · "}
-            <a href={`${siteBase}/${article.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-foreground/80 hover:text-[var(--gold)] hover:underline">
+            {/* ?apercu: the public page is static (from the CDN) and shows no draft;
+                this address is drawn on each request, for an admin (src/lib/queryViews.ts). */}
+            <a href={`${siteBase}/${article.slug}?apercu=1`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-foreground/80 hover:text-[var(--gold)] hover:underline">
               <span dir="ltr">/guides/{article.slug}</span>
               <ExternalLink className="size-3" />
             </a>

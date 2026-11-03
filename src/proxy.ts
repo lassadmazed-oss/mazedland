@@ -5,6 +5,7 @@ import { routing } from "./i18n/routing";
 import { log } from "./lib/log";
 import { isSupabaseAuthCookie } from "./lib/supabase/session-cookie";
 import { logActivity } from "./lib/activity";
+import { publicPathOfTwin, queryViewPath } from "./lib/queryViews";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -62,7 +63,34 @@ export async function proxy(req: NextRequest) {
     }
   }
 
+  // The gates below match the decoded path: /fr/%61dmin routes to /fr/admin.
+  let decodedPath = pathname;
+  try {
+    decodedPath = decodeURIComponent(pathname);
+  } catch {
+    // A malformed escape routes nowhere; the raw path is matched as is.
+  }
+
+  // A page's dynamic twin is an internal address (src/lib/queryViews.ts):
+  // asked for directly, it is the public one that answers.
+  const publicPath = publicPathOfTwin(decodedPath);
+  if (publicPath !== null) {
+    return NextResponse.redirect(new URL(`${publicPath}${search}`, req.url), 307);
+  }
+
   const res = intlMiddleware(req);
+
+  // An address whose query picks another view of a static page (?page=2,
+  // ?tag=…, ?deal=…) is drawn by the page's twin, which reads the query; the
+  // bare address stays on the CDN. Only where next-intl lets the request
+  // through as it is — never over one of its redirects.
+  if (res.headers.get("x-middleware-next") === "1") {
+    const twin = queryViewPath(pathname, req.nextUrl.searchParams);
+    if (twin) {
+      res.headers.delete("x-middleware-next");
+      res.headers.set("x-middleware-rewrite", new URL(`${twin}${search}`, req.url).toString());
+    }
+  }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -82,12 +110,6 @@ export async function proxy(req: NextRequest) {
     req.headers.get("x-purpose") === "prefetch";
   // The console is never skipped: a prefetch header is a header anyone can send.
   // Matched on the decoded path, since /fr/%61dmin routes to /fr/admin too.
-  let decodedPath = pathname;
-  try {
-    decodedPath = decodeURIComponent(pathname);
-  } catch {
-    // A malformed escape routes nowhere; the raw path is matched as is.
-  }
   const adminMatch = decodedPath.match(/^\/+(fr|ar|en)\/+admin(?:\/.*)?$/i);
   if (isPrefetch && !adminMatch) {
     mwLog.debug(`prefetch ${pathname} · auth skipped`, {

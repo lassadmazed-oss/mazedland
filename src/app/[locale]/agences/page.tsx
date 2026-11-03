@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
@@ -10,11 +10,18 @@ import { getSettings } from "@/lib/settings/server";
 import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
 
-export const dynamic = "force-dynamic";
+// The same list for every visitor, so it comes from the CDN and is rebuilt at
+// most a minute after an agence opens, changes or publishes (the home page's
+// recipe). Nothing on it is the reader's own.
+export const revalidate = 60;
+// A build that fails, naming the API, the day something here reads the
+// request (headers(), cookies(), searchParams) and silently turns the page
+// back into a render on every visit (src/app/[locale]/(home)/page.tsx).
+export const dynamic = "error";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("shops");
-  const locale = await getLocale();
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "shops" });
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
@@ -26,8 +33,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Les agences (0173, « boutiques » until 2026-10-27): the open shops, verified ones first, each with its count of annonces online. */
-export default async function ShopsPage() {
-  const locale = await getLocale();
+export default async function ShopsPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Before any translation: next-intl would otherwise read the request headers.
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("shops");
   const tKinds = await getTranslations("pro.kinds");
   const admin = getServiceSupabase();

@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { WhatsAppHelp } from "@/components/ui/WhatsAppHelp";
 import { HeroPhoto } from "@/components/landing/HeroPhoto";
-import { getServerSupabase } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { formatTND } from "@/lib/utils";
-import { membershipsOf } from "@/lib/pro/shops";
 import { getSettings } from "@/lib/settings/server";
 import { loadFoundingSeats } from "@/lib/pro/founding";
 import { FoundingCounter } from "@/components/agency/FoundingCounter";
-import { BadgeCheck, Check, LayoutGrid, Store, Users, Sparkles, ArrowUpRight } from "lucide-react";
+import { ProCta, ProNotMember, ProViewerProvider } from "@/components/agency/ProViewer";
+import { BadgeCheck, Check, LayoutGrid, Store, Users, Sparkles } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+// The same page for every visitor, so it comes from the CDN and is rebuilt at
+// most a minute after a plan, a price or a setting changes. Who is reading it
+// (a guest, someone signed in, a member of an agence) is found out in the
+// browser: the way in and the founding offer follow (ProViewer).
+export const revalidate = 60;
+// A build that fails, naming the API, the day something here reads the
+// request (headers(), cookies(), searchParams) and silently turns the page
+// back into a render on every visit (src/app/[locale]/(home)/page.tsx).
+export const dynamic = "error";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("pro.landing");
-  const locale = await getLocale();
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "pro.landing" });
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
@@ -38,31 +44,30 @@ type Plan = { slug: string; name_fr: string; name_ar: string | null; description
  * the agence page an agence gets — beside the promise; the four benefits as
  * quiet tiles; the three plans as pricing cards with the middle one raised.
  */
-export default async function ProLandingPage() {
-  const locale = await getLocale();
+export default async function ProLandingPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Before any translation: next-intl would otherwise read the request headers.
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("pro.landing");
   const tShops = await getTranslations("shops");
-  const supabase = await getServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
   const admin = getServiceSupabase();
 
-  const [{ data: planRows }, memberships, settings] = await Promise.all([
-    (admin ?? supabase)
-      .from("products")
-      .select("slug, name_fr, name_ar, description, description_ar, price, listing_quota")
-      .eq("kind", "subscription")
-      .eq("is_active", true)
-      .order("price"),
-    user && admin ? membershipsOf(admin, user.id) : Promise.resolve([]),
+  const [{ data: planRows }, settings] = await Promise.all([
+    admin
+      ? admin
+          .from("products")
+          .select("slug, name_fr, name_ar, description, description_ar, price, listing_quota")
+          .eq("kind", "subscription")
+          .eq("is_active", true)
+          .order("price")
+      : Promise.resolve({ data: null }),
     getSettings(),
   ]);
   const plans = (planRows ?? []) as Plan[];
-  const hasShop = memberships.length > 0;
   const seats = admin && settings.feature_founding_counter ? await loadFoundingSeats(admin, settings.founding_seats) : null;
-  const cta = hasShop ? "/pro/dashboard" : user ? "/pro/creer" : `/login?next=${encodeURIComponent(`/${locale}/pro/creer`)}`;
   // New shops switched off in the console: no « Ouvrir ma boutique ». The plans
-  // stay on show, and whoever runs a shop still gets to its dashboard.
-  const showCta = hasShop || settings.feature_pro_signup;
+  // stay on show, and whoever runs a shop still gets to its dashboard (ProCta).
+  const signupOpen = settings.feature_pro_signup;
 
   // « Les demandes » is only a benefit while demandes are on in the console.
   const benefits = ([
@@ -72,9 +77,8 @@ export default async function ProLandingPage() {
     { Icon: Sparkles, key: "matches" },
   ] as const).filter((b) => b.key !== "matches" || settings.feature_requests);
 
-  const ctaLabel = t(hasShop ? "ctaDashboard" : "ctaCreate");
-
   return (
+    <ProViewerProvider>
     <main className="mx-auto max-w-[var(--max-w-wide)] px-4 pb-10 pt-4 lg:px-8 lg:pt-8">
       {/* ── Hero: the promise, and the page an agence gets ── */}
       <section className="mazed-band-warm overflow-hidden rounded-[var(--radius-3xl)] px-6 py-10 lg:px-16 lg:py-16">
@@ -84,13 +88,20 @@ export default async function ProLandingPage() {
             <h1 className="mazed-display mt-3 max-w-[16ch] text-[32px] text-foreground lg:text-[52px]">{t("title")}</h1>
             <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-muted lg:text-[17px]">{t("subtitle")}</p>
             {/* The launch offer, and the places the console has left (not for an agence that already runs one). */}
-            {seats && !hasShop && <FoundingCounter seats={seats} months={settings.founding_offer_months} place={settings.founding_offer_place} />}
+            {seats && (
+              <ProNotMember>
+                <FoundingCounter seats={seats} months={settings.founding_offer_months} place={settings.founding_offer_place} />
+              </ProNotMember>
+            )}
             <div className="mt-7 flex flex-wrap items-center gap-4">
-              {showCta && (
-                <Link href={cta as never} data-track="pro_cta" data-track-cta="hero" className="mazed-btn-luxe tap-target inline-flex h-12 items-center gap-2 px-7 text-[14px]">
-                  {ctaLabel} <ArrowUpRight className="size-4 rtl:-scale-x-100" strokeWidth={2.4} aria-hidden />
-                </Link>
-              )}
+              <ProCta
+                signupOpen={signupOpen}
+                label={t("ctaCreate")}
+                dashboardLabel={t("ctaDashboard")}
+                arrow
+                track={{ cta: "hero" }}
+                className="mazed-btn-luxe tap-target inline-flex h-12 items-center gap-2 px-7 text-[14px]"
+              />
               <WhatsAppHelp topic="pro" />
             </div>
           </div>
@@ -181,21 +192,17 @@ export default async function ProLandingPage() {
                     </li>
                   ))}
                 </ul>
-                {showCta && (
-                  <Link
-                    href={cta as never}
-                    data-track="pro_cta"
-                    data-track-cta="plan"
-                    data-track-plan={p.slug}
-                    className={`tap-target mt-6 inline-flex h-11 items-center justify-center rounded-full text-[13.5px] font-bold transition ${
-                      featured
-                        ? "mazed-btn-luxe"
-                        : "bg-surface text-foreground ring-1 ring-border hover:ring-foreground/40"
-                    }`}
-                  >
-                    {hasShop ? ctaLabel : t("planCta")}
-                  </Link>
-                )}
+                <ProCta
+                  signupOpen={signupOpen}
+                  label={t("planCta")}
+                  dashboardLabel={t("ctaDashboard")}
+                  track={{ cta: "plan", plan: p.slug }}
+                  className={`tap-target mt-6 inline-flex h-11 items-center justify-center rounded-full text-[13.5px] font-bold transition ${
+                    featured
+                      ? "mazed-btn-luxe"
+                      : "bg-surface text-foreground ring-1 ring-border hover:ring-foreground/40"
+                  }`}
+                />
               </div>
             );
           })}
@@ -208,5 +215,6 @@ export default async function ProLandingPage() {
         </div>
       </section>
     </main>
+    </ProViewerProvider>
   );
 }

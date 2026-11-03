@@ -6,6 +6,7 @@ import { logAction } from "@/lib/activity";
 import { audit } from "@/lib/admin/audit";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
+import { revalidatePublic } from "@/lib/revalidatePublic";
 import { auditView, canPublish, changedKeys, parseArticleInput, type Article } from "@/lib/guides/articles";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -71,6 +72,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { error } = await admin.from("articles").update(patch).eq("id", row.id);
   if (error) return fail("article_update_failed", 500, error);
+  // The guide and the list come from the CDN: published, changed or taken
+  // down, they show so at the next visit, not a minute later.
+  revalidatePublic("/guides", `/guides/${row.slug}`);
 
   const before = auditView(row);
   const after = auditView({ ...row, ...(patch as Partial<Article>) });
@@ -104,6 +108,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   const { error } = await admin.from("articles").delete().eq("id", row.id);
   if (error) return fail("article_delete_failed", 500, error);
+  revalidatePublic("/guides", `/guides/${row.slug}`);
 
   logAction(req, user, "admin.article.delete", { id: row.id, slug: row.slug, status: row.status });
   await audit(admin, user.id, { action: "article.delete", targetType: "article", targetId: row.id, before: auditView(row), note: row.slug });

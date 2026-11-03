@@ -5,6 +5,7 @@ import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
 import { proGate } from "@/lib/pro/api";
 import { parseShopInput } from "@/lib/pro/shops";
+import { revalidatePublic } from "@/lib/revalidatePublic";
 
 /** What « vérifié » vouches for: the business behind the agence, as its papers name it. */
 const IDENTITY = ["name", "legal_name", "legal_id"] as const;
@@ -40,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!update.logo_path) delete update.logo_path;
   if (!update.cover_path) delete update.cover_path;
 
-  const { data: stored } = await admin.from("shops").select("name, legal_name, legal_id, verified_at, status, rejection_reason").eq("id", id).maybeSingle();
+  const { data: stored } = await admin.from("shops").select("slug, name, legal_name, legal_id, verified_at, status, rejection_reason").eq("id", id).maybeSingle();
   const changed = stored?.verified_at ? IDENTITY.filter((k) => (stored[k] ?? null) !== (parsed.value[k] ?? null)) : [];
   if (changed.length > 0) {
     update.verified_at = null;
@@ -64,6 +65,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { error } = await admin.from("shops").update(update).eq("id", id);
   if (error) return fail("shop_update_failed", 500, error);
   logAction(req, user, "shop.update", { id });
+  // The agence's page and the directory come from the CDN: the owner who
+  // saves and goes to look sees the change, at the old address and the new.
+  revalidatePublic(
+    "/agences",
+    ...[stored?.slug, update.slug].filter((s): s is string => typeof s === "string").map((s) => `/agences/${s}`),
+  );
   if (corrected) {
     const name = parsed.value.name;
     await admin

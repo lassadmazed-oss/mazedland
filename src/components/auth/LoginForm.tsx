@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { stripLocalePrefix } from "@/i18n/routing";
 import { PhoneInput } from "./PhoneInput";
@@ -43,14 +42,15 @@ function safeNextPath(raw: string | null): string {
  * Honors `?next=/some/path` so users coming from a "Sign in to bid" link land
  * back where they were. The next-intl router prepends the active locale itself,
  * so we strip the redundant prefix from `next` to avoid `/ar/ar/...`.
+ *
+ * `next` is read from the address when the form is sent, not with
+ * useSearchParams: /login is one static page for every address, served from
+ * the CDN, and useSearchParams would leave the form out of that HTML (Next
+ * renders it in the browser only).
  */
 export function LoginForm() {
   const t = useTranslations();
   const locale = useLocale();
-  const searchParams = useSearchParams();
-  const rawNext = searchParams.get("next");
-  const safeNext = safeNextPath(rawNext);
-  const next = safeNext === "/" ? "/" : stripLocalePrefix(safeNext);
 
   const [dialCode, setDialCode] = useState("+216");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -80,6 +80,8 @@ export function LoginForm() {
       // Hard navigation (not router.replace+refresh): the @supabase/ssr auth
       // cookie is written synchronously, but a soft refresh can prefetch the
       // destination before the cookie propagates, leaving the render anonymous.
+      const safeNext = safeNextPath(new URLSearchParams(window.location.search).get("next"));
+      const next = safeNext === "/" ? "/" : stripLocalePrefix(safeNext);
       const destination = next === "/" ? `/${locale}` : `/${locale}${next}`;
       try {
         const res = await fetch("/api/auth/login-by-phone", {
