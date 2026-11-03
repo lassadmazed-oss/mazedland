@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import Link from "next/link";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { jakarta, cairo } from "./fonts";
@@ -15,22 +14,27 @@ import { jakarta, cairo } from "./fonts";
  * page under [locale] that called notFound() made every unknown URL a soft
  * 404 for the same reason; the QA tour of 2026-10-30 found it, and it is gone.)
  *
- * It sits outside [locale], so it renders its own <html>. Which language the
- * visitor reads comes from the locale the proxy put on the request
- * (next-intl's header): /ar/… gets the Arabic page, right to left, with the
- * French below; /fr/… and everything else, the reverse.
+ * It sits outside [locale], so it renders its own <html>. /ar/… gets the
+ * Arabic page, right to left, with the French below; /fr/… and everything
+ * else, the reverse. The address is read in the browser, by the one-line
+ * script in <head>, before anything paints — never from the request: Next
+ * renders this page inside the home page too (it is that route's not-found
+ * boundary), and the `headers()` it used to read made the home page render on
+ * every visit instead of coming from the CDN (speed tour, 2026-11-03). The
+ * home page's `dynamic = "error"` now fails the build if that comes back.
  */
 
-async function requestLocale(): Promise<"fr" | "ar"> {
-  const h = await headers();
-  return h.get("x-next-intl-locale") === "ar" ? "ar" : "fr";
-}
-
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await requestLocale();
+// One page for every address, so one title for both languages.
+export const metadata: Metadata = {
   // Absolute: the layout's template (« %s · Mazed Immo ») would name the brand twice.
-  return { title: { absolute: locale === "ar" ? "الصفحة غير موجودة — Mazed Immo" : "Page introuvable — Mazed Immo" } };
-}
+  title: { absolute: "Page introuvable · الصفحة غير موجودة — Mazed Immo" },
+};
+
+/** Before the first paint: an /ar/… address turns the page Arabic-first. */
+const ARABIC_FIRST =
+  'if(location.pathname.split("/")[1]==="ar"){var d=document.documentElement;d.lang="ar";d.dir="rtl";d.setAttribute("data-nf","ar")}';
+/** Each order is in the page; the script's mark picks one. */
+const ORDER_CSS = 'html[data-nf="ar"] .nf-fr-first,html:not([data-nf="ar"]) .nf-ar-first{display:none}';
 
 function French({ secondary }: { secondary: boolean }) {
   return (
@@ -95,25 +99,25 @@ function Arabic({ secondary }: { secondary: boolean }) {
   );
 }
 
-export default async function RootNotFound() {
-  const locale = await requestLocale();
-  const arabicFirst = locale === "ar";
+export default function RootNotFound() {
   return (
-    <html lang={locale} dir={arabicFirst ? "rtl" : "ltr"} className={`${jakarta.variable} ${cairo.variable} h-full antialiased`}>
+    // The script changes lang/dir before React hydrates: that difference is expected.
+    <html lang="fr" dir="ltr" suppressHydrationWarning className={`${jakarta.variable} ${cairo.variable} h-full antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: ARABIC_FIRST }} />
+        <style dangerouslySetInnerHTML={{ __html: ORDER_CSS }} />
+      </head>
       <body className="min-h-full bg-background text-foreground font-sans" style={{ background: "#ffffff" }}>
         <main className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center px-6 text-center">
           <BrandLogo variant="logo" eager className="h-28 w-auto" />
-          {arabicFirst ? (
-            <>
-              <Arabic secondary={false} />
-              <French secondary />
-            </>
-          ) : (
-            <>
-              <French secondary={false} />
-              <Arabic secondary />
-            </>
-          )}
+          <div className="nf-fr-first w-full">
+            <French secondary={false} />
+            <Arabic secondary />
+          </div>
+          <div className="nf-ar-first w-full">
+            <Arabic secondary={false} />
+            <French secondary />
+          </div>
         </main>
       </body>
     </html>
