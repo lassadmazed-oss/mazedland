@@ -6276,6 +6276,7 @@
     "state": {
       "blocked": "Bloqué par {provider}",
       "unpaid": "Paiement en attente",
+      "duplicate": "Facturé deux fois",
       "overdue": "{days, plural, one {En retard d'un jour} other {En retard de # jours}}",
       "today": "Se renouvelle aujourd'hui",
       "soon": "{days, plural, one {Demain} other {Dans # jours}}",
@@ -6299,6 +6300,7 @@
       "notChecked": "Pas encore lu : le prochain contrôle s'en charge.",
       "vercel": "Plan {plan}, statut « {status} », période jusqu'au {date}.",
       "vercelBlock": "Bloqué ({reason}) depuis {since}.",
+      "vercelOtherTeams": "Une autre équipe de ce compte paie aussi un plan : {teams}. Le site n'en utilise qu'une.",
       "rdap": "Registraire : {registrar}. Expire le {date}.",
       "rdapStatus": "Statut : {statuses}.",
       "winsms": "Crédit : {balance} SMS. Licence jusqu'au {date}.",
@@ -6338,6 +6340,7 @@
       "unpaid": "Impayé",
       "blocked": "Blocage",
       "low": "Crédit bas",
+      "duplicate": "Double facture",
       "site_blocked": "Site bloqué",
       "site_down": "Site injoignable",
       "site_ok": "Site rétabli",
@@ -6426,6 +6429,7 @@
         "unpaid": "Paiement en attente : {name}",
         "blocked": "BLOQUÉ : {name}",
         "low": "Crédit bas : {name}",
+        "duplicate": "Double facture : {name}",
         "test": "SMS de test",
         "database_down": "ALERTE base de données"
       },
@@ -6437,6 +6441,7 @@
         "unpaid": "{provider} signale un paiement en attente ({status}). Payez avant que le service ne s'arrête.",
         "blocked": "{provider} a arrêté {name} ({status}). Payez la facture tout de suite.",
         "low": "Plus que {balance} SMS chez {provider}. Rechargez le crédit.",
+        "duplicate": "{provider} facture aussi l'équipe « {teams} ». Le site n'en utilise qu'une : passez l'autre en Hobby et demandez le remboursement.",
         "test": "Les alertes des abonnements arrivent bien à ce numéro.",
         "database_down": "Supabase ne répond plus : le site est en panne. Ouvrez supabase.com, onglet Billing."
       },

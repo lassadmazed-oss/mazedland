@@ -4,7 +4,10 @@
  *
  *   vercel     GET /v2/teams/<id> with VERCEL_TOKEN: the billing period's end,
  *              the plan's status and the soft block (« UNPAID_INVOICE » on
- *              2026-11-01, the day both sites answered 402).
+ *              2026-11-01, the day both sites answered 402). Then GET
+ *              /v2/teams: any OTHER team still on a paid plan is money spent
+ *              twice (2026-11-03: the old team kept Pro after the projects
+ *              moved, 20 USD paid on each for the same month).
  *   rdap       the domain's public registration record: its expiry, and a
  *              hold that takes the site off the net.
  *   winsms     the SMS credit left and the licence's end.
@@ -60,6 +63,37 @@ export function parseVercelTeam(body: unknown): Reading {
     ...(end === null ? {} : { renewsOn: tunisDay(new Date(end)) }),
     // Cents: 2000 is the 20 USD of the Pro seat.
     ...(typeof pro.price === "number" && pro.price > 0 ? { costUsd: pro.price / 100 } : {}),
+  };
+}
+
+/**
+ * The slugs of the teams in a GET /v2/teams answer that pay a plan, the
+ * watched one (by id or slug, as `auto_ref` may hold either) left out. Hobby
+ * is free; a canceled plan no longer charges; any other state (active,
+ * trialing, past_due…) is a team Vercel bills.
+ */
+export function otherPaidVercelTeams(body: unknown, watched: string): string[] {
+  const teams = Array.isArray(obj(body).teams) ? (obj(body).teams as unknown[]).map(obj) : [];
+  return teams
+    .filter((t) => t.id !== watched && t.slug !== watched)
+    .filter((t) => {
+      const billing = obj(t.billing);
+      return typeof billing.plan === "string" && billing.plan !== "hobby" && billing.status !== "canceled";
+    })
+    .map((t) => (typeof t.slug === "string" ? t.slug : String(t.id)));
+}
+
+/**
+ * The watched team's reading, told about the other paying teams: « duplicate »
+ * when the team itself is fine, its block or unpaid invoice first otherwise.
+ * Null: the list could not be read, so nothing is claimed either way.
+ */
+export function withOtherPaidTeams(r: Reading, others: string[] | null): Reading {
+  if (others === null) return { ...r, detail: { ...r.detail, otherPaidTeams: null } };
+  return {
+    ...r,
+    status: others.length > 0 && r.status === "ok" ? "duplicate" : r.status,
+    detail: { ...r.detail, otherPaidTeams: others },
   };
 }
 
@@ -140,8 +174,15 @@ export async function readProvider(s: Pick<PaidService, "auto_source" | "auto_re
     case "vercel": {
       const token = process.env.VERCEL_TOKEN;
       if (!token) throw new Error("VERCEL_TOKEN not set");
+      const auth = { headers: { Authorization: `Bearer ${token}` } };
       const team = encodeURIComponent(s.auto_ref ?? "");
-      return parseVercelTeam(await fetchJson(`https://api.vercel.com/v2/teams/${team}`, { headers: { Authorization: `Bearer ${token}` } }));
+      const reading = parseVercelTeam(await fetchJson(`https://api.vercel.com/v2/teams/${team}`, auth));
+      // The list is a second question: when it fails, the team's own reading stands.
+      const others = await fetchJson("https://api.vercel.com/v2/teams?limit=100", auth).then(
+        (body) => otherPaidVercelTeams(body, s.auto_ref ?? ""),
+        () => null,
+      );
+      return withOtherPaidTeams(reading, others);
     }
     case "rdap": {
       const domain = encodeURIComponent((s.auto_ref ?? "").toLowerCase());

@@ -3,7 +3,9 @@ import {
   daysBetween, dueAlerts, inQuietHours, monthlyTotals, nextRenewal, recipientDigits, serviceState, tunisHour,
   type PaidService,
 } from "./services";
-import { anthropicReading, parseRdap, parseVercelTeam, winsmsReading } from "./providers";
+import {
+  anthropicReading, otherPaidVercelTeams, parseRdap, parseVercelTeam, winsmsReading, withOtherPaidTeams,
+} from "./providers";
 import { parseServiceInput, billingLink } from "./input";
 
 type Judged = Pick<PaidService, "active" | "renews_on" | "lead_days" | "auto_status" | "cycle">;
@@ -39,6 +41,8 @@ describe("serviceState", () => {
     expect(serviceState(svc({ auto_status: "blocked" }), "2026-11-01", 4).state).toBe("blocked");
     expect(serviceState(svc({ auto_status: "unpaid" }), "2026-11-01", 4).state).toBe("unpaid");
     expect(serviceState(svc({ auto_status: "low", cycle: "prepaid" }), "2026-11-01", 4).state).toBe("low");
+    // A second paying team outranks the date, not a block.
+    expect(serviceState(svc({ auto_status: "duplicate" }), "2026-11-30", 4).state).toBe("duplicate");
   });
 
   it("asks for a date only where one is expected", () => {
@@ -80,6 +84,11 @@ describe("dueAlerts", () => {
   it("adds a low credit to a reminder, and says nothing for a paused service", () => {
     expect(stages(svc({ auto_status: "low" }), "2026-11-30")).toEqual(["day_before", "low"]);
     expect(stages(svc({ active: false }), "2026-11-30")).toEqual([]);
+  });
+
+  it("adds a second paying team to the reminders, once while it lasts", () => {
+    expect(stages(svc({ auto_status: "duplicate" }), "2026-11-30")).toEqual(["day_before", "duplicate"]);
+    expect(dueAlerts(svc({ auto_status: "duplicate" }), "2026-11-10", OPTS)).toEqual([{ stage: "duplicate", cycle: "open", days: null }]);
   });
 });
 
@@ -137,6 +146,33 @@ describe("provider readings", () => {
     expect(blocked.detail).toMatchObject({ block: "UNPAID_INVOICE", status: "canceled" });
     expect(parseVercelTeam({ billing: { status: "past_due" } }).status).toBe("unpaid");
     expect(parseVercelTeam({})).toEqual({ status: "ok", detail: expect.any(Object) });
+  });
+
+  it("finds another Vercel team that pays, as on 2026-11-03", () => {
+    const NEW = "team_rHVYh09RvuFbxkZ0WSpRXtEG";
+    const list = {
+      teams: [
+        { id: NEW, slug: "lassad-757960fc", billing: { plan: "pro", status: "active" } },
+        { id: "team_DNguYjDcPZfEF2PCrJH5zowJ", slug: "lassad", billing: { plan: "pro", status: "active" } },
+        { id: "team_free", slug: "side-project", billing: { plan: "hobby", status: "active" } },
+        { id: "team_gone", slug: "closed", billing: { plan: "pro", status: "canceled" } },
+        { id: "team_late", slug: "late", billing: { plan: "pro", status: "past_due" } },
+      ],
+    };
+    expect(otherPaidVercelTeams(list, NEW)).toEqual(["lassad", "late"]);
+    // auto_ref may name the team by its slug.
+    expect(otherPaidVercelTeams(list, "lassad-757960fc")).toEqual(["lassad", "late"]);
+    expect(otherPaidVercelTeams({ teams: [list.teams[0]] }, NEW)).toEqual([]);
+    expect(otherPaidVercelTeams({}, NEW)).toEqual([]);
+
+    const ok = parseVercelTeam({ billing: { plan: "pro", status: "active" } });
+    expect(withOtherPaidTeams(ok, ["lassad"])).toMatchObject({ status: "duplicate", detail: { otherPaidTeams: ["lassad"] } });
+    expect(withOtherPaidTeams(ok, []).status).toBe("ok");
+    // The list did not answer: nothing claimed either way.
+    expect(withOtherPaidTeams(ok, null)).toMatchObject({ status: "ok", detail: { otherPaidTeams: null } });
+    // A block on the watched team stays the message.
+    const blocked = parseVercelTeam({ softBlock: { reason: "UNPAID_INVOICE" }, billing: { status: "canceled" } });
+    expect(withOtherPaidTeams(blocked, ["lassad"]).status).toBe("blocked");
   });
 
   it("reads a domain's expiry and registrar from RDAP", () => {

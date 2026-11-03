@@ -4,6 +4,8 @@ Real-estate classifieds for Tunisia. A seller publishes an annonce at a displaye
 
 Live: **https://mazedland.vercel.app** — deploys from `main`.
 
+**Who owns and pays for what** (the Vercel team, the old one not to use, the rules after a billing change): `RUNBOOK.md` §7. Read it before you pay, move or create anything on Vercel.
+
 Stack: **Next.js 16 (App Router) · React 19 · TypeScript · Tailwind 4 · Supabase (Postgres + Auth + Storage) · next-intl (fr)**.
 
 ---

@@ -81,3 +81,53 @@ is known, not discovered during an incident.
   a new forward-fixing migration.
 - **Gate:** CI runs lint + typecheck + unit + the required RPC integration suite
   on every PR to `main`. Never merge red.
+
+## 7. Accounts & billing — who owns what, who pays
+
+Read this before you pay, move or create anything on Vercel. On 2026-11-03 the
+projects moved to a new Vercel team while the old team kept its Pro plan: 20 USD
+was charged on each team for the same month. The owner found out from the bank
+statement, and the duplicate was refunded through Vercel's support.
+
+**Vercel: one account, one team that matters.**
+
+| | |
+|---|---|
+| Account | `lassadmazed-2177` (lassad.mazed@gmail.com), the owner's |
+| **The team that runs the sites** | « lassad », slug **`lassad-757960fc`**, ID **`team_rHVYh09RvuFbxkZ0WSpRXtEG`** |
+| Its projects | mazedland (mazed.immo), mazed-auto (mazedauto.com), agrized, al-labina |
+| Its plan | Pro, 20 USD a month, card on file, renews on the 3rd |
+| Old team, do not use | also named « lassad », slug `lassad`, ID `team_DNguYjDcPZfEF2PCrJH5zowJ`: no projects since 2026-11-03; still holds the domain entries agrized.site and allabina.site until they are moved; to be downgraded to Hobby after that |
+| Saif's own Vercel account | holds nothing of these sites. Paying there does nothing (it was tried on 2026-11-01) |
+
+Both teams are named « lassad ». **Tell them apart by slug or ID, never by name**:
+in the dashboard URL (`vercel.com/lassad-757960fc/…`), in the team switcher, and in
+Vercel's support chat (the team ID is in the option's `data-value`).
+
+**Rules**
+
+1. Pay only on `lassad-757960fc`. When Vercel says a payment is due, read the URL's
+   slug first: if it is another team, that team should not be paying at all.
+2. Never create a Vercel team. If a payment flow creates one anyway (it did on
+   2026-11-03), do all of this the same day:
+   - set `VERCEL_ORG_ID` in `.github/workflows/deploy.yml`, here and in the
+     mazed-auto repo;
+   - set the Vercel row in `/admin/abonnements` (« Référence » = the new team ID,
+     billing link = its billing page);
+   - update the table above;
+   - move the old team's domains (Domains → ⋯ → Move teams);
+   - downgrade the old team to Hobby, and ask for a refund of any month paid
+     twice (vercel.com/help → pick the old team → the refund form; on
+     2026-11-03 it was approved at once).
+3. Read invoices from the API, not from memory:
+   `GET https://api.vercel.com/v1/invoices?teamId=<id>` with `VERCEL_TOKEN`. It
+   lists **paid** invoices only by default; add `&status=void`, `&status=open` or
+   `&status=uncollectible` to see the rest. A void invoice took no money.
+4. The hourly watch (`/api/cron/services`, `src/lib/services/providers.ts`)
+   lists every team the token sees. Another team on a paid plan turns the Vercel
+   row « Facturé deux fois » and texts the owner once (stage `duplicate`,
+   migration 0210). If that SMS comes, rule 2 was skipped.
+
+**Everything else that is paid** (Supabase, the domains at Hostinger, WinSMS,
+the Claude API): `/admin/abonnements` is the list, with each renewal date and
+the SMS before it. Add a row there for any new paid service.

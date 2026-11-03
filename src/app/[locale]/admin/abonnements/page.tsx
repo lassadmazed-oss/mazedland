@@ -54,6 +54,7 @@ type Alert = {
 const TONE: Record<ServiceState, Tone> = {
   blocked: "bad",
   unpaid: "bad",
+  duplicate: "bad",
   overdue: "bad",
   today: "warn",
   soon: "warn",
@@ -353,6 +354,7 @@ export default async function AdminServicesPage({ searchParams }: { searchParams
       const end = str("periodEnd");
       lines.push(t("detail.vercel", { plan: str("plan") ?? "?", status: str("status") ?? "?", date: end ? formatDate(end, locale, "medium") : "?" }));
       if (str("block")) lines.push(t("detail.vercelBlock", { reason: str("block") ?? "", since: str("blockedAt") ? ago(str("blockedAt") as string) : "?" }));
+      if (Array.isArray(d.otherPaidTeams) && d.otherPaidTeams.length) lines.push(t("detail.vercelOtherTeams", { teams: (d.otherPaidTeams as string[]).join(", ") }));
     } else if (s.auto_source === "rdap") {
       const exp = str("expiresAt");
       lines.push(t("detail.rdap", { registrar: str("registrar") ?? "?", date: exp ? formatDate(exp, locale, "medium") : "?" }));

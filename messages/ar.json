@@ -6276,6 +6276,7 @@
     "state": {
       "blocked": "مسكّر من {provider}",
       "unpaid": "خلاص ما تعداش",
+      "duplicate": "خلاص مرتين",
       "overdue": "{days, plural, zero {فات الوقت} one {فات بنهار} two {فات بيومين} few {فات بـ # أيام} many {فات بـ # يوم} other {فات بـ # يوم}}",
       "today": "يتجدد اليوم",
       "soon": "{days, plural, zero {اليوم} one {غدوة} two {بعد يومين} few {بعد # أيام} many {بعد # يوم} other {بعد # يوم}}",
@@ -6299,6 +6300,7 @@
       "notChecked": "مازال ما تقراش: الكونترول الجاي يتكفّل بيه.",
       "vercel": "Plan {plan}، الحالة «{status}»، الفترة لين {date}.",
       "vercelBlock": "مسكّر ({reason}) من {since}.",
+      "vercelOtherTeams": "فما team أخرى في نفس الحساب تخلّص زادة: {teams}. السيت يستعمل وحدة برك.",
       "rdap": "المسجّل: {registrar}. يوفى نهار {date}.",
       "rdapStatus": "الحالة: {statuses}.",
       "winsms": "الرصيد: {balance} SMS. الليسانس لين {date}.",
@@ -6338,6 +6340,7 @@
       "unpaid": "ما تخلصش",
       "blocked": "تسكير",
       "low": "رصيد قليل",
+      "duplicate": "خلاص مرتين",
       "site_blocked": "الموقع مسكّر",
       "site_down": "الموقع ما يجاوبش",
       "site_ok": "الموقع رجع",
@@ -6426,6 +6429,7 @@
         "unpaid": "خلاص ما تعداش: {name}",
         "blocked": "مسكّر: {name}",
         "low": "الرصيد قرب يوفى: {name}",
+        "duplicate": "خلاص مرتين: {name}",
         "test": "SMS تجربة",
         "database_down": "تنبيه: قاعدة البيانات"
       },
@@ -6437,6 +6441,7 @@
         "unpaid": "{provider} يقول فما خلاص ما تعداش ({status}). خلّص قبل ما توقف الخدمة.",
         "blocked": "{provider} وقّف {name} ({status}). خلّص الفاتورة توّا.",
         "low": "بقى {balance} SMS برك في {provider}. اشحن الرصيد.",
+        "duplicate": "{provider} يخلّص زادة على الـ team «{teams}». السيت يخدم على team وحدة برك: رجّع الأخرى Hobby واطلب ترجيع الفلوس.",
         "test": "تنبيهات الاشتراكات توصل للنومرو هذا.",
         "database_down": "Supabase ما يجاوبش: الموقع طايح. حلّ supabase.com، Billing."
       },
