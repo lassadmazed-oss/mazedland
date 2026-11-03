@@ -5934,8 +5934,8 @@
       "badType": "JPG, PNG ou WebP seulement.",
       "link": "Lien",
       "linkPlaceholder": "www.exemple.tn/offre",
-      "linkHint": "Où mène un clic, dans un nouvel onglet. « https:// » est ajouté s'il manque.",
-      "linkInvalid": "Ce n'est pas une adresse web.",
+      "linkHint": "Où mène un clic, dans un nouvel onglet : une adresse web (« https:// » est ajouté s'il manque) ou une adresse e-mail.",
+      "linkInvalid": "Ce n'est ni une adresse web ni une adresse e-mail.",
       "titles": "Texte de l'image",
       "titlesHint": "Lu à la place de l'image par les lecteurs d'écran. Vide : le nom de l'annonceur.",
       "titleFr": "En français",
@@ -5968,6 +5968,13 @@
         "link": "Ajoutez un lien valable.",
         "dates": "Le dernier jour vient avant le début.",
         "uploading": "Attendez la fin de l'envoi."
+      },
+      "quickLinks": "Ou un lien de Mazed Immo",
+      "quick": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok",
+        "email": "E-mail"
       }
     },
     "api": {

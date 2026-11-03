@@ -16,6 +16,7 @@ import {
 } from "@/lib/ads/ads";
 import { campaignDays, lastDays, tunisDay, type AdDay } from "@/lib/ads/dates";
 import { AdEditor, type EditableAd } from "./AdEditor";
+import { mazedLinks } from "@/lib/contact";
 import { AdActions } from "./AdActions";
 import { ChevronLeft, ExternalLink, GalleryHorizontalEnd, Plus } from "lucide-react";
 
@@ -239,6 +240,8 @@ export default async function AdminAdsPage({
                 ad={editable}
                 baseHref={`/${locale}${BASE}`}
                 cancelHref={`/${locale}${selected ? href(`a=${selected.id}`) : listHref}`}
+                // Réglages → Contact: Mazed Immo's Facebook, Instagram, TikTok and e-mail.
+                quickLinks={mazedLinks(settings)}
               />
             </div>
           ) : selected ? (

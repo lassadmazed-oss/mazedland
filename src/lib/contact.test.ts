@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { facebookHref, instagramHandle, instagramHref, tiktokHandle, tiktokHref, whatsappHref } from "./contact";
+import { facebookHref, instagramHandle, instagramHref, mazedLinks, tiktokHandle, tiktokHref, whatsappHref } from "./contact";
 
 describe("contact links", () => {
   it("opens a WhatsApp chat from any written number", () => {
@@ -24,5 +24,17 @@ describe("contact links", () => {
       expect(instagramHandle(v), v).toBe("mazed_immo");
     }
     expect(instagramHref("@mazed_immo")).toBe("https://www.instagram.com/mazed_immo/");
+  });
+
+  it("lists Mazed Immo's own addresses for a link to pick, leaving the empty ones out", () => {
+    expect(
+      mazedLinks({ contact_facebook: "100057517755322", contact_instagram: "mazed_immo", contact_tiktok: "@mazedimmo", contact_email: " contact@mazed.immo " }),
+    ).toEqual([
+      { key: "facebook", href: "https://www.facebook.com/profile.php?id=100057517755322" },
+      { key: "instagram", href: "https://www.instagram.com/mazed_immo/" },
+      { key: "tiktok", href: "https://www.tiktok.com/@mazedimmo" },
+      { key: "email", href: "mailto:contact@mazed.immo" },
+    ]);
+    expect(mazedLinks({ contact_facebook: "", contact_instagram: " ", contact_tiktok: "", contact_email: "" })).toEqual([]);
   });
 });

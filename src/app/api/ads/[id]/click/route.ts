@@ -11,7 +11,7 @@ import { countAdEvent, trackedAd } from "@/lib/ads/server";
  * by us, the number the advertiser is billed on, without a script in the way
  * of the tap. The address it redirects to is read from the ad, never from the
  * request: a redirect that takes its target from the URL is an open redirect
- * on our domain. And only http/https (safeAdLink), checked again here because
+ * on our domain. And only http/https or a mail to one address (safeAdLink), checked again here because
  * a row written before the check would otherwise still be followed.
  *
  * The visitor is not kept waiting on the count: the redirect goes first and
