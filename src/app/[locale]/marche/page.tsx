@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowUpRight, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getServiceSupabase } from "@/lib/supabase/admin";
@@ -17,10 +17,15 @@ import { Card, CountTile, FigureTile, NotEnough, Section, marketFormatters } fro
 import { PriceTable } from "@/components/market/PriceTable";
 import { GovernorateBlock } from "@/components/market/GovernorateBlock";
 
-// The figures are read from analytics_cache (public_stats_cache_minutes) and
-// the switch from the settings, on each request: a page switched off in the
-// console answers 404 at once, and a changed sample takes effect at once.
-export const dynamic = "force-dynamic";
+// The same figures for every visitor, so the page comes from the CDN and is
+// rebuilt at most a minute after a change: the figures themselves come from
+// analytics_cache (public_stats_cache_minutes), and a page switched off in the
+// console, or a changed sample, takes effect at the next rebuild.
+export const revalidate = 60;
+// A build that fails, naming the API, the day something here reads the
+// request (headers(), cookies(), searchParams) and silently turns the page
+// back into a render on every visit (src/app/[locale]/(home)/page.tsx).
+export const dynamic = "error";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -91,8 +96,10 @@ function marketLd(view: MarketView, locale: string, origin: string, words: { nam
  * A figure that fewer than `public_stats_min_sample` annonces stand behind
  * is not shown: the page says there is not enough data yet, in its place.
  */
-export default async function MarketPage() {
-  const locale = await getLocale();
+export default async function MarketPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Before any translation: next-intl would otherwise read the request headers.
+  const { locale } = await params;
+  setRequestLocale(locale);
   const settings = await getSettings();
   if (!settings.public_stats_enabled) notFound();
   const t = await getTranslations("market");

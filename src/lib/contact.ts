@@ -37,3 +37,33 @@ export function facebookHref(value: string): string {
   if (/^\d+$/.test(v)) return `https://www.facebook.com/profile.php?id=${v}`;
   return `https://www.facebook.com/${v.replace(/^@/, "")}`;
 }
+
+/**
+ * The `contact_instagram` setting as a bare handle: typed with or without
+ * its « @ », or the profile link pasted from the app (with its trailing
+ * slash or « ?igsh=… »).
+ */
+export function instagramHandle(value: string): string {
+  return value.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/^@/, "").replace(/[/?#].*$/, "");
+}
+
+export function instagramHref(value: string): string {
+  return `https://www.instagram.com/${instagramHandle(value)}/`;
+}
+
+export type MazedLink = { key: "facebook" | "instagram" | "tiktok" | "email"; href: string };
+
+/**
+ * Mazed Immo's own addresses, as links to tap instead of typing them — the
+ * campaign form's « Lien » (the owner, 2026-11-03: Facebook, TikTok,
+ * Instagram and contact@mazed.immo in the publicités). An empty setting is
+ * left out, as on the contact page.
+ */
+export function mazedLinks(s: { contact_facebook: string; contact_instagram: string; contact_tiktok: string; contact_email: string }): MazedLink[] {
+  const out: MazedLink[] = [];
+  if (s.contact_facebook.trim()) out.push({ key: "facebook", href: facebookHref(s.contact_facebook) });
+  if (s.contact_instagram.trim()) out.push({ key: "instagram", href: instagramHref(s.contact_instagram) });
+  if (s.contact_tiktok.trim()) out.push({ key: "tiktok", href: tiktokHref(s.contact_tiktok) });
+  if (s.contact_email.trim()) out.push({ key: "email", href: `mailto:${s.contact_email.trim()}` });
+  return out;
+}

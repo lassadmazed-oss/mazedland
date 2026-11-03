@@ -4,7 +4,7 @@ import { getSettings } from "@/lib/settings/server";
 import { guidesListed } from "@/lib/guides/server";
 import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
-import { facebookHref, tiktokHref } from "@/lib/contact";
+import { facebookHref, instagramHref, tiktokHref } from "@/lib/contact";
 
 /** TikTok icon — not in lucide-react. */
 function TikTokIcon({ className }: { className?: string }) {
@@ -24,6 +24,17 @@ function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
+/** Instagram's mark — the rounded square, the lens and the flash — at the weight of the others. */
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} className={className} aria-hidden>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 /**
  * The site's footer, on every public page.
  *
@@ -35,8 +46,9 @@ function FacebookIcon({ className }: { className?: string }) {
  * A server component: nothing here changes in the browser except the
  * language switch, which is its own client island. The layout hands it to
  * MobileShell, which leaves it out of the flow routes (auth, payment, the
- * console). The Facebook and TikTok marks follow the `contact_facebook` and
- * `contact_tiktok` settings; empty, the mark is gone.
+ * console). The Facebook, Instagram and TikTok marks follow the
+ * `contact_facebook`, `contact_instagram` and `contact_tiktok` settings;
+ * empty, the mark is gone.
  */
 export async function SiteFooter() {
   const t = await getTranslations();
@@ -47,6 +59,7 @@ export async function SiteFooter() {
   const hasGuides = await guidesListed();
   const tiktok = settings.contact_tiktok;
   const facebook = settings.contact_facebook;
+  const instagram = settings.contact_instagram;
 
   const columns: { key: string; title: string; links: { href: string; label: string }[] }[] = [
     {
@@ -127,6 +140,17 @@ export async function SiteFooter() {
                 className="inline-flex size-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
               >
                 <FacebookIcon className="size-4" />
+              </a>
+            )}
+            {instagram && (
+              <a
+                href={instagramHref(instagram)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="inline-flex size-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+              >
+                <InstagramIcon className="size-4" />
               </a>
             )}
             {tiktok && (

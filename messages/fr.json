@@ -2044,7 +2044,8 @@
     "whatsapp": "WhatsApp",
     "whatsappNote": "Messages uniquement — pas d'appels",
     "tiktok": "TikTok",
-    "facebook": "Facebook"
+    "facebook": "Facebook",
+    "instagram": "Instagram"
   },
   "errors": {
     "boundary": {
@@ -5807,6 +5808,10 @@
     "founding_offer_choices": {
       "label": "Formules au choix de l'offre fondatrice",
       "hint": "Les identifiants des plans qu'une agence choisit en s'inscrivant tant qu'il reste des places (pro-pro, pro-business…). Rien à payer : « Ouvrir » lui donne celui qu'elle a choisi. Vide : la console donne le plan de l'offre fondatrice."
+    },
+    "contact_instagram": {
+      "label": "Compte Instagram",
+      "hint": "Le nom du compte (avec ou sans @) ou son lien. Affiché en bas de chaque page et sur la page contact. Vide : pas d'Instagram."
     }
   },
   "ads": {
@@ -5929,8 +5934,8 @@
       "badType": "JPG, PNG ou WebP seulement.",
       "link": "Lien",
       "linkPlaceholder": "www.exemple.tn/offre",
-      "linkHint": "Où mène un clic, dans un nouvel onglet. « https:// » est ajouté s'il manque.",
-      "linkInvalid": "Ce n'est pas une adresse web.",
+      "linkHint": "Où mène un clic, dans un nouvel onglet : une adresse web (« https:// » est ajouté s'il manque) ou une adresse e-mail.",
+      "linkInvalid": "Ce n'est ni une adresse web ni une adresse e-mail.",
       "titles": "Texte de l'image",
       "titlesHint": "Lu à la place de l'image par les lecteurs d'écran. Vide : le nom de l'annonceur.",
       "titleFr": "En français",
@@ -5963,6 +5968,13 @@
         "link": "Ajoutez un lien valable.",
         "dates": "Le dernier jour vient avant le début.",
         "uploading": "Attendez la fin de l'envoi."
+      },
+      "quickLinks": "Ou un lien de Mazed Immo",
+      "quick": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok",
+        "email": "E-mail"
       }
     },
     "api": {

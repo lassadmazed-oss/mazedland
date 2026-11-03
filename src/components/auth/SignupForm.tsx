@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { useSearchParams } from "next/navigation";
 import { stripLocalePrefix } from "@/i18n/routing";
 import { safeInternalPath } from "@/lib/safePath";
 import { PhoneInput } from "./PhoneInput";
@@ -36,9 +35,6 @@ import { TermsContent, PrivacyContent } from "@/components/legal/LegalContent";
 export function SignupForm() {
   const t = useTranslations();
   const locale = useLocale();
-  const searchParams = useSearchParams();
-  // Where the visitor was heading before being asked to sign up.
-  const next = stripLocalePrefix(safeInternalPath(searchParams.get("next"), "/account"));
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   // The number tried on the login form (no account yet), until another is typed.
@@ -114,6 +110,11 @@ export function SignupForm() {
     // Where they were going before they were asked to sign up — « Vendre »
     // sends visitors through login, whose « Créer un compte » link carries
     // `next` along. Signing up used to drop it and land on /account.
+    //
+    // Read from the address now, not with useSearchParams: /signup is one
+    // static page for every address, served from the CDN, and
+    // useSearchParams would leave the form out of that HTML.
+    const next = stripLocalePrefix(safeInternalPath(new URLSearchParams(window.location.search).get("next"), "/account"));
     forgetPhone();
     // Google only: the route counts the account for the site itself.
     trackEvent("sign_up", { method: "phone" }, {}, { firstParty: false });

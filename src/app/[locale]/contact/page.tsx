@@ -3,8 +3,8 @@ import { pageAlternates } from "@/lib/seo";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { Ltr } from "@/components/ui/Ltr";
-import { Mail, Phone, MapPin, Clock, MessageCircle, Music2, Facebook } from "lucide-react";
-import { facebookHref, tiktokHandle, tiktokHref, whatsappHref } from "@/lib/contact";
+import { Mail, Phone, MapPin, Clock, MessageCircle, Music2, Facebook, Instagram } from "lucide-react";
+import { facebookHref, instagramHandle, instagramHref, tiktokHandle, tiktokHref, whatsappHref } from "@/lib/contact";
 import { getSettings } from "@/lib/settings/server";
 
 export async function generateMetadata({
@@ -31,7 +31,7 @@ const telHref = (v: string) => `tel:${v.replace(/[^\d+]/g, "")}`;
  */
 type Item = {
   Icon: typeof Mail;
-  labelKey: "whatsapp" | "email" | "phone" | "address" | "hours" | "tiktok" | "facebook";
+  labelKey: "whatsapp" | "email" | "phone" | "address" | "hours" | "tiktok" | "facebook" | "instagram";
   /** A line under the value (« messages uniquement »). */
   noteKey?: "whatsappNote";
   external?: boolean;
@@ -84,6 +84,9 @@ export default async function ContactPage({
     ...(phone ? [{ Icon: Phone, labelKey: "phone", value: phone, href: telHref(phone) } satisfies Item] : []),
     ...(s.contact_facebook
       ? [{ Icon: Facebook, labelKey: "facebook", value: tb("name"), href: facebookHref(s.contact_facebook), external: true } satisfies Item]
+      : []),
+    ...(s.contact_instagram
+      ? [{ Icon: Instagram, labelKey: "instagram", value: `@${instagramHandle(s.contact_instagram)}`, href: instagramHref(s.contact_instagram), external: true } satisfies Item]
       : []),
     ...(s.contact_tiktok
       ? [{ Icon: Music2, labelKey: "tiktok", value: `@${tiktokHandle(s.contact_tiktok)}`, href: tiktokHref(s.contact_tiktok), external: true } satisfies Item]
