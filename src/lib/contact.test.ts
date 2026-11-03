@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { facebookHref, tiktokHandle, tiktokHref, whatsappHref } from "./contact";
+import { facebookHref, instagramHandle, instagramHref, tiktokHandle, tiktokHref, whatsappHref } from "./contact";
 
 describe("contact links", () => {
   it("opens a WhatsApp chat from any written number", () => {
@@ -17,5 +17,12 @@ describe("contact links", () => {
     expect(facebookHref("100057517755322")).toBe("https://www.facebook.com/profile.php?id=100057517755322");
     expect(facebookHref("mazedimmo")).toBe("https://www.facebook.com/mazedimmo");
     expect(facebookHref("https://www.facebook.com/mazedimmo")).toBe("https://www.facebook.com/mazedimmo");
+  });
+
+  it("reads the Instagram handle however the admin typed it", () => {
+    for (const v of ["mazed_immo", "@mazed_immo", " @mazed_immo ", "https://www.instagram.com/mazed_immo/", "https://instagram.com/mazed_immo?igsh=abc"]) {
+      expect(instagramHandle(v), v).toBe("mazed_immo");
+    }
+    expect(instagramHref("@mazed_immo")).toBe("https://www.instagram.com/mazed_immo/");
   });
 });

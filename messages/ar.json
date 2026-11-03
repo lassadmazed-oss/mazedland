@@ -2044,7 +2044,8 @@
     "whatsapp": "واتساب",
     "whatsappNote": "مساجات برك — ما فماش مكالمات",
     "tiktok": "TikTok",
-    "facebook": "Facebook"
+    "facebook": "Facebook",
+    "instagram": "Instagram"
   },
   "errors": {
     "boundary": {
@@ -5807,6 +5808,10 @@
     "founding_offer_choices": {
       "label": "الباقات اللي تختار منها الوكالة المؤسِّسة",
       "hint": "معرّفات الباقات اللي تختار منها الوكالة كي تسجّل ما دام فمّا بلايص (pro-pro، pro-business…). ما تخلّص شي: « Ouvrir » يعطيها اللي اختارتها. فارغة: الكونسول تعطي باقة العرض المؤسِّس."
+    },
+    "contact_instagram": {
+      "label": "حساب Instagram",
+      "hint": "اسم الحساب (بـ @ ولا بلاش) ولا الرابط متاعو. يبان في آخر كل صفحة وفي صفحة الاتصال. فارغ: ما يبانش."
     }
   },
   "ads": {
