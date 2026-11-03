@@ -7,6 +7,7 @@ import { fail } from "@/lib/http/errors";
 import { apiTranslator, requestLocale } from "@/lib/i18n/server";
 import { activePlan, offerPlanPeriod } from "@/lib/pro/shops";
 import { foundingOffer, foundingPlanFor } from "@/lib/pro/founding";
+import { deleteShop } from "@/lib/admin/deletion";
 import { audit } from "@/lib/admin/audit";
 import { canOpen } from "@/lib/admin/sections";
 import { claimDecision, decidePayment, OPEN, releaseDecision, type PaymentRow } from "@/lib/payments/decision";
@@ -22,6 +23,8 @@ import { formatDate } from "@/lib/utils";
  *   offer_plan (product_id) — « Offrir une période »: the founding agencies'
  *   free months, `founding_offer_months` of the plan chosen, once per agence.
  *   An offered plan is a plan: « Ouvrir » then accepts the agence on it.
+ *   delete (reason) — for good, with its annonces and files (src/lib/admin/deletion.ts);
+ *   a full admin only, refused while a paid period runs or a receipt waits.
  *
  * An agence asked for with its plan (the agence request, 2026-10-31) is one
  * decision: « Ouvrir » accepts the plan's receipt still waiting — the same
@@ -76,6 +79,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (from && !from.includes(shop.status)) {
     const why = refusal(action, shop.status);
     return NextResponse.json({ error: why.error, detail: t(`errors.${why.key}`) }, { status: 409 });
+  }
+
+  // Delete it for good (2026-11-03: inactive agences take room). A full
+  // admin's call — it cannot be undone — with a motif for the journal.
+  if (action === "delete") {
+    if (!canOpen(gate.scopes, "equipe")) {
+      return NextResponse.json({ error: "forbidden_section", section: "equipe", detail: t("errors.deleteFullAdmin") }, { status: 403 });
+    }
+    if (reason.length < 3) return NextResponse.json({ error: "reason_required", detail: t("errors.reason") }, { status: 400 });
+    const out = await deleteShop(admin, id);
+    if (!out.ok && "blocker" in out) {
+      const detail = out.blocker === "paid_plan"
+        ? t("errors.deletePaidPlan", { date: formatDate(out.until ?? now, requestLocale(req), "medium") })
+        : t("errors.deletePaymentPending");
+      return NextResponse.json({ error: out.blocker, detail }, { status: 409 });
+    }
+    if (!out.ok) return fail("shop_delete_failed", 500, "error" in out ? out.error : null);
+    logAction(req, gate.user, "admin.shop.delete", { id, name: out.name, listings: out.listings });
+    await audit(admin, by, {
+      action: "shop.delete", targetType: "shop", targetId: id,
+      before: { name: out.name, status: shop.status, listings: out.listings, photos: out.photos, documents: out.documents },
+      note: reason,
+    });
+    return NextResponse.json({ ok: true, deleted: { listings: out.listings, photos: out.photos, documents: out.documents } });
   }
 
   if (action === "offer_plan") {

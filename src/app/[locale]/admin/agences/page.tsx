@@ -122,7 +122,7 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
   );
 
   async function Detail({ shop }: { shop: ShopRow }) {
-    const [{ data: owner }, { data: docs }, plan, live, { count: members }, { data: payRow }, { data: planRows }, settings] = await Promise.all([
+    const [{ data: owner }, { data: docs }, plan, live, { count: members }, { data: payRow }, { data: planRows }, settings, { count: shopListings }] = await Promise.all([
       admin!.from("profiles").select("full_name, phone").eq("id", shop.owner_id).maybeSingle(),
       admin!.from("shop_documents").select("id, kind, storage_path, file_name, created_at").eq("shop_id", shop.id).order("created_at", { ascending: false }),
       activePlan(admin!, shop.id),
@@ -133,6 +133,8 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
       // What « Offrir une période » can offer: the plans on sale.
       admin!.from("products").select("id, slug, name_fr, listing_quota").eq("kind", "subscription").eq("is_active", true).order("price", { ascending: true }),
       getSettings(),
+      // What « Supprimer » takes with it: its annonces, whatever their status.
+      admin!.from("listings").select("id", { count: "exact", head: true }).eq("shop_id", shop.id),
     ]);
     const onSale = (planRows ?? []) as { id: string; slug: string; name_fr: string; listing_quota: number }[];
     const offerPlans = onSale.map((p) => ({
@@ -286,6 +288,7 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
             offerMonths={settings.founding_offer_months}
             seats={{ left: seats.left, total: seats.total }}
             request={request ? { plan: payPlanName, amount: amountText } : null}
+            listings={shopListings ?? 0}
           />
         </div>
       </section>

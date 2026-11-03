@@ -9,6 +9,7 @@ import { canOpen, type AdminSection } from "@/lib/admin/sections";
 import { audit } from "@/lib/admin/audit";
 import { otherFullAdmins } from "@/lib/admin/team";
 import { PLACE_STATUSES } from "@/lib/places/model";
+import { deleteAccount } from "@/lib/admin/deletion";
 
 /**
  * Everything an admin can do to one account.
@@ -18,6 +19,8 @@ import { PLACE_STATUSES } from "@/lib/places/model";
  *   POST { action: "grant_credits", product_id, quota?, months?, note? }
  *   POST { action: "grant_badge", months?, product_id?, note? }
  *   POST { action: "revoke_badge", reason }
+ *   POST { action: "delete", reason }                → erased, or anonymised when it paid
+ *                                                      (src/lib/admin/deletion.ts); a full admin only
  *
  * This consolidates `/api/admin/users/[id]` (role only) and
  * `/api/admin/sellers/[id]` (credits and badges) into one door, because they
@@ -38,6 +41,7 @@ const ACTION_SECTION: Record<string, AdminSection> = {
   grant_credits: "paiements",
   grant_badge: "paiements",
   revoke_badge: "paiements",
+  delete: "vendeurs",
 };
 
 /** v3 roles. `bank`, `bailiff` and `inspector` are dropped (PIVOT-PLAN D6). */
@@ -115,6 +119,34 @@ export async function POST(
       before: { role: profile.role, admin_scopes: profile.admin_scopes }, after: { role, admin_scopes: null },
     });
     return NextResponse.json({ ok: true, role });
+  }
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  // For good (2026-11-03: inactive accounts take room): its annonces and their
+  // photos go; the account is erased, or anonymised and locked when it paid —
+  // its payments and invoices stay. Cannot be undone: a full admin's call.
+  if (action === "delete") {
+    if (!canOpen(scopes, "equipe")) {
+      return NextResponse.json({ error: "forbidden_section", section: "equipe", detail: t("deleteFullAdmin") }, { status: 403 });
+    }
+    const reason = text(body.reason, 300);
+    if (!reason) return NextResponse.json({ error: "reason_required", detail: t("deleteReasonRequired") }, { status: 400 });
+    const out = await deleteAccount(admin, id, user.id);
+    if (!out.ok && "blocker" in out) {
+      const detail =
+        out.blocker === "owns_shop" ? t("deleteOwnsShop", { shop: out.shop ?? "" })
+        : out.blocker === "payment_pending" ? t("deletePaymentPending")
+        : out.blocker === "self" ? t("deleteSelf")
+        : t("deleteAdmin");
+      return NextResponse.json({ error: out.blocker, detail }, { status: 409 });
+    }
+    if (!out.ok) return fail("user_delete_failed", 500, "error" in out ? out.error : null);
+    logAction(req, user, "admin.user.delete", { id, mode: out.mode, listings: out.listings });
+    await audit(admin, user.id, {
+      action: "user.delete", targetType: "profile", targetId: id,
+      before: { name: out.name, role: profile.role, listings: out.listings, photos: out.photos }, after: { mode: out.mode }, note: reason,
+    });
+    return NextResponse.json({ ok: true, mode: out.mode, deleted: { listings: out.listings, photos: out.photos } });
   }
 
   // ── Ban ───────────────────────────────────────────────────────────────────
