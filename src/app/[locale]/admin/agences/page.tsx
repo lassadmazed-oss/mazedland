@@ -131,15 +131,18 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
       // The plan it chose: paid, its receipt waiting, or chosen with no receipt yet.
       admin!.from("payments").select("id, status, amount, metadata, provider, receipt_urls, receipt_url, receipt_uploaded_at").eq("kind", "subscription").in("status", ["pending", "pending_review", "captured"]).contains("metadata", { shop_id: shop.id }).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       // What « Offrir une période » can offer: the plans on sale.
-      admin!.from("products").select("id, name_fr, listing_quota").eq("kind", "subscription").eq("is_active", true).order("price", { ascending: true }),
+      admin!.from("products").select("id, slug, name_fr, listing_quota").eq("kind", "subscription").eq("is_active", true).order("price", { ascending: true }),
       getSettings(),
     ]);
-    const offerPlans = ((planRows ?? []) as { id: string; name_fr: string; listing_quota: number }[]).map((p) => ({
+    const onSale = (planRows ?? []) as { id: string; slug: string; name_fr: string; listing_quota: number }[];
+    const offerPlans = onSale.map((p) => ({
       id: p.id,
       label: t("offerPlanOption", { name: p.name_fr, quota: p.listing_quota }),
     }));
     // The founding places left, said in the offer dialog (src/lib/pro/founding.ts).
     const seats = await loadFoundingSeats(admin!, settings.founding_seats);
+    // Asked for with the founding offer (2026-11-03): no receipt, the plan it picked — « Ouvrir » gives it.
+    const foundingPick = shop.status === "pending" && shop.founding_plan ? onSale.find((p) => p.slug === shop.founding_plan) ?? null : null;
     const pay = payRow as {
       id: string; status: string; amount: number | string; metadata: { product_id?: string } | null;
       provider: string | null; receipt_urls: string[] | null; receipt_url: string | null; receipt_uploaded_at: string | null;
@@ -220,6 +223,17 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
               </div>
             )}
             {fixAsked && <p className="mt-2 border-s-2 border-[var(--tone-warn)] ps-2.5 text-[12px] font-semibold text-foreground" dir="auto">{t("requestFixAsked", { reason: fixAsked })}</p>}
+          </div>
+        )}
+        {!request && foundingPick && (
+          <div className="mt-3 rounded-xl bg-gold-faint p-3 ring-1 ring-gold-soft">
+            <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-[var(--gold)]">{t("foundingEyebrow")}</p>
+            <p className="mt-1 text-[13.5px] font-bold leading-snug text-foreground" dir="auto">
+              {t("foundingLine", { owner: owner?.full_name?.trim() || "—", name: shop.name, plan: foundingPick.name_fr, quota: foundingPick.listing_quota, months: settings.founding_offer_months })}
+            </p>
+            <p className="mt-0.5 text-[12px] text-muted">
+              {seats.left > 0 ? t("foundingSeatsLeft", { left: seats.left, total: seats.total }) : t("foundingSeatsGone", { total: seats.total })}
+            </p>
           </div>
         )}
         {!request && fixAsked && <p className="mt-3 border-s-2 border-[var(--tone-warn)] ps-3 text-[12.5px] text-foreground" dir="auto">{t("requestFixAsked", { reason: fixAsked })}</p>}

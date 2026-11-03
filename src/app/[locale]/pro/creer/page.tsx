@@ -4,7 +4,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { ShopForm, type ShopFormValues } from "@/components/pro/ShopForm";
-import { AgenceRequest, type RequestPlan } from "@/components/pro/AgenceRequest";
+import { AgenceRequest, type FoundingOffer, type RequestPlan } from "@/components/pro/AgenceRequest";
+import { foundingSignup } from "@/lib/pro/founding";
 import { getSettings } from "@/lib/settings/server";
 import { phoneForField, readableEmail } from "@/lib/pro/shopForm";
 import { fetchPayeeDetails, paymentsOpen, usablePayeeMethods } from "@/lib/payments";
@@ -27,6 +28,9 @@ export async function generateMetadata() {
  * … ويبعث مرة واحدة »): the agence, its plan and the plan's receipt, sent as
  * one request (AgenceRequest). The agence alone, as before, while that is
  * switched off (feature_pro_signup_plan) or nobody can be paid yet.
+ *
+ * While founding places last (2026-11-03) the same form asks for nothing to
+ * pay: the agence picks one of the offer's plans and sends its request.
  */
 export default async function CreateShopPage() {
   const locale = await getLocale();
@@ -42,13 +46,15 @@ export default async function CreateShopPage() {
   const admin = getServiceSupabase();
   const db = admin ?? supabase;
   const withPlan = settings.feature_pro_signup_plan && paymentsOpen(settings);
-  const [{ data: owned }, { data: profile }, { data: planRows }, payee] = await Promise.all([
+  const [{ data: owned }, { data: profile }, { data: planRows }, payee, offer] = await Promise.all([
     db.from("shops").select("id").eq("owner_id", user!.id).limit(1),
     db.from("profiles").select("full_name, phone, governorate").eq("id", user!.id).maybeSingle(),
     withPlan
       ? db.from("products").select("slug, name_fr, name_ar, description, description_ar, price, listing_quota").eq("kind", "subscription").eq("is_active", true).order("price")
       : Promise.resolve({ data: null }),
     withPlan ? fetchPayeeDetails(db) : Promise.resolve(null),
+    // While founding places last, nothing to pay: the agence picks the offer's plan (2026-11-03).
+    admin ? foundingSignup(admin, settings) : Promise.resolve(null),
   ]);
   if (owned && owned.length > 0) redirect(`/${locale}/pro/dashboard?shop=${owned[0].id}`);
   // A phone account's e-mail is a synthetic one on the signup domain — the
@@ -84,22 +90,39 @@ export default async function CreateShopPage() {
   const usable = payee ? usablePayeeMethods(payee) : { bank_transfer: false, d17: false };
   const methods = (["bank_transfer", "d17"] as PaymentProvider[]).filter((m) => usable[m]);
   const request = withPlan && plans.length > 0 && methods.length > 0 && payee;
+  const founding: FoundingOffer | null = offer
+    ? {
+        left: offer.seats.left,
+        total: offer.seats.total,
+        months: offer.months,
+        plans: offer.plans.map((p) => ({
+          slug: p.slug,
+          name: locale === "ar" && p.name_ar ? p.name_ar : p.name_fr,
+          price: p.price,
+          quota: p.quota,
+          description: null,
+        })),
+      }
+    : null;
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6 lg:py-10">
       <h1 className="text-[24px] font-extrabold tracking-tight">{t("title")}</h1>
-      <p className="mt-1 text-[13px] leading-relaxed text-muted">{t(request ? "subtitleWithPlan" : "subtitle")}</p>
+      <p className="mt-1 text-[13px] leading-relaxed text-muted">
+        {founding ? t("subtitleFounding", { months: founding.months }) : t(request ? "subtitleWithPlan" : "subtitle")}
+      </p>
       <div className="mt-6">
-        {request ? (
+        {founding || request ? (
           <AgenceRequest
             userId={user!.id}
             initial={initial}
             suggestedName={suggestedName}
             plans={plans}
-            payee={payee}
+            payee={payee || null}
             methods={methods}
             paymentId={randomUUID()}
             payLater={settings.pro_signup_pay_later}
+            founding={founding}
           />
         ) : (
           <ShopForm mode="create" suggestedName={suggestedName} initial={initial} />

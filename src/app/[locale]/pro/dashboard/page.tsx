@@ -120,6 +120,17 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
     ? await admin.from("products").select("name_fr, name_ar").eq("id", requestSent.metadata.product_id).maybeSingle()
     : { data: null };
   const requestPlanName = requestPlan ? (locale === "ar" && requestPlan.name_ar ? requestPlan.name_ar : requestPlan.name_fr) : "";
+  // Sent with the founding offer (2026-11-03): nothing to pay — the console gives the plan it picked when it opens.
+  const { data: foundingRow } = shop.status === "pending" && shop.founding_plan && !requestSent
+    ? await admin.from("products").select("name_fr, name_ar, listing_quota").eq("slug", shop.founding_plan).eq("kind", "subscription").maybeSingle()
+    : { data: null };
+  const foundingAsked = foundingRow
+    ? {
+        plan: locale === "ar" && foundingRow.name_ar ? (foundingRow.name_ar as string) : (foundingRow.name_fr as string),
+        quota: Number(foundingRow.listing_quota),
+        months: settings.founding_offer_months,
+      }
+    : null;
   // The console sent it back « à corriger »: the motif, while it still waits.
   const fixAsked = shop.status === "pending" && shop.rejection_reason ? shop.rejection_reason : null;
   const listings = (listingRows ?? []) as {
@@ -193,7 +204,9 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
           {/* A request in: it says what was sent, not « choose your plan ». */}
           {shop.status === "pending" && requestSent
             ? tStatus("hint.request", { plan: requestPlanName, amount: formatTND(Number(requestSent.amount), locale) })
-            : tStatus(`hint.${shop.status}`)}
+            : shop.status === "pending" && foundingAsked
+              ? tStatus("hint.founding", foundingAsked)
+              : tStatus(`hint.${shop.status}`)}
           {shop.rejection_reason && <span className="mt-1 block font-semibold" dir="auto">{shop.rejection_reason}</span>}
         </p>
       )}
@@ -228,7 +241,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
                   <Plus className="size-4" /> {t("publishForShop")}
                 </Link>
               )}
-              {!plan && !requestSent && can(role, "subscribe") && (shop.status === "approved" || shop.status === "pending") && (
+              {!plan && !requestSent && !foundingAsked && can(role, "subscribe") && (shop.status === "approved" || shop.status === "pending") && (
                 <Link href={href("abonnement") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
                   {t("choosePlan")}
                 </Link>
@@ -306,7 +319,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
 
       {tab === "equipe" && <TeamTab shopId={shop.id} role={role} />}
 
-      {tab === "abonnement" && <PlanTab shopId={shop.id} role={role} status={shop.status} current={plan} requestWaiting={requestSent ? requestPlanName : null} />}
+      {tab === "abonnement" && <PlanTab shopId={shop.id} role={role} status={shop.status} current={plan} requestWaiting={requestSent ? requestPlanName : null} founding={foundingAsked} />}
 
       {tab === "agence" && can(role, "edit_shop") && (
         <section className="mt-5">
@@ -535,7 +548,13 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
     );
   }
 
-  async function PlanTab({ shopId, role: actor, status, current: running, requestWaiting }: { shopId: string; role: ShopRole; status: string; current: Awaited<ReturnType<typeof activePlan>>; requestWaiting: string | null }) {
+  async function PlanTab({
+    shopId, role: actor, status, current: running, requestWaiting, founding,
+  }: {
+    shopId: string; role: ShopRole; status: string; current: Awaited<ReturnType<typeof activePlan>>; requestWaiting: string | null;
+    /** Asked for with the founding offer: nothing to pay before the console opens it. */
+    founding: { plan: string; quota: number; months: number } | null;
+  }) {
     const [{ data: planRows }, { data: periods }, open, ahead] = await Promise.all([
       admin!.from("products").select("slug, name_fr, name_ar, price, listing_quota, duration_days").eq("kind", "subscription").eq("is_active", true).order("price"),
       // Cancelled periods were moved into an upgrade (carryOver): not history.
@@ -644,7 +663,11 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
             );
           })}
         </div>
-        {status === "pending" && <p className="mazed-band-warm rounded-2xl px-4 py-3 text-[12.5px] font-semibold leading-relaxed text-foreground ring-1 ring-border">{requestWaiting !== null ? t("planRequestWaiting", { plan: requestWaiting }) : t("planPayFirst")}</p>}
+        {status === "pending" && (
+          <p className="mazed-band-warm rounded-2xl px-4 py-3 text-[12.5px] font-semibold leading-relaxed text-foreground ring-1 ring-border">
+            {requestWaiting !== null ? t("planRequestWaiting", { plan: requestWaiting }) : founding ? t("planFoundingWaiting", founding) : t("planPayFirst")}
+          </p>
+        )}
         {status !== "pending" && status !== "approved" && <p className="text-[12px] text-muted">{t("planAfterApproval")}</p>}
         <p className="text-[11.5px] leading-snug text-muted">{t("planHow")}</p>
         {(periods ?? []).length > 0 && (

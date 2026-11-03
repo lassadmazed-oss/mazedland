@@ -160,10 +160,12 @@ export type ShopRow = {
   rejection_reason: string | null;
   verified_at: string | null;
   created_at: string;
+  /** The plan picked with the founding offer at sign-up (0209), or null. */
+  founding_plan: string | null;
 };
 
 export const SHOP_COLUMNS =
-  "id, owner_id, slug, name, kind, description, logo_path, cover_path, governorate, city, phone, email, website, hours, legal_name, legal_id, status, rejection_reason, verified_at, created_at";
+  "id, owner_id, slug, name, kind, description, logo_path, cover_path, governorate, city, phone, email, website, hours, legal_name, legal_id, status, rejection_reason, verified_at, created_at, founding_plan";
 
 /** The shops this person belongs to, with their role. */
 export async function membershipsOf(admin: Admin, userId: string): Promise<{ shop: ShopRow; role: ShopRole }[]> {

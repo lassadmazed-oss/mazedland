@@ -144,6 +144,9 @@ export const SETTINGS = {
   // The plan the offer gives (the slug of an offer on sale). With feature_founding_auto, « Ouvrir »
   // gives it by itself to an agence that has no plan, while places last (src/lib/pro/founding.ts).
   founding_offer_plan: { group: "publication", type: "text", default: "pro-pro", max: 40, ltr: true },
+  // The plans an agence picks from when it signs up while places last (2026-11-03, the owner:
+  // « الوكالة تختار » 40 or 120 annonces): no payment, « Ouvrir » gives the one it picked.
+  founding_offer_choices: { group: "publication", type: "list", default: ["pro-pro", "pro-business"], maxItems: 3, maxLen: 40, lower: true },
   // « Envoyer sans payer » under the agence request: the agence comes alone,
   // for the founding offer the console then gives (« Offrir une période »).
   pro_signup_pay_later: { group: "publication", type: "bool", default: true },
