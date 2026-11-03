@@ -37,10 +37,14 @@ import {
 export function AutoRail({
   children,
   arrows = false,
+  grid = false,
 }: {
   children: React.ReactNode;
   /** Previous / next buttons over the rail's edges, from lg up. */
   arrows?: boolean;
+  /** Below lg, a two-column grid instead of a rail: nothing scrolls there, so
+   *  the timer finds nothing to move and the arrows stay hidden anyway. */
+  grid?: boolean;
 }) {
   const t = useTranslations("landing.carousel");
   const autoplay = useSetting("home_rail_autoplay");
@@ -179,7 +183,11 @@ export function AutoRail({
       <div
         ref={railRef}
         id={railId}
-        className="snap-rail hide-scrollbar mt-4 flex gap-3 overflow-x-auto px-4 pb-2"
+        className={
+          grid
+            ? "snap-rail hide-scrollbar mt-4 grid grid-cols-2 gap-x-3 gap-y-5 px-4 lg:flex lg:gap-3 lg:overflow-x-auto lg:pb-2"
+            : "snap-rail hide-scrollbar mt-4 flex gap-3 overflow-x-auto px-4 pb-2"
+        }
       >
         {children}
       </div>

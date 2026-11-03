@@ -5,9 +5,9 @@ import { catalogueHrefFor } from "@/lib/catalog/browse";
 /**
  * Which rails of annonces the home page shows, in which order, holding what.
  *
- * Both layouts — the phone page and HomeDesktop — render this one list, so the
- * two cannot disagree about what a rail holds or when it disappears. Pure: the
- * feed comes in, the rails come out, and `rails.test.ts` covers the rules.
+ * The home page renders this one list at every width, so the phone and the
+ * desktop cannot disagree about what a rail holds or when it disappears. Pure:
+ * the feed comes in, the rails come out, and `rails.test.ts` covers the rules.
  *
  * The rules:
  *   - A rail the console has switched off (`home_rail_*`) is not there: the

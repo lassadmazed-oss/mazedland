@@ -25,8 +25,7 @@ export function IntentChooser({ layout = "row" }: { layout?: "compact" | "hero" 
   const t = useTranslations("home");
   const [rentOpen, setRentOpen] = useState(false);
   const hero = layout === "hero";
-  // The home renders this twice (the phone tree and the desktop tree), so the
-  // panel the button controls needs an id of its own in each.
+  // The panel the button controls gets an id of its own in each chooser.
   const panelId = `intent-rent-${useId()}`;
 
   if (layout === "row") {

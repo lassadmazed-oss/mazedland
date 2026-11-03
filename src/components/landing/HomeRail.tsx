@@ -9,80 +9,63 @@ import type { HomeRail } from "@/lib/home/rails";
 
 /**
  * One rail of the home page — heading, « Tout voir », and the cards moving by
- * themselves — in either layout. The phone page and HomeDesktop each had their
- * own copy of this markup for three rails; with ten, one copy is what keeps
- * them looking like the same site.
+ * themselves — at every width. The page is one tree since 2026-11-03: the
+ * phone and the desktop used to each get a copy of every rail, and a phone
+ * downloaded, parsed and hydrated both.
  *
- * `layout` carries the only differences there were: the card width, the title
- * size, the spacing, and the arrows, which only a mouse needs.
+ * What changes at `lg` is CSS only: the card width, the title size, the
+ * spacing, and the arrows, which only a mouse needs (AutoRail shows them
+ * from lg up). `grid` turns the rail into a two-column grid below lg — the
+ * phone's « À découvrir » — and leaves it a rail above.
  */
-
-type Layout = "phone" | "desktop";
-
-const SIZES: Record<Layout, { section: string; card: string; title: string; sub: string; pad: string }> = {
-  phone: {
-    section: "mt-10",
-    // Wide enough for the 4:3 photo to be a photo (260 × 195) and for the
-    // next card to peek in from the edge, which is what says « swipe ».
-    card: "w-[264px]",
-    title: "text-[21px]",
-    sub: "text-[12.5px]",
-    pad: "px-4",
-  },
-  desktop: {
-    section: "mt-16",
-    card: "w-[300px]",
-    title: "text-[24px]",
-    sub: "text-[13.5px]",
-    pad: "px-0",
-  },
-};
 
 export async function HomeRailSection({
   rail,
-  layout,
   savedIds,
   loggedIn,
+  grid = false,
 }: {
   rail: HomeRail;
-  layout: Layout;
   savedIds: Set<string>;
   loggedIn: boolean;
+  /** Below lg, the cards on a 2-up grid instead of a rail. */
+  grid?: boolean;
 }) {
   const t = await getTranslations();
   const isRTL = isRtl(await getLocale());
-  const size = SIZES[layout];
-  // Both layouts are in the page at once (CSS shows one), so the id says which.
-  const headingId = `home-rail-${layout}-${rail.key}`;
+  const headingId = `home-rail-${rail.key}`;
 
   return (
-    <section className={size.section} aria-labelledby={headingId}>
+    <section className="mt-10 lg:mt-16" aria-labelledby={headingId}>
       <RailHeading
         id={headingId}
-        layout={layout}
         isRTL={isRTL}
         eyebrow={t(`home.rails.${rail.key}.eyebrow`)}
         title={t(`home.rails.${rail.key}.title`)}
         sub={t(`home.rails.${rail.key}.sub`)}
         count={rail.rows.length}
+        // The phone's grid heading never had one; the desktop's rail does.
+        countFromLg={grid}
         href={rail.href}
         seeAllLabel={t("home.seeAll")}
       />
       {/* Before the rail, never inside it: the rail measures its children. */}
       <Impressions ids={rail.rows.map((a) => a.id)} surface={`home_${rail.key}`} />
-      <AutoRail arrows={layout === "desktop"}>
+      <AutoRail arrows grid={grid}>
         {rail.rows.map((a) => (
-          <div key={a.id} className={`${size.card} shrink-0 snap-start`}>
+          // Wide enough on a phone for the 4:3 photo to be a photo (260 × 195)
+          // and for the next card to peek in from the edge, which says « swipe ».
+          <div key={a.id} className={grid ? "lg:w-[300px] lg:shrink-0 lg:snap-start" : "w-[264px] shrink-0 snap-start lg:w-[300px]"}>
             <AnnonceCard
               listing={a}
               saved={savedIds.has(a.id)}
               loggedIn={loggedIn}
-              sizes={layout === "desktop" ? "300px" : "264px"}
+              sizes={grid ? "(min-width: 1024px) 300px, 45vw" : "(min-width: 1024px) 300px, 264px"}
             />
           </div>
         ))}
         {/* Room after the last card, so it does not sit on the screen's edge. */}
-        <div className="w-1 shrink-0" />
+        <div className={grid ? "hidden w-1 shrink-0 lg:block" : "w-1 shrink-0"} />
       </AutoRail>
     </section>
   );
@@ -90,47 +73,47 @@ export async function HomeRailSection({
 
 /**
  * A rail's heading: a small eyebrow, the title with its count, a line under
- * it, and « Tout voir » at the end. Also heads the phone's « À découvrir » grid.
+ * it, and « Tout voir » at the end.
  */
-export function RailHeading({
+function RailHeading({
   id,
-  layout,
   isRTL,
   eyebrow,
   title,
   sub,
   count,
+  countFromLg = false,
   href,
   seeAllLabel,
 }: {
   id?: string;
-  layout: Layout;
   isRTL: boolean;
   eyebrow?: string;
   title: string;
   sub?: string;
   count?: number;
+  /** The count from lg up only. */
+  countFromLg?: boolean;
   /** The catalogue search the section is the first cards of. */
   href: string;
   seeAllLabel: string;
 }) {
-  const size = SIZES[layout];
   const arabic = isRTL ? "font-arabic" : "";
   return (
-    <div className={`flex items-end justify-between gap-3 ${size.pad}`}>
+    <div className="flex items-end justify-between gap-3 px-4 lg:px-0">
       <div className="min-w-0">
         {eyebrow && (
           <p className={`mb-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-subtle ${isRTL ? "font-arabic" : ""}`}>
             {eyebrow}
           </p>
         )}
-        <h2 id={id} className={`mazed-h2 inline-flex items-baseline gap-2 text-foreground ${size.title} ${arabic}`}>
+        <h2 id={id} className={`mazed-h2 inline-flex items-baseline gap-2 text-[21px] text-foreground lg:text-[24px] ${arabic}`}>
           {title}
           {count !== undefined && (
-            <span className="mazed-tabular text-[13px] font-bold text-subtle">{count}</span>
+            <span className={`mazed-tabular text-[13px] font-bold text-subtle ${countFromLg ? "hidden lg:inline" : ""}`}>{count}</span>
           )}
         </h2>
-        {sub && <p className={`mt-1 ${size.sub} leading-snug text-muted ${arabic}`}>{sub}</p>}
+        {sub && <p className={`mt-1 text-[12.5px] leading-snug text-muted lg:text-[13.5px] ${arabic}`}>{sub}</p>}
       </div>
       <Link
         href={href as "/annonces"}
