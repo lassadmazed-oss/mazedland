@@ -62,6 +62,9 @@ export async function alertText(
   lang: AppLocale,
 ): Promise<{ text: string; unicode: boolean }> {
   const t = await getTranslations({ locale: lang, namespace: "adminServices.sms" });
+  const others = Array.isArray(s.auto_detail?.otherPaidTeams)
+    ? (s.auto_detail.otherPaidTeams as unknown[]).filter((x): x is string => typeof x === "string")
+    : [];
   const vars = {
     name: s.name,
     provider: s.provider,
@@ -69,10 +72,15 @@ export async function alertText(
     days: Math.abs(days ?? 0),
     balance: String(s.auto_detail?.balance ?? ""),
     status: String(s.auto_detail?.block ?? s.auto_detail?.status ?? ""),
+    teams: others.join(", "),
   };
   const dated = stage === "lead" || stage === "day_before" || stage === "day";
   const body = `${t(`body.${stage}`, vars)}${dated ? ` ${t(s.auto_renew ? "action.auto" : "action.manual")}` : ""}`;
-  return toSmsText({ brand: BRAND, title: t(`title.${stage}`, vars), body, url: s.billing_url ?? consoleUrl(lang) });
+  // A second paying team is fixed on that team's billing page, not on the watched one.
+  const url = stage === "duplicate" && others[0]
+    ? `https://vercel.com/${encodeURIComponent(others[0])}/~/settings/billing`
+    : (s.billing_url ?? consoleUrl(lang));
+  return toSmsText({ brand: BRAND, title: t(`title.${stage}`, vars), body, url });
 }
 
 type Db = SupabaseClient;

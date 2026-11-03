@@ -24,7 +24,8 @@ export type ServiceCurrency = (typeof SERVICE_CURRENCIES)[number];
 export const AUTO_SOURCES = ["vercel", "supabase", "rdap", "winsms", "anthropic"] as const;
 export type AutoSource = (typeof AUTO_SOURCES)[number];
 
-export const AUTO_STATUSES = ["ok", "unpaid", "blocked", "low", "error"] as const;
+/** « duplicate »: another Vercel team on the same account pays too (0210). */
+export const AUTO_STATUSES = ["ok", "unpaid", "blocked", "low", "duplicate", "error"] as const;
 export type AutoStatus = (typeof AUTO_STATUSES)[number];
 
 /** The lead times the console offers (services_lead_days has the same). */
@@ -67,7 +68,7 @@ export type PaidService = {
  * a date. `name` empty = the admin names it (a domain is its own name).
  */
 export const PROVIDER_PRESETS = [
-  { key: "vercel", provider: "Vercel", kind: "hosting", name: "Vercel Pro", cycle: "monthly", currency: "USD", autoRenew: true, billingUrl: "https://vercel.com/lassad/~/settings/billing" },
+  { key: "vercel", provider: "Vercel", kind: "hosting", name: "Vercel Pro", cycle: "monthly", currency: "USD", autoRenew: true, billingUrl: "https://vercel.com/lassad-757960fc/~/settings/billing" },
   { key: "supabase", provider: "Supabase", kind: "database", name: "Supabase Pro", cycle: "monthly", currency: "USD", autoRenew: true, billingUrl: "https://supabase.com/dashboard/org/_/billing" },
   { key: "hostinger", provider: "Hostinger", kind: "domain", name: "", cycle: "yearly", currency: "USD", autoRenew: true, billingUrl: "https://hpanel.hostinger.com/domains" },
   { key: "winsms", provider: "WinSMS", kind: "sms", name: "WinSMS", cycle: "prepaid", currency: "TND", autoRenew: false, billingUrl: "https://www.winsmspro.com/sms/" },
@@ -87,7 +88,7 @@ export const PROVIDER_PRESETS = [
 }[];
 
 /** Where a service stands, worst first. */
-export const SERVICE_STATES = ["blocked", "unpaid", "overdue", "today", "soon", "low", "unknown", "error", "ok", "paused"] as const;
+export const SERVICE_STATES = ["blocked", "unpaid", "duplicate", "overdue", "today", "soon", "low", "unknown", "error", "ok", "paused"] as const;
 export type ServiceState = (typeof SERVICE_STATES)[number];
 
 /** Whole days from `from` to `to` (both YYYY-MM-DD); negative once `to` is past. */
@@ -112,6 +113,8 @@ export function serviceState(s: Judged, today: string, defaultLead: number): { s
   if (!s.active) return { state: "paused", days };
   if (s.auto_status === "blocked") return { state: "blocked", days };
   if (s.auto_status === "unpaid") return { state: "unpaid", days };
+  // Money already gone twice outranks a renewal date.
+  if (s.auto_status === "duplicate") return { state: "duplicate", days };
   if (days !== null) {
     if (days < 0) return { state: "overdue", days };
     if (days === 0) return { state: "today", days };
@@ -123,10 +126,10 @@ export function serviceState(s: Judged, today: string, defaultLead: number): { s
   return { state: "ok", days };
 }
 
-export type AlertStage = "lead" | "day_before" | "day" | "overdue" | "unpaid" | "blocked" | "low";
+export type AlertStage = "lead" | "day_before" | "day" | "overdue" | "unpaid" | "blocked" | "low" | "duplicate";
 
 /** Stages that last as long as the provider says so (cycle « open »). */
-export const CONDITION_STAGES = ["unpaid", "blocked", "low"] as const satisfies readonly AlertStage[];
+export const CONDITION_STAGES = ["unpaid", "blocked", "low", "duplicate"] as const satisfies readonly AlertStage[];
 
 /** Sent at once, quiet hours or not (services_urgent_at_night), and past the daily cap. */
 export const URGENT_STAGES: ReadonlySet<AlertStage> = new Set(["unpaid", "blocked"]);
@@ -167,6 +170,8 @@ export function dueAlerts(
     } else if (days >= 2 && days <= lead) at("lead");
   }
   if (s.auto_status === "low") out.push({ stage: "low", cycle: "open", days: null });
+  // Another team paying does not stop the site: the reminders still go.
+  if (s.auto_status === "duplicate") out.push({ stage: "duplicate", cycle: "open", days: null });
   return out;
 }
 
