@@ -97,7 +97,7 @@ statement, and the duplicate was refunded through Vercel's support.
 | **The team that runs the sites** | « lassad », slug **`lassad-757960fc`**, ID **`team_rHVYh09RvuFbxkZ0WSpRXtEG`** |
 | Its projects | mazedland (mazed.immo), mazed-auto (mazedauto.com), agrized, al-labina |
 | Its plan | Pro, 20 USD a month, card on file, renews on the 3rd |
-| Old team, do not use | also named « lassad », slug `lassad`, ID `team_DNguYjDcPZfEF2PCrJH5zowJ`: no projects since 2026-11-03; still holds the domain entries agrized.site and allabina.site until they are moved; to be downgraded to Hobby after that |
+| Old team, do not use | also named « lassad », slug `lassad`, ID `team_DNguYjDcPZfEF2PCrJH5zowJ`: no projects since 2026-11-03; **Hobby (free) since 2026-11-03**, its 20 USD for November refunded (HQDHJIOA-0004). It still lists the domain entries agrized.site and allabina.site. The sites work as they are; to tidy up, move them to `lassad-757960fc` (Domains → ⋯ → Move teams). Never upgrade it again |
 | Saif's own Vercel account | holds nothing of these sites. Paying there does nothing (it was tried on 2026-11-01) |
 
 Both teams are named « lassad ». **Tell them apart by slug or ID, never by name**:
