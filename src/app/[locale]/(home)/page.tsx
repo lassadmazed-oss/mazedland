@@ -39,6 +39,12 @@ import {
 // serverless cold start — instead of rendering ~200 cards on every request.
 // The rails move in the browser (AutoRail), so they change none of this.
 export const revalidate = 60;
+// And a build that fails, naming the API, the day something in this tree reads
+// the request (headers(), cookies(), searchParams): Next would otherwise render
+// the page on every visit without a word. From 2026-10-30 to 2026-11-03 the
+// root not-found's headers() did exactly that — home 0.6–1.7 s instead of the
+// CDN (src/app/not-found.tsx).
+export const dynamic = "error";
 
 /** The home page's own address and its twin (the layout no longer sets one for every page). */
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
