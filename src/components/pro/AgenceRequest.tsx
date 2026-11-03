@@ -24,8 +24,13 @@ export type RequestPlan = {
   description: string | null;
 };
 
+/** The founding offer while places last (src/lib/pro/founding.ts): nothing to pay, a plan to pick. */
+export type FoundingOffer = { left: number; total: number; months: number; plans: RequestPlan[] };
+
 type Step = 0 | 1 | 2;
 const STEPS = ["agence", "plan", "pay"] as const;
+// With the founding offer there is no payment step: the agence, then its offer.
+const FOUNDING_STEPS = ["agence", "offer"] as const;
 
 /** What a reload keeps: the phone often drops the page while the payer is in the D17 or bank app. */
 type Draft = { v: 1; values: ShopFormValues; plan: string | null; provider: PaymentProvider | null; paymentId: string; step: Step };
@@ -63,6 +68,11 @@ function writeDraft(key: string, d: Draft | null) {
  * comes back on the same request and the same reference. The receipt itself
  * goes up when the request is sent, so an abandoned form leaves nothing in
  * the bucket.
+ *
+ * While the founding offer has places (2026-11-03, the owner: the first 50
+ * agences pay nothing, and « الوكالة تختار » 40 or 120 annonces), the plan
+ * step offers its plans, free, and sends the request from there: no payment
+ * step at all. The console's « Ouvrir » then gives the plan picked.
  */
 export function AgenceRequest({
   userId,
@@ -73,18 +83,21 @@ export function AgenceRequest({
   methods,
   paymentId: freshId,
   payLater,
+  founding,
 }: {
   userId: string;
   initial: ShopFormValues;
   suggestedName?: string;
   plans: RequestPlan[];
-  payee: PayeeDetails;
-  /** The methods whose details are real (usablePayeeMethods); never empty here. */
+  /** Null while nobody can be paid — only the founding offer is then possible. */
+  payee: PayeeDetails | null;
+  /** The methods whose details are real (usablePayeeMethods); empty only with the founding offer. */
   methods: PaymentProvider[];
   /** A new payment id, made by the page: the transfer's reference. */
   paymentId: string;
   /** « Envoyer sans payer » is offered (pro_signup_pay_later). */
   payLater: boolean;
+  founding?: FoundingOffer | null;
 }) {
   const t = useTranslations("pro.request");
   const tc = useTranslations("checkout");
@@ -97,12 +110,15 @@ export function AgenceRequest({
   const [v, setV] = useState<ShopFormValues>(() => shopFormStart(initial));
   const [step, setStep] = useState<Step>(0);
   const [plan, setPlan] = useState<string | null>(null);
-  const [provider, setProvider] = useState<PaymentProvider>(methods[0]);
+  const [provider, setProvider] = useState<PaymentProvider | null>(methods[0] ?? null);
   const [paymentId, setPaymentId] = useState(freshId);
   const [files, setFiles] = useState<File[]>([]);
   const [imageBusy, setImageBusy] = useState(false);
   const [sending, setSending] = useState<null | "receipts" | "request">(null);
-  const [sent, setSent] = useState<null | { id: string; paid: boolean }>(null);
+  const [sent, setSent] = useState<null | { id: string; paid: boolean; founding: boolean }>(null);
+  // The plans this request picks from: the founding offer's, free, or the paid ones.
+  const choices = founding?.plans ?? plans;
+  const steps = founding ? FOUNDING_STEPS : STEPS;
   // Remounts the fields once a kept draft is put back, so their own state
   // (a typed city, « Plus d'informations » open) follows the restored values.
   const [fieldsKey, setFieldsKey] = useState(0);
@@ -119,10 +135,11 @@ export function AgenceRequest({
     if (d) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronising with an external system (the device's storage), which is what an effect is for.
       setV(shopFormStart({ ...initial, ...d.values }));
-      if (d.plan && plans.some((p) => p.slug === d.plan)) setPlan(d.plan);
+      if (d.plan && choices.some((p) => p.slug === d.plan)) setPlan(d.plan);
       if (d.provider && methods.includes(d.provider)) setProvider(d.provider);
       setPaymentId(d.paymentId);
-      setStep(d.step === 2 && !d.plan ? 1 : d.step);
+      // No payment step with the founding offer, nor without a plan to pay.
+      setStep(d.step === 2 && (steps.length < 3 || !d.plan) ? 1 : d.step);
       setFieldsKey((k) => k + 1);
       if (d.values.name?.trim() && !toastShown.current) {
         toastShown.current = true;
@@ -139,18 +156,20 @@ export function AgenceRequest({
     writeDraft(draftKey, { v: 1, values: v, plan, provider, paymentId, step });
   }, [restored, draftKey, v, plan, provider, paymentId, step, sent]);
 
-  const chosen = plans.find((p) => p.slug === plan) ?? null;
+  const chosen = choices.find((p) => p.slug === plan) ?? null;
   const money = (n: number) => `${formatTND(n, locale)} ${t("tnd")}`;
 
   // The checkout's own instructions, for the plan's price and this request's reference.
   const instructions = useMemo(
     () =>
-      paymentInstructions({
-        paymentId,
-        amountTND: chosen?.price ?? 0,
-        payee,
-        t: (key, values) => tI(key, values),
-      }).filter((m) => methods.includes(m.value)),
+      payee
+        ? paymentInstructions({
+            paymentId,
+            amountTND: chosen?.price ?? 0,
+            payee,
+            t: (key, values) => tI(key, values),
+          }).filter((m) => methods.includes(m.value))
+        : [],
     [paymentId, chosen?.price, payee, methods, tI],
   );
   const active = instructions.find((m) => m.value === provider) ?? instructions[0];
@@ -179,10 +198,16 @@ export function AgenceRequest({
     if (accepted.length) setFiles((s) => [...s, ...accepted]);
   }
 
-  async function send(withPayment: boolean) {
+  /** « pay »: the plan and its receipt; « alone »: the agence only; « founding »: the offer's plan, nothing to pay. */
+  async function send(how: "pay" | "alone" | "founding") {
     if (sending) return;
+    const withPayment = how === "pay";
     if (withPayment && (!chosen || files.length === 0)) {
       toast(t(chosen ? "receiptNeeded" : "planNeeded"), "warning");
+      return;
+    }
+    if (how === "founding" && !chosen) {
+      toast(t("planNeeded"), "warning");
       return;
     }
     let paths: string[] = [];
@@ -204,6 +229,7 @@ export function AgenceRequest({
         body: JSON.stringify({
           ...v,
           ...(withPayment ? { plan, provider, receipt_paths: paths, payment_id: paymentId } : {}),
+          ...(how === "founding" ? { founding_plan: plan } : {}),
         }),
       });
       const j = (await res.json().catch(() => ({}))) as { id?: string; error?: string; detail?: string };
@@ -214,13 +240,13 @@ export function AgenceRequest({
       }
       writeDraft(draftKey, null);
       trackEvent("agence_request", {
-        plan: withPayment ? plan ?? undefined : "none",
-        method: withPayment ? provider : "none",
+        plan: how === "alone" ? "none" : plan ?? undefined,
+        method: withPayment ? provider ?? undefined : how === "founding" ? "founding" : "none",
         ...(withPayment && chosen ? { value: chosen.price, currency: "TND" } : {}),
       });
       // The receipt went with the request: a payment handed in, counted here.
-      if (withPayment) trackEvent("payment_submit", { kind: "subscription", method: provider, where: "signup" });
-      setSent({ id: j.id, paid: withPayment });
+      if (withPayment) trackEvent("payment_submit", { kind: "subscription", method: provider ?? undefined, where: "signup" });
+      setSent({ id: j.id, paid: withPayment, founding: how === "founding" });
       window.scrollTo({ top: 0 });
     } catch {
       removeReceipts(paths);
@@ -232,7 +258,12 @@ export function AgenceRequest({
 
   if (sent) {
     const bold = (chunks: React.ReactNode) => <span className="font-bold text-foreground" dir="auto">{chunks}</span>;
-    const steps = sent.paid ? ["review", "notify", "open"] : ["reviewAlone", "notify", "plan"];
+    const after = sent.paid
+      ? ["review", "notify", "open"]
+      : sent.founding
+        ? ["reviewAlone", "foundingOpen", "foundingEnd"]
+        : ["reviewAlone", "notify", "plan"];
+    const months = founding?.months ?? 0;
     return (
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">
         <div className="flex flex-col items-center px-6 pt-8 pb-6 text-center">
@@ -243,14 +274,16 @@ export function AgenceRequest({
           <p className="mt-1.5 text-[13px] leading-relaxed text-muted">
             {sent.paid && chosen
               ? t.rich("sentBody", { name: v.name.trim(), plan: chosen.name, amount: money(chosen.price), b: bold })
-              : t.rich("sentBodyAlone", { name: v.name.trim(), b: bold })}
+              : sent.founding && chosen
+                ? t.rich("sentBodyFounding", { name: v.name.trim(), plan: chosen.name, quota: chosen.quota, months, b: bold })
+                : t.rich("sentBodyAlone", { name: v.name.trim(), b: bold })}
           </p>
         </div>
         <ol className="space-y-3 border-t border-border px-6 py-5">
-          {steps.map((k, i) => (
+          {after.map((k, i) => (
             <li key={k} className="flex items-start gap-3">
               <span className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-gold-faint text-[11px] font-extrabold text-gold ring-1 ring-gold-soft">{i + 1}</span>
-              <span className="text-[12.5px] leading-relaxed text-muted">{t(`sentSteps.${k}`)}</span>
+              <span className="text-[12.5px] leading-relaxed text-muted">{t(`sentSteps.${k}`, { months })}</span>
             </li>
           ))}
         </ol>
@@ -269,8 +302,8 @@ export function AgenceRequest({
   return (
     <div className="space-y-5">
       {/* Where the request stands; a step already done is a tap away. */}
-      <ol className="grid grid-cols-3 gap-1.5" aria-label={t("stepsLabel")}>
-        {STEPS.map((k, i) => {
+      <ol className={cn("grid gap-1.5", founding ? "grid-cols-2" : "grid-cols-3")} aria-label={t("stepsLabel")}>
+        {steps.map((k, i) => {
           const reachable = i < step || (i === 1 && v.name.trim().length > 1 && !!v.governorate) || (i === 2 && !!chosen && step >= 1);
           return (
             <li key={k}>
@@ -315,7 +348,58 @@ export function AgenceRequest({
         </form>
       )}
 
-      {step === 1 && (
+      {step === 1 && founding && (
+        <section className="space-y-4">
+          {/* The founding offer: what it gives, how many places are left, nothing to pay. */}
+          <div className="rounded-2xl bg-gold-faint p-4 ring-1 ring-gold-soft">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-gold">{t("foundingEyebrow")}</p>
+            <h2 className="mt-1 text-[18px] font-extrabold leading-snug tracking-tight text-foreground">{t("foundingTitle", { months: founding.months })}</h2>
+            <p className="mt-1 text-[12.5px] font-semibold text-foreground">{t("foundingLeft", { left: founding.left, total: founding.total })}</p>
+          </div>
+          <p className="text-[13.5px] font-bold text-foreground">{t("foundingPick")}</p>
+          <div role="radiogroup" aria-label={t("foundingPick")} className="grid gap-3 sm:grid-cols-2">
+            {founding.plans.map((p) => {
+              const on = p.slug === plan;
+              return (
+                <button
+                  key={p.slug}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => {
+                    setPlan(p.slug);
+                    trackEvent("plan_choose", { plan: p.slug, where: "signup_founding" });
+                  }}
+                  className={cn(
+                    "relative flex flex-col rounded-2xl border-2 p-4 text-start transition",
+                    on ? "border-[var(--gold)] bg-gold-faint" : "border-border bg-surface hover:border-gold-soft",
+                  )}
+                >
+                  {on && (
+                    <span className="absolute end-3 top-3 inline-flex size-5 items-center justify-center rounded-full bg-[var(--gold)] text-[var(--background)]">
+                      <Check className="size-3" strokeWidth={3} />
+                    </span>
+                  )}
+                  <span className="text-[15px] font-extrabold text-foreground">{p.name}</span>
+                  <span className="mazed-tabular mt-1.5 text-[24px] font-extrabold leading-tight text-foreground">{t("quota", { count: p.quota })}</span>
+                  <span className="mt-0.5 text-[12.5px] font-bold text-gold">{t("foundingFree", { months: founding.months })}</span>
+                  <span className="mt-2 text-[11.5px] leading-relaxed text-muted">{t("foundingThen", { amount: money(p.price) })}</span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="rounded-2xl bg-surface-2 px-4 py-3 text-[12px] leading-relaxed text-muted ring-1 ring-border">{t("foundingNote", { months: founding.months })}</p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => go(0)} disabled={sending !== null} className={backBtn}>{t("back")}</button>
+            <button type="button" onClick={() => void send("founding")} disabled={sending !== null} className={cn(nextBtn, "flex-1 sm:flex-none")}>
+              {sending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" strokeWidth={3} />}
+              {sending ? t("sendingRequest") : t("sendFounding")}
+            </button>
+          </div>
+        </section>
+      )}
+
+      {step === 1 && !founding && (
         <section className="space-y-4">
           <div>
             <h2 className="text-[17px] font-extrabold tracking-tight">{t("planTitle")}</h2>
@@ -368,7 +452,7 @@ export function AgenceRequest({
         </section>
       )}
 
-      {step === 2 && chosen && active && (
+      {step === 2 && !founding && chosen && active && (
         <section className="space-y-4">
           {/* The request as it will reach the console. */}
           <div className="rounded-2xl border border-border bg-surface p-4">
@@ -384,7 +468,7 @@ export function AgenceRequest({
           </div>
 
           <StepTitle n={1} title={t("stepMethod")} />
-          <PayMethodPicker instructions={instructions} provider={provider} onProvider={setProvider} />
+          <PayMethodPicker instructions={instructions} provider={active.value} onProvider={setProvider} />
           <StepTitle n={2} title={t("stepPay", { amount: money(chosen.price) })} />
           <PayeeFields active={active} />
           <StepTitle n={3} title={t("stepReceipt")} />
@@ -425,7 +509,7 @@ export function AgenceRequest({
           <p className="rounded-2xl bg-surface-2 px-4 py-3 text-[12px] leading-relaxed text-muted ring-1 ring-border">{t("sendHint")}</p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => go(1)} disabled={sending !== null} className={backBtn}>{t("back")}</button>
-            <button type="button" onClick={() => void send(true)} disabled={sending !== null || files.length === 0} className={cn(nextBtn, "flex-1 sm:flex-none")}>
+            <button type="button" onClick={() => void send("pay")} disabled={sending !== null || files.length === 0} className={cn(nextBtn, "flex-1 sm:flex-none")}>
               {sending ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
               {sending === "receipts" ? t("sendingReceipts") : sending === "request" ? t("sendingRequest") : t("send")}
             </button>
@@ -436,7 +520,7 @@ export function AgenceRequest({
               type="button"
               disabled={sending !== null}
               onClick={() => {
-                if (window.confirm(t("payLaterConfirm"))) void send(false);
+                if (window.confirm(t("payLaterConfirm"))) void send("alone");
               }}
               className="tap-target mx-auto block text-[12px] font-semibold text-muted underline underline-offset-2 hover:text-foreground disabled:opacity-50"
             >

@@ -10,6 +10,7 @@ node scripts/backup-db.mjs
 
 | Migration | Rollback | What is lost |
 |---|---|---|
+| 0209 founding plan | `0209_founding_plan.down.sql` | which plan each waiting agence picked with the founding offer (« Ouvrir » then gives `founding_offer_plan`); roll the code back first |
 | 0208 articles (guides) | `0208_articles.down.sql` | every guide written in the console, published or draft (export the table first); the covers stay in storage until the nightly sweep |
 | 0207 public market stats | `0207_public_market_stats.down.sql` | nothing: the public aggregation is a read; /marche must be switched off (public_stats_enabled) or the code rolled back first |
 | 0206 analytics fixes | `0206_analytics_fixes.down.sql` | the weighted rate limit (/api/events must call check_rate_limit again); the report cache is no longer pruned; the guarded cast stays |

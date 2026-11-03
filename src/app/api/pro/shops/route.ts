@@ -12,6 +12,7 @@ import { paymentsOpen, usablePayeeMethods } from "@/lib/payments";
 import { missingObjects } from "@/lib/listings/storage";
 import { featureOff } from "@/lib/settings/gate";
 import { getSettings } from "@/lib/settings/server";
+import { foundingSignup, type FoundingPlan } from "@/lib/pro/founding";
 
 /**
  * POST /api/pro/shops — open a shop (0173). One shop per owner. It waits for
@@ -28,7 +29,11 @@ import { getSettings } from "@/lib/settings/server";
  *
  * Without a plan when the form does not ask for one (feature_pro_signup_plan
  * off, or no payee to pay) or when « Envoyer sans payer » is allowed
- * (pro_signup_pay_later, the founding offer): the agence alone, as before.
+ * (pro_signup_pay_later): the agence alone, as before.
+ *
+ * With the founding offer's plan instead (2026-11-03, while places last):
+ * `{ …agence, founding_plan }` — no payment; the agence keeps the plan it
+ * picked and « Ouvrir » gives it free (src/lib/pro/founding.ts).
  */
 export async function POST(req: NextRequest) {
   const off = await featureOff("feature_pro_signup");
@@ -58,7 +63,17 @@ export async function POST(req: NextRequest) {
   if ("ok" in asked && !asked.ok) {
     return NextResponse.json({ error: "invalid", detail: t(`errors.request.${asked.error}`) }, { status: 400 });
   }
-  if ("none" in asked && !planOptional({ withPlan: settings.feature_pro_signup_plan, paymentsOpen: open, payLater: settings.pro_signup_pay_later })) {
+  // The founding offer's plan, picked instead of paying while places last
+  // (2026-11-03). Checked against the offer as it stands now: the last place
+  // may have gone since the form was opened.
+  let founding: FoundingPlan | null = null;
+  if ("none" in asked && typeof body.founding_plan === "string" && body.founding_plan.trim()) {
+    const offer = await foundingSignup(admin, settings);
+    if (!offer) return NextResponse.json({ error: "founding_full", detail: t("errors.request.foundingFull") }, { status: 409 });
+    founding = offer.plans.find((p) => p.slug === (body.founding_plan as string).trim()) ?? null;
+    if (!founding) return NextResponse.json({ error: "invalid", detail: t("errors.plan") }, { status: 400 });
+  }
+  if ("none" in asked && !founding && !planOptional({ withPlan: settings.feature_pro_signup_plan, paymentsOpen: open, payLater: settings.pro_signup_pay_later })) {
     return NextResponse.json({ error: "invalid", detail: t("errors.request.plan") }, { status: 400 });
   }
   const request = "ok" in asked ? asked.value : null;
@@ -93,7 +108,7 @@ export async function POST(req: NextRequest) {
   const create = (withSlug: string) =>
     admin
       .from("shops")
-      .insert({ ...parsed.value, slug: withSlug, owner_id: user.id, status: "pending" })
+      .insert({ ...parsed.value, slug: withSlug, owner_id: user.id, status: "pending", ...(founding ? { founding_plan: founding.slug } : {}) })
       .select("id, slug, name")
       .single();
   let { data: shop, error } = await create(slug);
@@ -162,7 +177,7 @@ export async function POST(req: NextRequest) {
 
   // One notice for one request: the agence and, when it came with one, the
   // plan it paid — the receipt is the console's to check.
-  const { data: owner } = plan
+  const { data: owner } = plan || founding
     ? await admin.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
     : { data: null };
   const ownerName = ((owner as { full_name: string | null } | null)?.full_name ?? "").trim();
@@ -175,6 +190,14 @@ export async function POST(req: NextRequest) {
           p_link: `/admin/agences?id=${shop.id}`,
           p_payload: { vars: { variant: "request", name: shop.name, owner: ownerName || "—", plan: plan.name_fr, amount: Number(plan.price) } },
         }
+      : founding
+      ? {
+          p_kind: "admin_shop_pending",
+          p_title: "Demande d'agence — offre fondatrice",
+          p_body: `${ownerName || "Un compte"} demande l'agence « ${shop.name} » avec l'offre fondatrice : ${founding.name_fr}, ${founding.quota} annonces offertes ${settings.founding_offer_months} mois.`,
+          p_link: `/admin/agences?id=${shop.id}`,
+          p_payload: { vars: { variant: "founding", name: shop.name, owner: ownerName || "—", plan: founding.name_fr, quota: founding.quota, months: settings.founding_offer_months } },
+        }
       : {
           p_kind: "admin_shop_pending",
           p_title: "Agence à valider",
@@ -184,6 +207,6 @@ export async function POST(req: NextRequest) {
         })
     .then(() => {}, () => {});
 
-  logAction(req, user, "shop.create", { id: shop.id, ...(plan ? { plan: plan.slug, paymentId } : {}) });
+  logAction(req, user, "shop.create", { id: shop.id, ...(plan ? { plan: plan.slug, paymentId } : founding ? { founding: founding.slug } : {}) });
   return NextResponse.json({ ok: true, id: shop.id, slug: shop.slug, paymentId });
 }

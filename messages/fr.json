@@ -1371,6 +1371,10 @@
       "fixed": {
         "title": "Agence corrigée — à revoir",
         "body": "« {name} » a corrigé son agence : la demande est à revoir."
+      },
+      "founding": {
+        "title": "Demande d'agence — offre fondatrice",
+        "body": "{owner} demande l'agence « {name} » avec l'offre fondatrice : {plan}, {quota} annonces offertes {months} mois."
       }
     },
     "visitor": "Un acheteur",
@@ -4061,7 +4065,8 @@
         "request": "Votre demande est envoyée : l'agence et l'abonnement {plan} ({amount} DT), reçu joint. L'équipe vérifie et ouvre l'agence, en général sous 24 heures.",
         "fix": "L'équipe Mazed Immo vous demande de corriger votre agence avant de l'ouvrir :",
         "fixPaid": "Votre paiement reste enregistré : une fois l'agence corrigée, la demande revient à l'équipe, sans rien payer à nouveau.",
-        "receiptRefused": "Le reçu de votre abonnement a été refusé. Motif :"
+        "receiptRefused": "Le reçu de votre abonnement a été refusé. Motif :",
+        "founding": "Votre demande est envoyée avec l'offre des agences fondatrices ({plan}, {quota} annonces, {months, plural, one {# mois offert} other {# mois offerts}}) : rien à payer. L'équipe vérifie et ouvre l'agence, en général sous 24 heures ; les mois offerts démarrent ce jour-là."
       }
     },
     "documents": {
@@ -4110,7 +4115,8 @@
     "create": {
       "title": "Ouvrir mon agence",
       "subtitle": "Quelques informations suffisent. L'équipe Mazed Immo vérifie chaque agence avant de l'ouvrir, en général sous 24 heures.",
-      "subtitleWithPlan": "Votre agence, son abonnement et le reçu de paiement : une seule demande. L'équipe Mazed Immo la vérifie et ouvre l'agence, en général sous 24 heures."
+      "subtitleWithPlan": "Votre agence, son abonnement et le reçu de paiement : une seule demande. L'équipe Mazed Immo la vérifie et ouvre l'agence, en général sous 24 heures.",
+      "subtitleFounding": "Offre de lancement : les premières agences ne paient rien pendant {months, plural, one {# mois} other {# mois}}. Présentez votre agence, choisissez votre formule, envoyez : l'équipe Mazed Immo l'ouvre, en général sous 24 heures."
     },
     "form": {
       "imageTooBig": "Image trop lourde (10 Mo au maximum).",
@@ -4279,7 +4285,8 @@
         "earned": "vous avez le badge « Agence réactive » : {fast, plural, one {# demande de visite} other {# demandes de visite}} sur {total} traitées en moins de {hours} h ces {days} derniers jours. Il se voit sur vos annonces et sur votre page, et vous passe devant dans le bandeau des agences recommandées.",
         "tooFew": "le badge « Agence réactive » demande au moins {min} demandes de visite traitées sur {days} jours ; vous en avez {total}. Confirmer ou décliner dans les {hours} h suffit.",
         "below": "{fast, plural, =0 {Aucune demande de visite} one {# demande de visite} other {# demandes de visite}} sur {total} traitées en moins de {hours} h ({rate} %). Le badge « Agence réactive » demande {minRate} % : confirmez ou déclinez les prochaines plus vite."
-      }
+      },
+      "planFoundingWaiting": "Votre demande avec l'offre des agences fondatrices ({plan}, {quota} annonces) attend l'équipe : rien à payer. Les {months, plural, one {# mois offert démarre} other {# mois offerts démarrent}} à l'ouverture de l'agence."
     },
     "clients": {
       "open": "En cours",
@@ -4505,7 +4512,8 @@
       "steps": {
         "agence": "L'agence",
         "plan": "L'abonnement",
-        "pay": "Le paiement"
+        "pay": "Le paiement",
+        "offer": "L'offre"
       },
       "next": "Continuer",
       "back": "Retour",
@@ -4539,10 +4547,21 @@
         "reviewAlone": "L'équipe examine votre agence, en général sous 24 heures.",
         "notify": "Vous recevez une notification dès la décision.",
         "open": "Acceptée, l'agence s'ouvre avec son abonnement : vous publiez pour elle et recevez votre facture.",
-        "plan": "Vous choisirez et paierez votre abonnement depuis votre espace Pro ; l'agence s'ouvre une fois le paiement validé."
+        "plan": "Vous choisirez et paierez votre abonnement depuis votre espace Pro ; l'agence s'ouvre une fois le paiement validé.",
+        "foundingOpen": "Ouverte, elle reçoit son offre : {months, plural, one {# mois offert} other {# mois offerts}}, sans rien payer.",
+        "foundingEnd": "Avant la fin, une notification vous rappelle de choisir votre abonnement."
       },
       "toDashboard": "Mon espace Pro",
-      "restored": "Votre demande en cours a été reprise."
+      "restored": "Votre demande en cours a été reprise.",
+      "foundingEyebrow": "Agences fondatrices",
+      "foundingTitle": "{months, plural, one {# mois d'abonnement offert} other {# mois d'abonnement offerts}} : rien à payer",
+      "foundingLeft": "{left, plural, one {Plus qu'une place} other {Plus que # places}} sur {total}",
+      "foundingPick": "Choisissez votre formule",
+      "foundingFree": "Offert {months, plural, one {# mois} other {# mois}}",
+      "foundingThen": "Ensuite {amount} par mois, si vous la gardez",
+      "foundingNote": "Rien à payer maintenant, aucun reçu à envoyer. L'équipe Mazed Immo vérifie votre agence, en général sous 24 heures ; vos {months, plural, one {# mois offert démarre} other {# mois offerts démarrent}} le jour où elle l'ouvre. Avant la fin, nous vous rappelons de choisir votre abonnement.",
+      "sendFounding": "Envoyer ma demande",
+      "sentBodyFounding": "Votre agence <b>{name}</b> est envoyée avec l'offre des agences fondatrices : <b>{plan}</b>, {quota} annonces, {months, plural, one {# mois offert} other {# mois offerts}}."
     },
     "import": {
       "title": "Importer plusieurs annonces",
@@ -4599,8 +4618,8 @@
     },
     "founding": {
       "eyebrow": "Offre de lancement",
-      "headline": "{months, plural, one {# mois du plan Pro offert} other {# mois du plan Pro offerts}} aux {total} premières agences de {place}",
-      "headlineAny": "{months, plural, one {# mois du plan Pro offert} other {# mois du plan Pro offerts}} aux {total} premières agences",
+      "headline": "{months, plural, one {# mois d'abonnement offert} other {# mois d'abonnement offerts}} aux {total} premières agences de {place}",
+      "headlineAny": "{months, plural, one {# mois d'abonnement offert} other {# mois d'abonnement offerts}} aux {total} premières agences",
       "left": "{left, plural, one {Plus qu'une place} other {Plus que # places}} sur {total}",
       "how": "Ouvrez votre agence ci-dessous : après un examen rapide, nous l'ouvrons et vos mois offerts démarrent tout seuls. Ensuite, vous choisissez votre abonnement ; nous vous prévenons avant la fin."
     }
@@ -4638,7 +4657,8 @@
       "request": {
         "plan": "Choisissez l'abonnement de votre agence.",
         "provider": "Ce mode de paiement n'est pas disponible.",
-        "receipt": "Joignez le reçu de votre paiement."
+        "receipt": "Joignez le reçu de votre paiement.",
+        "foundingFull": "Les places de l'offre de lancement viennent d'être prises. Rechargez la page pour choisir votre abonnement."
       },
       "outcome": "Choisissez ce que devient le paiement.",
       "requestNeedsPayments": "Cette demande comprend un paiement : il faut aussi l'accès « Paiements ».",
@@ -4815,7 +4835,11 @@
     "fixChip": "à corriger",
     "offerSeats": "{left, plural, one {# place fondatrice restante} other {# places fondatrices restantes}} sur {total}.",
     "offerSeatsNone": "Les {total} places fondatrices sont toutes prises : cette agence passerait en plus.",
-    "approvedFounding": "Agence ouverte, avec le plan {plan} offert pour {months} mois, jusqu'au {date}."
+    "approvedFounding": "Agence ouverte, avec le plan {plan} offert pour {months} mois, jusqu'au {date}.",
+    "foundingEyebrow": "Demande — offre fondatrice",
+    "foundingLine": "{owner} demande l'agence « {name} » avec l'offre fondatrice : {plan}, {quota} annonces, {months, plural, one {# mois offert} other {# mois offerts}}. Aucun paiement : « Ouvrir » donne ce plan.",
+    "foundingSeatsLeft": "{left, plural, one {Plus qu'une place} other {Plus que # places}} sur {total} : la place est prise à l'ouverture.",
+    "foundingSeatsGone": "Les {total} places sont prises : « Ouvrir » demandera un abonnement payé."
   },
   "visits": {
     "parts": {
@@ -5779,6 +5803,10 @@
     "public_stats_cache_minutes": {
       "label": "Rafraîchissement du marché en chiffres",
       "hint": "Les chiffres de la page sont recalculés au plus une fois par ce délai."
+    },
+    "founding_offer_choices": {
+      "label": "Formules au choix de l'offre fondatrice",
+      "hint": "Les identifiants des plans qu'une agence choisit en s'inscrivant tant qu'il reste des places (pro-pro, pro-business…). Rien à payer : « Ouvrir » lui donne celui qu'elle a choisi. Vide : la console donne le plan de l'offre fondatrice."
     }
   },
   "ads": {

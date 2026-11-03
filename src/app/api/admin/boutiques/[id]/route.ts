@@ -6,7 +6,7 @@ import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator, requestLocale } from "@/lib/i18n/server";
 import { activePlan, offerPlanPeriod } from "@/lib/pro/shops";
-import { foundingOffer } from "@/lib/pro/founding";
+import { foundingOffer, foundingPlanFor } from "@/lib/pro/founding";
 import { audit } from "@/lib/admin/audit";
 import { canOpen } from "@/lib/admin/sections";
 import { claimDecision, decidePayment, OPEN, releaseDecision, type PaymentRow } from "@/lib/payments/decision";
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const action = typeof body.action === "string" ? body.action : "";
   const reason = typeof body.reason === "string" ? body.reason.trim().slice(0, 500) : "";
 
-  const { data: shop } = await admin.from("shops").select("id, owner_id, name, status").eq("id", id).maybeSingle();
+  const { data: shop } = await admin.from("shops").select("id, owner_id, name, status, founding_plan").eq("id", id).maybeSingle();
   if (!shop) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const now = new Date().toISOString();
   const by = gate.user.id;
@@ -190,7 +190,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // open, and the button used to open it anyway.
       if (!accepted && !(await activePlan(admin, id))) {
         // …unless the founding offer is on and has a place left (2026-11-01): the agence then
-        // opens on the free months, and is told when they end and what comes after.
+        // opens on the free months — of the plan it picked when it signed up (2026-11-03) —
+        // and is told when they end and what comes after.
         const s = await getSettings();
         offered = await foundingOffer(admin, {
           shopId: id,
@@ -198,7 +199,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           enabled: s.feature_founding_auto,
           seats: s.founding_seats,
           months: s.founding_offer_months,
-          planSlug: s.founding_offer_plan,
+          planSlug: foundingPlanFor(shop.founding_plan as string | null, s.founding_offer_plan),
         });
         if (!offered) return NextResponse.json({ error: "plan_required", detail: t("errors.planRequired") }, { status: 409 });
       }

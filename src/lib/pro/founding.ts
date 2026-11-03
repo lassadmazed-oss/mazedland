@@ -18,6 +18,62 @@ export function seatsOf(taken: number, total: number): FoundingSeats {
   return { total: t, taken: Math.min(n, t), left: Math.max(0, t - n) };
 }
 
+/** A plan the founding offer lets an agence pick at sign-up. */
+export type FoundingPlan = {
+  slug: string;
+  name_fr: string;
+  name_ar: string | null;
+  price: number;
+  quota: number;
+};
+
+/**
+ * The plans an agence may pick, in the order of `choices` with duplicates
+ * gone, and only those on sale with a quota (a slug the console mistyped or
+ * took off sale is skipped, not offered).
+ */
+export function foundingPlansOf(
+  products: readonly { slug: string; name_fr: string; name_ar: string | null; price: number | string; listing_quota: number | null }[],
+  choices: readonly string[],
+): FoundingPlan[] {
+  const out: FoundingPlan[] = [];
+  for (const slug of new Set(choices.map((c) => c.trim().toLowerCase()).filter(Boolean))) {
+    const p = products.find((x) => x.slug === slug);
+    const quota = Number(p?.listing_quota);
+    if (!p || !(Number.isFinite(quota) && quota > 0)) continue;
+    out.push({ slug: p.slug, name_fr: p.name_fr, name_ar: p.name_ar, price: Number(p.price), quota });
+  }
+  return out;
+}
+
+/** What « Ouvrir » gives: the plan the agence picked at sign-up, else the offer's own. */
+export function foundingPlanFor(picked: string | null | undefined, offerPlan: string): string {
+  return picked?.trim() ? picked.trim() : offerPlan;
+}
+
+/**
+ * The founding offer as the sign-up form shows it (2026-11-03, the owner: no
+ * payment for the first 50 agences, and « الوكالة تختار » between 40 and 120
+ * annonces): open while `feature_founding_auto` is on and a place is left,
+ * with the plans to pick from. Null otherwise — the form then asks for a paid
+ * plan, as before. The place itself is taken when the console opens the agence.
+ */
+export async function foundingSignup(
+  admin: Admin,
+  s: { feature_founding_auto: boolean; founding_seats: number; founding_offer_months: number; founding_offer_choices: readonly string[] },
+): Promise<{ seats: FoundingSeats; months: number; plans: FoundingPlan[] } | null> {
+  if (!s.feature_founding_auto || s.founding_offer_choices.length === 0) return null;
+  const seats = await loadFoundingSeats(admin, s.founding_seats);
+  if (seats.left <= 0) return null;
+  const { data } = await admin
+    .from("products")
+    .select("slug, name_fr, name_ar, price, listing_quota")
+    .eq("kind", "subscription")
+    .eq("is_active", true);
+  const plans = foundingPlansOf((data ?? []) as Parameters<typeof foundingPlansOf>[0], s.founding_offer_choices);
+  return plans.length > 0 ? { seats, months: s.founding_offer_months, plans } : null;
+}
+
 /** The agences that were given a period for nothing (no payment behind it), counted once each. */
 export async function loadFoundingSeats(admin: Admin, total: number): Promise<FoundingSeats> {
   // A counter is a nicety: any failure leaves the page without it (0 places left shows nothing).
