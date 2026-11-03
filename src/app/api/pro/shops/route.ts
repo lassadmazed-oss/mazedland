@@ -5,7 +5,9 @@ import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
 import { proGate } from "@/lib/pro/api";
-import { parseShopInput, slugify } from "@/lib/pro/shops";
+import { membershipsOf, parseShopInput, slugify } from "@/lib/pro/shops";
+import { getServerSupabase } from "@/lib/supabase/server";
+import { getServiceSupabase } from "@/lib/supabase/admin";
 import { parseRequestPayment, planOptional } from "@/lib/pro/agenceRequest";
 import { addMonths, monthsOf } from "@/lib/pro/planChange";
 import { paymentsOpen, usablePayeeMethods } from "@/lib/payments";
@@ -35,6 +37,23 @@ import { foundingSignup, type FoundingPlan } from "@/lib/pro/founding";
  * `{ …agence, founding_plan }` — no payment; the agence keeps the plan it
  * picked and « Ouvrir » gives it free (src/lib/pro/founding.ts).
  */
+/**
+ * GET /api/pro/shops — whether the caller is signed in and belongs to an
+ * agence. /pro is one static page for every visitor; it asks this in the
+ * browser to send a member to the dashboard instead of the form
+ * (src/components/agency/ProViewer.tsx). Their own answer, never cached.
+ */
+export async function GET() {
+  const noStore = { headers: { "Cache-Control": "private, no-store" } };
+  const supabase = await getServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ signedIn: false, hasShop: false }, noStore);
+  const admin = getServiceSupabase();
+  if (!admin) return fail("server_misconfigured", 500);
+  const memberships = await membershipsOf(admin, user.id);
+  return NextResponse.json({ signedIn: true, hasShop: memberships.length > 0 }, noStore);
+}
+
 export async function POST(req: NextRequest) {
   const off = await featureOff("feature_pro_signup");
   if (off) return off;

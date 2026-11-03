@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { AuthScreen } from "@/components/auth/AuthScreen";
+import { AuthSwitchLink } from "@/components/auth/AuthSwitchLink";
 import { Link } from "@/i18n/navigation";
 
 /**
@@ -20,15 +21,22 @@ export async function generateMetadata({
   return { title: t("metaTitle"), robots: { index: false } };
 }
 
+// The same page for every visitor (a signed-in one never reaches it: the
+// proxy sends them home), so it comes from the CDN. `?next=` is read in the
+// browser, by the form and by the link to the signup.
+export const revalidate = 60;
+// A build that fails, naming the API, the day something here reads the
+// request (src/app/[locale]/(home)/page.tsx).
+export const dynamic = "error";
+
 export default async function LoginPage({
-  searchParams,
+  params,
 }: {
-  searchParams: Promise<{ next?: string | string[] }>;
+  params: Promise<{ locale: string }>;
 }) {
-  // `next` rides along to the other form: someone sent here from « Vendre »
-  // who signs up instead of signing in should still land on the publish page.
-  const sp = await searchParams;
-  const next = typeof sp.next === "string" ? sp.next : undefined;
+  // Before any translation: next-intl would otherwise read the request headers.
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations();
 
   return (
@@ -46,12 +54,12 @@ export default async function LoginPage({
       footer={
         <>
           {t("auth.login.noAccount")}{" "}
-          <Link
-            href={{ pathname: "/signup", query: next ? { next } : {} }}
+          <AuthSwitchLink
+            to="/signup"
             className="font-bold text-foreground underline underline-offset-4 transition hover:text-muted"
           >
             {t("nav.signup")}
-          </Link>
+          </AuthSwitchLink>
         </>
       }
     >
