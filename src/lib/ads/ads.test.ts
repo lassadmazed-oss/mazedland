@@ -88,11 +88,18 @@ describe("safeAdLink", () => {
     expect(safeAdLink("banque.tn")).toBe("https://banque.tn/");
   });
 
+  it("takes a mail to one address, typed with or without its scheme", () => {
+    expect(safeAdLink("mailto:contact@mazed.immo")).toBe("mailto:contact@mazed.immo");
+    expect(safeAdLink("contact@mazed.immo")).toBe("mailto:contact@mazed.immo");
+    expect(safeAdLink("mailto:contact@mazed.immo?subject=x&bcc=a@b.tn")).toBeNull();
+    expect(safeAdLink("mailto:a@b.tn,c@d.tn")).toBeNull();
+    expect(safeAdLink("mailto:nobody")).toBeNull();
+  });
+
   it("refuses every other scheme", () => {
     expect(safeAdLink("javascript:alert(1)")).toBeNull();
     expect(safeAdLink("JavaScript:alert(1)")).toBeNull();
     expect(safeAdLink("data:text/html,<script>alert(1)</script>")).toBeNull();
-    expect(safeAdLink("mailto:contact@banque.tn")).toBeNull();
     expect(safeAdLink("tel:+21671000000")).toBeNull();
     expect(safeAdLink("ftp://banque.tn")).toBeNull();
   });

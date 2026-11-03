@@ -5934,8 +5934,8 @@
       "badType": "JPG، PNG ولا WebP برك.",
       "link": "الرابط",
       "linkPlaceholder": "www.exemple.tn/offre",
-      "linkHint": "وين يمشي اللي ينقر، في نافذة جديدة. « https:// » يتزاد كان ناقص.",
-      "linkInvalid": "هذا موش عنوان موقع.",
+      "linkHint": "وين يمشي اللي ينقر، في نافذة جديدة: عنوان موقع (« https:// » يتزاد كان ناقص) ولا إيميل.",
+      "linkInvalid": "هذا موش عنوان موقع ولا إيميل.",
       "titles": "نص التصويرة",
       "titlesHint": "يتقرا في بلاصة التصويرة لقارئات الشاشة. فارغ: اسم المعلن.",
       "titleFr": "بالفرنسية",
@@ -5968,6 +5968,13 @@
         "link": "زيد رابط صحيح.",
         "dates": "آخر نهار جا قبل البداية.",
         "uploading": "استنّى حتى يوفى الإرسال."
+      },
+      "quickLinks": "ولا رابط من روابط مزاد إيمو",
+      "quick": {
+        "facebook": "Facebook",
+        "instagram": "Instagram",
+        "tiktok": "TikTok",
+        "email": "الإيميل"
       }
     },
     "api": {

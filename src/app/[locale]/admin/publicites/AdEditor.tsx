@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { AD_IMAGE, AD_PLACEMENTS, adImageExt, safeAdLink, type AdPlacement } from "@/lib/ads/ads";
 import { monthsFrom, tunisDay } from "@/lib/ads/dates";
+import type { MazedLink } from "@/lib/contact";
 import { ChevronLeft, ImagePlus, Loader2, Save } from "lucide-react";
 
 /**
@@ -73,12 +74,15 @@ export function AdEditor({
   ad,
   baseHref,
   cancelHref,
+  quickLinks = [],
 }: {
   /** null = a new campaign. */
   ad: EditableAd | null;
   /** /<locale>/admin/publicites — next/navigation's router takes it as is. */
   baseHref: string;
   cancelHref: string;
+  /** Mazed Immo's own addresses (mazedLinks), one tap each instead of typing them. */
+  quickLinks?: MazedLink[];
 }) {
   const t = useTranslations("adminAds");
   const router = useRouter();
@@ -270,6 +274,19 @@ export function AdEditor({
               // What will really be saved, when it differs from what was typed.
               hint={cleanLink && cleanLink !== link.trim() ? <span dir="ltr">→ {cleanLink}</span> : t("editor.linkHint")}
             />
+            {quickLinks.length > 0 && (
+              // Mazed Immo's own campaign: its pages and its mailbox, one tap each.
+              <div>
+                <p className={LABEL}>{t("editor.quickLinks")}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {quickLinks.map((q) => (
+                    <button key={q.key} type="button" onClick={() => setLink(q.href)} aria-pressed={cleanLink === q.href} className={chip(cleanLink === q.href)}>
+                      {t(`editor.quick.${q.key}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <p className={LABEL}>{t("editor.titles")}</p>

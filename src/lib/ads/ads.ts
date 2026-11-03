@@ -83,23 +83,31 @@ const MAX_LINK = 600;
 /**
  * The advertiser's link, or null when it is not one we will redirect to.
  *
- * Only http and https: the click route answers with a redirect to this
- * address, and a `javascript:` or `data:` one would turn our own domain into
- * the launch pad. An address typed without its scheme (« biat.com.tn/credit »)
- * is taken as https, so the admin does not have to type it. A user name or
- * password in the address is refused — it is how a link pretends to go to one
- * site and goes to another (`https://mazed.tn@evil.example`).
+ * Only http and https, or a mail to one address: the click route answers
+ * with a redirect to this address, and a `javascript:` or `data:` one would
+ * turn our own domain into the launch pad. An address typed without its
+ * scheme (« biat.com.tn/credit ») is taken as https, and an e-mail address
+ * (« contact@mazed.immo ») as a mail to it, so the admin does not have to
+ * type either. A user name or password in a web address is refused — it is
+ * how a link pretends to go to one site and goes to another
+ * (`https://mazed.tn@evil.example`).
  */
 export function safeAdLink(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const s = raw.trim();
   if (!s || s.length > MAX_LINK || /\s/.test(s)) return null;
+  if (/^[^@\s/:?#]+@[^@\s/:?#]+\.[a-z]{2,}$/i.test(s)) return `mailto:${s}`;
   const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(s) ? s : `https://${s.replace(/^\/+/, "")}`;
   let url: URL;
   try {
     url = new URL(withScheme);
   } catch {
     return null;
+  }
+  // An e-mail address too (Mazed Immo's own, for its house banners, 2026-11-03): a
+  // mailto: to one address, nothing else in it.
+  if (url.protocol === "mailto:") {
+    return /^[^@\s/?#]+@[^@\s/?#]+\.[a-z]{2,}$/i.test(decodeURIComponent(url.pathname)) && !url.search ? url.href : null;
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") return null;
   if (url.username || url.password) return null;
