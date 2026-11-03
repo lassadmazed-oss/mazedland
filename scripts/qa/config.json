@@ -6,5 +6,5 @@
   "baseBranch": "main",
   "prodUrl": "https://www.mazed.immo",
   "github": { "repo": "lassadmazed-oss/mazedland", "base": "main" },
-  "vercel": { "projectId": "prj_OSokO1HZGeSV65w1IjyYujIRGqOZ", "teamId": "team_DNguYjDcPZfEF2PCrJH5zowJ" }
+  "vercel": { "projectId": "prj_OSokO1HZGeSV65w1IjyYujIRGqOZ", "teamId": "team_rHVYh09RvuFbxkZ0WSpRXtEG" }
 }
