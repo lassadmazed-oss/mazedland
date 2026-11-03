@@ -308,7 +308,7 @@ async function loadSeller(
   if (!p) return null;
 
   const nowIso = new Date().toISOString();
-  const [listingsRes, publishedRes, creditsRes, badgeRes, paymentsRes, packsRes] =
+  const [listingsRes, publishedRes, creditsRes, badgeRes, paymentsRes, packsRes, anyPaymentRes, invoicesRes] =
     await Promise.all([
       admin.from("listings").select("id", { count: "exact", head: true }).eq("seller_id", id),
       admin
@@ -336,6 +336,9 @@ async function loadSeller(
         .eq("kind", "listing_pack")
         .eq("is_active", true)
         .order("sort_order"),
+      // Any payment or invoice at all: « Supprimer » then anonymises instead of erasing (src/lib/admin/deletion.ts).
+      admin.from("payments").select("id", { count: "exact", head: true }).eq("user_id", id),
+      admin.from("invoices").select("id", { count: "exact", head: true }).eq("user_id", id),
     ]);
 
   const credits = (creditsRes.data ?? []) as {
@@ -367,6 +370,7 @@ async function loadSeller(
       captured: payments.length,
       amount: payments.reduce((s, x) => s + (Number(x.amount) || 0), 0),
     },
+    keepsRecords: (anyPaymentRes.count ?? 0) > 0 || (invoicesRes.count ?? 0) > 0,
     packs: (packsRes.data ?? []).map((r) => ({
       id: r.id as string,
       label: productName(

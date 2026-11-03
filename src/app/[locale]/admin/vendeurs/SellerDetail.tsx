@@ -2,17 +2,18 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { AdminButton } from "@/components/admin/AdminButton";
 import {
   StatusPill, Confirm, SelectField, NumberField, TextareaField,
   FieldGrid, useAdminAction, EYEBROW,
 } from "@/components/admin/kit";
 import { Ltr } from "@/components/ui/Ltr";
+import { useToast } from "@/components/ui/Toast";
 import { formatDate } from "@/lib/utils";
 import { governorateLabel } from "@/lib/tunisia";
 import {
-  BadgeCheck, ShieldOff, Ticket, ChevronLeft, ExternalLink, Ban, RotateCcw,
+  BadgeCheck, ShieldOff, Ticket, ChevronLeft, ExternalLink, Ban, RotateCcw, Trash2,
 } from "lucide-react";
 
 /**
@@ -37,6 +38,8 @@ export type SellerDetailData = {
   credits: { remaining: number; total: number; expiresAt: string | null };
   badge: { expiresAt: string | null } | null;
   payments: { captured: number; amount: number };
+  /** It has a payment or an invoice, whatever its status: deleting it anonymises it, its records kept. */
+  keepsRecords: boolean;
   /** `label` is already in the page's language (productName). */
   packs: { id: string; label: string; quota: number | null }[];
 };
@@ -64,7 +67,9 @@ export function SellerDetail({
   const tAdmin = useTranslations("admin");
   const tCommon = useTranslations("common");
   const locale = useLocale();
-  const [confirm, setConfirm] = useState<null | "ban" | "revoke">(null);
+  const [confirm, setConfirm] = useState<null | "ban" | "revoke" | "delete">(null);
+  const router = useRouter();
+  const { toast } = useToast();
   const [panel, setPanel] = useState<null | "credits" | "badge">(null);
 
   const [role, setRole] = useState(seller.role);
@@ -334,6 +339,16 @@ export function SellerDetail({
             {t("suspend")}
           </AdminButton>
         )}
+        {/* For good (2026-11-03). A console member is removed from the team screen, not here. */}
+        {s.role !== "admin" && (
+          <AdminButton
+            variant="danger"
+            icon={<Trash2 className="size-3.5" strokeWidth={2.4} />}
+            onClick={() => setConfirm("delete")}
+          >
+            {t("delete")}
+          </AdminButton>
+        )}
       </footer>
 
       <Confirm
@@ -346,6 +361,30 @@ export function SellerDetail({
         onCancel={() => setConfirm(null)}
         onConfirm={async (reason) => {
           if (await act({ action: "ban", reason }, t("suspended"))) setConfirm(null);
+        }}
+      />
+      <Confirm
+        open={confirm === "delete"}
+        title={t("deleteTitle")}
+        // Erased when it never paid; anonymised when it did, its invoices kept (src/lib/admin/deletion.ts).
+        body={t(s.keepsRecords ? "deleteBodyPaid" : "deleteBody", { listings: s.listings.total })}
+        confirmLabel={t("deleteConfirm")}
+        pending={pending}
+        reason={{ label: t("reasonInternal"), placeholder: t("deletePlaceholder"), required: true }}
+        onCancel={() => setConfirm(null)}
+        onConfirm={async (reason) => {
+          const ok = await run({
+            url: `/api/admin/vendeurs/${s.id}`,
+            method: "POST",
+            body: { action: "delete", reason },
+            success: null,
+            onSuccess: (data) => {
+              const d = data as { mode?: string; deleted?: { listings: number } };
+              toast(t(d.mode === "anonymise" ? "deletedAnonymised" : "deleted", { listings: d.deleted?.listings ?? 0 }), "success");
+              router.push("/admin/vendeurs" as never);
+            },
+          });
+          if (ok) setConfirm(null);
         }}
       />
       <Confirm
