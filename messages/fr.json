@@ -5788,7 +5788,7 @@
     },
     "guides_enabled": {
       "label": "Guides pratiques",
-      "hint": "La page /guides, le lien du pied de page et les bandeaux « Guides utiles » sous les annonces. Désactivé : rien ne se voit sur le site, les guides restent dans la console."
+      "hint": "La page /guides, son lien dans le menu et le pied de page, et les bandeaux « Guides utiles » de l'accueil et sous les annonces. Désactivé : rien ne se voit sur le site, les guides restent dans la console."
     },
     "guides_ai_assist": {
       "label": "Aide à la rédaction (IA)",
@@ -5804,7 +5804,7 @@
     },
     "guides_strip_count": {
       "label": "« Guides utiles » sous les annonces",
-      "hint": "Combien de guides apparaissent sous une annonce et sous le catalogue, choisis selon vente / location et le type de bien. 0 : pas de bandeau."
+      "hint": "Combien de guides apparaissent sur l'accueil (les plus récents), sous une annonce et sous le catalogue (choisis selon vente / location et le type de bien). 0 : pas de bandeau."
     },
     "guides_toc_min": {
       "label": "Sommaire à partir de",
