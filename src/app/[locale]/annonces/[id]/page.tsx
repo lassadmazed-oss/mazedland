@@ -20,8 +20,10 @@ import { ContactReveal } from "./ContactReveal";
 import { StickyContact } from "./StickyContact";
 import { ReportListing } from "./ReportListing";
 import { VisitRequest } from "./VisitRequest";
+import { PriceOffer, type OpenOffer } from "./PriceOffer";
 import { CompareToggle } from "@/components/compare/CompareToggle";
 import type { VisitSlot, VisitStatus } from "@/lib/visits";
+import { shownStatus, takesOffers, type OfferStatus } from "@/lib/offers";
 import { isEditable } from "@/lib/listings/edit";
 import { getSettings } from "@/lib/settings/server";
 import { FavoriteButton } from "@/components/property/FavoriteButton";
@@ -288,8 +290,11 @@ export default async function AnnoncePage({
   // and the request they already have open on this annonce, if any.
   let visitDefaults = { name: "", phone: "" };
   let openVisit: { status: VisitStatus; when: string | null } | null = null;
+  // « Proposer un prix » (0211): the buyer's offer still open (or agreed) here, and how many they made.
+  let openOffer: OpenOffer | null = null;
+  let offersMade = 0;
   if (user && !isOwner && !isPreview && admin) {
-    const [{ data: me }, { data: v }] = await Promise.all([
+    const [{ data: me }, { data: v }, { data: offers }] = await Promise.all([
       admin.from("profiles").select("full_name, phone").eq("id", user.id).maybeSingle(),
       admin
         .from("visit_requests")
@@ -298,7 +303,24 @@ export default async function AnnoncePage({
         .eq("buyer_id", user.id)
         .in("status", ["requested", "confirmed"])
         .maybeSingle(),
+      admin
+        .from("price_offers")
+        .select("status, amount, counter_amount, expires_at")
+        .eq("listing_id", l.id)
+        .eq("buyer_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10),
     ]);
+    offersMade = offers?.length ?? 0;
+    const last = offers?.[0];
+    const lastStatus = last ? shownStatus({ status: last.status as OfferStatus, expires_at: last.expires_at as string }) : null;
+    if (last && (lastStatus === "pending" || lastStatus === "countered" || lastStatus === "accepted")) {
+      openOffer = {
+        status: lastStatus,
+        amount: Number(last.amount),
+        counter: last.counter_amount == null ? null : Number(last.counter_amount),
+      };
+    }
     visitDefaults = { name: (me?.full_name as string | null) ?? "", phone: (me?.phone as string | null) ?? "" };
     if (v) {
       const slot = v.confirmed_slot as VisitSlot | null;
@@ -517,6 +539,15 @@ export default async function AnnoncePage({
     !l.price_on_request &&
     l.price != null &&
     Number(l.price) >= Math.max(1, settings.credit_min_price);
+  // « Proposer un prix »: where the console lets this annonce take offers (a negotiable sale by default).
+  const offersOn =
+    !isOwner &&
+    !isPreview &&
+    settings.feature_offers &&
+    takesOffers(
+      { ...l, price: l.price == null ? null : Number(l.price) },
+      { onlyNegotiable: settings.offers_only_negotiable, rent: settings.offers_rent },
+    );
 
   const ownerCard =
     isOwner && editOn && isEditable(l) ? (
@@ -589,6 +620,17 @@ export default async function AnnoncePage({
         <ContactReveal listingId={l.id} showPhone={l.show_phone} />
         {!isOwner && !isPreview && (
           <VisitRequest listingId={l.id} loggedIn={!!user} defaultName={visitDefaults.name} defaultPhone={visitDefaults.phone} open={openVisit} />
+        )}
+        {offersOn && (
+          <PriceOffer
+            listingId={l.id}
+            price={Number(l.price)}
+            loggedIn={!!user}
+            defaultName={visitDefaults.name}
+            defaultPhone={visitDefaults.phone}
+            open={openOffer}
+            left={settings.offers_max_per_listing - offersMade}
+          />
         )}
         {!isPreview && (
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2">

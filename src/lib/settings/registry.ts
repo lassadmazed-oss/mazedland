@@ -19,6 +19,9 @@ export const SETTINGS = {
   //    refuses, without touching what already exists (a visit already asked
   //    stays in « Mes visites », a placement already bought runs its course).
   feature_visits: { group: "features", type: "bool", default: true, client: true },
+  // « Proposer un prix » (0211): a buyer's offer below the asking price, which
+  // the seller accepts, refuses or answers once (src/lib/offers.ts).
+  feature_offers: { group: "features", type: "bool", default: true, client: true },
   feature_compare: { group: "features", type: "bool", default: true, client: true },
   feature_requests: { group: "features", type: "bool", default: true, client: true, href: "/admin/demandes" },
   feature_pro_signup: { group: "features", type: "bool", default: true, client: true, href: "/admin/agences" },
@@ -162,6 +165,15 @@ export const SETTINGS = {
   // ── Buyers: visits, compare, demandes.
   visits_max_slots: { group: "buyers", type: "int", default: 3, min: 1, max: 5, client: true },
   visits_horizon_days: { group: "buyers", type: "int", default: 30, min: 3, max: 90, unit: "days", client: true },
+  // Price offers (0211): on negotiable sales only (the owner, 2026-11-04), never
+  // under this share of the asking price, quick amounts this many percent apart,
+  // this many days to answer, and how many offers one buyer makes on one annonce.
+  offers_only_negotiable: { group: "buyers", type: "bool", default: true, client: true },
+  offers_rent: { group: "buyers", type: "bool", default: false, client: true },
+  offers_min_percent: { group: "buyers", type: "int", default: 70, min: 30, max: 95, unit: "percent", choices: [50, 60, 70, 80, 90], client: true },
+  offers_chip_step: { group: "buyers", type: "int", default: 5, min: 1, max: 20, unit: "percent", choices: [3, 5, 10], client: true },
+  offers_days: { group: "buyers", type: "int", default: 5, min: 1, max: 30, unit: "days", choices: [2, 3, 5, 7, 14] },
+  offers_max_per_listing: { group: "buyers", type: "int", default: 2, min: 1, max: 10, choices: [1, 2, 3, 5] },
   compare_max: { group: "buyers", type: "int", default: 3, min: 2, max: 4, client: true },
   requests_max_active: { group: "buyers", type: "int", default: 10, min: 1, max: 50 },
   requests_days: { group: "buyers", type: "int", default: 60, min: 7, max: 365, unit: "days" },
@@ -217,6 +229,7 @@ export const SETTINGS = {
 
   // ── Abuse limits: how often one person may do a thing.
   limit_visits_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
+  limit_offers_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
   limit_drafts_per_account: { group: "limits", type: "int", default: 30, min: 1, max: 500 },
   limit_reports_per_hour: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_hour" },
   limit_edits_per_hour: { group: "limits", type: "int", default: 20, min: 1, max: 200, unit: "per_hour" },

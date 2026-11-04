@@ -65,6 +65,10 @@ export const NOTIFICATION_KINDS = [
   "plan_expiring",
   // Visits (0174): the seller hears the request and a cancellation, the buyer the answer
   "visit_requested", "visit_confirmed", "visit_declined", "visit_cancelled",
+  // Price offers (0211): the seller hears the offer and the buyer's answers, the
+  // buyer the seller's; an offer nobody answered expires (expire_price_offers)
+  "offer_received", "offer_accepted", "offer_declined", "offer_countered",
+  "offer_counter_accepted", "offer_counter_declined", "offer_withdrawn", "offer_expired",
   // A shop answers a demande (P3); the person stays anonymous to the shop
   "request_suggestion",
   // A paid placement ended (0156): written by expire_listing_promotions()
@@ -96,6 +100,7 @@ type FallbackRoute =
   | "/account/listings"
   | "/account/requests"
   | "/account/visites"
+  | "/account/offres"
   | "/admin/annonces"
   | "/admin/paiements"
   | "/admin/social"
@@ -212,6 +217,14 @@ export const KIND_FALLBACK: Record<NotificationKind, FallbackRoute> = {
   visit_confirmed: "/account/visites",
   visit_declined: "/account/visites",
   visit_cancelled: "/account/visites",
+  offer_received: "/account/offres",
+  offer_accepted: "/account/offres",
+  offer_declined: "/account/offres",
+  offer_countered: "/account/offres",
+  offer_counter_accepted: "/account/offres",
+  offer_counter_declined: "/account/offres",
+  offer_withdrawn: "/account/offres",
+  offer_expired: "/account/offres",
   request_suggestion: "/account/requests",
   promo_expired: "/account/listings",
 };
@@ -299,6 +312,8 @@ const FALLBACK_SUPPORTS_FOCUS: Record<NotificationKind, boolean> = {
   shop_approved: false, shop_rejected: false, shop_member_added: false, admin_shop_pending: false,
   plan_expiring: false,
   visit_requested: false, visit_confirmed: false, visit_declined: false, visit_cancelled: false,
+  offer_received: false, offer_accepted: false, offer_declined: false, offer_countered: false,
+  offer_counter_accepted: false, offer_counter_declined: false, offer_withdrawn: false, offer_expired: false,
   request_suggestion: false,
   promo_expired: false,
 };

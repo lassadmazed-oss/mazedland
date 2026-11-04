@@ -36,6 +36,8 @@ export const EVENT_NAMES = [
   "contact_site",
   "visit_request_open",
   "visit_request",
+  "offer_open",
+  "offer_send",
   "favourite_add",
   "favourite_remove",
   "compare_add",

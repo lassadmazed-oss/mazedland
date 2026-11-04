@@ -113,7 +113,9 @@
       "proOpenTitle": "Ouvrir une agence",
       "proOpenBody": "Agence ou promoteur : votre page et vos annonces sur Mazed Immo.",
       "visitsTitle": "Mes visites",
-      "visitsBody": "Les visites demandées et reçues, et leurs réponses."
+      "visitsBody": "Les visites demandées et reçues, et leurs réponses.",
+      "offersTitle": "Mes offres",
+      "offersBody": "Les prix proposés sur vos annonces, et ceux que vous avez proposés."
     }
   },
   "account": {
@@ -1456,6 +1458,62 @@
     "plan_expiring": {
       "title": "Votre abonnement se termine bientôt",
       "body": "L'abonnement {plan} de « {shop} » se termine le {date}. Vous pouvez le renouveler dès maintenant."
+    },
+    "offer_received": {
+      "title": "Nouvelle offre : {amount} TND",
+      "body": "{name} propose {amount} TND pour « {title} » (prix affiché {asking} TND). Répondez depuis Mes offres."
+    },
+    "offer_accepted": {
+      "plain": {
+        "title": "Offre acceptée",
+        "body": "Le vendeur accepte {amount} TND pour « {title} ». Son numéro est dans Mes offres."
+      },
+      "with_note": {
+        "title": "Offre acceptée",
+        "body": "Le vendeur accepte {amount} TND pour « {title} ». Son numéro est dans Mes offres. Le vendeur : {note}"
+      }
+    },
+    "offer_declined": {
+      "plain": {
+        "title": "Offre non retenue",
+        "body": "Votre offre de {amount} TND sur « {title} » n'est pas retenue."
+      },
+      "with_note": {
+        "title": "Offre non retenue",
+        "body": "Votre offre de {amount} TND sur « {title} » n'est pas retenue. Le vendeur : {note}"
+      }
+    },
+    "offer_countered": {
+      "plain": {
+        "title": "Le vendeur propose {counter} TND",
+        "body": "Pour « {title} », le vendeur propose {counter} TND (votre offre : {amount} TND). Acceptez ou refusez dans Mes offres."
+      },
+      "with_note": {
+        "title": "Le vendeur propose {counter} TND",
+        "body": "Pour « {title} », le vendeur propose {counter} TND (votre offre : {amount} TND). Le vendeur : {note}"
+      }
+    },
+    "offer_counter_accepted": {
+      "title": "Prix accepté : {amount} TND",
+      "body": "{name} accepte votre prix de {amount} TND pour « {title} ». Son numéro est dans Mes offres."
+    },
+    "offer_counter_declined": {
+      "title": "Prix refusé",
+      "body": "{name} ne retient pas votre prix de {amount} TND pour « {title} »."
+    },
+    "offer_withdrawn": {
+      "title": "Offre retirée",
+      "body": "{name} a retiré son offre sur « {title} »."
+    },
+    "offer_expired": {
+      "pending": {
+        "title": "Offre expirée",
+        "body": "Le vendeur n'a pas répondu à temps à votre offre sur « {title} »."
+      },
+      "countered": {
+        "title": "Votre prix a expiré",
+        "body": "L'acheteur n'a pas répondu à temps à votre prix de {amount} TND pour « {title} »."
+      }
     }
   },
   "publish": {
@@ -3490,7 +3548,12 @@
     "admin_article_upload": "Image de guide envoyée",
     "admin_article_assist": "Aide à la rédaction utilisée",
     "admin_shop_delete": "Agence supprimée",
-    "admin_user_delete": "Compte supprimé"
+    "admin_user_delete": "Compte supprimé",
+    "offer_create": "Offre de prix envoyée",
+    "offer_accept": "Offre acceptée",
+    "offer_decline": "Offre refusée",
+    "offer_counter": "Autre prix proposé",
+    "offer_withdraw": "Offre retirée"
   },
   "adminApi": {
     "bulk": {
@@ -4249,7 +4312,8 @@
         "clients": "Clients",
         "demandes": "Demandes",
         "projets": "Projets",
-        "rapports": "Rapports"
+        "rapports": "Rapports",
+        "offres": "Offres"
       },
       "planLabel": "Abonnement",
       "noPlan": "Aucun",
@@ -4349,7 +4413,9 @@
         "tooFew": "le badge « Agence réactive » demande au moins {min} demandes de visite traitées sur {days} jours ; vous en avez {total}. Confirmer ou décliner dans les {hours} h suffit.",
         "below": "{fast, plural, =0 {Aucune demande de visite} one {# demande de visite} other {# demandes de visite}} sur {total} traitées en moins de {hours} h ({rate} %). Le badge « Agence réactive » demande {minRate} % : confirmez ou déclinez les prochaines plus vite."
       },
-      "planFoundingWaiting": "Votre demande avec l'offre des agences fondatrices ({plan}, {quota} annonces) attend l'équipe : rien à payer. Les {months, plural, one {# mois offert démarre} other {# mois offerts démarrent}} à l'ouverture de l'agence."
+      "planFoundingWaiting": "Votre demande avec l'offre des agences fondatrices ({plan}, {quota} annonces) attend l'équipe : rien à payer. Les {months, plural, one {# mois offert démarre} other {# mois offerts démarrent}} à l'ouverture de l'agence.",
+      "offersWaiting": "{count, plural, one {# offre à répondre} other {# offres à répondre}}",
+      "noOffers": "Aucune offre de prix sur les annonces de l'agence pour l'instant."
     },
     "clients": {
       "open": "En cours",
@@ -4383,7 +4449,8 @@
       "sources": {
         "visit": "Visite",
         "manual": "Ajouté",
-        "suggestion": "Demande"
+        "suggestion": "Demande",
+        "offer": "Offre"
       },
       "quickLabel": "Ajouter à la note",
       "quick": {
@@ -5883,6 +5950,38 @@
     "contact_instagram": {
       "label": "Compte Instagram",
       "hint": "Le nom du compte (avec ou sans @) ou son lien. Affiché en bas de chaque page et sur la page contact. Vide : pas d'Instagram."
+    },
+    "feature_offers": {
+      "label": "Proposer un prix",
+      "hint": "Le bouton « Proposer un prix » sur les annonces à vendre. Coupé : plus de nouvelle offre ; celles en cours restent dans « Mes offres »."
+    },
+    "offers_only_negotiable": {
+      "label": "Offres sur les prix négociables seulement",
+      "hint": "Le bouton n'apparaît que si le vendeur a coché « Prix négociable ». Coupé : sur toutes les annonces à vendre qui ont un prix."
+    },
+    "offers_rent": {
+      "label": "Offres sur les locations aussi",
+      "hint": "Le bouton apparaît aussi sur les annonces à louer."
+    },
+    "offers_min_percent": {
+      "label": "Offre la plus basse",
+      "hint": "Sous ce pourcentage du prix affiché, l'offre est refusée avant d'arriver au vendeur."
+    },
+    "offers_chip_step": {
+      "label": "Écart entre les montants proposés",
+      "hint": "Les choix rapides : le prix moins 1, 2 et 3 fois ce pourcentage (5 % : −5 %, −10 %, −15 %)."
+    },
+    "offers_days": {
+      "label": "Délai pour répondre à une offre",
+      "hint": "Une offre ou un autre prix sans réponse expire après ce nombre de jours."
+    },
+    "offers_max_per_listing": {
+      "label": "Offres par acheteur et par annonce",
+      "hint": "Un acheteur dont l'offre n'est pas retenue peut en refaire une, jusqu'à ce nombre."
+    },
+    "limit_offers_per_day": {
+      "label": "Offres de prix par acheteur",
+      "hint": "Au-delà, il attend le lendemain."
     }
   },
   "ads": {
@@ -7332,5 +7431,136 @@
       "name": "Le marché immobilier tunisien en chiffres — Mazed Immo",
       "description": "Prix médians demandés, offre par gouvernorat et par type de bien, demande des acheteurs, calculés à partir des annonces publiées sur Mazed Immo."
     }
+  },
+  "offers": {
+    "request": {
+      "cta": "Proposer un prix",
+      "title": "Proposer un prix",
+      "close": "Fermer",
+      "asking": "Prix affiché : {amount}",
+      "hint": "Sans engagement : le vendeur accepte, refuse ou vous propose un autre prix.",
+      "amountLabel": "Votre offre",
+      "other": "Autre montant",
+      "otherPlaceholder": "Au moins {amount}",
+      "min": "Au moins {amount} ({percent} % du prix affiché).",
+      "max": "Au plus le prix affiché, {amount}.",
+      "financingLabel": "Comment vous payez (facultatif)",
+      "financing": {
+        "cash": "Comptant",
+        "loan": "Crédit bancaire"
+      },
+      "name": "Votre nom",
+      "phone": "Votre numéro",
+      "message": "Un mot pour le vendeur (facultatif)",
+      "defaultMessage": "Bonjour, votre bien m'intéresse. Voici mon offre.",
+      "phrasesLabel": "Ajouter une phrase",
+      "phrases": {
+        "quick": "Je peux conclure rapidement.",
+        "visit": "Je souhaite visiter avant de conclure."
+      },
+      "shared": "Le vendeur recevra votre offre, votre nom et votre numéro. L'offre n'engage ni vous ni lui.",
+      "send": "Envoyer l'offre",
+      "sendAmount": "Envoyer l'offre : {amount}",
+      "sentToast": "Offre envoyée au vendeur.",
+      "failed": "L'offre n'a pas pu être envoyée. Réessayez.",
+      "sentTitle": "Offre envoyée : {amount}",
+      "sentBody": "Le vendeur vous répondra ici et par SMS.",
+      "counteredTitle": "Le vendeur propose {amount}",
+      "counteredBody": "Acceptez ou refusez son prix dans Mes offres.",
+      "acceptedTitle": "Prix convenu : {amount}",
+      "acceptedBody": "Le numéro du vendeur est dans Mes offres : appelez-le pour la suite.",
+      "follow": "Suivre dans Mes offres",
+      "noneLeft": "Vous avez fait toutes les offres possibles sur cette annonce."
+    },
+    "status": {
+      "pending": "En attente",
+      "countered": "Autre prix proposé",
+      "accepted": "Acceptée",
+      "declined": "Non retenue",
+      "withdrawn": "Retirée",
+      "expired": "Expirée"
+    },
+    "card": {
+      "sent": "Proposée le {date}",
+      "listingGone": "Annonce supprimée",
+      "asking": "Prix affiché",
+      "offer": "Offre de l'acheteur",
+      "yourOffer": "Votre offre",
+      "counter": "Prix du vendeur",
+      "yourCounter": "Votre prix",
+      "agreed": "Prix convenu",
+      "callSeller": "Appelez le vendeur :",
+      "sellerNote": "Le vendeur :",
+      "yourNote": "Votre mot :",
+      "answerBefore": "À répondre avant le {date}",
+      "waitingUntil": "Réponse attendue avant le {date}",
+      "nextSteps": "Rien n'est signé : la vente se conclut chez le notaire ou l'avocat, après la visite et la vérification des papiers.",
+      "again": "Faire une nouvelle offre"
+    },
+    "actions": {
+      "accept": "Accepter",
+      "acceptAsk": "L'acheteur verra votre numéro avec votre accord.",
+      "acceptAmount": "Accepter {amount}",
+      "acceptNote": "Merci, j'accepte votre offre. Appelons-nous pour la suite.",
+      "counter": "Proposer un autre prix",
+      "counterLabel": "Votre prix",
+      "askingChip": "prix affiché",
+      "other": "Autre montant",
+      "counterRange": "Entre {min} et {max} TND",
+      "counterNote": "Merci pour votre offre. Je peux vous proposer ce prix.",
+      "counterSend": "Envoyer mon prix",
+      "counterSendAmount": "Envoyer mon prix : {amount}",
+      "decline": "Refuser",
+      "declineTitle": "Pourquoi refuser ?",
+      "declineReasons": {
+        "low": "Le montant est trop bas.",
+        "firm": "Mon prix est ferme.",
+        "sold": "Le bien n'est plus disponible."
+      },
+      "declineSend": "Envoyer le refus",
+      "note": "Un mot pour l'acheteur",
+      "back": "Retour",
+      "accepted": "Offre acceptée, l'acheteur est prévenu.",
+      "countered": "Votre prix est envoyé à l'acheteur.",
+      "declined": "Refus envoyé, l'acheteur est prévenu.",
+      "withdraw": "Retirer mon offre",
+      "withdrawAsk": "Retirer cette offre ? Le vendeur sera prévenu.",
+      "withdrawConfirm": "Oui, retirer",
+      "withdrawn": "Offre retirée.",
+      "acceptCounterAsk": "Le vendeur recevra votre accord, et vous verrez son numéro.",
+      "declineCounter": "Refuser ce prix",
+      "agreedToast": "Accord conclu, le vendeur est prévenu.",
+      "declinedCounter": "Prix refusé, le vendeur est prévenu.",
+      "failed": "Action impossible. Réessayez."
+    },
+    "page": {
+      "title": "Mes offres",
+      "subtitle": "Les prix proposés sur vos annonces, et ceux que vous avez proposés.",
+      "unavailable": "Service momentanément indisponible.",
+      "tabs": {
+        "received": "Reçues",
+        "sent": "Envoyées"
+      },
+      "emptyReceived": "Aucune offre sur vos annonces pour l'instant.",
+      "emptySent": "Vous n'avez proposé aucun prix. Sur une annonce négociable, « Proposer un prix » envoie votre offre au vendeur."
+    }
+  },
+  "offersApi": {
+    "tooMany": "Trop d'offres aujourd'hui. Réessayez demain.",
+    "amount": "Indiquez un montant en dinars.",
+    "tooLow": "L'offre doit être d'au moins {amount} TND.",
+    "tooHigh": "L'offre ne peut pas dépasser le prix affiché ({amount} TND).",
+    "counter": "Votre prix doit être entre {min} et {max} TND.",
+    "phone": "Numéro de téléphone invalide.",
+    "name": "Indiquez votre nom.",
+    "nameLetters": "Votre nom, en lettres seulement (2 à 60 caractères).",
+    "notOnline": "Cette annonce n'est plus en ligne.",
+    "notOffered": "Cette annonce ne reçoit pas d'offres.",
+    "own": "C'est votre annonce, ou celle de votre agence.",
+    "alreadyOpen": "Vous avez déjà une offre en cours sur cette annonce.",
+    "maxReached": "Vous avez fait le nombre d'offres possible sur cette annonce ({count}).",
+    "transition": "Cette offre a déjà changé d'état. Rechargez la page.",
+    "expired": "Cette offre a expiré.",
+    "agreed": "Vous avez déjà un accord de prix avec le vendeur sur cette annonce."
   }
 }

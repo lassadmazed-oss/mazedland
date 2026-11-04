@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
  * keeps about the caller, as one JSON file (droit d'accès, loi 2004-63).
  *
  * Read with the service role, every query filtered on the caller's id. Only
- * what is theirs: their annonces, the visits they asked (not the people who
- * asked to visit theirs), what they paid. Internal moderation columns (admin
+ * what is theirs: their annonces, the visits they asked and the prices they
+ * proposed (not the people who asked about theirs), what they paid. Internal moderation columns (admin
  * notes, review flags, search index) stay out; they are not personal data of
  * the caller but the console's work.
  */
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   const id = user.id;
 
   const [
-    profile, listings, requests, visits, watchlist, payments, invoices, consents,
+    profile, listings, requests, visits, offers, watchlist, payments, invoices, consents,
     shops, memberships, notifications, reveals, reports, social, credits, activity,
   ] = await Promise.all([
     admin.from("profiles")
@@ -40,6 +40,9 @@ export async function GET(req: NextRequest) {
       .eq("user_id", id).order("created_at"),
     admin.from("visit_requests")
       .select("listing_id, slots, buyer_name, buyer_phone, message, status, confirmed_slot, created_at")
+      .eq("buyer_id", id).order("created_at"),
+    admin.from("price_offers")
+      .select("listing_id, asking_price, amount, counter_amount, financing, buyer_name, buyer_phone, message, status, created_at")
       .eq("buyer_id", id).order("created_at"),
     admin.from("watchlist").select("listing_id, created_at").eq("user_id", id).order("created_at"),
     admin.from("payments")
@@ -72,6 +75,7 @@ export async function GET(req: NextRequest) {
     listings: listings.data ?? [],
     property_requests: requests.data ?? [],
     visit_requests: visits.data ?? [],
+    price_offers: offers.data ?? [],
     favourites: watchlist.data ?? [],
     payments: payments.data ?? [],
     invoices: invoices.data ?? [],

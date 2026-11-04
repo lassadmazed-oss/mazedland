@@ -113,6 +113,30 @@ describe("forSms", () => {
     expect((forSms(declined, visitor).payload as { vars: Record<string, string> }).vars.variant).toBe("plain");
   });
 
+  it("does the same for a price offer (0211)", () => {
+    const received = {
+      kind: "offer_received",
+      title: "Nouvelle offre",
+      body: "x",
+      payload: { vars: { title: "Villa", name: "Appelez le 20123456", amount: 198000, asking: 220000 } },
+    };
+    expect(forSms(received, visitor).payload).toEqual({ vars: { title: "Villa", name: visitor, amount: 198000, asking: 220000 } });
+    const countered = {
+      kind: "offer_countered",
+      title: "x",
+      body: "y",
+      payload: { vars: { title: "Villa", amount: 198000, counter: 205000, note: "Versez une avance", variant: "with_note" } },
+    };
+    const out = forSms(countered, visitor).payload as { vars: Record<string, unknown> };
+    expect(out.vars).toEqual({ title: "Villa", amount: 198000, counter: 205000, note: "", variant: "plain" });
+    // An agreed price always goes out; a new offer is under the daily cap.
+    expect(CAPPED_KINDS.has("offer_accepted")).toBe(false);
+    expect(CAPPED_KINDS.has("offer_counter_accepted")).toBe(false);
+    expect(CAPPED_KINDS.has("offer_received")).toBe(true);
+    expect(SMS_KINDS.has("offer_withdrawn")).toBe(false);
+    expect(SMS_KINDS.has("offer_expired")).toBe(false);
+  });
+
   it("leaves every other kind as it is", () => {
     const published = { kind: "listing_published", title: "x", body: "y", payload: { vars: { title: "Villa", name: "kept" } } };
     expect(forSms(published, visitor)).toBe(published);

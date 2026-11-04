@@ -24,6 +24,8 @@ import { toMatchable } from "@/lib/requests/server";
 import { categoryLabel } from "@/lib/i18n";
 import { VisitCard } from "@/components/visits/VisitCard";
 import { loadVisits } from "@/lib/visits-server";
+import { OfferCard } from "@/components/offers/OfferCard";
+import { loadOffers } from "@/lib/offers-server";
 import { tunisDay, type LeadStage } from "@/lib/visits";
 import { getSettings } from "@/lib/settings/server";
 import { paymentsAreOpen } from "@/lib/payments/server";
@@ -40,7 +42,7 @@ export async function generateMetadata() {
   return { title: t("eyebrow") };
 }
 
-const TABS = ["apercu", "annonces", "rapports", "projets", "visites", "clients", "demandes", "equipe", "abonnement", "agence", "documents"] as const;
+const TABS = ["apercu", "annonces", "rapports", "projets", "visites", "offres", "clients", "demandes", "equipe", "abonnement", "agence", "documents"] as const;
 type TabKey = (typeof TABS)[number];
 
 const STATUS_TONE: Record<string, string> = {
@@ -81,13 +83,15 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
   const demandesOn = settings.feature_requests;
   const projectsOn = settings.feature_projects;
   const reportsOn = settings.feature_pro_reports;
+  // « Proposer un prix » (0211): the team answers its annonces' offers here.
+  const offersTab = settings.feature_offers;
   // Everyone sees the plan; only those who may act on the page or the papers see those tabs.
   const visibleTabs = TABS.filter((k) =>
-    k === "rapports" ? reportsOn : k === "projets" ? projectsOn && can(role, "projects") : k === "agence" ? can(role, "edit_shop") : k === "documents" ? can(role, "documents") : k === "demandes" ? demandesOn && can(role, "clients") : k === "visites" || k === "clients" ? can(role, "clients") : true,
+    k === "rapports" ? reportsOn : k === "projets" ? projectsOn && can(role, "projects") : k === "agence" ? can(role, "edit_shop") : k === "documents" ? can(role, "documents") : k === "demandes" ? demandesOn && can(role, "clients") : k === "offres" ? offersTab && can(role, "clients") : k === "visites" || k === "clients" ? can(role, "clients") : true,
   );
   const href = (k: TabKey) => `/pro/dashboard?shop=${shop.id}&tab=${k}`;
 
-  const [plan, used, { data: listingRows }, { count: visitsWaiting }, { data: requestRow }] = await Promise.all([
+  const [plan, used, { data: listingRows }, { count: visitsWaiting }, { data: requestRow }, { count: offersWaiting }] = await Promise.all([
     activePlan(admin, shop.id),
     // The agence's annonces and its owner's own: the plan's places (src/lib/places).
     planUsage(admin, shop.id),
@@ -110,6 +114,13 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
           .limit(1)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    // Offers still waiting on the team's answer, and still in time.
+    admin
+      .from("price_offers")
+      .select("id", { count: "exact", head: true })
+      .eq("shop_id", shop.id)
+      .eq("status", "pending")
+      .gt("expires_at", new Date().toISOString()),
   ]);
   // What the request waits on: the console (receipt in), a new receipt (an
   // admin refused it — not a choice the owner replaced), or nothing yet.
@@ -222,6 +233,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
             >
               {t(`tabs.${k}`)}
               {k === "visites" && (visitsWaiting ?? 0) > 0 && <span className="mazed-tabular ms-1 text-[11px] text-[var(--tone-warn)]">{visitsWaiting}</span>}
+              {k === "offres" && (offersWaiting ?? 0) > 0 && <span className="mazed-tabular ms-1 text-[11px] text-[var(--tone-warn)]">{offersWaiting}</span>}
             </Link>
           ))}
         </div>
@@ -249,6 +261,11 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
               {(visitsWaiting ?? 0) > 0 && (
                 <Link href={href("visites") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
                   {t("visitsWaiting", { count: visitsWaiting ?? 0 })}
+                </Link>
+              )}
+              {offersTab && can(role, "clients") && (offersWaiting ?? 0) > 0 && (
+                <Link href={href("offres") as never} className="mazed-btn-quiet tap-target inline-flex h-10 items-center rounded-full px-4 text-[13px]">
+                  {t("offersWaiting", { count: offersWaiting ?? 0 })}
                 </Link>
               )}
               {can(role, "documents") && !shop.verified_at && (
@@ -312,6 +329,8 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
       )}
 
       {tab === "visites" && can(role, "clients") && <VisitsTab shopId={shop.id} />}
+
+      {tab === "offres" && offersTab && can(role, "clients") && <OffersTab shopId={shop.id} />}
 
       {tab === "clients" && can(role, "clients") && <ClientsTab shopId={shop.id} />}
 
@@ -377,6 +396,20 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
           </section>
         )}
       </>
+    );
+  }
+
+  /** The prices buyers proposed on the agence's annonces (0211), answered by the team. */
+  async function OffersTab({ shopId }: { shopId: string }) {
+    const offers = await loadOffers(admin!, { shop: shopId });
+    return offers.length === 0 ? (
+      <p className="mt-5 mazed-band-warm rounded-[var(--radius-3xl)] p-8 text-center text-[13px] text-muted">{t("noOffers")}</p>
+    ) : (
+      <section className="mt-5 space-y-3">
+        {offers.map((o) => (
+          <OfferCard key={o.id} offer={o} side="seller" locale={locale} />
+        ))}
+      </section>
     );
   }
 
