@@ -7,6 +7,7 @@ import { getAdminSession } from "@/lib/admin/session";
 import { asAppLocale } from "@/lib/i18n";
 import { AdminRail, AdminMobileBar, type AdminCounts } from "@/components/admin/AdminShell";
 import { AdminScopesProvider } from "@/components/admin/AdminScopes";
+import { AdminSearchProvider } from "@/components/admin/AdminSearch";
 
 // Admin is auth-gated and per-request — never static. Forcing dynamic here
 // covers EVERY admin route (so a new page can't accidentally be prerendered,
@@ -96,6 +97,7 @@ export default async function AdminLayout({
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
     <AdminScopesProvider scopes={scopes}>
+    <AdminSearchProvider>
     <div className="flex h-dvh overflow-hidden bg-background">
       <AdminRail counts={counts} />
       <div className="flex min-w-0 flex-1 flex-col">
@@ -108,6 +110,7 @@ export default async function AdminLayout({
         </div>
       </div>
     </div>
+    </AdminSearchProvider>
     </AdminScopesProvider>
     </NextIntlClientProvider>
   );

@@ -3192,6 +3192,52 @@
     },
     "editWaitingPlain": "تبديل للمراجعة (موش منشور)"
   },
+  "adminSearch": {
+    "open": "بحث",
+    "shortcut": "Ctrl K",
+    "label": "بحث في الكونسول",
+    "placeholder": "إعلان، MZ-…، وكالة، اسم، تلفون، خلاص، إعداد…",
+    "hint": "اكتب حرفين على الأقل: مرجع (MZ-01643 ولا 1643)، عنوان، اسم، نومرو تلفون، مرجع تحويل (MAZED IMMO-C243037D)، نومرو فاتورة، إشهار، عرض، دليل ولا اسم إعداد. كل نتيجة تتحلّ في البلاصة اللي تتبدّل فيها.",
+    "loading": "نلوّج…",
+    "empty": "ما لقيت شي لـ « {q} ».",
+    "failed": "جزء من البحث ما جاوبش. عاود جرّب.",
+    "keys": "↑ ↓ باش تختار · Entrée باش تحلّ · Échap باش تسكّر",
+    "close": "سكّر",
+    "groups": {
+      "pages": "صفحات الكونسول",
+      "listings": "الإعلانات",
+      "shops": "الوكالات",
+      "sellers": "الحسابات",
+      "payments": "المدفوعات",
+      "invoices": "الفواتير والوصولات والأفوار",
+      "social": "طلبات النشر في الشبكات",
+      "ads": "الإشهار",
+      "products": "العروض والأسعار",
+      "articles": "الأدلّة",
+      "categories": "الأصناف",
+      "settings": "الإعدادات"
+    },
+    "amount": "{amount} د.ت",
+    "noName": "بلا اسم",
+    "banned": "موقوف",
+    "invoice": "فاتورة {number}",
+    "receipt": "وصل {number}",
+    "creditNote": "أفوار {number}",
+    "socialRequest": "طلب {ref}",
+    "socialStatus": {
+      "draft": "مسودة",
+      "pending_approval": "قيد المراجعة",
+      "scheduled": "مبرمج",
+      "published": "منشور",
+      "failed": "ما تنشرش",
+      "rejected": "مرفوض",
+      "cancelled": "ملغى",
+      "withdrawn": "مسحوب"
+    },
+    "until": "حتى {date}",
+    "inactive": "موقوفة",
+    "settingGroup": "الإعدادات · {group}"
+  },
   "adminSellers": {
     "title": "البائعون",
     "tabs": {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -29,16 +29,21 @@ function defaultDraft(def: SettingDef): string | boolean {
  * One tab of /admin/settings: every setting of a group, with its default and
  * its range, saved together. Only what changed is sent; « Rétablir » sends
  * `null`, which puts the default back (the stored row goes away).
+ *
+ * `focus` is the setting the console search opened (`?k=`): scrolled to and
+ * outlined, so it stands out among the rest of its tab.
  */
 export function SettingsPanel({
   keys,
   values,
   stored,
+  focus = null,
 }: {
   keys: SettingKey[];
   values: Record<string, unknown>;
   /** Keys with a stored row; the others show their default. */
   stored: string[];
+  focus?: SettingKey | null;
 }) {
   const t = useTranslations("settingsRegistry");
   const apiError = useApiError();
@@ -55,6 +60,10 @@ export function SettingsPanel({
   const [saved, setSaved] = useState(false);
 
   const changed = keys.filter((k) => draft[k] !== initial[k] || reset.has(k));
+
+  useEffect(() => {
+    if (focus) document.getElementById(`setting-row-${focus}`)?.scrollIntoView({ block: "center" });
+  }, [focus]);
 
   function set(key: SettingKey, v: string | boolean) {
     setDraft((d) => ({ ...d, [key]: v }));
@@ -125,7 +134,7 @@ export function SettingsPanel({
           const isStored = stored.includes(key) && !reset.has(key);
           const isDefault = draft[key] === defaultDraft(def);
           return (
-            <li key={key} className="px-4 py-3.5">
+            <li key={key} id={`setting-row-${key}`} className={cn("px-4 py-3.5", key === focus && "rounded-2xl ring-2 ring-inset ring-[var(--gold)]")}>
               <Field
                 id={key}
                 def={def}

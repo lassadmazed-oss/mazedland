@@ -3192,6 +3192,52 @@
     },
     "editWaitingPlain": "Modification à vérifier (hors ligne)"
   },
+  "adminSearch": {
+    "open": "Rechercher",
+    "shortcut": "Ctrl K",
+    "label": "Rechercher dans la console",
+    "placeholder": "Annonce, MZ-…, agence, nom, téléphone, paiement, réglage…",
+    "hint": "Tapez au moins deux lettres : une référence (MZ-01643 ou 1643), un titre, un nom, un numéro de téléphone, la référence d'un virement (MAZED IMMO-C243037D), un numéro de facture, une publicité, une offre, un guide ou le nom d'un réglage. Chaque résultat s'ouvre là où il se modifie.",
+    "loading": "Recherche…",
+    "empty": "Rien trouvé pour « {q} ».",
+    "failed": "Une partie de la recherche n'a pas répondu. Réessayez.",
+    "keys": "↑ ↓ pour choisir · Entrée pour ouvrir · Échap pour fermer",
+    "close": "Fermer",
+    "groups": {
+      "pages": "Pages de la console",
+      "listings": "Annonces",
+      "shops": "Agences",
+      "sellers": "Comptes",
+      "payments": "Paiements",
+      "invoices": "Factures, reçus et avoirs",
+      "social": "Demandes réseaux sociaux",
+      "ads": "Publicités",
+      "products": "Offres et prix",
+      "articles": "Guides",
+      "categories": "Catégories",
+      "settings": "Réglages"
+    },
+    "amount": "{amount} TND",
+    "noName": "Sans nom",
+    "banned": "Suspendu",
+    "invoice": "Facture {number}",
+    "receipt": "Reçu {number}",
+    "creditNote": "Avoir {number}",
+    "socialRequest": "Demande {ref}",
+    "socialStatus": {
+      "draft": "Brouillon",
+      "pending_approval": "À valider",
+      "scheduled": "Programmée",
+      "published": "Publiée",
+      "failed": "Échouée",
+      "rejected": "Refusée",
+      "cancelled": "Annulée",
+      "withdrawn": "Retirée"
+    },
+    "until": "jusqu'au {date}",
+    "inactive": "Désactivée",
+    "settingGroup": "Réglages · {group}"
+  },
   "adminSellers": {
     "title": "Vendeurs",
     "tabs": {
