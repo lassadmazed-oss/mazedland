@@ -960,7 +960,24 @@
     "metaDescription": "{count, plural, =0 {Aucune annonce pour le moment} one {# annonce} other {# annonces}} : {title}. Prix affichés, vendeurs joignables directement, en français et en arabe.",
     "metaDescriptionAny": "{title}. Prix affichés, vendeurs joignables directement, en français et en arabe.",
     "marketLink": "Le marché en chiffres",
-    "marketLinkIn": "Le marché à {gov} en chiffres"
+    "marketLinkIn": "Le marché à {gov} en chiffres",
+    "viewLabel": "Affichage",
+    "view": {
+      "list": "Liste",
+      "map": "Carte"
+    }
+  },
+  "catalogueMap": {
+    "mapLabel": "Carte des annonces",
+    "inView": "{count, plural, =0 {Aucune annonce dans cette zone} one {# annonce dans cette zone} other {# annonces dans cette zone}}",
+    "unplaced": "{count, plural, one {# sans position, visible dans la liste} other {# sans position, visibles dans la liste}}",
+    "zoneHint": "Bulle en pointillés : annonce sans position exacte, placée dans sa délégation.",
+    "zone": "zone",
+    "none": "Aucune annonce de cette recherche n'est encore sur la carte.",
+    "moveHint": "Déplacez ou dézoomez la carte pour voir des annonces.",
+    "amount": "{amount} DT",
+    "perMonth": "{amount} DT / mois",
+    "onRequest": "Prix sur demande"
   },
   "listing": {
     "gallery": {
@@ -1133,7 +1150,8 @@
       "badLocation": "Position invalide : elle doit être en Tunisie.",
       "noPoint": "Aucune position trouvée dans ce lien.",
       "outside": "Ce point n'est pas en Tunisie."
-    }
+    },
+    "outsideGovernorate": "Ce point est hors du gouvernorat de {gov}. Vérifiez l'épingle ou le gouvernorat."
   },
   "listingApi": {
     "tooManyReveals": "Trop de numéros consultés depuis cet appareil. Réessayez plus tard.",
@@ -6045,6 +6063,18 @@
     "map_pin_live_without_review": {
       "label": "Position d'une annonce en ligne sans modération",
       "hint": "Activé : une position ajoutée ou déplacée sur une annonce en ligne s'affiche tout de suite. Coupé : elle attend un admin comme toute modification, et l'annonce est hors ligne jusque-là."
+    },
+    "feature_catalogue_map": {
+      "label": "Vue carte des annonces",
+      "hint": "Le bouton « Liste | Carte » du catalogue : la recherche en bulles de prix sur une carte, avec les annonces de la zone à côté."
+    },
+    "map_show_without_pin": {
+      "label": "Annonces sans position sur la carte",
+      "hint": "Activé : une annonce sans épingle apparaît dans sa délégation, en bulle pointillée. Coupé : seules les annonces avec une position sont sur la carte."
+    },
+    "catalogue_map_max": {
+      "label": "Annonces au plus sur la carte",
+      "hint": "Au-delà, les plus récentes."
     }
   },
   "ads": {

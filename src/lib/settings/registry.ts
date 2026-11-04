@@ -41,6 +41,9 @@ export const SETTINGS = {
   // Where an annonce is, on a map (0212): the optional pin in the form and the
   // map on the annonce page. Off: neither shows; the pins stay stored.
   feature_listing_map: { group: "features", type: "bool", default: true, client: true },
+  // « Carte » in the catalogue (?vue=carte): the search as price bubbles on a
+  // map, with the annonces in its frame beside it.
+  feature_catalogue_map: { group: "features", type: "bool", default: true, client: true },
   // « Publier en parlant » (version B): an annonce made in a conversation, voice
   // first. Off until the owner turns it on (asked 2026-10-31).
   feature_publish_chat: { group: "features", type: "bool", default: false, client: true },
@@ -140,6 +143,11 @@ export const SETTINGS = {
   catalogue_phone_columns: { group: "publication", type: "int", default: 1, min: 1, max: 2, choices: [1, 2] },
   // « Position approximative » (the default): visitors see a circle of this
   // radius, which holds the house without pointing at it (src/lib/geo).
+  // On the catalogue map, an annonce without a pin stands in its délégation,
+  // drawn as a zone (on); off, only the annonces with a pin are on the map.
+  map_show_without_pin: { group: "publication", type: "bool", default: true },
+  // The most annonces one map shows; past it, the newest.
+  catalogue_map_max: { group: "publication", type: "int", default: 1000, min: 100, max: 3000, choices: [500, 1000, 2000, 3000] },
   map_approx_radius_m: { group: "publication", type: "int", default: 500, min: 200, max: 2000, unit: "meters", choices: [300, 500, 800, 1000, 1500], client: true },
   // A project goes public only while its agence has a running plan.
   projects_need_plan: { group: "publication", type: "bool", default: true },
