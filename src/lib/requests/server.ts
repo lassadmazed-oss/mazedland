@@ -2,6 +2,8 @@ import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { asDealType, type Furnished } from "@/lib/listings/deal";
 import { loadSettings } from "@/lib/settings/server";
 import { matchRequest, type MatchableListing, type MatchableRequest } from "./model";
+import { parseZone } from "@/lib/geo/zone";
+import { delegationCenter } from "@/lib/geo/places";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -17,6 +19,7 @@ type RequestRow = {
   rooms_min: number | null;
   furnished: string | null;
   move_in_by: string | null;
+  zone?: unknown;
 };
 
 const n = (v: number | string | null) => (v == null ? null : Number(v));
@@ -33,6 +36,7 @@ export function toMatchable(r: Omit<RequestRow, "id" | "user_id">): MatchableReq
     rooms_min: r.rooms_min,
     furnished: (r.furnished as Furnished | null) ?? null,
     move_in_by: r.move_in_by,
+    zone: parseZone(r.zone),
   };
 }
 
@@ -52,7 +56,7 @@ export async function notifyMatchingRequests(admin: Admin, listingId: string): P
     const { data: l } = await admin
       .from("listings")
       .select(
-        "id, seller_id, title, deal_type, category_id, governorate, price, price_on_request, attributes, furnished, available_from",
+        "id, seller_id, title, deal_type, category_id, governorate, delegation, lat, lng, price, price_on_request, attributes, furnished, available_from",
       )
       .eq("id", listingId)
       .maybeSingle();
@@ -61,7 +65,7 @@ export async function notifyMatchingRequests(admin: Admin, listingId: string): P
     const { data: rows } = await admin
       .from("property_requests")
       .select(
-        "id, user_id, deal_type, category_ids, governorates, budget_min, budget_max, surface_min, rooms_min, furnished, move_in_by",
+        "id, user_id, deal_type, category_ids, governorates, budget_min, budget_max, surface_min, rooms_min, furnished, move_in_by, zone",
       )
       .eq("status", "active")
       .eq("alerts", true)
@@ -70,7 +74,12 @@ export async function notifyMatchingRequests(admin: Admin, listingId: string): P
       .neq("user_id", l.seller_id as string)
       .limit(1000);
 
-    const listing = l as unknown as MatchableListing & { id: string; title: string };
+    // Where it stands for a zone: the map's point (0212), or its délégation.
+    const point =
+      l.lat != null && l.lng != null
+        ? { lat: Number(l.lat), lng: Number(l.lng) }
+        : delegationCenter(l.governorate as string, l.delegation as string | null);
+    const listing = { ...(l as unknown as MatchableListing), point } as MatchableListing & { id: string; title: string };
     const hits = ((rows ?? []) as RequestRow[])
       .map((r) => ({ r, m: matchRequest(listing, toMatchable(r)) }))
       .filter((x) => x.m.ok);

@@ -10,6 +10,8 @@ import { FURNISHED } from "@/lib/listings/deal";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { inputsInverted } from "@/lib/range";
 import { NOTE_MAX, type RequestFormValue } from "@/lib/requests/prefill";
+import { zoneParam } from "@/lib/geo/zone";
+import { Link } from "@/i18n/navigation";
 import {
   NOTE_PHRASES,
   ROOMS_PRESETS,
@@ -163,6 +165,7 @@ export function RequestForm({
           move_in_by: rent && v.move_in_by ? v.move_in_by : null,
           note: v.note,
           alerts: v.alerts,
+          zone: v.zone,
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -199,6 +202,7 @@ export function RequestForm({
     [t("summaryDeal"), t(rent ? "kindRent" : "kindBuy")],
     [t("categoriesLabel"), picked.length ? picked.join(", ") : t("anyCategory")],
     [t("summaryWhere"), v.governorates.length ? v.governorates.map((g) => governorateLabel(g, locale)).join(", ") : t("anywhere")],
+    ...(v.zone ? [[t("zoneLabel"), t("zoneDrawn")] as [string, string]] : []),
     [t("summaryBudget"), budget],
   ];
   if (Number(v.surface_min) > 0) {
@@ -318,6 +322,24 @@ export function RequestForm({
               <option key={g} value={g}>{governorateLabel(g, locale)}</option>
             ))}
           </select>
+        )}
+        {/* The zone drawn on the catalogue map (0213): the alert only goes
+            for an annonce inside it. Kept as drawn; redrawn on the map. */}
+        {v.zone && (
+          <div className="mt-3 rounded-xl bg-surface-2 p-3 ring-1 ring-border">
+            <p className="flex items-center gap-1.5 text-[13px] font-bold text-foreground">
+              <MapPin className="size-4 shrink-0" /> {t("zoneLabel")}
+            </p>
+            <p className="mt-0.5 text-[12px] leading-relaxed text-muted">{t("zoneHint")}</p>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] font-bold">
+              <Link href={`/annonces?vue=carte&zone=${zoneParam(v.zone)}` as never} target="_blank" className="text-foreground underline underline-offset-2">
+                {t("zoneView")}
+              </Link>
+              <button type="button" onClick={() => set("zone", null)} className="text-muted hover:text-foreground">
+                {t("zoneRemove")}
+              </button>
+            </div>
+          </div>
         )}
       </section>
 

@@ -977,7 +977,20 @@
     "moveHint": "Déplacez ou dézoomez la carte pour voir des annonces.",
     "amount": "{amount} DT",
     "perMonth": "{amount} DT / mois",
-    "onRequest": "Prix sur demande"
+    "onRequest": "Prix sur demande",
+    "draw": "Dessiner une zone",
+    "drawHint": "Tracez le contour avec le doigt",
+    "drawCancel": "Annuler",
+    "drawFailed": "Zone non retenue : tracez un contour fermé, en Tunisie.",
+    "zoneClear": "Effacer la zone",
+    "inZone": "{count, plural, =0 {Aucune annonce dans la zone dessinée} one {# annonce dans la zone dessinée} other {# annonces dans la zone dessinée}}",
+    "noneInZone": "Aucune annonce de cette recherche dans la zone. Agrandissez-la, ou soyez alerté quand une arrive.",
+    "alertZone": "M'alerter dans cette zone",
+    "nearMe": "Près de moi",
+    "sortedByDistance": "Du plus proche au plus loin.",
+    "geoFailed": "Position introuvable : autorisez la localisation, ou déplacez la carte.",
+    "distanceM": "à {m} m",
+    "distanceKm": "à {km} km"
   },
   "listing": {
     "gallery": {
@@ -3841,7 +3854,12 @@
       "groundFloor": "Rez-de-chaussée",
       "parking": "Avec parking",
       "furnished": "Meublé"
-    }
+    },
+    "zoneLabel": "Zone dessinée sur la carte",
+    "zoneHint": "L'alerte ne part que pour une annonce dans cette zone.",
+    "zoneView": "Voir la zone",
+    "zoneRemove": "Retirer la zone",
+    "zoneDrawn": "Zone sur la carte"
   },
   "requestsApi": {
     "budgetRequired": "Indiquez un budget maximum.",
@@ -3887,7 +3905,8 @@
       "expired": "Expirée"
     },
     "alertsOff": "alertes coupées",
-    "note": "Les {max} plus récentes. Une demande appartient à la personne qui l'a laissée : cette page ne la modifie pas."
+    "note": "Les {max} plus récentes. Une demande appartient à la personne qui l'a laissée : cette page ne la modifie pas.",
+    "zoneDrawn": "Zone sur la carte"
   },
   "accountSettings": {
     "title": "Paramètres",

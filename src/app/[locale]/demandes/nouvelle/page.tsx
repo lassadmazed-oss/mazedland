@@ -5,6 +5,7 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { categoryLabel } from "@/lib/i18n";
 import { asDealType, type Furnished } from "@/lib/listings/deal";
 import { requestFormFromSearch, type RequestFormValue } from "@/lib/requests/prefill";
+import { parseZone } from "@/lib/geo/zone";
 import { getSettings } from "@/lib/settings/server";
 import { RequestForm } from "./RequestForm";
 
@@ -89,7 +90,7 @@ export default async function NewRequestPage({
     ? await admin
         .from("property_requests")
         .select(
-          "id, user_id, deal_type, category_ids, governorates, budget_min, budget_max, surface_min, rooms_min, furnished, move_in_by, note, alerts",
+          "id, user_id, deal_type, category_ids, governorates, budget_min, budget_max, surface_min, rooms_min, furnished, move_in_by, note, alerts, zone",
         )
         .eq("id", sp.id)
         .maybeSingle()
@@ -109,6 +110,7 @@ export default async function NewRequestPage({
       move_in_by: (existing.move_in_by as string | null) ?? "",
       note: (existing.note as string | null) ?? "",
       alerts: existing.alerts !== false,
+      zone: parseZone(existing.zone),
     };
   } else {
     // The search it came from: its filters as criteria, its words as the note.

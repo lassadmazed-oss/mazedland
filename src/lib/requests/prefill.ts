@@ -16,6 +16,7 @@
 import { asDealType, FURNISHED, isoDay, type DealType, type Furnished } from "@/lib/listings/deal";
 import { TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
 import { findCategory } from "@/lib/catalog/browse";
+import { parseZone, type Zone } from "@/lib/geo/zone";
 
 /** The form holds strings, because inputs do; the API types them. */
 export type RequestFormValue = {
@@ -30,13 +31,15 @@ export type RequestFormValue = {
   move_in_by: string;
   note: string;
   alerts: boolean;
+  /** A zone drawn on the catalogue map (0213), kept as drawn. */
+  zone: Zone | null;
 };
 
 /** The note's length on the form and in the API. */
 export const NOTE_MAX = 500;
 
 /** The catalogue filters a search can carry, besides the deal and the words. */
-const SEARCH_FILTERS = ["cat", "gov", "min", "max", "surface", "rooms", "q"] as const;
+const SEARCH_FILTERS = ["cat", "gov", "min", "max", "surface", "rooms", "q", "zone"] as const;
 
 export type SearchPrefill = {
   value: RequestFormValue;
@@ -78,6 +81,7 @@ export function requestFormFromSearch(
       move_in_by: rent ? isoDay(sp.avail) ?? "" : "",
       note: words ?? "",
       alerts: true,
+      zone: parseZone(sp.zone),
     },
     words,
     anyDeal: searched && sp.deal !== "sale" && sp.deal !== "rent",
