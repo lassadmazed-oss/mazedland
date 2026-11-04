@@ -29,6 +29,8 @@ type Row = {
   furnished: string | null;
   move_in_by: string | null;
   note: string | null;
+  /** A zone drawn on the map (0213), [[lat, lng], …]. */
+  zone: unknown;
   status: string;
   alerts: boolean;
   expires_at: string;
@@ -64,7 +66,7 @@ export default async function MyRequestsPage() {
     db
       .from("property_requests")
       .select(
-        "id, deal_type, category_ids, governorates, budget_min, budget_max, surface_min, rooms_min, furnished, move_in_by, note, status, alerts, expires_at, created_at",
+        "id, deal_type, category_ids, governorates, budget_min, budget_max, surface_min, rooms_min, furnished, move_in_by, note, zone, status, alerts, expires_at, created_at",
       )
       .eq("user_id", user!.id)
       .order("created_at", { ascending: false }),
@@ -131,9 +133,10 @@ export default async function MyRequestsPage() {
             const what = (r.category_ids ?? []).length
               ? (r.category_ids ?? []).map((id) => (cats.get(id) ? categoryLabel(cats.get(id)!, locale) : null)).filter(Boolean).join(", ")
               : t("anyCategory");
-            const where = (r.governorates ?? []).length
-              ? (r.governorates ?? []).map((g) => governorateLabel(g, locale)).join(", ")
-              : t("anywhere");
+            const where = [
+              Array.isArray(r.zone) ? t("zoneDrawn") : null,
+              (r.governorates ?? []).length ? (r.governorates ?? []).map((g) => governorateLabel(g, locale)).join(", ") : null,
+            ].filter(Boolean).join(" · ") || t("anywhere");
             const budget = r.budget_max != null
               ? t(rent ? "upToPerMonth" : "upTo", { amount: money(r.budget_max) })
               : null;

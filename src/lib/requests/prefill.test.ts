@@ -30,6 +30,7 @@ describe("requestFormFromSearch", () => {
         move_in_by: "",
         note: "route de Teniour",
         alerts: true,
+        zone: null,
       },
       words: "route de Teniour",
       anyDeal: false,

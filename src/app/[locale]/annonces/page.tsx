@@ -52,6 +52,7 @@ import { CatalogueMap } from "@/components/map/CatalogueMap";
 import { spreadAround, type MapPoint } from "@/lib/geo/mapPoints";
 import { GOVERNORATE_CENTER } from "@/lib/geo/location";
 import { delegationCenter } from "@/lib/geo/places";
+import { parseZone, zoneParam } from "@/lib/geo/zone";
 import { coverPhoto } from "@/lib/listingCover";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 
@@ -312,6 +313,8 @@ export default async function AnnoncesPage({
   const requestedPage = pageNumber(sp.page);
   // « Carte » (?vue=carte, 0212): the same search, on a map instead of pages.
   const mapView = settings.feature_catalogue_map && sp.vue === "carte";
+  // A zone drawn on the map (0213): the map keeps to it; the pages ignore it.
+  const zone = mapView ? parseZone(sp.zone) : null;
 
   if (!admin) {
     return (
@@ -564,6 +567,7 @@ export default async function AnnoncesPage({
       furnished: furnished ?? undefined,
       avail: availBy ?? undefined,
       vue: mapView ? "carte" : undefined,
+      zone: zone ? zoneParam(zone) : undefined,
       ...next,
     };
     for (const [k, v] of Object.entries(merged)) if (v) p.set(k, v);
@@ -605,6 +609,7 @@ export default async function AnnoncesPage({
       ["surface", surface ? String(surface) : undefined], ["rooms", roomsMin ? String(roomsMin) : undefined],
       ["furnished", furnished ?? undefined], ["avail", availBy ?? undefined],
       ["vue", mapView ? "carte" : undefined],
+      ["zone", zone ? zoneParam(zone) : undefined],
     ];
     return all
       .filter(([k, v]) => v && !omit.includes(k))
@@ -1098,7 +1103,7 @@ export default async function AnnoncesPage({
               return (
                 <Link
                   key={key}
-                  href={qs({ vue, page: undefined }) as never}
+                  href={qs({ vue, page: undefined, ...(vue ? {} : { zone: undefined }) }) as never}
                   aria-current={on ? "true" : undefined}
                   className={`tap-target inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-bold transition ${
                     on ? "bg-foreground text-[var(--background)]" : "text-muted hover:text-foreground"
@@ -1141,7 +1146,14 @@ export default async function AnnoncesPage({
         </div>
       ) : mapView ? (
         <Optional name="catalogue-map">
-          <CatalogueMap points={mapPoints} unplaced={unplaced} start={mapStart} locale={locale} />
+          <CatalogueMap
+            points={mapPoints}
+            unplaced={unplaced}
+            start={mapStart}
+            initialZone={zone}
+            alertBase={settings.feature_requests ? qs({ sort: undefined, vue: undefined, zone: undefined }).replace("/annonces", "/demandes/nouvelle") : null}
+            locale={locale}
+          />
         </Optional>
       ) : (
         <>

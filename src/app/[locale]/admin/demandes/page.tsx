@@ -26,6 +26,8 @@ type Row = {
   furnished: string | null;
   move_in_by: string | null;
   note: string | null;
+  /** A zone drawn on the map (0213). */
+  zone: unknown;
   status: string;
   alerts: boolean;
   expires_at: string;
@@ -65,7 +67,7 @@ export default async function AdminDemandesPage({
     .from("property_requests")
     .select(
       `id, deal_type, category_ids, governorates, budget_min, budget_max, surface_min, rooms_min,
-       furnished, move_in_by, note, status, alerts, expires_at, created_at,
+       furnished, move_in_by, note, zone, status, alerts, expires_at, created_at,
        user:profiles!property_requests_user_id_fkey (full_name, phone)`,
     )
     .order("created_at", { ascending: false })
@@ -135,9 +137,10 @@ export default async function AdminDemandesPage({
                 const what = (r.category_ids ?? []).length
                   ? (r.category_ids ?? []).map((id) => (cats.get(id) ? categoryLabel(cats.get(id)!, locale) : "?")).join(", ")
                   : t("anyCategory");
-                const where = (r.governorates ?? []).length
-                  ? (r.governorates ?? []).map((g) => governorateLabel(g, locale)).join(", ")
-                  : t("anywhere");
+                const where = [
+                  Array.isArray(r.zone) ? t("zoneDrawn") : null,
+                  (r.governorates ?? []).length ? (r.governorates ?? []).map((g) => governorateLabel(g, locale)).join(", ") : null,
+                ].filter(Boolean).join(" · ") || t("anywhere");
                 const extra = [
                   r.surface_min != null ? t("surfaceAtLeast", { area: formatNumber(Number(r.surface_min), locale) }) : null,
                   r.rooms_min != null ? `S+${r.rooms_min}+` : null,

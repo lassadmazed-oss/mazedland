@@ -62,6 +62,7 @@ describe("parseRequestInput", () => {
         move_in_by: null,
         note: "proche du centre",
         alerts: true,
+        zone: null,
       },
     });
   });
@@ -169,5 +170,30 @@ describe("requestExpiresAt", () => {
     const now = Date.parse("2026-10-26T10:00:00Z");
     expect(requestExpiresAt(60, now)).toBe("2026-12-25T10:00:00.000Z");
     expect(requestExpiresAt(7, now)).toBe("2026-11-02T10:00:00.000Z");
+  });
+});
+
+describe("a zone drawn on the map (0213)", () => {
+  const zone: [number, number][] = [[34.70, 10.70], [34.70, 10.80], [34.80, 10.80], [34.80, 10.70]];
+  it("is kept from the body when it reads, and dropped when it does not", () => {
+    const base = { deal_type: "sale", budget_max: 200000 };
+    const ok = parseRequestInput({ ...base, zone });
+    expect(ok.ok && ok.value.zone).toEqual(zone);
+    const bad = parseRequestInput({ ...base, zone: [[48.8, 2.3], [48.9, 2.3], [48.9, 2.4]] });
+    expect(bad.ok && bad.value.zone).toBeNull();
+  });
+  it("lets through only an annonce standing inside it", () => {
+    const r = request({ zone });
+    expect(matchRequest(listing({ point: { lat: 34.74, lng: 10.76 } }), r)).toMatchObject({ ok: true, met: expect.arrayContaining(["zone"]) });
+    expect(matchRequest(listing({ point: { lat: 34.9, lng: 10.76 } }), r)).toMatchObject({ ok: false, failed: ["zone"] });
+    // An annonce nobody can place is not in a zone: no alert for annonces anywhere.
+    expect(matchRequest(listing({ point: null }), r)).toMatchObject({ ok: false, failed: ["zone"] });
+    // No zone, no condition.
+    expect(matchRequest(listing({ point: null }), request()).ok).toBe(true);
+  });
+  it("opens « Voir les annonces » on the map, on the zone", () => {
+    const q = catalogueQueryFor(request({ zone }), new Map([[FLAT, "appartements"]]));
+    expect(q).toContain("vue=carte");
+    expect(q).toContain(`zone=${encodeURIComponent("34.7,10.7;34.7,10.8;34.8,10.8;34.8,10.7")}`);
   });
 });

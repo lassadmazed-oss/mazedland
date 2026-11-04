@@ -14,6 +14,8 @@
 import { asDealType, FURNISHED, isoDay, type DealType, type Furnished } from "@/lib/listings/deal";
 import { TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
 import { rangeInverted } from "@/lib/range";
+import { inZone, parseZone, zoneParam, type Zone } from "@/lib/geo/zone";
+import type { LatLng } from "@/lib/geo/location";
 
 /**
  * When a demande made or renewed now stops: `days` is the console's
@@ -35,6 +37,8 @@ export type RequestInput = {
   move_in_by: string | null;
   note: string | null;
   alerts: boolean;
+  /** A zone drawn on the catalogue map (0213); null: the governorates decide. */
+  zone: Zone | null;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -78,6 +82,7 @@ export function parseRequestInput(
     move_in_by: deal === "rent" ? isoDay(body.move_in_by) : null,
     note: note || null,
     alerts: body.alerts !== false,
+    zone: parseZone(body.zone),
   };
 
   // The ceiling is the one thing a demande cannot do without: it is what makes
@@ -101,15 +106,20 @@ export type MatchableListing = {
   attributes: Record<string, unknown> | null;
   furnished: string | null;
   available_from: string | null;
+  /**
+   * Where it stands, for a demande's zone: its public point (0212), or for an
+   * annonce without a pin, its délégation's centre; null when neither is known.
+   */
+  point?: LatLng | null;
 };
 
 export type MatchableRequest = Pick<
   RequestInput,
   "deal_type" | "category_ids" | "governorates" | "budget_min" | "budget_max" |
   "surface_min" | "rooms_min" | "furnished" | "move_in_by"
->;
+> & { zone?: Zone | null };
 
-export type Criterion = "deal" | "category" | "governorate" | "budget" | "surface" | "rooms" | "furnished" | "move_in";
+export type Criterion = "deal" | "category" | "governorate" | "zone" | "budget" | "surface" | "rooms" | "furnished" | "move_in";
 
 export type MatchResult = {
   /** Every hard condition is met or could not be checked. */
@@ -139,6 +149,9 @@ export function matchRequest(listing: MatchableListing, request: MatchableReques
 
   if (request.category_ids.length > 0) check("category", request.category_ids.includes(listing.category_id));
   if (request.governorates.length > 0) check("governorate", request.governorates.includes(listing.governorate));
+  // A zone is a hard condition, and an annonce nobody can place is not in it:
+  // « unknown » would send a zone's alert for annonces anywhere in Tunisia.
+  if (request.zone) check("zone", !!listing.point && inZone(listing.point, request.zone));
 
   if (request.budget_max != null || request.budget_min != null) {
     const price = listing.price_on_request ? null : num(listing.price);
@@ -203,5 +216,10 @@ export function catalogueQueryFor(
   if (r.rooms_min) p.set("rooms", String(r.rooms_min));
   if (r.deal_type === "rent" && r.furnished) p.set("furnished", r.furnished);
   if (r.deal_type === "rent" && r.move_in_by) p.set("avail", r.move_in_by);
+  // A zone is a map search: « Voir les annonces » opens the map on it.
+  if (r.zone) {
+    p.set("vue", "carte");
+    p.set("zone", zoneParam(r.zone));
+  }
   return `/annonces?${p.toString()}`;
 }
