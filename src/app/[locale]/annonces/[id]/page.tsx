@@ -26,6 +26,8 @@ import type { VisitSlot, VisitStatus } from "@/lib/visits";
 import { shownStatus, takesOffers, type OfferStatus } from "@/lib/offers";
 import { isEditable } from "@/lib/listings/edit";
 import { getSettings } from "@/lib/settings/server";
+import { Optional } from "@/components/ui/Optional";
+import { ListingMap } from "@/components/map/ListingMap";
 import { FavoriteButton } from "@/components/property/FavoriteButton";
 import { ShareButton } from "@/components/listing/ShareButton";
 import { CreditSimulator } from "@/components/listing/CreditSimulator";
@@ -108,6 +110,10 @@ type Row = {
   available_from: string | null;
   min_lease_months: number | null;
   availability: string | null;
+  /** The point visitors see (0212): the pin, or near it. */
+  lat: number | string | null;
+  lng: number | string | null;
+  location_exact: boolean | null;
   shop_id: string | null;
   review_flags: string[] | null;
 };
@@ -117,7 +123,7 @@ const SELECT = `
   governorate, delegation, address, attributes, contact_name, show_phone, status,
   published_at, expires_at, seller_id, reference, rejection_reason, review_flags,
   deal_type, deposit_amount, charges_amount, furnished, available_from,
-  min_lease_months, availability, shop_id,
+  min_lease_months, availability, shop_id, lat, lng, location_exact,
   category:categories (id, slug, label_fr, label_ar, kind),
   photos:listing_photos (storage_path, sort_order)
 `;
@@ -848,6 +854,18 @@ export default async function AnnoncePage({
               <p dir="auto" className="mt-3 max-w-prose whitespace-pre-line text-[15px] leading-relaxed text-foreground/85 [overflow-wrap:anywhere]">
                 {l.description}
               </p>
+            </section>
+          )}
+
+          {/* Where it is (0212): a circle round the quarter, or the pin and the way there. */}
+          {settings.feature_listing_map && l.lat != null && l.lng != null && (
+            <section className="mt-8">
+              <h2 className="mazed-h2 text-[18px] text-foreground">{tRoot("listingMap.pageTitle")}</h2>
+              <div className="mt-3">
+                <Optional name="listing-map">
+                  <ListingMap point={{ lat: Number(l.lat), lng: Number(l.lng) }} exact={!!l.location_exact} radiusM={settings.map_approx_radius_m} />
+                </Optional>
+              </div>
             </section>
           )}
 

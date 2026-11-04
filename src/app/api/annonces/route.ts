@@ -10,6 +10,8 @@ import { listingFields, listingPhotos, num, text, titleTooShort, type ListingBod
 import { suspendedResponse } from "@/lib/moderation/ban";
 import { can, roleIn } from "@/lib/pro/shops";
 import { getSettings } from "@/lib/settings/server";
+import { asPin } from "@/lib/geo/location";
+import { pinColumns, pinUpdate } from "@/lib/geo/server";
 
 /**
  * POST /api/annonces — create or update the seller's draft listing.
@@ -100,6 +102,14 @@ export async function POST(req: NextRequest) {
 
   const fields = listingFields(body);
 
+  // The pin (0212), sent with the draft: { lat, lng, exact }, or null for none.
+  // One that does not read is dropped rather than failing the autosave; an
+  // annonce online moves its pin through /api/annonces/:id/location.
+  const location = "location" in body ? body.location : undefined;
+  const pin = location === undefined || location === null ? null : asPin(location);
+  const exact = !!pin && (location as { exact?: unknown }).exact === true;
+  const radius = (await getSettings()).map_approx_radius_m;
+
   // Published for a shop (0173): only one the seller may publish for.
   if ("shop_id" in body) {
     let shopId = text((body as Record<string, unknown>).shop_id, 40);
@@ -132,7 +142,7 @@ export async function POST(req: NextRequest) {
   if (listingId) {
     const { data: owned } = await admin
       .from("listings")
-      .select("id, seller_id, status")
+      .select("id, seller_id, status, pin_lat, pin_lng, location_exact")
       .eq("id", listingId)
       .maybeSingle();
     if (!owned || owned.seller_id !== user.id) {
@@ -148,6 +158,10 @@ export async function POST(req: NextRequest) {
         { error: "not_editable", detail: t("notEditable") },
         { status: 409 },
       );
+    }
+    if (location === null || pin) {
+      const columns = pinUpdate(owned as { pin_lat: number | null; pin_lng: number | null; location_exact: boolean }, pin, exact, radius);
+      if (columns) Object.assign(fields, columns);
     }
     if (Object.keys(fields).length > 0) {
       // « Prix sur demande » off with no price: the database refuses the row
@@ -175,7 +189,7 @@ export async function POST(req: NextRequest) {
     }
     const { data: created, error } = await admin
       .from("listings")
-      .insert({ ...fields, seller_id: user.id, status: "draft" })
+      .insert({ ...fields, ...(pin ? pinColumns(pin, exact, radius) : {}), seller_id: user.id, status: "draft" })
       .select("id")
       .single();
     if (error || !created) return fail("listing_create_failed", 500, error);

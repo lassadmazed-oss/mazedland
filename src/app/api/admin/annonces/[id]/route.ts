@@ -13,6 +13,8 @@ import { getSettings } from "@/lib/settings/server";
 import { missingObjects, missingPhotos } from "@/lib/listings/storage";
 import { MAX_PRICE, phone, titleTooShort } from "@/lib/listings/input";
 import { TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
+import { asPin } from "@/lib/geo/location";
+import { pinUpdate } from "@/lib/geo/server";
 
 /**
  * Everything an admin can do to one annonce.
@@ -80,6 +82,7 @@ export async function POST(
     reason?: unknown;
     days?: unknown;
     fields?: unknown;
+    location?: unknown;
   };
   let action = typeof body.action === "string" ? body.action : "";
   // The `detail` sentences below are shown to the moderator as-is, in the
@@ -393,6 +396,24 @@ export async function POST(
   // many, a title in capitals, a wrong phone number. Deliberately a short
   // allow-list — category and attributes change what the annonce *is*, and
   // that belongs in the seller's own form, not in a moderation drawer.
+  // ── The pin (0212): put, moved or taken away by an admin ─────────────────
+  // { lat, lng, exact } or null. Written at once, whatever the status: the
+  // console is where a pin is corrected.
+  if (action === "location") {
+    const clear = body.location === null;
+    const pin = clear ? null : asPin(body.location);
+    if (!clear && !pin) return NextResponse.json({ error: "bad_location", detail: t("badLocation") }, { status: 400 });
+    const exact = !!pin && (body.location as { exact?: unknown }).exact === true;
+    const { data: cur } = await admin.from("listings").select("pin_lat, pin_lng, location_exact").eq("id", id).maybeSingle();
+    const columns = cur ? pinUpdate(cur, pin, exact, (await getSettings()).map_approx_radius_m) : null;
+    if (columns) {
+      const { error } = await admin.from("listings").update(columns).eq("id", id);
+      if (error) return fail("listing_location_failed", 500, error);
+      logAction(req, user, "admin.listing.location", { id, exact, cleared: clear });
+    }
+    return NextResponse.json({ ok: true, changed: !!columns });
+  }
+
   if (action === "edit") {
     const f = (body.fields ?? {}) as Record<string, unknown>;
     const patch: Record<string, unknown> = {};

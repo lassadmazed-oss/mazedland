@@ -196,7 +196,8 @@
       "promoteHint": "Partagée sur nos réseaux : Facebook, Instagram",
       "boostHint": "Placement payant sur le site : accueil, haut des résultats",
       "planPlaces": "{used}/{limit} annonces utilisées · abonnement {plan}",
-      "contactUs": "Nous contacter"
+      "contactUs": "Nous contacter",
+      "addLocation": "Ajouter la position"
     },
     "listingActions": {
       "mark_sold": {
@@ -1086,6 +1087,52 @@
       "interest": "Intérêts",
       "total": "Total remboursé",
       "disclaimer": "Estimation indicative, hors assurance et frais de dossier. Le taux réel dépend de votre banque et de votre profil."
+    }
+  },
+  "listingMap": {
+    "title": "Position sur la carte",
+    "optional": "facultatif",
+    "intro": "Les acheteurs voient où se trouve le bien. Par défaut, un cercle d'environ {radius} m autour : le quartier, pas la maison.",
+    "add": "Placer sur la carte",
+    "edit": "Modifier la position",
+    "remove": "Retirer",
+    "savedExact": "Position exacte : les visiteurs voient le point et l'itinéraire.",
+    "savedApprox": "Position approximative : les visiteurs voient un cercle d'environ {radius} m.",
+    "tapHint": "Touchez la carte à l'endroit du bien, ou faites glisser l'épingle.",
+    "mapLabel": "Carte",
+    "myPosition": "Ma position",
+    "locating": "Localisation…",
+    "geoDenied": "Le téléphone a refusé la position. Placez l'épingle à la main.",
+    "geoFailed": "Position introuvable. Placez l'épingle à la main.",
+    "pasteLabel": "Ou collez un lien Google Maps ou des coordonnées",
+    "pastePlaceholder": "https://maps.app.goo.gl/… ou 34.7406, 10.7603",
+    "pasteGo": "Placer",
+    "precisionLabel": "Ce que voient les visiteurs",
+    "approx": "Approximative (recommandé)",
+    "approxHint": "Un cercle d'environ {radius} m : le quartier, pas l'adresse.",
+    "exact": "Exacte",
+    "exactHint": "L'épingle sur le bien et le bouton « Itinéraire ».",
+    "save": "Enregistrer la position",
+    "cancel": "Annuler",
+    "needPin": "Placez d'abord l'épingle sur la carte.",
+    "outside": "Ce point n'est pas en Tunisie.",
+    "noPoint": "Aucune position trouvée dans ce lien.",
+    "added": "Position ajoutée à l'annonce.",
+    "saved": "Position enregistrée.",
+    "savedForReview": "Position envoyée : elle s'affichera après validation par un admin.",
+    "saveFailed": "La position n'a pas pu être enregistrée.",
+    "removed": "Position retirée.",
+    "liveNote": "Annonce en ligne : la position s'enregistre tout de suite.",
+    "pageTitle": "Où se trouve le bien",
+    "approxNote": "Zone approximative (environ {radius} m) : le vendeur vous donne l'adresse exacte.",
+    "exactNote": "Position indiquée par le vendeur.",
+    "directions": "Itinéraire",
+    "consoleTitle": "Position sur la carte",
+    "openPin": "Voir l'épingle sur Google Maps",
+    "api": {
+      "badLocation": "Position invalide : elle doit être en Tunisie.",
+      "noPoint": "Aucune position trouvée dans ce lien.",
+      "outside": "Ce point n'est pas en Tunisie."
     }
   },
   "listingApi": {
@@ -3553,7 +3600,9 @@
     "offer_accept": "Offre acceptée",
     "offer_decline": "Offre refusée",
     "offer_counter": "Autre prix proposé",
-    "offer_withdraw": "Offre retirée"
+    "offer_withdraw": "Offre retirée",
+    "listing_location": "Position d'une annonce modifiée",
+    "admin_listing_location": "Position d'une annonce modifiée (console)"
   },
   "adminApi": {
     "bulk": {
@@ -3592,7 +3641,8 @@
       "publishedNotDeletable": "Archivez d'abord : supprimer une annonce en ligne casse les liens partagés.",
       "paidNotDeletable": "Cette annonce a été payée. Archivez-la — la trace du paiement doit rester.",
       "noPendingEdit": "Aucune modification en attente sur cette annonce.",
-      "editNotLive": "L'annonce n'est plus en ligne : la modification ne peut pas être publiée."
+      "editNotLive": "L'annonce n'est plus en ligne : la modification ne peut pas être publiée.",
+      "badLocation": "Position invalide : elle doit être en Tunisie."
     },
     "sellers": {
       "unknownRole": "Rôle inconnu.",
@@ -5507,7 +5557,8 @@
       "years": "ans",
       "hour_of_day": "h",
       "sms": "SMS",
-      "minutes": "minutes"
+      "minutes": "minutes",
+      "meters": "m"
     },
     "ui": {
       "tabsLabel": "Parties des réglages",
@@ -5982,6 +6033,18 @@
     "limit_offers_per_day": {
       "label": "Offres de prix par acheteur",
       "hint": "Au-delà, il attend le lendemain."
+    },
+    "feature_listing_map": {
+      "label": "Position sur la carte",
+      "hint": "L'épingle facultative du formulaire de publication et la carte de la page annonce. Coupé : ni l'une ni l'autre ne s'affiche, les positions restent enregistrées."
+    },
+    "map_approx_radius_m": {
+      "label": "Rayon de la position approximative",
+      "hint": "Le cercle que voient les visiteurs quand le vendeur ne montre pas la maison. Plus grand protège mieux, plus petit renseigne mieux."
+    },
+    "map_pin_live_without_review": {
+      "label": "Position d'une annonce en ligne sans modération",
+      "hint": "Activé : une position ajoutée ou déplacée sur une annonce en ligne s'affiche tout de suite. Coupé : elle attend un admin comme toute modification, et l'annonce est hors ligne jusque-là."
     }
   },
   "ads": {

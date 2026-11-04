@@ -138,7 +138,7 @@ export default async function NewListingPage({
           `id, category_id, title, description, price, price_on_request, negotiable,
            governorate, delegation, address, attributes, contact_name, contact_phone, updated_at,
            deal_type, deposit_amount, charges_amount, furnished, available_from, min_lease_months,
-           pending_edit, shop_id, status, review_flags,
+           pending_edit, shop_id, status, review_flags, pin_lat, pin_lng, location_exact,
            photos:listing_photos (storage_path, sort_order)`,
         )
         .eq("seller_id", user!.id);

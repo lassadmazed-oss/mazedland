@@ -11,6 +11,10 @@ import {
 import { Ltr } from "@/components/ui/Ltr";
 import { formatDate, formatTND } from "@/lib/utils";
 import { governorateLabel } from "@/lib/tunisia";
+import { mapsUrl } from "@/lib/geo/location";
+import { useSetting } from "@/components/settings/SettingsProvider";
+import { Optional } from "@/components/ui/Optional";
+import { LocationPicker } from "@/components/map/LocationPicker";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import {
   Check, X, Archive, Trash2, CalendarPlus, BadgeCheck,
@@ -70,6 +74,8 @@ export type PanelListing = {
   viewCount: number;
   contactRevealCount: number;
   renewedCount: number;
+  /** The seller's pin (0212), private: the console sees the house itself. */
+  pin: { lat: number; lng: number; exact: boolean } | null;
   attestation: { version: string; at: string | null } | null;
   payment: { amount: number; status: string; kind: string; uploadedAt: string | null } | null;
   paidWith: "credit" | "payment" | "waived" | "none";
@@ -120,6 +126,9 @@ export function ListingDetail({
   const locale = useLocale();
   const [confirm, setConfirm] = useState<null | "reject" | "delete" | "archive" | "sold" | "rejectEdit">(null);
   const [editing, setEditing] = useState(false);
+  const tMap = useTranslations("listingMap");
+  const mapOn = useSetting("feature_listing_map");
+  const mapRadius = useSetting("map_approx_radius_m");
 
   const l = listing;
   const feeUnsettled =
@@ -283,6 +292,31 @@ export function ListingDetail({
                 </Row>
               ))}
             </Group>
+          )}
+
+          {mapOn && (
+            <section className="border-t border-border pt-4">
+              <h3 className={EYEBROW}>{tMap("consoleTitle")}</h3>
+              {l.pin && (
+                <p className="mt-2 text-[12.5px] text-muted">
+                  {l.pin.exact ? tMap("exact") : tMap("approx")} ·{" "}
+                  <a href={mapsUrl(l.pin)} target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground underline underline-offset-2">
+                    {tMap("openPin")}
+                  </a>
+                </p>
+              )}
+              <div className="mt-2">
+                <Optional name="console-location">
+                  <LocationPicker
+                    value={l.pin}
+                    governorate={l.governorate}
+                    radiusM={mapRadius}
+                    onSave={(v) => act({ action: "location", location: v }, tMap("saved"))}
+                    onClear={() => run({ url: `/api/admin/annonces/${l.id}`, method: "POST", body: { action: "location", location: null }, success: null })}
+                  />
+                </Optional>
+              </div>
+            </section>
           )}
 
           <Group title={t("groupSeller")}>

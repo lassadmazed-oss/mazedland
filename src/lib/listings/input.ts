@@ -35,6 +35,8 @@ export type ListingBody = {
   furnished?: unknown;
   available_from?: unknown;
   min_lease_months?: unknown;
+  // The pin (0212): { lat, lng, exact } or null — read by the draft route.
+  location?: unknown;
 };
 
 /** `listing_max_photos` when nothing is stored; the routes pass the setting. */
