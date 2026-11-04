@@ -114,8 +114,12 @@ export function renderNotification(
       values.when = t.has(partKey) ? `${day} · ${t(partKey)}` : day;
     }
   }
-  if (vars.amount !== undefined && vars.amount !== null && Number.isFinite(Number(vars.amount))) {
-    values.amount = formatTND(Number(vars.amount), locale);
+  // Sums of money, grouped as the reader's language does; a price offer (0211)
+  // also says the asking price and the seller's other price.
+  for (const k of ["amount", "asking", "counter"]) {
+    if (vars[k] !== undefined && vars[k] !== null && Number.isFinite(Number(vars[k]))) {
+      values[k] = formatTND(Number(vars[k]), locale);
+    }
   }
   // What was paid for, in the three forms a French sentence needs: the bare
   // noun, « d'abonnement » / « de frais d'annonce », « pour votre abonnement ».

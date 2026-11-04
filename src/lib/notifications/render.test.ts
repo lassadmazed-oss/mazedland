@@ -143,4 +143,28 @@ describe("renderNotification", () => {
     expect(renderNotification(n, tr("fr"), "fr").body).toBe("Votre visite de « S+2 La Marsa » est confirmée : mercredi 28 octobre · le matin.");
     expect(renderNotification(n, tr("ar"), "ar").body).toContain("الصباح");
   });
+
+  it("says the three figures of a price offer (0211) in the reader's language", () => {
+    const received = {
+      kind: "offer_received",
+      title: "x",
+      body: "x",
+      payload: { vars: { title: "S+3 Sfax", name: "Amel", amount: 198000, asking: 220000 } },
+    };
+    const fr1 = renderNotification(received, tr("fr"), "fr");
+    expect(fr1.title).toMatch(/^Nouvelle offre : 198\s000 TND$/);
+    expect(fr1.body).toMatch(/Amel propose 198\s000 TND pour « S\+3 Sfax » \(prix affiché 220\s000 TND\)/);
+    const countered = {
+      kind: "offer_countered",
+      title: "x",
+      body: "x",
+      payload: { vars: { title: "S+3 Sfax", amount: 198000, counter: 215000, note: "", variant: "plain" } },
+    };
+    const ar1 = renderNotification(countered, tr("ar"), "ar");
+    expect(ar1.title).toContain("البائع يقترح");
+    expect(ar1.body).toContain("« S+3 Sfax »");
+    expect(ar1.body).not.toContain("{counter}");
+    const expired = { kind: "offer_expired", title: "x", body: "x", payload: { vars: { title: "S+3 Sfax", amount: 215000, variant: "countered" } } };
+    expect(renderNotification(expired, tr("fr"), "fr").body).toMatch(/votre prix de 215\s000 TND pour « S\+3 Sfax »/);
+  });
 });

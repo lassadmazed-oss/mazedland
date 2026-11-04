@@ -21,6 +21,7 @@ import {
   Settings,
   Store,
   CalendarCheck,
+  HandCoins,
 } from "lucide-react";
 
 // Per-user, auth-gated — never static (env-less prerender would throw + fail the build).
@@ -153,6 +154,8 @@ export default async function AccountPage() {
     { href: "/account/requests", Icon: BellRing, title: t("actions.requestsTitle"), body: t("actions.requestsBody") },
     // Visits asked and received (0174).
     { href: "/account/visites", Icon: CalendarCheck, title: t("actions.visitsTitle"), body: t("actions.visitsBody") },
+    // Prices proposed and received (0211).
+    { href: "/account/offres", Icon: HandCoins, title: t("actions.offersTitle"), body: t("actions.offersBody") },
     { href: "/account/activity", Icon: Heart, title: t("actions.favoritesTitle"), body: t("actions.favoritesBody") },
     { href: "/account/payments", Icon: Wallet, title: t("actions.paymentsTitle"), body: t("actions.paymentsBody") },
     inAShop

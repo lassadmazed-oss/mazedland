@@ -64,6 +64,7 @@ counted once whatever the browser did: `sign_up`, `login`, `logout`,
 | `agence_view` | an agence page opens | `kind`, `gov` |
 | `agence_contact` | a tap on Appeler / WhatsApp / E-mail / Site | `via` |
 | `visit_request_open` / `visit_request` | the form opens / is sent | `slots` |
+| `offer_open` / `offer_send` | « Proposer un prix » opens / an offer is sent | `below` (percent under the asking price, never the amount) |
 | `favourite_add` / `favourite_remove` | the heart | |
 | `compare_add` / `compare_remove` / `compare_open` | the comparator | `count` |
 | `share` | a share | `method`, `content_type`, `item_id` |

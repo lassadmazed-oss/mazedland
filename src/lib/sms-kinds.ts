@@ -56,6 +56,10 @@ export const SMS_KINDS = new Set<string>([
   "shop_approved", "shop_rejected",
   // Visits (0174) — each one moves a date in somebody's diary, so each goes out.
   "visit_requested", "visit_confirmed", "visit_declined", "visit_cancelled",
+  // Price offers (0211) — each answer waits on the other side. A withdrawal
+  // and an offer run out of time stay in the site: nothing to do about them.
+  "offer_received", "offer_accepted", "offer_declined", "offer_countered",
+  "offer_counter_accepted", "offer_counter_declined",
 ]);
 
 // The kinds the per-user daily cap (`sms_daily_cap` in the console) never
@@ -80,6 +84,8 @@ export const UNCAPPED_KINDS = new Set<string>([
   "plan_expiring",
   // The buyer must turn up: the day and half-day of a visit.
   "visit_confirmed",
+  // A price both sides agreed on: each must now call the other.
+  "offer_accepted", "offer_counter_accepted",
   // Retired with the auction product and the identity checks; a row of one
   // of these, should any remain, still bypasses the cap as it always did.
   "kyc_verified", "kyc_rejected",
@@ -112,7 +118,7 @@ export type SmsSource = {
  * urgent », a seller's note could ask the buyer for a deposit. The bell and
  * the e-mail keep the name and the note (the recipient opens them inside the
  * site); the SMS names the buyer with `visitor` (« Un acheteur ») and drops
- * the seller's note, which the link shows. A row from before payloads carried
+ * the seller's note, which the link shows — on a visit and on a price offer. A row from before payloads carried
  * variables keeps the name in its stored body, so that body is not sent.
  */
 export function forSms<T extends SmsSource>(row: T, visitor: string): T {
@@ -124,8 +130,19 @@ export function forSms<T extends SmsSource>(row: T, visitor: string): T {
       return vars
         ? { ...row, payload: { ...payload, vars: { ...vars, name: visitor } } }
         : { ...row, body: null };
+    // An offer carries the buyer's name the same way (0211).
+    case "offer_received":
+    case "offer_counter_accepted":
+    case "offer_counter_declined":
+    case "offer_withdrawn":
+      return vars
+        ? { ...row, payload: { ...payload, vars: { ...vars, name: visitor } } }
+        : { ...row, body: null };
     case "visit_confirmed":
     case "visit_declined":
+    case "offer_accepted":
+    case "offer_declined":
+    case "offer_countered":
       return vars && typeof vars.note === "string" && vars.note !== ""
         ? { ...row, payload: { ...payload, vars: { ...vars, note: "", variant: "plain" } } }
         : row;

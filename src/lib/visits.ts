@@ -113,7 +113,7 @@ export function pickSlot(slots: VisitSlot[], raw: unknown): VisitSlot | null {
 // ── The client pipeline ─────────────────────────────────────────────────────
 export const LEAD_STAGES = ["new", "contacted", "visit", "negotiation", "won", "lost"] as const;
 export type LeadStage = (typeof LEAD_STAGES)[number];
-export const LEAD_SOURCES = ["visit", "manual", "suggestion"] as const;
+export const LEAD_SOURCES = ["visit", "manual", "suggestion", "offer"] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 
 /** A visit request moves its client along; it never moves one back from a decided stage. */
