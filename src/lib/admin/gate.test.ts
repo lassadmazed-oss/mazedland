@@ -83,11 +83,13 @@ describe("admin API routes", () => {
       const src = fs.readFileSync(file, "utf8");
       const folder = path.relative(API, file).split(path.sep)[0];
       const section = API_SECTION[folder] ?? folder;
-      // One door for actions of different sections (a table of them), or
-      // its own gate naming the section.
+      // One door for actions of different sections (a table of them), the
+      // console search reading each section's rows only for its members
+      // (SOURCE_SECTION), or its own gate naming the section.
       return !(
         src.includes(`requireAdmin(req, "${section}")`) ||
         src.includes("ACTION_SECTION") ||
+        src.includes("canOpen(scopes, SOURCE_SECTION[source])") ||
         src.includes(`canOpen(scopesFromRow(profile.admin_scopes), "${section}")`) ||
         src.includes(`canOpen(scopes, "${section}")`)
       );

@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { usablePayeeMethods } from "@/lib/payments";
 import { settingsFromRows } from "@/lib/settings/server";
-import { SETTINGS, SETTING_GROUPS, type SettingKey } from "@/lib/settings/registry";
+import { SETTINGS, SETTING_GROUPS, isSettingKey, type SettingKey } from "@/lib/settings/registry";
 import { SettingsPanel } from "./SettingsPanel";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { SiteTabs } from "@/components/admin/kit/SiteTabs";
@@ -32,7 +32,7 @@ export async function generateMetadata() {
   return { title: t("title") };
 }
 
-export default async function AdminSettingsPage({ searchParams }: { searchParams: Promise<{ g?: string }> }) {
+export default async function AdminSettingsPage({ searchParams }: { searchParams: Promise<{ g?: string; k?: string }> }) {
   await requireAdmin("settings");
   const sp = await searchParams;
   const group: Group = (SETTING_GROUPS as readonly string[]).includes(sp.g ?? "") ? (sp.g as Group) : "features";
@@ -46,6 +46,8 @@ export default async function AdminSettingsPage({ searchParams }: { searchParams
   const rows = (data ?? []) as { key: string; value: unknown }[];
   const values = settingsFromRows(rows);
   const keys = (Object.keys(SETTINGS) as SettingKey[]).filter((k) => SETTINGS[k].group === group);
+  // The setting the console search opened, when it is on this tab.
+  const focus = sp.k && isSettingKey(sp.k) && keys.includes(sp.k) ? sp.k : null;
 
   // The payee check reads the stored values themselves: the seed's
   // placeholders count as « not set ».
@@ -109,6 +111,7 @@ export default async function AdminSettingsPage({ searchParams }: { searchParams
           keys={keys}
           values={Object.fromEntries(keys.map((k) => [k, values[k]]))}
           stored={rows.map((r) => r.key).filter((k) => keys.includes(k as SettingKey))}
+          focus={focus}
         />
       </div>
     </div>

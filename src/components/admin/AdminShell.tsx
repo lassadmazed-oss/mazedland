@@ -3,19 +3,17 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
-import {
-  BarChart3, BellRing, BookOpen, Megaphone, Store, GalleryHorizontalEnd,
-  LayoutDashboard, Inbox, Receipt, Tag, Users, FolderTree,
-  SlidersHorizontal, ExternalLink, Menu, X, TrendingUp,
-  type LucideIcon,
-} from "lucide-react";
+import { ExternalLink, Menu, X } from "lucide-react";
 import { NavIcon } from "./kit/LinkPending";
 import { InstallAppButton } from "./InstallAppButton";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { useCanOpen } from "./AdminScopes";
-import type { ConsoleSection } from "@/lib/admin/sections";
 import { SITE_TABS } from "./kit/SiteTabs";
+import { NAV, SITE, type AdminCounts, type NavItem } from "./kit/consoleNav";
+import { AdminSearchButton } from "./AdminSearch";
+
+export type { AdminCounts, CountKey } from "./kit/consoleNav";
 
 /**
  * Console navigation.
@@ -30,41 +28,10 @@ import { SITE_TABS } from "./kit/SiteTabs";
  * were still outstanding, because deleting a screen is reversible and deleting
  * the money it settles is not. Measuring settled it: there had never been a
  * single bid, and the only three "bidders" were the operator's own accounts.
+ *
+ * The destinations themselves live in kit/consoleNav, which the search box
+ * (AdminSearch, under the logo) reads too.
  */
-
-type Item = {
-  /** Names the label in `admin.nav`; its tooltip is `${key}Hint`. */
-  key: string;
-  href: string;
-  Icon: LucideIcon;
-  /** Key into the `counts` map — a badge for work that is waiting. */
-  countKey?: CountKey;
-  /** The team section it belongs to (src/lib/admin/sections.ts); none = every member. */
-  section?: ConsoleSection;
-};
-
-export type CountKey = "annonces" | "paiements" | "social" | "boutiques";
-export type AdminCounts = Partial<Record<CountKey, number>>;
-
-const NAV: Item[] = [
-  { key: "dashboard", href: "/admin", Icon: LayoutDashboard },
-  { key: "results", href: "/admin/resultats", Icon: BarChart3, section: "resultats" },
-  { key: "analytics", href: "/admin/analytics", Icon: TrendingUp, section: "analytics" },
-  { key: "listings", href: "/admin/annonces", Icon: Inbox, countKey: "annonces", section: "annonces" },
-  { key: "demandes", href: "/admin/demandes", Icon: BellRing, section: "demandes" },
-  { key: "social", href: "/admin/social", Icon: Megaphone, countKey: "social", section: "social" },
-  { key: "ads", href: "/admin/publicites", Icon: GalleryHorizontalEnd, section: "publicites" },
-  { key: "payments", href: "/admin/paiements", Icon: Receipt, countKey: "paiements", section: "paiements" },
-  { key: "shops", href: "/admin/agences", Icon: Store, countKey: "boutiques", section: "agences" },
-  { key: "offers", href: "/admin/offres", Icon: Tag, section: "offres" },
-  { key: "sellers", href: "/admin/vendeurs", Icon: Users, section: "vendeurs" },
-  { key: "catalogue", href: "/admin/catalogue", Icon: FolderTree, section: "catalogue" },
-  // The guides (0208): articles written here, read on /guides.
-  { key: "content", href: "/admin/contenu", Icon: BookOpen, section: "content" },
-];
-
-
-const SITE: Item = { key: "site", href: "/admin/site", Icon: SlidersHorizontal };
 
 function BrandMark({ onNavigate }: { onNavigate?: () => void }) {
   const t = useTranslations("admin");
@@ -98,7 +65,7 @@ function NavList({
       ? pathname === "/admin"
       : pathname === href || pathname.startsWith(`${href}/`);
 
-  const render = (item: Item) => {
+  const render = (item: NavItem) => {
     const active = isActive(item.href);
     const count = item.countKey ? counts[item.countKey] ?? 0 : 0;
     return (
@@ -164,6 +131,9 @@ export function AdminRail({ counts }: { counts: AdminCounts }) {
       <header className="flex h-16 items-center border-b border-border px-4">
         <BrandMark />
       </header>
+      <div className="px-3 pt-3">
+        <AdminSearchButton variant="field" />
+      </div>
       <NavList counts={counts} />
       <footer className="border-t border-border py-2">
         <InstallAppButton />
@@ -208,6 +178,7 @@ export function AdminMobileBar({ counts }: { counts: AdminCounts }) {
       <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background px-4">
         <BrandMark />
         <div className="flex items-center gap-1">
+          <AdminSearchButton variant="icon" />
           <InstallAppButton variant="icon" />
           <LocaleSwitcher className="h-8 min-w-8 border-transparent" />
           <button
