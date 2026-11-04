@@ -775,6 +775,14 @@
     "marketTitle": "Le marché en chiffres",
     "marketBody": "Prix médians demandés, offre par gouvernorat, demande des acheteurs : les chiffres du site, mis à jour automatiquement."
   },
+  "homeMap": {
+    "eyebrow": "Carte",
+    "title": "Les annonces par gouvernorat",
+    "hint": "Touchez un gouvernorat pour voir ses annonces sur la carte.",
+    "seeMap": "Toute la carte",
+    "mapLabel": "Carte de la Tunisie par gouvernorat",
+    "aria": "{gov} : {count, plural, one {# annonce} other {# annonces}}"
+  },
   "search": {
     "placeholder": "Rechercher un bien…",
     "submit": "Rechercher",
@@ -6094,6 +6102,18 @@
     "catalogue_map_max": {
       "label": "Annonces au plus sur la carte",
       "hint": "Au-delà, les plus récentes."
+    },
+    "home_map_enabled": {
+      "label": "Carte « Les annonces par gouvernorat »",
+      "hint": "Sous la recherche de l'accueil : la Tunisie par gouvernorat, chacun avec son nombre d'annonces, qui ouvre sa carte."
+    },
+    "home_map_min_total": {
+      "label": "Carte de l'accueil à partir de",
+      "hint": "Nombre d'annonces en ligne à partir duquel la carte s'affiche. 0 : toujours."
+    },
+    "home_map_min_count": {
+      "label": "Cercle d'un gouvernorat à partir de",
+      "hint": "Un gouvernorat avec moins d'annonces reste pâle, sans cercle ni lien."
     }
   },
   "ads": {

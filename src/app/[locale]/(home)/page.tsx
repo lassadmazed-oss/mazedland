@@ -7,6 +7,7 @@ import { IntentChooser } from "@/components/landing/IntentChooser";
 import { HeroPhoto } from "@/components/landing/HeroPhoto";
 import { SellBand, WhyBand } from "@/components/landing/HomeBands";
 import { GuidesStrip } from "@/components/guides/GuidesStrip";
+import { HomeMap } from "@/components/landing/HomeMap";
 import { isRtl } from "@/lib/i18n";
 import { getHomeFeed } from "@/lib/home/feed";
 import { homeRailOptions, planHomeRails, splitAtMiddle, type HomeRail } from "@/lib/home/rails";
@@ -122,6 +123,8 @@ export default async function LandingPage({
   const loggedIn = false;
   // How many annonces are online: the hero's eyebrow.
   let liveCount = 0;
+  // And where: the map « Les annonces par gouvernorat ».
+  let govCounts: Record<string, number> = {};
 
   // Perf instrumentation — logs to the server terminal under scope `home`.
   const perf = log.scope("home");
@@ -153,6 +156,7 @@ export default async function LandingPage({
     const rows = feed?.published.rows ?? [];
     // eslint-disable-next-line react-hooks/immutability -- synchronising with an external system, which is what an effect is for.
     liveCount = feed?.published.count ?? rows.length;
+    govCounts = feed?.govCounts ?? {};
 
     // Every rail draws from one inventory, and at a few dozen annonces that made
     // the home page the same cards over and over. The plan has each discovery
@@ -267,6 +271,13 @@ export default async function LandingPage({
           ))}
         </ul>
       </div>
+
+      {/* Where the annonces are (the owner, 2026-11-04): Tunisia by
+          governorate, each a touch from its map. Light SVG, no map library;
+          shown once the catalogue is worth a map (Réglages → Accueil). */}
+      {settings.home_map_enabled && liveCount >= settings.home_map_min_total && (
+        <HomeMap counts={govCounts} locale={locale} minCount={settings.home_map_min_count} />
+      )}
 
       {/* An advertiser's banner (/admin/publicites): under the search, above
           the first rail. Nothing when no campaign runs here. */}
