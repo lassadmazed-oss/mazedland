@@ -18,6 +18,8 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  List,
+  Map as MapIcon,
   Search,
   SearchX,
   SlidersHorizontal,
@@ -45,6 +47,13 @@ import { loadFeaturedShops } from "@/lib/pro/featured";
 import { reactiveRules } from "@/lib/pro/reactivity";
 import { cleanSearchTerm } from "@/lib/analytics/ga";
 import { governorateSlug } from "@/lib/market/stats";
+import { Optional } from "@/components/ui/Optional";
+import { CatalogueMap } from "@/components/map/CatalogueMap";
+import { spreadAround, type MapPoint } from "@/lib/geo/mapPoints";
+import { GOVERNORATE_CENTER } from "@/lib/geo/location";
+import { delegationCenter } from "@/lib/geo/places";
+import { coverPhoto } from "@/lib/listingCover";
+import { propertyPhotoUrl } from "@/lib/imageUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -301,6 +310,8 @@ export default async function AnnoncesPage({
   const availBy = deal === "rent" ? isoDay(sp.avail) : null;
   const moreActive = Boolean(surface || roomsMin || furnished || availBy);
   const requestedPage = pageNumber(sp.page);
+  // « Carte » (?vue=carte, 0212): the same search, on a map instead of pages.
+  const mapView = settings.feature_catalogue_map && sp.vue === "carte";
 
   if (!admin) {
     return (
@@ -341,36 +352,38 @@ export default async function AnnoncesPage({
     ? sp.govs.split(",").map((g) => g.trim()).filter((g) => (TUNISIAN_GOVERNORATES as readonly string[]).includes(g))
     : [];
 
-  let q = admin
-    .from("listings")
-    .select(
-      `id, title, price, price_on_request, negotiable, governorate, delegation, attributes, published_at,
-       deal_type, availability, available_from, shop_id,
-       category:categories (label_fr, label_ar, kind),
-       promo_top_listed,
-       photos:listing_photos (storage_path, sort_order)`,
-      { count: "exact" },
-    )
-    .eq("status", "published");
+  // The search, for any columns: the pages below and, with ?vue=carte, the map.
+  const filtered = (columns: string, options?: { count: "exact" }) => {
+    let f = admin.from("listings").select(columns, options).eq("status", "published");
+    if (deal) f = f.eq("deal_type", deal);
+    if (active) f = f.eq("category_id", active.id);
+    else if (multiCats.length) f = f.in("category_id", multiCats.map((c) => c.id));
+    if (sp.gov) f = f.eq("governorate", sp.gov);
+    else if (multiGovs.length) f = f.in("governorate", multiGovs);
+    if (del) f = f.eq("delegation", del);
+    // One ILIKE per word, against the accent-folded column: every word has to
+    // appear, in any order. See searchTokens.
+    for (const token of searchTokens(sp.q)) f = f.ilike("search_text", `%${token}%`);
+    if (min) f = f.gte("price", min);
+    if (max) f = f.lte("price", max);
+    // jsonb numbers compare as numbers through the arrow operator.
+    if (surface) f = f.gte("attributes->area_sqm", surface);
+    if (roomsMin) f = f.gte("attributes->rooms", roomsMin);
+    if (furnished) f = f.eq("furnished", furnished);
+    // Free by that date — or the owner did not say: those stay in, flagged on
+    // the card as not confirmed rather than silently dropped or silently passed.
+    if (availBy) f = f.or(`available_from.is.null,available_from.lte.${availBy}`);
+    return f;
+  };
 
-  if (deal) q = q.eq("deal_type", deal);
-  if (active) q = q.eq("category_id", active.id);
-  else if (multiCats.length) q = q.in("category_id", multiCats.map((c) => c.id));
-  if (sp.gov) q = q.eq("governorate", sp.gov);
-  else if (multiGovs.length) q = q.in("governorate", multiGovs);
-  if (del) q = q.eq("delegation", del);
-  // One ILIKE per word, against the accent-folded column: every word has to
-  // appear, in any order. See searchTokens.
-  for (const token of searchTokens(sp.q)) q = q.ilike("search_text", `%${token}%`);
-  if (min) q = q.gte("price", min);
-  if (max) q = q.lte("price", max);
-  // jsonb numbers compare as numbers through the arrow operator.
-  if (surface) q = q.gte("attributes->area_sqm", surface);
-  if (roomsMin) q = q.gte("attributes->rooms", roomsMin);
-  if (furnished) q = q.eq("furnished", furnished);
-  // Free by that date — or the owner did not say: those stay in, flagged on
-  // the card as not confirmed rather than silently dropped or silently passed.
-  if (availBy) q = q.or(`available_from.is.null,available_from.lte.${availBy}`);
+  let q = filtered(
+    `id, title, price, price_on_request, negotiable, governorate, delegation, attributes, published_at,
+     deal_type, availability, available_from, shop_id,
+     category:categories (label_fr, label_ar, kind),
+     promo_top_listed,
+     photos:listing_photos (storage_path, sort_order)`,
+    { count: "exact" },
+  );
 
   if (sort === "popular") q = q.order("view_count", { ascending: false, nullsFirst: false });
   else if (sort === "cheap") q = q.order("price", { ascending: true, nullsFirst: false });
@@ -428,6 +441,48 @@ export default async function AnnoncesPage({
     total = res.count ?? rows.length;
   }
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
+
+  // ── The map's points (?vue=carte) ─────────────────────────────────────────
+  // At its public point an annonce with a pin; one without, in its délégation
+  // (map_show_without_pin), drawn as a zone; the rest are counted, not placed.
+  let mapPoints: MapPoint[] = [];
+  let unplaced = 0;
+  if (mapView && total > 0) {
+    type MapRow = {
+      id: string; title: string; price: number | null; price_on_request: boolean; deal_type: string | null;
+      governorate: string; delegation: string | null; lat: number | string | null; lng: number | string | null;
+      photos: { storage_path: string; sort_order: number; is_cover?: boolean | null }[] | null;
+    };
+    const { data: mapRows } = await filtered(
+      "id, title, price, price_on_request, deal_type, governorate, delegation, lat, lng, photos:listing_photos (storage_path, sort_order, is_cover)",
+    )
+      .order("published_at", { ascending: false })
+      .limit(settings.catalogue_map_max);
+    for (const r of (mapRows ?? []) as unknown as MapRow[]) {
+      const pinned = r.lat != null && r.lng != null ? { lat: Number(r.lat), lng: Number(r.lng) } : null;
+      const centre = !pinned && settings.map_show_without_pin ? delegationCenter(r.governorate, r.delegation) : null;
+      const at = pinned ?? (centre ? spreadAround(centre, r.id) : null);
+      if (!at) {
+        unplaced += 1;
+        continue;
+      }
+      const cover = coverPhoto(r.photos);
+      mapPoints.push({
+        id: r.id,
+        title: r.title,
+        price: r.price_on_request ? null : r.price,
+        deal: r.deal_type === "rent" ? "rent" : "sale",
+        place: [governorateLabel(r.governorate, locale), r.delegation ? delegationLabel(canonicalDelegation(r.governorate, r.delegation) ?? r.delegation, locale) : null].filter(Boolean).join(" · "),
+        photo: cover ? propertyPhotoUrl(cover.storage_path, { transform: { width: 240, quality: 70 } }) : null,
+        zone: !pinned,
+        ...at,
+      });
+    }
+    unplaced += Math.max(0, total - (mapRows?.length ?? 0));
+    mapPoints = mapPoints.slice(0, settings.catalogue_map_max);
+  }
+  // A search for one governorate opens on it; otherwise around its points.
+  const mapStart = sp.gov && GOVERNORATE_CENTER[sp.gov] ? { center: GOVERNORATE_CENTER[sp.gov], zoom: 10.5 } : null;
 
   const { data: govRows } = await admin
     .from("listings")
@@ -508,6 +563,7 @@ export default async function AnnoncesPage({
       rooms: roomsMin ? String(roomsMin) : undefined,
       furnished: furnished ?? undefined,
       avail: availBy ?? undefined,
+      vue: mapView ? "carte" : undefined,
       ...next,
     };
     for (const [k, v] of Object.entries(merged)) if (v) p.set(k, v);
@@ -548,6 +604,7 @@ export default async function AnnoncesPage({
       ["min", min ? String(min) : undefined], ["max", max ? String(max) : undefined],
       ["surface", surface ? String(surface) : undefined], ["rooms", roomsMin ? String(roomsMin) : undefined],
       ["furnished", furnished ?? undefined], ["avail", availBy ?? undefined],
+      ["vue", mapView ? "carte" : undefined],
     ];
     return all
       .filter(([k, v]) => v && !omit.includes(k))
@@ -1034,6 +1091,25 @@ export default async function AnnoncesPage({
             <X className="size-3" aria-hidden />
           </Link>
         )}
+        {settings.feature_catalogue_map && (
+          <nav aria-label={t("viewLabel")} className="order-last ms-auto inline-flex rounded-full bg-surface-2 p-0.5 ring-1 ring-border sm:order-none">
+            {([["list", undefined, List], ["map", "carte", MapIcon]] as const).map(([key, vue, Icon]) => {
+              const on = key === "map" ? mapView : !mapView;
+              return (
+                <Link
+                  key={key}
+                  href={qs({ vue, page: undefined }) as never}
+                  aria-current={on ? "true" : undefined}
+                  className={`tap-target inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-bold transition ${
+                    on ? "bg-foreground text-[var(--background)]" : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="size-3.5" strokeWidth={2.4} aria-hidden /> {t(`view.${key}`)}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
         {settings.public_stats_enabled && (
           <Link
             href={(marketGov ? `/marche#${governorateSlug(marketGov)}` : "/marche") as never}
@@ -1063,6 +1139,10 @@ export default async function AnnoncesPage({
             </Link>
           )}
         </div>
+      ) : mapView ? (
+        <Optional name="catalogue-map">
+          <CatalogueMap points={mapPoints} unplaced={unplaced} start={mapStart} locale={locale} />
+        </Optional>
       ) : (
         <>
         <Impressions ids={rows.map((r) => r.id)} surface="catalogue" />
@@ -1110,7 +1190,7 @@ export default async function AnnoncesPage({
         </section>
       )}
 
-      {lastPage > 1 && (
+      {lastPage > 1 && !mapView && (
         <nav className="mt-8 flex items-center justify-center gap-2" aria-label={t("pagination")}>
           {page > 1 ? (
             <Link

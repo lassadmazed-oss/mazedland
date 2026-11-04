@@ -1,0 +1,4 @@
+# MapLibre's worker and the Arabic text plugin, copied byte for byte from
+# their packages (src/components/map/maplibre.ts, checked by maplibre.test.ts):
+# never converted to CRLF on a Windows checkout.
+public/maplibre/** -text

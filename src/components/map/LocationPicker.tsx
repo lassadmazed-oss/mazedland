@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Crosshair, Link2, Loader2, MapPin, Pencil, Trash2 } from "lucide-react";
 import type * as MapLibre from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -9,6 +9,8 @@ import { useToast } from "@/components/ui/Toast";
 import { useApiError } from "@/lib/useApiError";
 import { GOVERNORATE_CENTER, TUNISIA_VIEW, inTunisia, isShortMapsLink, parseLocation, type LatLng } from "@/lib/geo/location";
 import { cn } from "@/lib/utils";
+import { governorateLabel } from "@/lib/tunisia";
+import { outsideGovernorate } from "@/lib/geo/places";
 import { MAP_STYLE, loadMapLibre } from "./maplibre";
 
 export type PinValue = LatLng & { exact: boolean };
@@ -43,6 +45,7 @@ export function LocationPicker({
   note?: string;
 }) {
   const t = useTranslations("listingMap");
+  const locale = useLocale();
   const { toast } = useToast();
   const apiError = useApiError();
   const [open, setOpen] = useState(false);
@@ -315,6 +318,13 @@ export function LocationPicker({
       </fieldset>
 
       {error && <p role="alert" className="mt-2.5 text-[12px] font-bold text-danger">{error}</p>}
+      {/* A pin in another governorate than the one chosen: a slip of the
+          finger, or the wrong governorate. Said, not refused. */}
+      {!error && draft && outsideGovernorate(governorate, draft) && (
+        <p role="status" className="mt-2.5 text-[12px] font-bold text-[var(--tone-warn)]">
+          {t("outsideGovernorate", { gov: governorateLabel(governorate, locale) })}
+        </p>
+      )}
 
       <div className="mt-3.5 flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => void save()} disabled={saving} className="mazed-btn-luxe tap-target inline-flex h-11 items-center justify-center gap-1.5 rounded-full px-5 text-[13px]">
