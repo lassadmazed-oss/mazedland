@@ -107,6 +107,12 @@ export const SETTINGS = {
   // there are. A rail switched off is neither queried nor shown; one with
   // fewer than three annonces hides itself either way (src/lib/home/rails.ts).
   home_rail_size: { group: "home", type: "int", default: 12, min: 4, max: 24 },
+  // « Les annonces par gouvernorat » under the search (HomeMap): Tunisia by
+  // governorate with each one's count; shown from so many annonces online,
+  // and a governorate gets its circle from so many of its own.
+  home_map_enabled: { group: "home", type: "bool", default: true },
+  home_map_min_total: { group: "home", type: "int", default: 10, min: 0, max: 500, choices: [0, 10, 20, 50, 100] },
+  home_map_min_count: { group: "home", type: "int", default: 1, min: 1, max: 20, choices: [1, 2, 3, 5] },
   home_rail_featured: { group: "home", type: "bool", default: true, href: "/admin/home" },
   home_rail_most_viewed: { group: "home", type: "bool", default: true },
   home_rail_new: { group: "home", type: "bool", default: true },

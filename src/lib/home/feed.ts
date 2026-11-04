@@ -85,8 +85,8 @@ export type HomeFeed = {
   bestValue: HomeListingRow[];
   /** Published in the last 7 days — a hero figure. */
   newThisWeek: number;
-  /** Distinct governorates with at least one published annonce. */
-  govs: string[];
+  /** Annonces online per governorate: the home page's map (HomeMap). */
+  govCounts: Record<string, number>;
 };
 
 /** m² price, or null when the listing cannot answer the question. A rent is a
@@ -173,16 +173,17 @@ export const getHomeFeed = unstable_cache(
           .eq("status", "published")
           .gte("published_at", weekStart),
       ),
-      // Coverage figure. Capped rather than aggregated because Postgrest has no
-      // `count(distinct)` — 500 rows is plenty to see all 24 governorates, and
-      // it is a head-of-page statistic, not a report.
+      // How many annonces each governorate has online, for the home page's
+      // map. One short column per annonce, counted here (PostgREST has no
+      // GROUP BY); 5 000 is far above the catalogue, and the count is a
+      // picture of where the annonces are, not a report.
       timed(
-        "q4 govs(500)",
+        "q4 govs(5000)",
         sb
           .from("listings")
           .select("governorate")
           .eq("status", "published")
-          .limit(500),
+          .limit(5000),
       ),
       on.has("mostViewed")
         ? timed(
@@ -259,9 +260,10 @@ export const getHomeFeed = unstable_cache(
       ),
       bestValue,
       newThisWeek: newWeekRes.count ?? 0,
-      govs: (govRes.data ?? [])
-        .map((r) => (r as { governorate: string | null }).governorate)
-        .filter((g): g is string => typeof g === "string" && g.length > 0),
+      govCounts: ((govRes.data ?? []) as { governorate: string | null }[]).reduce<Record<string, number>>((acc, r) => {
+        if (r.governorate) acc[r.governorate] = (acc[r.governorate] ?? 0) + 1;
+        return acc;
+      }, {}),
     };
   },
   ["home-feed"],
