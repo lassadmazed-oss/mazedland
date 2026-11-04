@@ -483,7 +483,7 @@ async function loadPanel(
        deal_type, deposit_amount, charges_amount, furnished, available_from, min_lease_months,
        created_at, published_at, expires_at,        view_count, contact_reveal_count, renewed_count,
        seller_attestation_version, seller_attestation_at,
-       seller_credit_id, fee_payment_id, fee_waived_by, pending_edit,
+       seller_credit_id, fee_payment_id, fee_waived_by, pending_edit, pin_lat, pin_lng, location_exact,
        seller:profiles!listings_seller_id_fkey (full_name, phone),
        category:categories (label_fr, label_ar, kind),
        photos:listing_photos (storage_path, sort_order, is_cover)`,
@@ -507,6 +507,7 @@ async function loadPanel(
     seller_attestation_version: string | null; seller_attestation_at: string | null;
     seller_credit_id: string | null; fee_payment_id: string | null; fee_waived_by: string | null;
     pending_edit: unknown;
+    pin_lat: number | string | null; pin_lng: number | string | null; location_exact: boolean;
     seller: { full_name: string | null; phone: string | null } | null;
     category: { label_fr: string; label_ar: string | null; kind: string } | null;
     photos: { storage_path: string; sort_order: number; is_cover: boolean }[] | null;
@@ -619,6 +620,7 @@ async function loadPanel(
     viewCount: r.view_count,
     contactRevealCount: r.contact_reveal_count,
     renewedCount: r.renewed_count,
+    pin: r.pin_lat != null && r.pin_lng != null ? { lat: Number(r.pin_lat), lng: Number(r.pin_lng), exact: r.location_exact } : null,
     attestation: r.seller_attestation_version
       ? { version: r.seller_attestation_version, at: r.seller_attestation_at }
       : null,

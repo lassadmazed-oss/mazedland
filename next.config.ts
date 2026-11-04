@@ -201,11 +201,16 @@ const nextConfig: NextConfig = {
       // (src/components/analytics/GoogleAnalytics.tsx), which then sends its
       // hits to google-analytics.com — the hosts Google lists for GA4 without
       // Google Signals (switched off in its config, so no doubleclick.net).
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com https://*.googletagmanager.com`,
+      // 'wasm-unsafe-eval' compiles WebAssembly and nothing else (no JS eval):
+      // the plugin that joins Arabic letters on the maps (mapbox-gl-rtl-text,
+      // src/components/map/maplibre.ts) is a WebAssembly module.
+      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com https://*.googletagmanager.com`,
       "style-src 'self' 'unsafe-inline'",
       // Listing photos go through /_next/image (same origin); receipts and
       // signed storage URLs come straight from Supabase.
-      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com",
+      // tiles.openfreemap.org draws the maps (0212): vector tiles, fonts and
+      // icons fetched by MapLibre, and the relief images under them.
+      "img-src 'self' data: blob: https://*.supabase.co https://*.google-analytics.com https://*.googletagmanager.com https://tiles.openfreemap.org",
       "font-src 'self' data:",
       [
         "connect-src 'self'",
@@ -216,6 +221,7 @@ const nextConfig: NextConfig = {
         "https://*.google-analytics.com",
         "https://*.analytics.google.com",
         "https://*.googletagmanager.com",
+        "https://tiles.openfreemap.org",
       ]
         .filter(Boolean)
         .join(" "),
@@ -246,11 +252,12 @@ const nextConfig: NextConfig = {
             value: "max-age=63072000; includeSubDomains; preload",
           },
           {
-            // camera and geolocation were `(self)` for the KYC selfie and the
-            // property map. Neither exists; a permission no feature uses is a
-            // permission an injected script can still prompt for.
+            // camera was `(self)` for the KYC selfie, which no longer exists; a
+            // permission no feature uses is a permission an injected script can
+            // still prompt for. geolocation is back for « Ma position » when a
+            // seller puts their annonce on the map (0212), on this site only.
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), payment=()",
+            value: "camera=(), microphone=(), geolocation=(self), payment=()",
           },
           // Keeps a page opened from this site (or that opened it) from holding
           // a reference to our window — the tabnabbing vector.

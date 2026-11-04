@@ -11,7 +11,7 @@ import { isEditable } from "@/lib/listings/edit";
 import { categoryLabel } from "@/lib/i18n";
 import {
   Plus, Ticket, ImageOff, Clock, CreditCard, PencilLine,
-  ArrowRight, AlertTriangle, Inbox, Megaphone, Sparkles, MessageCircle,
+  ArrowRight, AlertTriangle, Inbox, Megaphone, Sparkles, MessageCircle, MapPin,
 } from "lucide-react";
 import { RenewButton } from "./RenewButton";
 import { DeleteDraftButton } from "./DeleteDraftButton";
@@ -111,7 +111,7 @@ export default async function MyListingsPage({
       .select(
         `id, title, price, price_on_request, status, rejection_reason, published_at,
          deal_type, availability, pending_edit_at, review_flags, taken_down_at, taken_down_reason,
-         expires_at, created_at, category_id, category:categories (label_fr, label_ar),
+         expires_at, created_at, category_id, lat, category:categories (label_fr, label_ar),
          photos:listing_photos (storage_path, sort_order, is_cover)`,
       )
       .eq("seller_id", user.id)
@@ -178,6 +178,8 @@ export default async function MyListingsPage({
     taken_down_at: string | null; taken_down_reason: string | null;
     category: Category | Category[] | null;
     category_id: string;
+    /** The public point (0212); null = not on the map yet. */
+    lat: number | string | null;
     photos: { storage_path: string; sort_order: number; is_cover?: boolean | null }[] | null;
   };
   const all = (listRes.data ?? []) as Row[];
@@ -381,6 +383,20 @@ export default async function MyListingsPage({
             }
           >
             <PencilLine className="size-3.5" /> {l.pending_edit_at ? t("editPending") : t("edit")}
+          </Link>
+        )}
+        {/* No place on the map yet (0212): one tap to the pin, which goes
+            live at once — it is what fills the map. */}
+        {settings.feature_listing_map && settings.feature_listing_edit && l.lat == null && isEditable(l) && (
+          <Link
+            href={`/annonces/nouvelle?edit=${l.id}#f-location` as never}
+            className={
+              block
+                ? "mazed-btn-quiet tap-target mt-2 flex h-11 w-full items-center justify-center gap-1.5 rounded-full px-4 text-[13px]"
+                : "ms-3 inline-flex items-center gap-1 text-[12.5px] font-bold text-foreground hover:underline"
+            }
+          >
+            <MapPin className="size-3.5" /> {t("addLocation")}
           </Link>
         )}
         {/* « Promouvoir » and « Mettre en avant » both sound like "more people

@@ -38,6 +38,9 @@ export const SETTINGS = {
   feature_publish_ai_fill: { group: "features", type: "bool", default: false, client: true },
   // The microphone of « Publier en parlant », in the page's language.
   feature_ai_voice: { group: "features", type: "bool", default: true, client: true },
+  // Where an annonce is, on a map (0212): the optional pin in the form and the
+  // map on the annonce page. Off: neither shows; the pins stay stored.
+  feature_listing_map: { group: "features", type: "bool", default: true, client: true },
   // « Publier en parlant » (version B): an annonce made in a conversation, voice
   // first. Off until the owner turns it on (asked 2026-10-31).
   feature_publish_chat: { group: "features", type: "bool", default: false, client: true },
@@ -122,6 +125,10 @@ export const SETTINGS = {
   moderation_min_photos: { group: "moderation", type: "int", default: 3, min: 0, max: 12, unit: "photos", client: true },
   moderation_report_threshold: { group: "moderation", type: "int", default: 3, min: 1, max: 50 },
   moderation_banned_words: { group: "moderation", type: "list", default: [], maxItems: 200, maxLen: 40, lower: true },
+  // A pin added to or moved on an annonce online goes live at once (on): it
+  // changes no word, price or photo the moderation read. Off: it waits for an
+  // admin like any edit, and the annonce is offline until then (0172).
+  map_pin_live_without_review: { group: "moderation", type: "bool", default: true },
 
   // ── Publication.
   listing_default_days: { group: "publication", type: "int", default: 30, min: 1, max: 365, unit: "days" },
@@ -131,6 +138,9 @@ export const SETTINGS = {
   // photos (Idealista, Rightmove), or two, denser (Tayara). Tablets and up
   // always lay out three or four.
   catalogue_phone_columns: { group: "publication", type: "int", default: 1, min: 1, max: 2, choices: [1, 2] },
+  // « Position approximative » (the default): visitors see a circle of this
+  // radius, which holds the house without pointing at it (src/lib/geo).
+  map_approx_radius_m: { group: "publication", type: "int", default: 500, min: 200, max: 2000, unit: "meters", choices: [300, 500, 800, 1000, 1500], client: true },
   // A project goes public only while its agence has a running plan.
   projects_need_plan: { group: "publication", type: "bool", default: true },
   projects_max_units: { group: "publication", type: "int", default: 300, min: 10, max: 2000 },

@@ -10,6 +10,8 @@ import { ListingImage } from "@/components/media/ListingImage";
 import { Ltr } from "@/components/ui/Ltr";
 import { Modal } from "@/components/ui/Modal";
 import { useSetting } from "@/components/settings/SettingsProvider";
+import { Optional } from "@/components/ui/Optional";
+import { LocationPicker, type PinValue } from "@/components/map/LocationPicker";
 import { formatTND, formatDate, formatNumber, cn } from "@/lib/utils";
 import { chipClass } from "@/lib/chips";
 import { flushFirstParty, trackEvent } from "@/lib/analytics/events";
@@ -178,6 +180,10 @@ export type InitialDraft = {
   available_from?: string | null;
   min_lease_months?: number | null;
   shop_id?: string | null;
+  /** The pin (0212), private: the seller sees their own. */
+  pin_lat?: number | string | null;
+  pin_lng?: number | string | null;
+  location_exact?: boolean | null;
 };
 
 /** A shop the seller may publish for (0173), and how many annonces its plan still covers. */
@@ -264,6 +270,7 @@ export function PublishWizard({
   const { toast } = useToast();
   const apiError = useApiError();
   const t = useTranslations("publish");
+  const tMap = useTranslations("listingMap");
   const tc = useTranslations("common");
   // As an admin set them in /admin/settings: the photo count below which an
   // annonce waits for a human, the price help, and « Corriger » once sent.
@@ -382,6 +389,15 @@ export function PublishWizard({
   const [quartier, setQuartier] = useState(() =>
     d?.address?.trim() || (d?.delegation && !canonicalDelegation(d?.governorate ?? homeGovernorate, d.delegation) ? d.delegation : ""),
   );
+  // The pin (0212), optional. A draft keeps it and sends it with its next
+  // save — only once the seller touched it, so a pin put from the console is
+  // not wiped by a form opened before; an annonce online sends it at once.
+  const mapOn = useSetting("feature_listing_map");
+  const mapRadius = useSetting("map_approx_radius_m");
+  const [pin, setPin] = useState<PinValue | null>(() =>
+    d?.pin_lat != null && d?.pin_lng != null ? { lat: Number(d.pin_lat), lng: Number(d.pin_lng), exact: !!d.location_exact } : null,
+  );
+  const [pinTouched, setPinTouched] = useState(false);
   // Sorted the way the reader reads them: by the Arabic name on /ar.
   const delegationOptions = useMemo(
     () =>
@@ -975,6 +991,8 @@ export function PublishWizard({
     setGovernorate(homeGovernorate);
     setDelegation("");
     setQuartier("");
+    setPin(null);
+    setPinTouched(false);
     setContactName(defaultContactName);
     setContactPhone(defaultContactPhone);
     setContactOpen(!phoneUsable(defaultContactPhone));
@@ -1020,6 +1038,7 @@ export function PublishWizard({
         photos: photos.map((p, i) => ({ storage_path: p.path, sort_order: i })),
         // Only sent when there is a choice to make, so a seller with no shop never touches it.
         ...(shops.length > 0 || d?.shop_id ? { shop_id: shopId || null } : {}),
+        ...(mapOn && pinTouched ? { location: pin } : {}),
         ...extra,
       }),
     });
@@ -1037,6 +1056,34 @@ export function PublishWizard({
     setListingId(j.id);
     setSaved("ok");
     return j.id;
+  }
+
+  /**
+   * The pin from the picker: a draft keeps it for its next save; an annonce
+   * online sends it at once (PUT /api/annonces/:id/location), where it goes
+   * live without the edit's review unless the console says otherwise.
+   */
+  async function savePin(v: PinValue | null): Promise<boolean> {
+    if (!editing) {
+      setPin(v);
+      setPinTouched(true);
+      if (v) toast(tMap("added"), "success");
+      return true;
+    }
+    if (!listingId) return false;
+    const res = await fetch(`/api/annonces/${listingId}/location`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(v ?? { clear: true }),
+    });
+    const j = (await res.json().catch(() => ({}))) as { status?: string };
+    if (!res.ok) {
+      toast(apiError(j, tMap("saveFailed")), "error");
+      return false;
+    }
+    setPin(v);
+    if (v) toast(j.status === "pending_review" ? tMap("savedForReview") : tMap("saved"), j.status === "pending_review" ? "warning" : "success");
+    return true;
   }
 
   // ─── Autosave ─────────────────────────────────────────────────────────────
@@ -1071,7 +1118,7 @@ export function PublishWizard({
   }, [
     categoryId, photos, attrs, typedTitle, titleTouched, description,
     price, onRequest, negotiable, governorate, delegation, quartier, contactName, contactPhone,
-    deal, deposit, charges, furnished, availableFrom, minLease,
+    deal, deposit, charges, furnished, availableFrom, minLease, pin,
   ]);
 
   async function publishNow() {
@@ -1722,6 +1769,20 @@ export function PublishWizard({
                       placeholder={t("quartierPlaceholder")}
                     />
                   </div>
+                  {mapOn && (
+                    <div className="col-span-2">
+                      <Optional name="location-picker">
+                        <LocationPicker
+                          value={pin}
+                          governorate={governorate}
+                          radiusM={mapRadius}
+                          onSave={(v) => savePin(v)}
+                          onClear={() => savePin(null)}
+                          note={editing ? tMap("liveNote") : undefined}
+                        />
+                      </Optional>
+                    </div>
+                  )}
                 </div>
               </section>
             </>
