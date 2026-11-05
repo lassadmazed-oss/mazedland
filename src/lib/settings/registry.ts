@@ -142,6 +142,10 @@ export const SETTINGS = {
   // ── Publication.
   listing_default_days: { group: "publication", type: "int", default: 30, min: 1, max: 365, unit: "days" },
   listing_max_photos: { group: "publication", type: "int", default: 12, min: 1, max: 30, unit: "photos", client: true },
+  // The full-screen gallery's zoom (the owner, 2026-11-05): on or off, and how
+  // many times a photo grows. Uploads are 1600 px long, so past 3 it blurs.
+  gallery_zoom: { group: "publication", type: "bool", default: true, client: true },
+  gallery_zoom_max: { group: "publication", type: "int", default: 3, min: 2, max: 4, choices: [2, 3, 4], client: true },
   catalogue_page_size: { group: "publication", type: "int", default: 24, min: 12, max: 60 },
   // How many annonces side by side on a phone's catalogue: one, with big
   // photos (Idealista, Rightmove), or two, denser (Tayara). Tablets and up

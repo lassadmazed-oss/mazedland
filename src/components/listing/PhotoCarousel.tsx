@@ -3,12 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { IMAGE_BLUR_MAP } from "@/lib/imageBlurMap";
 import { isRtl } from "@/lib/i18n";
 import { HiddenAt } from "@/components/ui/HiddenAt";
 import { trackEvent } from "@/lib/analytics/events";
+import { useSetting } from "@/components/settings/SettingsProvider";
+import type { Size } from "@/lib/zoom";
+import { usePhotoZoom } from "./usePhotoZoom";
 
 type Photo = {
   id: string;
@@ -39,7 +42,9 @@ const SWIPE_THRESHOLD = 40;
  *     for a showcase that wants it.
  *   - `counter` prints « 3 / 12 » on the photo, the way every property app
  *     does, so the reader knows how much there is to see.
- *   - `variant="modal"` is the full-screen gallery the desktop mosaic opens.
+ *   - `variant="modal"` is the full-screen gallery (GalleryModal), with the
+ *     zoom of usePhotoZoom when the console has it on (`gallery_zoom`).
+ *   - `onOpen` makes a tap on the photo open that gallery (PhonePhotos).
  *
  * The server-rendered overlay (chips, title) is passed in via `children` so
  * crawlers see it without waiting for hydration.
@@ -54,6 +59,7 @@ export function PhotoCarousel({
   variant = "page",
   hiddenAt,
   listingId,
+  onOpen,
 }: {
   photos: Photo[];
   alt: string;
@@ -66,6 +72,8 @@ export function PhotoCarousel({
   hiddenAt?: string;
   /** The annonce, for the count of photos looked at (Statistiques). */
   listingId?: string;
+  /** A tap on the photo opens the full-screen gallery at that photo. */
+  onOpen?: (index: number) => void;
 }) {
   const t = useTranslations();
   // Right-to-left, the flex track lays the slides out leftwards from the right
@@ -117,6 +125,24 @@ export function PhotoCarousel({
   const looked = useRef(new Set<number>());
   const indexRef = useRef(index);
   indexRef.current = index;
+
+  // Zoom, in the full-screen gallery only. The photos' own sizes, as each
+  // loads, say where a zoomed photo's edges are.
+  const zoomSetting = useSetting("gallery_zoom");
+  const zoomMax = useSetting("gallery_zoom_max");
+  const zoomOn = modal && zoomSetting && count > 0;
+  const frameRef = useRef<HTMLDivElement>(null);
+  const naturals = useRef(new Map<number, Size>());
+  const zoom = usePhotoZoom({
+    enabled: zoomOn,
+    max: zoomMax,
+    frameRef,
+    natural: () => naturals.current.get(indexRef.current % Math.max(1, count)) ?? null,
+  });
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+  // A swipe that changed photo is not also a tap that opens the gallery.
+  const swiped = useRef(false);
   function lookedAt(i: number) {
     if (!listingId || count < 2) return;
     const at = ((i % count) + count) % count;
@@ -128,6 +154,7 @@ export function PhotoCarousel({
   function go(delta: number) {
     if (!loop) return;
     pauseUntil.current = Date.now() + USER_NAV_PAUSE_MS;
+    zoomRef.current.reset();
     setAnim(true);
     lookedAt(indexRef.current + delta);
     setIndex((i) => {
@@ -139,8 +166,8 @@ export function PhotoCarousel({
   }
 
   function jumpTo(i: number) {
-
     pauseUntil.current = Date.now() + USER_NAV_PAUSE_MS;
+    zoomRef.current.reset();
     setAnim(true);
     lookedAt(i);
     setIndex(i);
@@ -158,6 +185,18 @@ export function PhotoCarousel({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `go` only reads refs and setters
   }, [modal, loop, rtl]);
 
+  // « + », « − » and « 0 » zoom in, out and back, in the full-screen gallery.
+  useEffect(() => {
+    if (!zoomOn) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "+" || e.key === "=") zoomRef.current.zoomIn();
+      else if (e.key === "-") zoomRef.current.zoomOut();
+      else if (e.key === "0") zoomRef.current.reset();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomOn]);
+
   const arrow =
     "absolute top-1/2 z-20 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/92 text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.2)] backdrop-blur-md transition hover:bg-white active:scale-95";
 
@@ -166,12 +205,21 @@ export function PhotoCarousel({
       <div className="relative">
         {/* 4:3 on a phone too, and never more than half the screen: a portrait
             photo pushed the title, the place and the price below the fold
-            (2026-10-27 audit). The modal has the whole screen. */}
+            (2026-10-27 audit). The modal has the whole screen: on an upright
+            phone a taller frame than 4:3, so a photo can be zoomed into. */}
         <div
+          ref={frameRef}
           className={`relative w-full overflow-hidden ${
-            modal ? "aspect-[4/3] max-h-[78svh] bg-black" : "aspect-[4/3] max-h-[50svh] bg-surface-2"
-          }`}
-          style={{ touchAction: "pan-y" }}
+            modal
+              ? "h-[64svh] bg-black sm:h-auto sm:aspect-[4/3] sm:max-h-[78svh]"
+              : "aspect-[4/3] max-h-[50svh] bg-surface-2"
+          } ${onOpen ? "cursor-zoom-in" : ""}`}
+          style={{
+            // The gallery's own pinch, not the browser's zoom of the page.
+            touchAction: zoomOn ? "none" : "pan-y",
+            cursor: zoomOn ? (zoom.zoom.scale > 1 ? (zoom.gesturing ? "grabbing" : "grab") : "zoom-in") : undefined,
+          }}
+          {...zoom.handlers}
           onTouchStart={(e) => {
             touchX.current = e.touches[0].clientX;
             pauseUntil.current = Date.now() + USER_NAV_PAUSE_MS;
@@ -180,8 +228,32 @@ export function PhotoCarousel({
             if (touchX.current == null) return;
             const dx = e.changedTouches[0].clientX - touchX.current;
             touchX.current = null;
-            if (Math.abs(dx) > SWIPE_THRESHOLD) go((rtl ? dx > 0 : dx < 0) ? 1 : -1);
+            // A pinch, a zoomed photo moved, a double tap: not a swipe.
+            if (Math.abs(dx) > SWIPE_THRESHOLD && !zoom.blocksSwipe()) {
+              swiped.current = true;
+              go((rtl ? dx > 0 : dx < 0) ? 1 : -1);
+            }
           }}
+          {...(onOpen
+            ? {
+                role: "button",
+                tabIndex: 0,
+                "aria-label": t("listing.gallery.openFull"),
+                onClick: () => {
+                  if (swiped.current) {
+                    swiped.current = false;
+                    return;
+                  }
+                  onOpen(activeDot);
+                },
+                onKeyDown: (e: React.KeyboardEvent) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onOpen(activeDot);
+                  }
+                },
+              }
+            : {})}
         >
           {count > 0 ? (
             <div
@@ -201,6 +273,7 @@ export function PhotoCarousel({
                     className="relative h-full w-full shrink-0"
                   >
                     {(() => {
+                      const zoomed = zoomOn && i === index && zoom.zoom.scale > 1;
                       const img = (
                         <Image
                           src={src}
@@ -208,21 +281,48 @@ export function PhotoCarousel({
                           fill
                           loading={i === 0 ? "eager" : "lazy"}
                           fetchPriority={i === 0 ? "high" : undefined}
-                          sizes={modal ? "100vw" : "(min-width: 1024px) 1100px, 100vw"}
+                          // Zoomed in, the largest size there is: the photo as
+                          // uploaded (1600 px on its long side) rather than a
+                          // screen-wide copy blown up.
+                          sizes={zoomed ? "1920px" : modal ? "100vw" : "(min-width: 1024px) 1100px, 100vw"}
                           placeholder={blur ? "blur" : "empty"}
                           blurDataURL={blur}
-                          className={modal ? "object-contain" : "object-cover"}
+                          className={`${modal ? "object-contain" : "object-cover"} ${zoomOn ? "select-none" : ""}`}
+                          draggable={zoomOn ? false : undefined}
+                          onLoad={
+                            zoomOn
+                              ? (e) => naturals.current.set(i % count, { w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })
+                              : undefined
+                          }
                         />
                       );
                       // The first photo loads eagerly, and display:none does not
                       // stop that: where CSS hides this carousel, an empty GIF
                       // takes its place (see HiddenAt).
-                      return i === 0 && hiddenAt ? (
-                        <HiddenAt media={hiddenAt} className="absolute inset-0">
-                          {img}
-                        </HiddenAt>
+                      const shown =
+                        i === 0 && hiddenAt ? (
+                          <HiddenAt media={hiddenAt} className="absolute inset-0">
+                            {img}
+                          </HiddenAt>
+                        ) : (
+                          img
+                        );
+                      return zoomOn ? (
+                        <div
+                          className="absolute inset-0"
+                          style={
+                            i === index
+                              ? {
+                                  transform: `translate(${zoom.zoom.x}px, ${zoom.zoom.y}px) scale(${zoom.zoom.scale})`,
+                                  transition: zoom.gesturing ? "none" : "transform 160ms ease-out",
+                                }
+                              : undefined
+                          }
+                        >
+                          {shown}
+                        </div>
                       ) : (
-                        img
+                        shown
                       );
                     })()}
                   </div>
@@ -246,6 +346,30 @@ export function PhotoCarousel({
               {t("listing.gallery.counter", { n: activeDot + 1, total: count })}
             </span>
           </span>
+        )}
+
+        {/* « − » and « + », for a mouse without a wheel and whoever does not know the pinch. */}
+        {zoomOn && (
+          <div className="absolute bottom-3 start-3 z-20 inline-flex gap-1.5">
+            <button
+              type="button"
+              aria-label={t("listing.gallery.zoomOut")}
+              onClick={() => zoom.zoomOut()}
+              disabled={zoom.zoom.scale <= 1}
+              className="inline-grid size-10 place-items-center rounded-full bg-white/92 text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition hover:bg-white active:scale-95 disabled:opacity-40"
+            >
+              <ZoomOut className="size-5" strokeWidth={2.2} />
+            </button>
+            <button
+              type="button"
+              aria-label={t("listing.gallery.zoomIn")}
+              onClick={() => zoom.zoomIn()}
+              disabled={zoom.zoom.scale >= zoomMax}
+              className="inline-grid size-10 place-items-center rounded-full bg-white/92 text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition hover:bg-white active:scale-95 disabled:opacity-40"
+            >
+              <ZoomIn className="size-5" strokeWidth={2.2} />
+            </button>
+          </div>
         )}
 
         {/* Arrows + dots — only when there's more than one photo. */}
@@ -321,6 +445,14 @@ export function PhotoCarousel({
             );
           })}
         </div>
+      )}
+
+      {/* How to zoom: fingers on a touch screen, the wheel with a mouse. */}
+      {zoomOn && (
+        <p className="px-4 pt-3 text-center text-[12px] text-white/60">
+          <span className="pointer-coarse:hidden">{t("listing.gallery.zoomHintMouse")}</span>
+          <span className="hidden pointer-coarse:inline">{t("listing.gallery.zoomHintTouch")}</span>
+        </p>
       )}
     </div>
   );
