@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Images, X } from "lucide-react";
+import { Images } from "lucide-react";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { trackEvent } from "@/lib/analytics/events";
 import { IMAGE_BLUR_MAP } from "@/lib/imageBlurMap";
 import { HiddenAt, BELOW_LG } from "@/components/ui/HiddenAt";
-import { PhotoCarousel } from "./PhotoCarousel";
+import { GalleryModal } from "./GalleryModal";
 
 type Photo = { id: string; storage_path: string };
 
@@ -119,52 +118,5 @@ function Tile({
         img
       )}
     </button>
-  );
-}
-
-/** The full-screen gallery: the carousel on black, Escape or × to leave. */
-function GalleryModal({
-  photos,
-  alt,
-  startIndex,
-  onClose,
-  closeLabel,
-  listingId,
-}: {
-  photos: Photo[];
-  alt: string;
-  startIndex: number;
-  onClose: () => void;
-  closeLabel: string;
-  listingId?: string;
-}) {
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [onClose]);
-
-  return createPortal(
-    <div role="dialog" aria-modal="true" aria-label={alt} className="fixed inset-0 z-[120] flex flex-col justify-center bg-black/95 p-4">
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label={closeLabel}
-        className="absolute end-4 top-4 z-30 inline-grid size-11 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition hover:bg-white/20"
-      >
-        <X className="size-5" strokeWidth={2.4} />
-      </button>
-      <div className="mx-auto w-full max-w-6xl">
-        <PhotoCarousel photos={photos} alt={alt} autoplay={false} counter startIndex={startIndex} variant="modal" listingId={listingId} />
-      </div>
-    </div>,
-    document.body,
   );
 }

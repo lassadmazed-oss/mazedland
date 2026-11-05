@@ -1005,7 +1005,12 @@
       "counter": "{n} / {total}",
       "all": "Toutes les photos",
       "photos": "{count, plural, one {# photo} other {# photos}}",
-      "close": "Fermer"
+      "close": "Fermer",
+      "openFull": "Voir les photos en plein écran",
+      "zoomIn": "Zoomer",
+      "zoomOut": "Dézoomer",
+      "zoomHintTouch": "Écartez deux doigts ou touchez deux fois pour zoomer",
+      "zoomHintMouse": "Double-cliquez ou tournez la molette pour zoomer"
     },
     "metaNotFound": "Annonce introuvable — Mazed Immo",
     "metaDescriptionFallback": "{title} à {governorate}.",
@@ -5461,6 +5466,14 @@
     "listing_max_photos": {
       "label": "Photos maximum par annonce",
       "hint": "Le formulaire n'en accepte pas plus."
+    },
+    "gallery_zoom": {
+      "label": "Zoom sur les photos",
+      "hint": "Dans les photos en plein écran : deux doigts ou deux touches sur un téléphone, la molette ou un double-clic sur un ordinateur. Coupé : les photos s'ouvrent toujours en plein écran, sans zoom."
+    },
+    "gallery_zoom_max": {
+      "label": "Zoom jusqu'à",
+      "hint": "Combien de fois une photo peut grandir. Les photos sont envoyées en 1600 px : au-delà de 3 fois, elles deviennent floues."
     },
     "catalogue_page_size": {
       "label": "Annonces par page de recherche",

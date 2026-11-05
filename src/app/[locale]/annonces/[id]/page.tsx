@@ -13,7 +13,7 @@ import { governorateLabel } from "@/lib/tunisia";
 import { canonicalDelegation, shownDelegation } from "@/lib/delegations";
 import { routing } from "@/i18n/routing";
 import { Ltr } from "@/components/ui/Ltr";
-import { PhotoCarousel } from "@/components/listing/PhotoCarousel";
+import { PhonePhotos } from "@/components/listing/PhonePhotos";
 import { GalleryMosaic } from "@/components/listing/GalleryMosaic";
 import { LG_UP } from "@/components/ui/HiddenAt";
 import { ContactReveal } from "./ContactReveal";
@@ -773,11 +773,11 @@ export default async function AnnoncePage({
         </ol>
       </nav>
 
-      {/* ── The photos ── a swipe carousel on a phone, a mosaic on a desktop. */}
+      {/* ── The photos ── a swipe carousel on a phone, a mosaic on a desktop; a tap on either opens them full screen. */}
       {photos.length > 0 && (
         <div className="lg:mt-4">
           <div className="lg:hidden">
-            <PhotoCarousel photos={photos} alt={l.title} autoplay={false} counter hiddenAt={LG_UP} listingId={l.id} />
+            <PhonePhotos photos={photos} alt={l.title} hiddenAt={LG_UP} listingId={l.id} />
           </div>
           <GalleryMosaic photos={photos} alt={l.title} listingId={l.id} />
         </div>
