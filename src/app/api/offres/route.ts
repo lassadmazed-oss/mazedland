@@ -9,7 +9,7 @@ import { apiTranslator, requestLocale } from "@/lib/i18n/server";
 import { anyPhoneToE164 } from "@/lib/tunisia";
 import { formatTND } from "@/lib/utils";
 import { personName } from "@/lib/visits";
-import { checkAmount, FINANCING, offerExpiry, offerFloor, parseAmount, takesOffers, type Financing } from "@/lib/offers";
+import { checkAmount, FINANCING, offerExpiry, offerFloor, offerReceivedBySms, parseAmount, takesOffers, type Financing } from "@/lib/offers";
 import { asOfferRow, expireDue, leadForOffer, OFFER_COLUMNS } from "@/lib/offers-server";
 import { roleIn } from "@/lib/pro/shops";
 import { featureOff } from "@/lib/settings/gate";
@@ -123,6 +123,8 @@ export async function POST(req: NextRequest) {
   const offer = asOfferRow(created);
 
   await leadForOffer(admin, offer).catch(() => {});
+  // By SMS too when the seller said « négociable »; otherwise the bell only.
+  const sms = offerReceivedBySms(listing, settings.offers_sms_only_negotiable);
   await admin
     .rpc("enqueue_notification", {
       p_user_id: listing.seller_id,
@@ -130,7 +132,7 @@ export async function POST(req: NextRequest) {
       p_title: "Nouvelle offre",
       p_body: `${name} propose ${formatTND(amount)} TND pour « ${listing.title} ».`,
       p_link: `/account/offres?o=${offer.id}`,
-      p_payload: { vars: { title: listing.title, name, amount, asking } },
+      p_payload: { vars: { title: listing.title, name, amount, asking }, ...(sms ? {} : { sms: false }) },
     })
     .then(() => {}, () => {});
 

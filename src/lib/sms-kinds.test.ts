@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { SMS_KINDS, CAPPED_KINDS, UNCAPPED_KINDS, forSms } from "./sms-kinds";
+import { SMS_KINDS, CAPPED_KINDS, UNCAPPED_KINDS, forSms, smsWanted } from "./sms-kinds";
 
 // These guard the SMS-eligibility list against the two ways it silently breaks:
 // (1) an admin/queue/broadcast kind leaking in (the user gets operator spam, or
@@ -142,5 +142,18 @@ describe("forSms", () => {
     expect(forSms(published, visitor)).toBe(published);
     const plain = { kind: "visit_confirmed", title: "x", body: "y", payload: { vars: { title: "Villa", note: "", variant: "plain" } } };
     expect(forSms(plain, visitor)).toBe(plain);
+  });
+});
+
+describe("smsWanted", () => {
+  it("lets every notification go out unless it says sms: false", () => {
+    expect(smsWanted({ vars: { title: "Villa" } })).toBe(true);
+    expect(smsWanted(null)).toBe(true);
+    expect(smsWanted(undefined)).toBe(true);
+    expect(smsWanted({ sms: true })).toBe(true);
+  });
+
+  it("keeps an offer on a non-negotiable annonce in the bell", () => {
+    expect(smsWanted({ vars: { title: "Villa" }, sms: false })).toBe(false);
   });
 });

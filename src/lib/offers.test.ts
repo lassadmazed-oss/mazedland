@@ -8,6 +8,7 @@ import {
   offerChips,
   offerExpiry,
   offerFloor,
+  offerReceivedBySms,
   parseAmount,
   percentBelow,
   roundOffer,
@@ -153,5 +154,17 @@ describe("which annonces take offers", () => {
     expect(takesOffers({ ...sale, price_on_request: true }, scope)).toBe(false);
     expect(takesOffers({ ...sale, status: "pending_review" }, scope)).toBe(false);
     expect(takesOffers({ ...sale, availability: "reserved" }, scope)).toBe(false);
+  });
+});
+
+describe("which new offers go out by SMS", () => {
+  it("texts the seller who said « négociable », and only the bell for the others", () => {
+    expect(offerReceivedBySms({ negotiable: true }, true)).toBe(true);
+    expect(offerReceivedBySms({ negotiable: false }, true)).toBe(false);
+  });
+
+  it("texts every seller when the console switch is off", () => {
+    expect(offerReceivedBySms({ negotiable: false }, false)).toBe(true);
+    expect(offerReceivedBySms({ negotiable: true }, false)).toBe(true);
   });
 });

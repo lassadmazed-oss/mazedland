@@ -4,7 +4,7 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { sendSms, isSmsConfigured, toSmsText } from "@/lib/winsms";
 import { log } from "@/lib/log";
 import { fail } from "@/lib/http/errors";
-import { SMS_KINDS, CAPPED_KINDS, forSms } from "@/lib/sms-kinds";
+import { SMS_KINDS, CAPPED_KINDS, forSms, smsWanted } from "@/lib/sms-kinds";
 import { getTranslations } from "next-intl/server";
 import { renderNotification } from "@/lib/notifications/render";
 import { PRODUCTION_ORIGIN, siteUrl } from "@/lib/siteUrl";
@@ -143,6 +143,12 @@ async function run(req: NextRequest) {
   // simply the cap.
 
   async function processRow(row: Row): Promise<"sent" | "failed" | "skipped" | "deadletter"> {
+    // Kept in the site by whoever enqueued it (smsWanted): done, and the
+    // day's cap is not spent on it.
+    if (!smsWanted(row.payload)) {
+      await db.from("notifications").update({ sms_sent_at: new Date().toISOString() }).eq("id", row.id);
+      return "skipped";
+    }
     const phone = phoneByUser.get(row.user_id);
     if (!phone) {
       // Phone vanished between claim and send (opt-out / deletion race) — mark

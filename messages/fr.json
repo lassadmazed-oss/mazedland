@@ -6048,12 +6048,16 @@
       "hint": "Le nom du compte (avec ou sans @) ou son lien. Affiché en bas de chaque page et sur la page contact. Vide : pas d'Instagram."
     },
     "feature_offers": {
-      "label": "Proposer un prix",
-      "hint": "Le bouton « Proposer un prix » sur les annonces à vendre. Coupé : plus de nouvelle offre ; celles en cours restent dans « Mes offres »."
+      "label": "Négocier le prix",
+      "hint": "Le bouton « Négocier le prix » sur les annonces à vendre. Coupé : plus de nouvelle offre ; celles en cours restent dans « Mes offres »."
     },
     "offers_only_negotiable": {
       "label": "Offres sur les prix négociables seulement",
       "hint": "Le bouton n'apparaît que si le vendeur a coché « Prix négociable ». Coupé : sur toutes les annonces à vendre qui ont un prix."
+    },
+    "offers_sms_only_negotiable": {
+      "label": "SMS d'offre seulement pour les prix négociables",
+      "hint": "Une offre arrive par SMS et dans le site au vendeur qui a coché « Prix négociable ». Aux autres, dans le site seulement : ils la voient en ouvrant le site ou l'application. Coupé : SMS pour toutes les offres."
     },
     "offers_rent": {
       "label": "Offres sur les locations aussi",
@@ -7566,8 +7570,8 @@
   },
   "offers": {
     "request": {
-      "cta": "Proposer un prix",
-      "title": "Proposer un prix",
+      "cta": "Négocier le prix",
+      "title": "Négocier le prix",
       "close": "Fermer",
       "asking": "Prix affiché : {amount}",
       "hint": "Sans engagement : le vendeur accepte, refuse ou vous propose un autre prix.",
@@ -7674,7 +7678,7 @@
         "sent": "Envoyées"
       },
       "emptyReceived": "Aucune offre sur vos annonces pour l'instant.",
-      "emptySent": "Vous n'avez proposé aucun prix. Sur une annonce négociable, « Proposer un prix » envoie votre offre au vendeur."
+      "emptySent": "Vous n'avez proposé aucun prix. Sur une annonce à vendre, « Négocier le prix » envoie votre offre au vendeur."
     }
   },
   "offersApi": {
