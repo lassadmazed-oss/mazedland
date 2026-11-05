@@ -6,6 +6,7 @@ import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
 import { dueNow, refreshRequestStatus } from "@/lib/social/server";
+import { isApiChannel, isSocialChannel } from "@/lib/social/channels";
 import { runSocialJob, type JobRow } from "@/lib/social/engine";
 
 /**
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!job) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   if (body.action === "run") {
-    if (!["scheduled", "failed"].includes(job.status as string) || (job.channel !== "facebook_page" && job.channel !== "instagram")) {
+    if (!["scheduled", "failed"].includes(job.status as string) || !isSocialChannel(job.channel) || !isApiChannel(job.channel)) {
       return NextResponse.json({ error: "conflict" }, { status: 409 });
     }
     const { data: claimed } = await admin

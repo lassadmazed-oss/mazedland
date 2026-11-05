@@ -12,21 +12,51 @@ import { PRODUCTION_ORIGIN, siteUrl } from "@/lib/siteUrl";
 import { coverPhoto } from "@/lib/listingCover";
 import { asDealType, type DealType } from "@/lib/listings/deal";
 import {
-  MAX_PHOTOS, OFFERED_CHANNELS, OPEN_REQUEST_STATUSES, requestStatusFrom,
+  FEATURED_CHANNELS, MAX_PHOTOS, OFFERED_CHANNELS, OPEN_REQUEST_STATUSES, isApiChannel, isPageChannel, requestStatusFrom,
   type JobAction, type JobStatus, type RequestStatus, type SocialChannel, type SocialLanguage,
 } from "./channels";
 import { generatePost, socialListingFrom, type SocialListing } from "./content";
+import { consentHistory } from "@/lib/consents/server";
+import { currentConsents } from "@/lib/consents/model";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
 /** The wording the seller agreed to; bump it when the consent text changes. */
 export const CONSENT_VERSION = "2026-10-social-v1";
 
-export type SocialSettings = { enabled: boolean; priceTnd: number; autoApprove: boolean; dailyLimit: number };
+/**
+ * The first `legal_version` whose CGU let Mazed Immo show a published annonce
+ * on its own pages (« 3. Annonces »). A seller who accepted it, or a later
+ * one, can have their annonce put forward by an admin without ticking the
+ * promotion box; versions are dates, so they compare as text.
+ */
+export const SOCIAL_TERMS_SINCE = "2026-11-05";
+
+export type SocialSettings = { enabled: boolean; priceTnd: number; autoApprove: boolean; dailyLimit: number; mazedPage: string };
 
 export async function socialSettings(admin: Admin): Promise<SocialSettings> {
   const s = await loadSettings(admin);
-  return { enabled: s.social_enabled, priceTnd: s.social_price_tnd, autoApprove: s.social_auto_approve, dailyLimit: s.social_daily_limit };
+  return {
+    enabled: s.social_enabled,
+    priceTnd: s.social_price_tnd,
+    autoApprove: s.social_auto_approve,
+    dailyLimit: s.social_daily_limit,
+    mazedPage: s.social_mazed_page.trim().replace(/^@/, ""),
+  };
+}
+
+/** Whether a connected page is the « Mazed » one the setting names (id or username). */
+export function isMazedPage(page: { external_id: string; username?: string | null }, mazedPage: string): boolean {
+  if (!mazedPage) return false;
+  return page.external_id === mazedPage || (page.username ?? "").toLowerCase() === mazedPage.toLowerCase();
+}
+
+/**
+ * Whether the seller's answer to the CGU lets Mazed put their annonce forward:
+ * accepted, in the version that carries the clause or a later one.
+ */
+export function termsCoverFeaturing(terms: { granted: boolean; version: string } | null | undefined): boolean {
+  return !!terms && terms.granted && terms.version >= SOCIAL_TERMS_SINCE;
 }
 
 /** The site's address for the links in a post; the request's own origin when it has none (local). */
@@ -236,22 +266,133 @@ export async function createSocialRequest(
   return { ok: true, id: created.id as string, status: "pending_approval" };
 }
 
-type AccountRow = { id: string; platform: string; status: string; token_expires_at: string | null };
+export type FeatureResult =
+  | { ok: true; id: string; ref: string }
+  | { ok: false; error: "disabled" | "not_found" | "not_online" | "no_channel" | "no_photo" | "db" }
+  | { ok: false; error: "already_open"; id: string }
+  | { ok: false; error: "seller_terms"; version: string | null };
 
-/** The connected account per platform, if any (expired ones do not count). */
-export async function connectedAccounts(admin: Admin): Promise<Partial<Record<"facebook_page" | "instagram", AccountRow>>> {
-  const { data } = await admin
-    .from("social_accounts")
-    .select("id, platform, status, token_expires_at")
-    .eq("status", "connected")
-    .order("connected_at", { ascending: false });
-  const out: Partial<Record<"facebook_page" | "instagram", AccountRow>> = {};
-  const now = Date.now();
-  for (const a of (data ?? []) as AccountRow[]) {
+/**
+ * An admin puts an annonce forward on Mazed's pages (0214). It is not theirs,
+ * so what stands for the seller's consent is the CGU they accepted — in the
+ * version that carries the clause or a later one (SOCIAL_TERMS_SINCE); an
+ * admin's own annonce needs nothing more. The ask is the seller's (they see
+ * it under « Promouvoir » and can withdraw it) and waits in « À valider »,
+ * where the admin reads the texts before anything is posted.
+ */
+export async function createFeaturedRequest(
+  admin: Admin,
+  input: { adminId: string; listingId: string; channels: SocialChannel[]; language: SocialLanguage; origin?: string | null },
+): Promise<FeatureResult> {
+  const settings = await socialSettings(admin);
+  if (!settings.enabled) return { ok: false, error: "disabled" };
+  const channels = FEATURED_CHANNELS.filter((c) => input.channels.includes(c));
+  if (channels.length === 0) return { ok: false, error: "no_channel" };
+
+  const row = await loadSocialListing(admin, input.listingId);
+  if (!row) return { ok: false, error: "not_found" };
+  if (row.status !== "published") return { ok: false, error: "not_online" };
+  if (channels.includes("instagram") && row.photos.length === 0) return { ok: false, error: "no_photo" };
+
+  const { data: open } = await admin
+    .from("social_publication_requests")
+    .select("id")
+    .eq("listing_id", row.id)
+    .in("status", OPEN_REQUEST_STATUSES as string[])
+    .limit(1);
+  if (open && open.length > 0) return { ok: false, error: "already_open", id: open[0].id as string };
+
+  let consentAt = new Date().toISOString();
+  let consentVersion = CONSENT_VERSION;
+  if (row.seller_id !== input.adminId) {
+    const terms = currentConsents(await consentHistory(admin, row.seller_id)).terms;
+    if (!termsCoverFeaturing(terms)) return { ok: false, error: "seller_terms", version: terms?.granted ? terms.version : null };
+    consentAt = terms!.created_at;
+    consentVersion = `terms-${terms!.version}`;
+  }
+
+  const { data: created, error } = await admin
+    .from("social_publication_requests")
+    .insert({
+      listing_id: row.id,
+      user_id: row.seller_id,
+      initiated_by: input.adminId,
+      channels,
+      language: input.language,
+      status: "pending_approval",
+      consent_at: consentAt,
+      consent_version: consentVersion,
+      price_tnd: 0,
+    })
+    .select("id, ref")
+    .single();
+  if (error || !created) {
+    if (error?.code === "23505") {
+      const { data: again } = await admin
+        .from("social_publication_requests")
+        .select("id")
+        .eq("listing_id", row.id)
+        .in("status", OPEN_REQUEST_STATUSES as string[])
+        .limit(1);
+      if (again?.[0]) return { ok: false, error: "already_open", id: again[0].id as string };
+    }
+    return { ok: false, error: "db" };
+  }
+
+  const variants = buildVariants({
+    row,
+    channels,
+    language: input.language,
+    origin: socialOrigin(input.origin),
+    ref: created.ref as string,
+    today: tunisToday(),
+  });
+  const { error: vErr } = await admin
+    .from("social_content_variants")
+    .insert(variants.map((v) => ({ ...v, request_id: created.id })));
+  if (vErr) {
+    await admin.from("social_publication_requests").delete().eq("id", created.id);
+    return { ok: false, error: "db" };
+  }
+  return { ok: true, id: created.id as string, ref: created.ref as string };
+}
+
+export type AccountRow = {
+  id: string; platform: string; external_id: string; username: string | null; status: string; token_expires_at: string | null;
+};
+
+export type ApiChannel = "facebook_page" | "facebook_mazed" | "instagram";
+
+/**
+ * The account each API channel posts through, from the connected ones (most
+ * recent first): the page the setting names is « Mazed », any other page is
+ * Mazed Immo's. Expired tokens do not count.
+ */
+export function accountsByChannel(rows: AccountRow[], mazedPage: string, now: number = Date.now()): Partial<Record<ApiChannel, AccountRow>> {
+  const out: Partial<Record<ApiChannel, AccountRow>> = {};
+  for (const a of rows) {
+    if (a.status !== "connected") continue;
     if (a.token_expires_at && new Date(a.token_expires_at).getTime() <= now) continue;
-    if ((a.platform === "facebook_page" || a.platform === "instagram") && !out[a.platform]) out[a.platform] = a;
+    const channel: ApiChannel | null =
+      a.platform === "instagram" ? "instagram"
+        : a.platform === "facebook_page" ? (isMazedPage(a, mazedPage) ? "facebook_mazed" : "facebook_page")
+          : null;
+    if (channel && !out[channel]) out[channel] = a;
   }
   return out;
+}
+
+/** The connected account per API channel, if any. */
+export async function connectedAccounts(admin: Admin, mazedPage?: string): Promise<Partial<Record<ApiChannel, AccountRow>>> {
+  const [{ data }, page] = await Promise.all([
+    admin
+      .from("social_accounts")
+      .select("id, platform, external_id, username, status, token_expires_at")
+      .eq("status", "connected")
+      .order("connected_at", { ascending: false }),
+    mazedPage ?? socialSettings(admin).then((s) => s.mazedPage),
+  ]);
+  return accountsByChannel((data ?? []) as AccountRow[], page);
 }
 
 /**
@@ -280,7 +421,7 @@ export async function approveSocialRequest(
   const runAfter = scheduledFor && scheduledFor.getTime() > Date.now() ? scheduledFor.toISOString() : dueNow();
   const jobs: Record<string, unknown>[] = [];
   for (const channel of req.channels as SocialChannel[]) {
-    if (channel === "facebook_page" || channel === "instagram") {
+    if (isApiChannel(channel)) {
       const account = accounts[channel];
       jobs.push({
         request_id: requestId,
@@ -416,7 +557,7 @@ export async function withdrawSocialRequest(
     .eq("action", "publish")
     .eq("status", "published");
   const removals = ((posted ?? []) as { channel: SocialChannel; group_id: string | null; account_id: string | null }[]).map((j) => {
-    const api = j.channel === "facebook_page" && j.account_id;
+    const api = isPageChannel(j.channel) && j.account_id;
     return {
       request_id: requestId,
       channel: j.channel,

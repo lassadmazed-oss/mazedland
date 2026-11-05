@@ -21,6 +21,13 @@ import { StickyContact } from "./StickyContact";
 import { ReportListing } from "./ReportListing";
 import { VisitRequest } from "./VisitRequest";
 import { PriceOffer, type OpenOffer } from "./PriceOffer";
+import { FeatureOnPages, type OpenFeature } from "./FeatureOnPages";
+import { getAdminSession } from "@/lib/admin/session";
+import { canOpen } from "@/lib/admin/sections";
+import { consentHistory } from "@/lib/consents/server";
+import { currentConsents } from "@/lib/consents/model";
+import { OPEN_REQUEST_STATUSES, type SocialChannel } from "@/lib/social/channels";
+import { connectedAccounts, termsCoverFeaturing } from "@/lib/social/server";
 import { CompareToggle } from "@/components/compare/CompareToggle";
 import type { VisitSlot, VisitStatus } from "@/lib/visits";
 import { shownStatus, takesOffers, type OfferStatus } from "@/lib/offers";
@@ -533,6 +540,39 @@ export default async function AnnoncePage({
   // unless an admin has switched editing off.
   const settings = await getSettings();
   const editOn = settings.feature_listing_edit;
+
+  // « Publier sur nos pages » (0214): an admin who runs the social pages, on any annonce online.
+  let feature: { open: OpenFeature | null; sellerTerms: boolean; connected: Partial<Record<SocialChannel, boolean>> } | null = null;
+  if (user && !isPreview && admin && settings.social_enabled) {
+    const session = await getAdminSession();
+    if (session.isAdmin && canOpen(session.scopes, "social")) {
+      const [{ data: openReq }, history, accounts] = await Promise.all([
+        admin
+          .from("social_publication_requests")
+          .select("ref, status")
+          .eq("listing_id", l.id)
+          .in("status", OPEN_REQUEST_STATUSES as string[])
+          .limit(1)
+          .maybeSingle(),
+        isOwner ? Promise.resolve([]) : consentHistory(admin, l.seller_id),
+        connectedAccounts(admin, settings.social_mazed_page.trim().replace(/^@/, "")),
+      ]);
+      feature = {
+        open: openReq ? { ref: openReq.ref as string, status: openReq.status as string } : null,
+        sellerTerms: isOwner || termsCoverFeaturing(currentConsents(history).terms),
+        connected: { facebook_mazed: !!accounts.facebook_mazed, facebook_page: !!accounts.facebook_page, instagram: !!accounts.instagram },
+      };
+    }
+  }
+  const featureCard = feature ? (
+    <FeatureOnPages
+      listingId={l.id}
+      open={feature.open}
+      sellerTerms={feature.sellerTerms}
+      connected={feature.connected}
+      hasPhotos={photos.length > 0}
+    />
+  ) : null;
   // « Agence réactive »: the agence of this annonce answers its visit requests fast.
   const reactivity =
     shop && admin && l.shop_id && settings.feature_agency_reactive
@@ -820,6 +860,8 @@ export default async function AnnoncePage({
           <div id={CONTACT_CARD_ID} className="mt-5 rounded-2xl border border-border bg-surface p-4 lg:hidden">
             {ownerCard ?? sellerBlock}
           </div>
+          {/* Not in the floating card: it is sticky, and taller than a laptop's screen with this under it. */}
+          {featureCard}
 
           {specs.length > 0 && (
             <section className="mt-8">

@@ -2,6 +2,10 @@
  * The channels an annonce can be promoted on, and what each one can do.
  *
  *   facebook_page    Mazed Immo's Facebook page — posted by the API.
+ *   facebook_mazed   The « Mazed » page (facebook.com/mazedonline, the old
+ *                    auction project's audience) — posted by the API, through
+ *                    the same connection. Only an admin putting an annonce
+ *                    forward picks it (0214); sellers are not offered it.
  *   instagram        Mazed Immo's Instagram account — posted by the API.
  *   facebook_groups  Tunisian property groups — Meta closed the groups API in
  *                    2024, so the text is prepared here and a person on the
@@ -9,16 +13,28 @@
  *   tiktok           Later (phase 3): an app that has not passed TikTok's audit
  *                    can only post privately, which is no promotion at all.
  *
- * The values are stored in the database (0170) and must not be translated.
+ * The values are stored in the database (0170, 0214) and must not be translated.
  */
-export const SOCIAL_CHANNELS = ["facebook_page", "instagram", "facebook_groups", "tiktok"] as const;
+export const SOCIAL_CHANNELS = ["facebook_page", "facebook_mazed", "instagram", "facebook_groups", "tiktok"] as const;
 export type SocialChannel = (typeof SOCIAL_CHANNELS)[number];
 
 /** What a seller can choose today. */
 export const OFFERED_CHANNELS: readonly SocialChannel[] = ["facebook_page", "instagram", "facebook_groups"];
 
+/** What an admin can choose when Mazed puts an annonce forward itself. */
+export const FEATURED_CHANNELS: readonly SocialChannel[] = ["facebook_mazed", "facebook_page", "instagram", "facebook_groups"];
+
 /** Posted by the engine when an account is connected; by hand otherwise. */
-export const API_CHANNELS: readonly SocialChannel[] = ["facebook_page", "instagram"];
+export const API_CHANNELS: readonly SocialChannel[] = ["facebook_page", "facebook_mazed", "instagram"];
+
+/** The two Facebook pages: posted, edited and taken down the same way. */
+export function isPageChannel(channel: SocialChannel): channel is "facebook_page" | "facebook_mazed" {
+  return channel === "facebook_page" || channel === "facebook_mazed";
+}
+
+export function isApiChannel(channel: SocialChannel): channel is "facebook_page" | "facebook_mazed" | "instagram" {
+  return (API_CHANNELS as readonly string[]).includes(channel);
+}
 
 export const SOCIAL_LANGUAGES = ["both", "ar", "fr"] as const;
 export type SocialLanguage = (typeof SOCIAL_LANGUAGES)[number];
@@ -34,12 +50,14 @@ export function isSocialLanguage(v: unknown): v is SocialLanguage {
 /** The account platform a channel posts through, if any. */
 export function platformOf(channel: SocialChannel): "facebook_page" | "instagram" | "tiktok" | null {
   if (channel === "facebook_groups") return null;
+  if (channel === "facebook_mazed") return "facebook_page";
   return channel;
 }
 
 /** Instagram takes 10 photos in a carousel; a Facebook post shows 4 well. */
 export const MAX_PHOTOS: Record<SocialChannel, number> = {
   facebook_page: 4,
+  facebook_mazed: 4,
   instagram: 10,
   facebook_groups: 4,
   tiktok: 10,
@@ -48,6 +66,7 @@ export const MAX_PHOTOS: Record<SocialChannel, number> = {
 /** `utm_source` per channel — what the tracking reads back. */
 export const UTM_SOURCE: Record<SocialChannel, string> = {
   facebook_page: "facebook",
+  facebook_mazed: "facebook_mazed",
   instagram: "instagram",
   facebook_groups: "facebook_group",
   tiktok: "tiktok",

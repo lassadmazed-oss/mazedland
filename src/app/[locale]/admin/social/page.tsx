@@ -11,10 +11,10 @@ import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { governorateLabel } from "@/lib/tunisia";
 import { formatDate, formatNumber } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
-import type { SocialChannel, SocialLanguage } from "@/lib/social/channels";
+import { isApiChannel, type SocialChannel, type SocialLanguage } from "@/lib/social/channels";
 import { shortUrl, trackedUrl } from "@/lib/social/content";
 import { callbackUrl, missingMetaConfig } from "@/lib/social/connect";
-import { socialOrigin, socialSettings } from "@/lib/social/server";
+import { isMazedPage, socialOrigin, socialSettings } from "@/lib/social/server";
 import { AccountActions, AccountTest, GroupActions, GroupForm, JobActions, ReviewActions, VariantEditor } from "./SocialActions";
 
 export const dynamic = "force-dynamic";
@@ -107,7 +107,7 @@ export default async function AdminSocialPage({
     const { data } = await admin!
       .from("social_publication_requests")
       .select(
-        `id, ref, channels, language, created_at, consent_at, price_tnd,
+        `id, ref, channels, language, created_at, consent_at, consent_version, initiated_by, price_tnd,
          listing:listings (id, title, governorate, deal_type),
          user:profiles!social_publication_requests_user_id_fkey (full_name, phone),
          variants:social_content_variants (id, channel, body, photo_paths, edited_at)`,
@@ -117,6 +117,7 @@ export default async function AdminSocialPage({
       .limit(20);
     type R = {
       id: string; ref: string; channels: SocialChannel[]; language: SocialLanguage; created_at: string; consent_at: string;
+      consent_version: string | null; initiated_by: string | null;
       listing: ListingRef | ListingRef[] | null;
       user: { full_name: string | null; phone: string | null } | { full_name: string | null; phone: string | null }[] | null;
       variants: { id: string; channel: SocialChannel; body: string; photo_paths: string[]; edited_at: string | null }[] | null;
@@ -145,7 +146,12 @@ export default async function AdminSocialPage({
                     {u?.full_name ?? t("noName")}
                     {u?.phone && <> · <Ltr>{u.phone}</Ltr></>}
                     {" · "}
-                    {t("consentOn", { date: date(r.consent_at) })}
+                    {/* Put forward by an admin (0214): the CGU stand for the promotion box. */}
+                    {r.initiated_by
+                      ? r.consent_version?.startsWith("terms-")
+                        ? t("featuredTerms", { date: date(r.consent_at) })
+                        : t("featuredOwn")
+                      : t("consentOn", { date: date(r.consent_at) })}
                   </p>
                 </div>
                 <ReviewActions requestId={r.id} />
@@ -257,7 +263,7 @@ export default async function AdminSocialPage({
                 <div className="w-full sm:w-auto sm:min-w-[320px]">
                   <JobActions
                     jobId={j.id}
-                    canRun={(j.channel === "facebook_page" || j.channel === "instagram") && (j.status === "scheduled" || j.status === "failed")}
+                    canRun={isApiChannel(j.channel) && (j.status === "scheduled" || j.status === "failed")}
                     manual={manual}
                     copyText={copyText}
                     groupUrl={g?.url ?? null}
@@ -353,10 +359,10 @@ export default async function AdminSocialPage({
   async function AccountsTab() {
     const { data } = await admin!
       .from("social_accounts")
-      .select("id, platform, name, username, status, token_expires_at, last_error, connected_at, parent_account_id")
+      .select("id, platform, external_id, name, username, status, token_expires_at, last_error, connected_at, parent_account_id")
       .order("connected_at", { ascending: false });
     const accounts = (data ?? []) as {
-      id: string; platform: string; name: string; username: string | null; status: string; token_expires_at: string | null;
+      id: string; platform: string; external_id: string; name: string; username: string | null; status: string; token_expires_at: string | null;
       last_error: string | null; connected_at: string; parent_account_id: string | null;
     }[];
     const missing = missingMetaConfig();
@@ -418,7 +424,10 @@ export default async function AdminSocialPage({
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface p-3.5 ring-1 ring-border">
                 <div>
                   <p className="text-[13px] font-bold text-foreground">
-                    {channelName(a.platform)} · {a.name}
+                    {a.platform === "facebook_page"
+                      ? channelName(isMazedPage(a, settings.mazedPage) ? "facebook_mazed" : "facebook_page")
+                      : channelName(a.platform)}
+                    {" · "}{a.name}
                     {a.username && <span className="text-muted"> · @{a.username}</span>}
                   </p>
                   <p className="text-[11.5px] text-muted">

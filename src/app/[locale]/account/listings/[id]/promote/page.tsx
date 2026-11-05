@@ -34,6 +34,8 @@ type RequestRow = {
   channels: SocialChannel[];
   language: SocialLanguage;
   consent_at: string | null;
+  /** Set when Mazed put the annonce forward itself (0214). */
+  initiated_by: string | null;
   price_tnd: number | string;
   rejection_reason: string | null;
   created_at: string;
@@ -82,7 +84,7 @@ export default async function PromotePage({ params }: { params: Promise<{ id: st
     admin
       .from("social_publication_requests")
       .select(
-        "id, ref, status, channels, language, consent_at, price_tnd, rejection_reason, created_at, jobs:social_publication_jobs (channel, group_id, action, status, external_url, published_at)",
+        "id, ref, status, channels, language, consent_at, initiated_by, price_tnd, rejection_reason, created_at, jobs:social_publication_jobs (channel, group_id, action, status, external_url, published_at)",
       )
       .eq("listing_id", id)
       .order("created_at", { ascending: false })
@@ -152,7 +154,9 @@ export default async function PromotePage({ params }: { params: Promise<{ id: st
       {open ? (
         <section className="mt-6 rounded-2xl border border-border bg-surface p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[14px] font-extrabold text-foreground">{t("askedOn", { date: formatDate(open.created_at, locale, "medium") })}</p>
+            <p className="text-[14px] font-extrabold text-foreground">
+              {t(open.initiated_by ? "featuredOn" : "askedOn", { date: formatDate(open.created_at, locale, "medium") })}
+            </p>
             <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-bold ${TONE[open.status] ?? ""}`}>
               {t(`status.${open.status}`)}
             </span>

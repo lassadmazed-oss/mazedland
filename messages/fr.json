@@ -2114,7 +2114,7 @@
         },
         "listings": {
           "title": "3. Annonces",
-          "body": "Le vendeur garantit qu'il est habilité à proposer le bien et que les informations, le prix et les photos publiés sont exacts. Chaque annonce est vérifiée par notre équipe avant publication. Mazed Immo peut refuser, suspendre ou retirer une annonce trompeuse, illicite ou contraire aux présentes conditions."
+          "body": "Le vendeur garantit qu'il est habilité à proposer le bien et que les informations, le prix et les photos publiés sont exacts. Chaque annonce est vérifiée par notre équipe avant publication. Mazed Immo peut refuser, suspendre ou retirer une annonce trompeuse, illicite ou contraire aux présentes conditions. En publiant une annonce, le vendeur autorise Mazed Immo à la présenter gratuitement sur ses pages et comptes de réseaux sociaux (Facebook, Instagram) : photos, prix, type de bien et lieu, jamais son nom ni son numéro de téléphone. Le vendeur peut retirer une publication à tout moment depuis « Mes annonces » → « Promouvoir », ou en nous écrivant."
         },
         "fees": {
           "title": "4. Frais",
@@ -3568,6 +3568,7 @@
     "shop_member_leave": "Membre parti d'une agence",
     "shop_subscribe": "Abonnement Pro choisi",
     "social_request": "Promotion réseaux demandée",
+    "social_feature": "Annonce mise en avant sur nos pages",
     "social_withdraw": "Promotion réseaux retirée",
     "social_approve": "Promotion réseaux validée",
     "social_reject": "Promotion réseaux refusée",
@@ -3988,6 +3989,10 @@
       "tiktok": {
         "name": "TikTok",
         "hint": "Bientôt."
+      },
+      "facebook_mazed": {
+        "name": "Page Facebook Mazed",
+        "hint": "Publiée par nous sur la page Mazed."
       }
     },
     "instagramNeedsPhoto": "Instagram a besoin d'au moins une photo. Ajoutez-en une à l'annonce.",
@@ -4060,7 +4065,8 @@
       "body": "La promotion sur les réseaux est payante, et nos coordonnées de paiement sont en cours de mise à jour. Vous pourrez la demander dès qu'elles seront en ligne.",
       "contact": "Nous contacter"
     },
-    "acceptAndSend": "J'accepte et j'envoie"
+    "acceptAndSend": "J'accepte et j'envoie",
+    "featuredOn": "Proposée par Mazed Immo le {date}"
   },
   "socialApi": {
     "disabled": "La promotion sur les réseaux est momentanément fermée.",
@@ -4090,10 +4096,11 @@
       "groupes": "Groupes"
     },
     "channels": {
-      "facebook_page": "Page Facebook",
+      "facebook_page": "Page Mazed Immo",
       "instagram": "Instagram",
       "facebook_groups": "Groupe Facebook",
-      "tiktok": "TikTok"
+      "tiktok": "TikTok",
+      "facebook_mazed": "Page Mazed"
     },
     "languages": {
       "both": "arabe + français",
@@ -4260,7 +4267,9 @@
     "testOk": "Connexion OK : {name}.",
     "testOkQuota": "Connexion OK : {name} — {used}/{total} publications sur 24 h.",
     "testOkInstagram": "« {name} » répond. Compte Instagram @{username} trouvé et relié : les publications Instagram en attente repartent.",
-    "connectDetail": "Détail : {text}"
+    "connectDetail": "Détail : {text}",
+    "featuredTerms": "proposée par Mazed · CGU acceptées le {date}",
+    "featuredOwn": "proposée par Mazed"
   },
   "pro": {
     "kinds": {
@@ -6118,6 +6127,10 @@
     "home_map_min_count": {
       "label": "Cercle d'un gouvernorat à partir de",
       "hint": "Un gouvernorat avec moins d'annonces reste pâle, sans cercle ni lien."
+    },
+    "social_mazed_page": {
+      "label": "Page « Mazed »",
+      "hint": "L'identifiant (ou le nom d'utilisateur) de la page Facebook « Mazed ». Une annonce mise en avant par un admin peut y être publiée ; toute autre page connectée est celle de Mazed Immo."
     }
   },
   "ads": {
@@ -7698,5 +7711,52 @@
     "transition": "Cette offre a déjà changé d'état. Rechargez la page.",
     "expired": "Cette offre a expiré.",
     "agreed": "Vous avez déjà un accord de prix avec le vendeur sur cette annonce."
+  },
+  "featureOnPages": {
+    "title": "Publier sur nos pages",
+    "adminOnly": "Admin",
+    "hint": "Le texte est fait à partir de l'annonce, jamais avec le nom ni le numéro du vendeur. Il vous attend dans la console avant de partir.",
+    "pagesLabel": "Où",
+    "channels": {
+      "facebook_mazed": "Page Mazed",
+      "facebook_page": "Page Mazed Immo",
+      "instagram": "Instagram",
+      "facebook_groups": "Groupes (à la main)"
+    },
+    "notConnected": "Pas encore connectée : {pages}. La publication attendra dans la file : à faire à la main, ou elle part une fois la page connectée.",
+    "groupsHint": "Les groupes Facebook se partagent à la main, depuis la file de la console.",
+    "languageLabel": "Langue",
+    "languages": {
+      "both": "Arabe + français",
+      "ar": "Arabe",
+      "fr": "Français"
+    },
+    "cta": "Préparer la publication",
+    "afterHint": "Rien ne part avant votre validation dans Social Publisher → « À valider ».",
+    "madeToast": "Publication prête : relisez-la et validez-la dans la console.",
+    "openTitle": "Promotion {ref}",
+    "openPending": "Elle attend votre validation dans la console.",
+    "openBody": "Suivez-la dans la console.",
+    "openConsole": "Ouvrir dans la console",
+    "sellerTerms": "Le vendeur n'a pas encore accepté les conditions du 5 novembre 2026, qui permettent de publier son annonce sur nos pages. Elles lui sont demandées à sa prochaine visite ; vous pourrez publier ensuite.",
+    "errors": {
+      "seller_terms": "Le vendeur n'a pas encore accepté les conditions du 5 novembre 2026.",
+      "already_open": "Une promotion est déjà en cours pour cette annonce.",
+      "not_online": "L'annonce n'est plus en ligne.",
+      "no_photo": "Instagram demande au moins une photo.",
+      "no_channel": "Choisissez au moins une page.",
+      "disabled": "Social Publisher est coupé dans les réglages.",
+      "failed": "La publication n'a pas pu être préparée. Réessayez."
+    },
+    "status": {
+      "draft": "Brouillon",
+      "pending_approval": "À valider",
+      "scheduled": "Programmée",
+      "published": "En ligne",
+      "failed": "Échec",
+      "rejected": "Refusée",
+      "cancelled": "Annulée",
+      "withdrawn": "Retirée"
+    }
   }
 }

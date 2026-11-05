@@ -7,9 +7,9 @@
  *   META_APP_ID, META_APP_SECRET   the Meta app (developers.facebook.com)
  *   SOCIAL_TOKEN_KEY               the key that seals the page token (crypto.ts)
  * Optional:
- *   META_PAGE_ID           keep only that page when the person who connects
- *                          manages several — its id or its username
- *                          (« mazedonline » for facebook.com/mazedonline)
+ *   META_PAGE_ID           keep only that page (and « Mazed », the
+ *                          social_mazed_page setting) when the person who
+ *                          connects manages several — its id or its username
  *   META_LOGIN_CONFIG_ID   a « Facebook Login for Business » configuration;
  *                          without it the dialog asks for the scopes itself
  *
@@ -20,7 +20,8 @@
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { hasTokenKey, sealToken } from "./crypto";
 import type { ManagedPage } from "./meta";
-import { dueNow } from "./server";
+import { API_CHANNELS } from "./channels";
+import { connectedAccounts, dueNow, isMazedPage } from "./server";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -89,15 +90,27 @@ export function isWantedPage(page: Pick<ManagedPage, "id" | "username">, wanted:
 }
 
 /**
+ * The pages a connection keeps: Mazed Immo's (META_PAGE_ID) and « Mazed »
+ * (the social_mazed_page setting, 0214). Without META_PAGE_ID, every page the
+ * person ticked — null.
+ */
+export function wantedPages(pageId: string | null, mazedPage: string): string[] | null {
+  if (!pageId) return null;
+  return [pageId, mazedPage].filter((p, i, all) => !!p && all.indexOf(p) === i);
+}
+
+/**
  * Store the pages (sealed tokens) and their Instagram accounts, and put back
- * in the queue the jobs that were waiting for a connection.
+ * in the queue the jobs that were waiting for a connection. Instagram is
+ * taken from Mazed Immo's page only: @mazed_immo is the one account posts go
+ * to, and « Mazed » linking one later must not take its place.
  */
 export async function saveConnectedPages(
   admin: Admin,
   pages: ManagedPage[],
-  opts: { adminId: string; scopes: string[]; pageId: string | null },
+  opts: { adminId: string; scopes: string[]; wanted: string[] | null; mazedPage: string },
 ): Promise<number> {
-  const keep = pages.filter((p) => isWantedPage(p, opts.pageId));
+  const keep = pages.filter((p) => !opts.wanted || opts.wanted.some((w) => isWantedPage(p, w)));
   const now = new Date().toISOString();
   for (const page of keep) {
     const { data: fb } = await admin
@@ -107,6 +120,7 @@ export async function saveConnectedPages(
           platform: "facebook_page",
           external_id: page.id,
           name: page.name,
+          username: page.username,
           token_sealed: sealToken(page.accessToken),
           token_expires_at: null,
           scopes: opts.scopes,
@@ -120,7 +134,7 @@ export async function saveConnectedPages(
       )
       .select("id")
       .single();
-    if (fb && page.instagram) {
+    if (fb && page.instagram && !isMazedPage({ external_id: page.id, username: page.username }, opts.mazedPage)) {
       await admin.from("social_accounts").upsert(
         {
           platform: "instagram",
@@ -152,18 +166,14 @@ export async function saveConnectedPages(
  * Instagram account a page has been given since (checkSocialAccount).
  */
 export async function requeueWaitingJobs(admin: Admin): Promise<void> {
-  const { data: accounts } = await admin
-    .from("social_accounts")
-    .select("id, platform")
-    .eq("status", "connected")
-    .order("connected_at", { ascending: false });
-  for (const platform of ["facebook_page", "instagram"] as const) {
-    const account = (accounts ?? []).find((a) => a.platform === platform);
+  const accounts = await connectedAccounts(admin);
+  for (const channel of API_CHANNELS) {
+    const account = accounts[channel as keyof typeof accounts];
     if (!account) continue;
     await admin
       .from("social_publication_jobs")
       .update({ status: "scheduled", account_id: account.id, manual_reason: null, run_after: dueNow(), attempts: 0 })
-      .eq("channel", platform)
+      .eq("channel", channel)
       .eq("status", "manual_action_required")
       .in("manual_reason", ["no_account", "account_expired"]);
   }
