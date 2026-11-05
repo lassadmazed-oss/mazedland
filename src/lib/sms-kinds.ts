@@ -101,6 +101,16 @@ export const UNCAPPED_KINDS = new Set<string>([
 // notification stays in the bell and the e-mail, as the console's hint says.
 export const CAPPED_KINDS = new Set<string>([...SMS_KINDS].filter((k) => !UNCAPPED_KINDS.has(k)));
 
+/**
+ * Whether this one notification may go out by SMS. A kind in SMS_KINDS can
+ * still be kept in the site by the code that enqueues it, with
+ * `payload.sms: false`: an offer on an annonce whose seller did not tick
+ * « Prix négociable » (offerReceivedBySms) stays in the bell.
+ */
+export function smsWanted(payload: unknown): boolean {
+  return !(payload && typeof payload === "object" && (payload as Record<string, unknown>).sms === false);
+}
+
 /** What a notification carries under `payload.vars`, if anything. */
 type Vars = Record<string, unknown>;
 

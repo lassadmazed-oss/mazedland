@@ -189,10 +189,12 @@ export const SETTINGS = {
   // ── Buyers: visits, compare, demandes.
   visits_max_slots: { group: "buyers", type: "int", default: 3, min: 1, max: 5, client: true },
   visits_horizon_days: { group: "buyers", type: "int", default: 30, min: 3, max: 90, unit: "days", client: true },
-  // Price offers (0211): on negotiable sales only (the owner, 2026-11-04), never
-  // under this share of the asking price, quick amounts this many percent apart,
-  // this many days to answer, and how many offers one buyer makes on one annonce.
-  offers_only_negotiable: { group: "buyers", type: "bool", default: true, client: true },
+  // Price offers (0211): on every priced sale (the owner, 2026-11-05; negotiable
+  // ones only before), by SMS to the seller only when he said « négociable »,
+  // never under this share of the asking price, quick amounts this many percent
+  // apart, this many days to answer, and how many offers one buyer makes on one annonce.
+  offers_only_negotiable: { group: "buyers", type: "bool", default: false, client: true },
+  offers_sms_only_negotiable: { group: "buyers", type: "bool", default: true },
   offers_rent: { group: "buyers", type: "bool", default: false, client: true },
   offers_min_percent: { group: "buyers", type: "int", default: 70, min: 30, max: 95, unit: "percent", choices: [50, 60, 70, 80, 90], client: true },
   offers_chip_step: { group: "buyers", type: "int", default: 5, min: 1, max: 20, unit: "percent", choices: [3, 5, 10], client: true },

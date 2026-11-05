@@ -168,6 +168,16 @@ export function takesOffers(
   return l.availability !== "reserved";
 }
 
+/**
+ * Whether a new offer reaches the seller by SMS as well as in the site. A
+ * seller who ticked « Prix négociable » asked for offers; the others get
+ * theirs in the bell only, seen when they next open the site or the app
+ * (the owner, 2026-11-05). `onlyNegotiable` is the console's switch.
+ */
+export function offerReceivedBySms(l: { negotiable: boolean }, onlyNegotiable: boolean): boolean {
+  return !onlyNegotiable || l.negotiable;
+}
+
 /** An offer moves its client to the negotiation; a decided client stays where they are. */
 export function stageAfterOffer(stage: LeadStage): LeadStage {
   return stage === "won" || stage === "lost" ? stage : "negotiation";
