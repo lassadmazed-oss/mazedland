@@ -27,7 +27,8 @@ export function PostPreview({
     <div className="flex items-center gap-2 px-3 pt-3">
       <span className="grid size-8 place-items-center rounded-full bg-foreground text-[12px] font-black text-[var(--background)]">M</span>
       <span className="min-w-0">
-        <span className="block text-[12.5px] font-bold text-foreground">Mazed Immo</span>
+        {/* The page it is posted as: « Mazed » for its own page (0214), Mazed Immo everywhere else. */}
+        <span className="block text-[12.5px] font-bold text-foreground">{channel === "facebook_mazed" ? "Mazed" : "Mazed Immo"}</span>
         <span className="block text-[11px] text-muted">{label}</span>
       </span>
     </div>

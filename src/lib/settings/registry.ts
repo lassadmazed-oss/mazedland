@@ -235,6 +235,9 @@ export const SETTINGS = {
   social_price_tnd: { group: "social", type: "number", default: 0, min: 0, max: 1000, unit: "tnd" },
   social_auto_approve: { group: "social", type: "bool", default: false },
   social_daily_limit: { group: "social", type: "int", default: 10, min: 1, max: 100, unit: "per_day" },
+  // Which connected Facebook page is « Mazed » (channel facebook_mazed, 0214): its id
+  // (Business Suite's asset_id) or its username. Every other page is Mazed Immo's.
+  social_mazed_page: { group: "social", type: "text", default: "1390476427730991", max: 60, ltr: true },
   ai_daily_budget_usd: { group: "social", type: "number", default: 2, min: 0, max: 100, step: 0.5 },
   // One account's share of it: at about 4 cents a call, half a dollar is a dozen conversations.
   ai_user_daily_budget_usd: { group: "social", type: "number", default: 0.5, min: 0, max: 100, step: 0.1 },

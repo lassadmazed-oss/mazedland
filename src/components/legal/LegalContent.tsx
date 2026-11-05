@@ -49,7 +49,9 @@ const PRIVACY_SECTIONS = [
  * the text.
  */
 export const LEGAL_UPDATED_AT = {
-  terms: "2026-10-06",
+  // « 3. Annonces » lets Mazed Immo show an annonce on its own pages since
+  // 2026-11-05 (SOCIAL_TERMS_SINCE, 0214).
+  terms: "2026-11-05",
   // « Cookies » names Google Analytics since 2026-10-31.
   privacy: "2026-10-31",
 } as const;

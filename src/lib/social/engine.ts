@@ -17,7 +17,7 @@
  */
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
-import type { JobAction, JobStatus, SocialChannel, SocialLanguage } from "./channels";
+import { isPageChannel, type JobAction, type JobStatus, type SocialChannel, type SocialLanguage } from "./channels";
 import { closedNotice, referenceCode } from "./content";
 import { openToken } from "./crypto";
 import { requeueWaitingJobs } from "./connect";
@@ -27,7 +27,7 @@ import {
   type Fetch, type GraphClient, type PostedRef,
 } from "./meta";
 import { afterError } from "./policy";
-import { refreshRequestStatus, socialOrigin, socialSettings } from "./server";
+import { isMazedPage, refreshRequestStatus, socialOrigin, socialSettings } from "./server";
 import { asDealType } from "@/lib/listings/deal";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
@@ -301,7 +301,7 @@ async function run(admin: Admin, job: JobRow, deps: EngineDeps): Promise<Outcome
       .is("group_id", null)
       .maybeSingle();
     const postId = original?.external_post_id as string | null | undefined;
-    if (!postId || job.channel !== "facebook_page") {
+    if (!postId || !isPageChannel(job.channel)) {
       await succeed(admin, job, null, "done");
       return "done";
     }
@@ -328,7 +328,7 @@ async function run(admin: Admin, job: JobRow, deps: EngineDeps): Promise<Outcome
 
   // Already online after an attempt whose outcome was unknown? Take it.
   if (job.attempts > 1 && !job.container_id) {
-    const found = job.channel === "facebook_page" ? await findPagePost(g, externalId, marker) : await findIgMedia(g, externalId, marker);
+    const found = isPageChannel(job.channel) ? await findPagePost(g, externalId, marker) : await findIgMedia(g, externalId, marker);
     if (found) {
       await succeed(admin, job, found, "adopted");
       return "adopted";
@@ -356,7 +356,7 @@ async function run(admin: Admin, job: JobRow, deps: EngineDeps): Promise<Outcome
     (_, i) => `${origin}/api/social/image/${job.request_id}/${i}?c=${job.channel}`,
   );
 
-  if (job.channel === "facebook_page") {
+  if (isPageChannel(job.channel)) {
     const posted = await publishPagePost(g, externalId, { message: variant.body as string, imageUrls });
     await succeed(admin, job, posted, "published");
     return "published";
@@ -411,7 +411,11 @@ export async function checkSocialAccount(
   | { ok: true; name: string; quota: { used: number; total: number } | null; instagram?: { username: string | null; added: boolean } }
   | { ok: false; error: string }
 > {
-  const { data: acc } = await admin.from("social_accounts").select("platform, name, scopes, connected_by").eq("id", accountId).maybeSingle();
+  const { data: acc } = await admin
+    .from("social_accounts")
+    .select("platform, external_id, username, name, scopes, connected_by")
+    .eq("id", accountId)
+    .maybeSingle();
   if (!acc) return { ok: false, error: "missing" };
   const client = await clientFor(admin, accountId, deps);
   if ("error" in client) return { ok: false, error: client.error };
@@ -435,7 +439,9 @@ export async function checkSocialAccount(
     await admin.from("social_accounts").update({ last_checked_at: now, last_error: null }).eq("id", accountId);
     let instagram: { username: string | null; added: boolean } | undefined;
     const ig = page.instagram_business_account;
-    if (ig?.id) {
+    // Instagram is Mazed Immo's page's only (see saveConnectedPages).
+    const mazed = isMazedPage(acc as { external_id: string; username: string | null }, (await socialSettings(admin)).mazedPage);
+    if (ig?.id && !mazed) {
       const { data: known } = await admin.from("social_accounts").select("id, status").eq("platform", "instagram").eq("external_id", ig.id).maybeSingle();
       const added = !known || known.status !== "connected";
       await admin.from("social_accounts").upsert(
