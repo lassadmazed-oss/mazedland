@@ -24,6 +24,16 @@ export const OFFERED_CHANNELS: readonly SocialChannel[] = ["facebook_page", "ins
 /** What an admin can choose when Mazed puts an annonce forward itself. */
 export const FEATURED_CHANNELS: readonly SocialChannel[] = ["facebook_mazed", "facebook_page", "instagram", "facebook_groups"];
 
+/**
+ * Whether Mazed put the annonce forward itself rather than the seller asking
+ * (0214): an admin did (`initiated_by`), or the site did on its own (the
+ * auto-queue, which has no admin to name and rests on the CGU alone, so its
+ * consent is recorded as « terms-<version> »).
+ */
+export function isFeaturedRequest(r: { initiated_by: string | null; consent_version?: string | null }): boolean {
+  return !!r.initiated_by || !!r.consent_version?.startsWith("terms-");
+}
+
 /** Posted by the engine when an account is connected; by hand otherwise. */
 export const API_CHANNELS: readonly SocialChannel[] = ["facebook_page", "facebook_mazed", "instagram"];
 

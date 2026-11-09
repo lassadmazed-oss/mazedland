@@ -4274,7 +4274,8 @@
     "testOkInstagram": "« {name} » répond. Compte Instagram @{username} trouvé et relié : les publications Instagram en attente repartent.",
     "connectDetail": "Détail : {text}",
     "featuredTerms": "proposée par Mazed · CGU acceptées le {date}",
-    "featuredOwn": "proposée par Mazed"
+    "featuredOwn": "proposée par Mazed",
+    "featuredAuto": "proposée par le site · CGU acceptées le {date}"
   },
   "pro": {
     "kinds": {
@@ -6144,6 +6145,34 @@
     "social_mazed_page": {
       "label": "Page « Mazed »",
       "hint": "L'identifiant (ou le nom d'utilisateur) de la page Facebook « Mazed ». Une annonce mise en avant par un admin peut y être publiée ; toute autre page connectée est celle de Mazed Immo."
+    },
+    "social_auto_queue": {
+      "label": "Proposer chaque annonce en ligne sur nos pages",
+      "hint": "Chaque annonce qui passe en ligne arrive toute seule dans « À valider », avec ses textes prêts, sur les pages choisies ci-dessous. Rien n'est publié avant votre accord : vous lisez, vous modifiez, vous publiez ou vous refusez. Seules les annonces dont le vendeur a accepté les CGU du 5 novembre 2026 sont proposées ; une annonce déjà refusée ou publiée n'est jamais reproposée."
+    },
+    "social_auto_queue_mazed": {
+      "label": "Proposer sur la page « Mazed »",
+      "hint": "La grande page Facebook (facebook.com/mazedonline)."
+    },
+    "social_auto_queue_page": {
+      "label": "Proposer sur la page « Mazed Immo »",
+      "hint": "La page Facebook de Mazed Immo."
+    },
+    "social_auto_queue_instagram": {
+      "label": "Proposer sur Instagram",
+      "hint": "Le compte @mazed_immo. Il faut au moins une photo."
+    },
+    "social_auto_queue_days": {
+      "label": "Annonces proposées : celles des derniers jours",
+      "hint": "Seules les annonces mises en ligne depuis ce nombre de jours sont proposées ; pour une plus ancienne, utilisez « Publier sur nos pages » sur sa page."
+    },
+    "social_auto_queue_waiting_max": {
+      "label": "Propositions en attente au maximum",
+      "hint": "Quand ce nombre d'annonces attend dans « À valider », on n'en propose plus tant que vous n'avez pas répondu."
+    },
+    "social_auto_queue_min_photos": {
+      "label": "Photos minimum pour être proposée",
+      "hint": "Une annonce avec moins de photos n'est pas proposée. 0 : toutes."
     }
   },
   "ads": {

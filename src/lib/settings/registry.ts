@@ -242,6 +242,18 @@ export const SETTINGS = {
   // Which connected Facebook page is « Mazed » (channel facebook_mazed, 0214): its id
   // (Business Suite's asset_id) or its username. Every other page is Mazed Immo's.
   social_mazed_page: { group: "social", type: "text", default: "1390476427730991", max: 60, ltr: true },
+  // The site proposes every annonce that goes online on Mazed's pages (the
+  // owner, 2026-11-09), by default the « Mazed » page: an ask waiting in
+  // « À valider », nothing posted until an admin approves it.
+  social_auto_queue: { group: "social", type: "bool", default: true, href: "/admin/social" },
+  social_auto_queue_mazed: { group: "social", type: "bool", default: true },
+  social_auto_queue_page: { group: "social", type: "bool", default: false },
+  social_auto_queue_instagram: { group: "social", type: "bool", default: false },
+  // Only annonces that went online in the last days; older ones are put forward by hand.
+  social_auto_queue_days: { group: "social", type: "int", default: 7, min: 1, max: 60, unit: "days", choices: [1, 3, 7, 14, 30] },
+  // At most this many asks wait in « À valider »; no new one while it is full.
+  social_auto_queue_waiting_max: { group: "social", type: "int", default: 20, min: 1, max: 100, choices: [5, 10, 20, 50] },
+  social_auto_queue_min_photos: { group: "social", type: "int", default: 1, min: 0, max: 10, choices: [0, 1, 2, 3] },
   ai_daily_budget_usd: { group: "social", type: "number", default: 2, min: 0, max: 100, step: 0.5 },
   // One account's share of it: at about 4 cents a call, half a dollar is a dozen conversations.
   ai_user_daily_budget_usd: { group: "social", type: "number", default: 0.5, min: 0, max: 100, step: 0.1 },

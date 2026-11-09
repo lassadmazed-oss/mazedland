@@ -146,12 +146,12 @@ export default async function AdminSocialPage({
                     {u?.full_name ?? t("noName")}
                     {u?.phone && <> · <Ltr>{u.phone}</Ltr></>}
                     {" · "}
-                    {/* Put forward by an admin (0214): the CGU stand for the promotion box. */}
-                    {r.initiated_by
-                      ? r.consent_version?.startsWith("terms-")
-                        ? t("featuredTerms", { date: date(r.consent_at) })
-                        : t("featuredOwn")
-                      : t("consentOn", { date: date(r.consent_at) })}
+                    {/* Put forward by an admin (0214), or by the site on its own (the auto-queue): the CGU stand for the promotion box. */}
+                    {r.consent_version?.startsWith("terms-")
+                      ? t(r.initiated_by ? "featuredTerms" : "featuredAuto", { date: date(r.consent_at) })
+                      : r.initiated_by
+                        ? t("featuredOwn")
+                        : t("consentOn", { date: date(r.consent_at) })}
                   </p>
                 </div>
                 <ReviewActions requestId={r.id} />
