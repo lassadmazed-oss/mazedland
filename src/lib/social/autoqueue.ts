@@ -23,8 +23,8 @@ type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
 /** The most asks one run makes, so a first run never floods the console. */
 const PER_RUN = 10;
-/** How many recent annonces one run looks at. */
-const LOOKED_AT = 200;
+/** How many online annonces one run looks at, the newest first. */
+const LOOKED_AT = 500;
 
 export type AutoQueueSettings = {
   enabled: boolean;
@@ -43,9 +43,9 @@ export function autoQueueChannels(on: { mazed: boolean; page: boolean; instagram
 export type AutoQueueCandidate = { id: string; seller_id: string; photos: number };
 
 /**
- * Which of the recent annonces to propose now, oldest first so none waits
- * behind newer ones: not already asked about (in any state — a refused ask
- * is an answer, it is not asked again), a seller whose CGU cover it, enough
+ * Which of the annonces to propose now, in the order given (the sweep gives
+ * the newest first): not already asked about (in any state — a refused ask is
+ * an answer, it is not asked again), a seller whose CGU cover it, enough
  * photos, and no more than the room the waiting list has left.
  */
 export function pickAutoQueue(
@@ -96,6 +96,51 @@ async function sellersCovered(admin: Admin, sellerIds: string[]): Promise<Set<st
   return covered;
 }
 
+type OnlineAnnonce = { id: string; seller_id: string; title: string; photos: { id: string }[] | null };
+
+/** The online annonces of the last `days` days, newest first, and which of them already have an ask (in any state). */
+async function recentAnnonces(admin: Admin, days: number, now: Date): Promise<{ rows: OnlineAnnonce[]; asked: Set<string> }> {
+  const since = new Date(now.getTime() - days * 86_400_000).toISOString();
+  const { data } = await admin
+    .from("listings")
+    .select("id, seller_id, title, photos:listing_photos (id)")
+    .eq("status", "published")
+    .gte("published_at", since)
+    .order("published_at", { ascending: false })
+    .limit(LOOKED_AT);
+  const rows = (data ?? []) as unknown as OnlineAnnonce[];
+  if (rows.length === 0) return { rows, asked: new Set() };
+  const { data: askedRows } = await admin
+    .from("social_publication_requests")
+    .select("listing_id")
+    .in("listing_id", rows.map((r) => r.id));
+  return { rows, asked: new Set(((askedRows ?? []) as { listing_id: string }[]).map((r) => r.listing_id)) };
+}
+
+export type WaitingSeller = { seller_id: string; full_name: string | null; phone: string | null; annonces: number };
+
+/**
+ * Who the proposals wait for: the sellers with online annonces that were not
+ * proposed because they have not accepted the CGU of 2026-11-05 yet (the
+ * banner shows on their next visit). The console lists them, so the owner
+ * sees every annonce that is held back and whom to ask.
+ */
+export async function sellersWaitingForTerms(admin: Admin, opts: { now?: Date } = {}): Promise<WaitingSeller[]> {
+  const settings = await autoQueueSettings(admin);
+  const { rows, asked } = await recentAnnonces(admin, settings.days, opts.now ?? new Date());
+  const open = rows.filter((r) => !asked.has(r.id));
+  const sellerIds = [...new Set(open.map((r) => r.seller_id))];
+  const covered = await sellersCovered(admin, sellerIds);
+  const counts = new Map<string, number>();
+  for (const r of open) if (!covered.has(r.seller_id)) counts.set(r.seller_id, (counts.get(r.seller_id) ?? 0) + 1);
+  if (counts.size === 0) return [];
+  const { data: people } = await admin.from("profiles").select("id, full_name, phone").in("id", [...counts.keys()]);
+  const byId = new Map(((people ?? []) as { id: string; full_name: string | null; phone: string | null }[]).map((p) => [p.id, p]));
+  return [...counts]
+    .map(([seller_id, annonces]) => ({ seller_id, full_name: byId.get(seller_id)?.full_name ?? null, phone: byId.get(seller_id)?.phone ?? null, annonces }))
+    .sort((a, b) => b.annonces - a.annonces);
+}
+
 export type AutoQueueResult = { queued: number; off?: true; full?: true };
 
 export async function queueFeaturedListings(
@@ -113,22 +158,8 @@ export async function queueFeaturedListings(
   const room = settings.waitingMax - (waiting ?? 0);
   if (room <= 0) return { queued: 0, full: true };
 
-  const since = new Date((opts.now ?? new Date()).getTime() - settings.days * 86_400_000).toISOString();
-  const { data: recent } = await admin
-    .from("listings")
-    .select("id, seller_id, title, photos:listing_photos (id)")
-    .eq("status", "published")
-    .gte("published_at", since)
-    .order("published_at", { ascending: true })
-    .limit(LOOKED_AT);
-  const rows = (recent ?? []) as unknown as { id: string; seller_id: string; title: string; photos: { id: string }[] | null }[];
+  const { rows, asked } = await recentAnnonces(admin, settings.days, opts.now ?? new Date());
   if (rows.length === 0) return { queued: 0 };
-
-  const { data: askedRows } = await admin
-    .from("social_publication_requests")
-    .select("listing_id")
-    .in("listing_id", rows.map((r) => r.id));
-  const asked = new Set(((askedRows ?? []) as { listing_id: string }[]).map((r) => r.listing_id));
 
   const open = rows.filter((r) => !asked.has(r.id));
   const covered = await sellersCovered(admin, [...new Set(open.map((r) => r.seller_id))]);

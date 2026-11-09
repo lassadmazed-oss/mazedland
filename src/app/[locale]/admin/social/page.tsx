@@ -15,6 +15,7 @@ import { isApiChannel, type SocialChannel, type SocialLanguage } from "@/lib/soc
 import { shortUrl, trackedUrl } from "@/lib/social/content";
 import { callbackUrl, missingMetaConfig } from "@/lib/social/connect";
 import { isMazedPage, socialOrigin, socialSettings } from "@/lib/social/server";
+import { sellersWaitingForTerms } from "@/lib/social/autoqueue";
 import { AccountActions, AccountTest, GroupActions, GroupForm, JobActions, ReviewActions, VariantEditor } from "./SocialActions";
 
 export const dynamic = "force-dynamic";
@@ -114,7 +115,7 @@ export default async function AdminSocialPage({
       )
       .eq("status", "pending_approval")
       .order("created_at", { ascending: true })
-      .limit(20);
+      .limit(40);
     type R = {
       id: string; ref: string; channels: SocialChannel[]; language: SocialLanguage; created_at: string; consent_at: string;
       consent_version: string | null; initiated_by: string | null;
@@ -123,9 +124,38 @@ export default async function AdminSocialPage({
       variants: { id: string; channel: SocialChannel; body: string; photo_paths: string[]; edited_at: string | null }[] | null;
     };
     const rows = (data ?? []) as unknown as R[];
-    if (rows.length === 0) return <Empty text={t("emptyReview")} />;
+    // The annonces held back until their seller accepts the CGU: listed by seller, so every one is accounted for here.
+    const waiting = await sellersWaitingForTerms(admin!).catch(() => []);
+    const waitingTotal = waiting.reduce((n, w) => n + w.annonces, 0);
+    const waitingPanel =
+      waiting.length > 0 ? (
+        <section className="rounded-2xl bg-surface p-4 ring-1 ring-border">
+          <p className="text-[13.5px] font-extrabold text-foreground">{t("waitingTitle", { count: waitingTotal, sellers: waiting.length })}</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-muted">{t("waitingHint")}</p>
+          <ul className="mt-3 divide-y divide-border text-[13px]">
+            {waiting.map((w) => (
+              <li key={w.seller_id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 py-2">
+                <span className="font-bold text-foreground">{w.full_name ?? t("noName")}</span>
+                <span className="text-muted">
+                  {w.phone && <><Ltr>{w.phone}</Ltr>{" · "}</>}
+                  {t("waitingCount", { count: w.annonces })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null;
+    if (rows.length === 0) {
+      return (
+        <div className="mt-4 space-y-4">
+          {waitingPanel}
+          <Empty text={t("emptyReview")} />
+        </div>
+      );
+    }
     return (
       <div className="mt-4 space-y-4">
+        {waitingPanel}
         {rows.map((r) => {
           const l = one(r.listing);
           const u = one(r.user);

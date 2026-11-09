@@ -4275,7 +4275,10 @@
     "connectDetail": "Détail : {text}",
     "featuredTerms": "proposée par Mazed · CGU acceptées le {date}",
     "featuredOwn": "proposée par Mazed",
-    "featuredAuto": "proposée par le site · CGU acceptées le {date}"
+    "featuredAuto": "proposée par le site · CGU acceptées le {date}",
+    "waitingTitle": "En attente des CGU : {count, plural, one {# annonce} other {# annonces}} de {sellers, plural, one {# vendeur} other {# vendeurs}}",
+    "waitingHint": "Ces annonces ne sont pas proposées parce que leur vendeur n'a pas encore accepté les CGU du 5 novembre (la bannière s'affiche à sa prochaine visite). Dès qu'il les accepte, ses annonces arrivent ici toutes seules.",
+    "waitingCount": "{count, plural, one {# annonce} other {# annonces}}"
   },
   "pro": {
     "kinds": {
@@ -6148,7 +6151,7 @@
     },
     "social_auto_queue": {
       "label": "Proposer chaque annonce en ligne sur nos pages",
-      "hint": "Chaque annonce qui passe en ligne arrive toute seule dans « À valider », avec ses textes prêts, sur les pages choisies ci-dessous. Rien n'est publié avant votre accord : vous lisez, vous modifiez, vous publiez ou vous refusez. Seules les annonces dont le vendeur a accepté les CGU du 5 novembre 2026 sont proposées ; une annonce déjà refusée ou publiée n'est jamais reproposée."
+      "hint": "Chaque annonce en ligne arrive toute seule dans « À valider », avec ses textes prêts, sur les pages choisies ci-dessous. Rien n'est publié avant votre accord : vous lisez, vous modifiez, vous publiez ou vous refusez. Seules les annonces dont le vendeur a accepté les CGU du 5 novembre 2026 sont proposées ; les autres sont listées en haut de « À valider », par vendeur. Une annonce déjà refusée ou publiée n'est jamais reproposée."
     },
     "social_auto_queue_mazed": {
       "label": "Proposer sur la page « Mazed »",

@@ -249,10 +249,10 @@ export const SETTINGS = {
   social_auto_queue_mazed: { group: "social", type: "bool", default: true },
   social_auto_queue_page: { group: "social", type: "bool", default: false },
   social_auto_queue_instagram: { group: "social", type: "bool", default: false },
-  // Only annonces that went online in the last days; older ones are put forward by hand.
-  social_auto_queue_days: { group: "social", type: "int", default: 7, min: 1, max: 60, unit: "days", choices: [1, 3, 7, 14, 30] },
-  // At most this many asks wait in « À valider »; no new one while it is full.
-  social_auto_queue_waiting_max: { group: "social", type: "int", default: 20, min: 1, max: 100, choices: [5, 10, 20, 50] },
+  // Annonces that went online in the last days (a year: all of them, the owner wants every one to pass before him).
+  social_auto_queue_days: { group: "social", type: "int", default: 365, min: 1, max: 3650, unit: "days", choices: [7, 30, 90, 365] },
+  // At most this many asks wait in « À valider » (the tab shows up to 40); no new one while it is full.
+  social_auto_queue_waiting_max: { group: "social", type: "int", default: 40, min: 1, max: 40, choices: [10, 20, 40] },
   social_auto_queue_min_photos: { group: "social", type: "int", default: 1, min: 0, max: 10, choices: [0, 1, 2, 3] },
   ai_daily_budget_usd: { group: "social", type: "number", default: 2, min: 0, max: 100, step: 0.5 },
   // One account's share of it: at about 4 cents a call, half a dollar is a dozen conversations.
