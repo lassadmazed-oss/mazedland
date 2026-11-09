@@ -7,7 +7,7 @@ import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { formatDate, formatTND } from "@/lib/utils";
 import { ArrowLeft, ExternalLink, Info, Megaphone } from "lucide-react";
 import {
-  OFFERED_CHANNELS, OPEN_REQUEST_STATUSES, SOCIAL_LANGUAGES,
+  OFFERED_CHANNELS, OPEN_REQUEST_STATUSES, SOCIAL_LANGUAGES, isFeaturedRequest,
   type JobStatus, type RequestStatus, type SocialChannel, type SocialLanguage,
 } from "@/lib/social/channels";
 import { buildVariants, loadSocialListing, socialOrigin, socialSettings, tunisToday } from "@/lib/social/server";
@@ -34,8 +34,9 @@ type RequestRow = {
   channels: SocialChannel[];
   language: SocialLanguage;
   consent_at: string | null;
-  /** Set when Mazed put the annonce forward itself (0214). */
+  /** Set when an admin put the annonce forward (0214); the auto-queue has none, its consent says « terms-… ». */
   initiated_by: string | null;
+  consent_version: string | null;
   price_tnd: number | string;
   rejection_reason: string | null;
   created_at: string;
@@ -84,7 +85,7 @@ export default async function PromotePage({ params }: { params: Promise<{ id: st
     admin
       .from("social_publication_requests")
       .select(
-        "id, ref, status, channels, language, consent_at, initiated_by, price_tnd, rejection_reason, created_at, jobs:social_publication_jobs (channel, group_id, action, status, external_url, published_at)",
+        "id, ref, status, channels, language, consent_at, initiated_by, consent_version, price_tnd, rejection_reason, created_at, jobs:social_publication_jobs (channel, group_id, action, status, external_url, published_at)",
       )
       .eq("listing_id", id)
       .order("created_at", { ascending: false })
@@ -155,7 +156,7 @@ export default async function PromotePage({ params }: { params: Promise<{ id: st
         <section className="mt-6 rounded-2xl border border-border bg-surface p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-[14px] font-extrabold text-foreground">
-              {t(open.initiated_by ? "featuredOn" : "askedOn", { date: formatDate(open.created_at, locale, "medium") })}
+              {t(isFeaturedRequest(open) ? "featuredOn" : "askedOn", { date: formatDate(open.created_at, locale, "medium") })}
             </p>
             <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-bold ${TONE[open.status] ?? ""}`}>
               {t(`status.${open.status}`)}

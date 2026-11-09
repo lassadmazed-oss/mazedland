@@ -278,11 +278,14 @@ export type FeatureResult =
  * version that carries the clause or a later one (SOCIAL_TERMS_SINCE); an
  * admin's own annonce needs nothing more. The ask is the seller's (they see
  * it under « Promouvoir » and can withdraw it) and waits in « À valider »,
- * where the admin reads the texts before anything is posted.
+ * where the admin reads the texts before anything is posted. With no admin
+ * (`adminId` null) it is the site proposing the annonce on its own (the
+ * auto-queue, ./autoqueue.ts): the seller's CGU are then the only consent,
+ * whoever the seller is.
  */
 export async function createFeaturedRequest(
   admin: Admin,
-  input: { adminId: string; listingId: string; channels: SocialChannel[]; language: SocialLanguage; origin?: string | null },
+  input: { adminId: string | null; listingId: string; channels: SocialChannel[]; language: SocialLanguage; origin?: string | null },
 ): Promise<FeatureResult> {
   const settings = await socialSettings(admin);
   if (!settings.enabled) return { ok: false, error: "disabled" };
