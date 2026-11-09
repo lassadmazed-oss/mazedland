@@ -97,6 +97,9 @@ type ActivityRow = {
   status: number | null;
   ip: string | null;
   user_agent: string | null;
+  /** Errors only: what the browser or the server said, and where it ran (production, local…). */
+  message: string | null;
+  env: string | null;
 };
 
 /** Best-effort, dependency-free device label from a User-Agent string.
@@ -162,7 +165,7 @@ export default async function AdminActivity({
   let query = sb
     .from("activity_log")
     .select(
-      "id, created_at, user_id, user_email, type, action, path, method, status, ip, user_agent",
+      "id, created_at, user_id, user_email, type, action, path, method, status, ip, user_agent, message:metadata->>message, env:metadata->>env",
       { count: "estimated" },
     );
   if (type !== "all") query = query.eq("type", type);
@@ -271,6 +274,7 @@ export default async function AdminActivity({
               {rows.map((e) => {
                 const prof = e.user_id ? profById.get(e.user_id) : undefined;
                 const isAction = e.type === "action";
+                const isError = e.type === "error";
                 const meta = isAction ? actionMeta(e.action, t, tActions) : null;
                 return (
                   <tr key={e.id} className="hover:bg-surface-2">
@@ -294,14 +298,41 @@ export default async function AdminActivity({
                         <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${TONE_CLASS[meta.tone]}`}>
                           {meta.label}
                         </span>
+                      ) : isError ? (
+                        <span className="flex flex-wrap items-center gap-1">
+                          <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${TONE_CLASS.bad}`}>
+                            {t("error")}
+                          </span>
+                          {e.env && e.env !== "production" ? (
+                            <span
+                              title={t("errorNotProductionHint")}
+                              className="inline-block rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-bold text-muted ring-1 ring-border"
+                            >
+                              {t("errorNotProduction")}
+                            </span>
+                          ) : null}
+                        </span>
                       ) : (
                         <span className="inline-block rounded-full bg-surface-2 px-2.5 py-0.5 text-[11px] font-bold text-muted ring-1 ring-border">
                           {t("pageView")}
                         </span>
                       )}
                     </td>
-                    <td className="max-w-[280px] truncate px-4 py-2.5 text-foreground/80" title={e.path || ""}>
-                      {e.path ? <Ltr>{e.path}</Ltr> : "—"}
+                    <td className="max-w-[320px] px-4 py-2.5 text-foreground/80">
+                      <div className="truncate" title={e.path || ""}>
+                        {e.path ? <Ltr>{e.path}</Ltr> : "—"}
+                      </div>
+                      {isError ? (
+                        // What broke: the browser's or the server's own words, and the code of the
+                        // place that caught it (client.window.onerror, server.render…).
+                        <div className="mt-0.5 line-clamp-2 break-words text-[11px] text-muted" title={e.message || ""}>
+                          <Ltr>
+                            {e.action ? <span className="font-bold text-foreground/70">{e.action}</span> : null}
+                            {e.action && e.message ? " — " : null}
+                            {e.message}
+                          </Ltr>
+                        </div>
+                      ) : null}
                     </td>
                     <td className="mazed-tabular whitespace-nowrap px-4 py-2.5 text-muted">
                       {e.ip ? <Ltr>{e.ip}</Ltr> : "—"}

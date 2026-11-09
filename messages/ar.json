@@ -2374,7 +2374,10 @@
       "popupUpdate": "تم تعديل نافذة منبثقة",
       "popupDelete": "تم حذف نافذة منبثقة",
       "logout": "خروج"
-    }
+    },
+    "error": "خطأ",
+    "errorNotProduction": "محلّي",
+    "errorNotProductionHint": "وقع في جهاز التطوير (موش في الموقع المباشر): ما يبعث حتى تنبيه."
   },
   "adminNotifications": {
     "eyebrow": "أدوات الإدارة",
