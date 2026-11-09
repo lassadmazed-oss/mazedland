@@ -2374,7 +2374,10 @@
       "popupUpdate": "Popup modifié",
       "popupDelete": "Popup supprimé",
       "logout": "Déconnexion"
-    }
+    },
+    "error": "Erreur",
+    "errorNotProduction": "Local",
+    "errorNotProductionHint": "Arrivée sur un poste de développement (pas sur le site en ligne) : elle n'alerte personne."
   },
   "adminNotifications": {
     "eyebrow": "Outils admin",
