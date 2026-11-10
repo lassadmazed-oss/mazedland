@@ -54,6 +54,7 @@ import { resolveNotificationLink } from "@/lib/notifications/target";
 import { renderNotification } from "@/lib/notifications/render";
 import { useHydrated } from "@/lib/useHydrated";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
+import { timeoutSignal } from "@/lib/timeoutSignal";
 
 type NotificationRow = {
   id: string;
@@ -166,7 +167,7 @@ export function NotificationBell() {
         const want = Math.min(50, Math.max(PAGE_SIZE, itemsLenRef.current));
         const res = await fetch(`/api/notifications?limit=${want}`, {
           cache: "no-store",
-          signal: AbortSignal.timeout(10000),
+          signal: timeoutSignal(10000),
         });
         if (!res.ok) break;
         const data = (await res.json()) as {
@@ -194,7 +195,7 @@ export function NotificationBell() {
     try {
       const res = await fetch(
         `/api/notifications?limit=${PAGE_SIZE}&offset=${items.length}`,
-        { cache: "no-store", signal: AbortSignal.timeout(10000) },
+        { cache: "no-store", signal: timeoutSignal(10000) },
       );
       if (!res.ok) return;
       const data = (await res.json()) as { items: NotificationRow[]; hasMore?: boolean };
@@ -396,7 +397,7 @@ export function NotificationBell() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ all: true }),
-        signal: AbortSignal.timeout(10000),
+        signal: timeoutSignal(10000),
       });
     } catch {
       // best-effort
@@ -415,7 +416,7 @@ export function NotificationBell() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [id] }),
-        signal: AbortSignal.timeout(10000),
+        signal: timeoutSignal(10000),
       });
     } catch {
       // best-effort
@@ -437,7 +438,7 @@ export function NotificationBell() {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [id] }),
-        signal: AbortSignal.timeout(10000),
+        signal: timeoutSignal(10000),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error("delete_failed");
@@ -465,7 +466,7 @@ export function NotificationBell() {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ all: true }),
-        signal: AbortSignal.timeout(10000),
+        signal: timeoutSignal(10000),
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error("delete_failed");
