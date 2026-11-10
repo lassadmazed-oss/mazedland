@@ -4074,7 +4074,8 @@
       "contact": "Nous contacter"
     },
     "acceptAndSend": "J'accepte et j'envoie",
-    "featuredOn": "Proposée par Mazed Immo le {date}"
+    "featuredOn": "Proposée par Mazed Immo le {date}",
+    "coveredByMazed": "Déjà sur cette page : Mazed Immo l'y a mise."
   },
   "socialApi": {
     "disabled": "La promotion sur les réseaux est momentanément fermée.",
@@ -7786,6 +7787,7 @@
     "openPending": "Elle attend votre validation dans la console.",
     "openBody": "Suivez-la dans la console.",
     "openConsole": "Ouvrir dans la console",
+    "sellerPromotion": "Le vendeur a sa propre promotion {ref} ({status}) : {pages}. Ces pages ne sont pas reproposées.",
     "sellerTerms": "Le vendeur n'a pas encore accepté les conditions du 5 novembre 2026, qui permettent de publier son annonce sur nos pages. Elles lui sont demandées à sa prochaine visite ; vous pourrez publier ensuite.",
     "errors": {
       "seller_terms": "Le vendeur n'a pas encore accepté les conditions du 5 novembre 2026.",

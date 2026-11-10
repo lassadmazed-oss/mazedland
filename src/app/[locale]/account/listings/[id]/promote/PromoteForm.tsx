@@ -26,19 +26,22 @@ export function PromoteForm({
   photos,
   hasPhotos,
   priceTnd,
+  covered = [],
 }: {
   listingId: string;
   previews: Record<SocialLanguage, Record<SocialChannel, string>>;
   photos: string[];
   hasPhotos: boolean;
   priceTnd: number;
+  /** Pages Mazed already put this annonce on (its own ask, 0215): not asked for twice. */
+  covered?: readonly SocialChannel[];
 }) {
   const t = useTranslations("promote");
   const locale = useLocale();
   const router = useRouter();
   const { toast } = useToast();
   const apiError = useApiError();
-  const offered = (c: SocialChannel) => c !== "instagram" || hasPhotos;
+  const offered = (c: SocialChannel) => !covered.includes(c) && (c !== "instagram" || hasPhotos);
   const [channels, setChannels] = useState<SocialChannel[]>(() => OFFERED_CHANNELS.filter(offered));
   const [language, setLanguage] = useState<SocialLanguage>(locale === "ar" ? "ar" : "fr");
   const [busy, setBusy] = useState(false);
@@ -106,7 +109,7 @@ export function PromoteForm({
                 <span className="min-w-0">
                   <span className="block text-[13.5px] font-bold text-foreground">{t(`channels.${c}.name`)}</span>
                   <span className="mt-0.5 block text-[12px] leading-snug text-muted">
-                    {disabled ? t("instagramNeedsPhoto") : t(`channels.${c}.hint`)}
+                    {covered.includes(c) ? t("coveredByMazed") : disabled ? t("instagramNeedsPhoto") : t(`channels.${c}.hint`)}
                   </span>
                 </span>
               </button>

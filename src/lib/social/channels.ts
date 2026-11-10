@@ -103,10 +103,53 @@ export type JobStatus = (typeof JOB_STATUSES)[number];
 
 export type JobAction = "publish" | "mark_closed" | "remove";
 
-/** An ask that still blocks a second one for the same annonce (see the 0170 index). */
+/** An ask that is still live, and so keeps its lane taken for the annonce (see the 0215 index). */
 export const OPEN_REQUEST_STATUSES: readonly RequestStatus[] = [
   "draft", "pending_approval", "scheduled", "published", "failed",
 ];
+
+export function isOpenRequest(status: string): boolean {
+  return (OPEN_REQUEST_STATUSES as readonly string[]).includes(status);
+}
+
+/** What the two-lane rules read of an ask. */
+export type LaneAsk = {
+  status: string;
+  channels: readonly string[];
+  initiated_by: string | null;
+  consent_version?: string | null;
+};
+
+/**
+ * The two lanes of an annonce's asks (0215): the seller's own, and Mazed's
+ * (an admin's or the site's, isFeaturedRequest). Each lane has at most one
+ * live ask, and the two never share a channel: the same house is posted once
+ * on each page. So an annonce the seller promoted on Mazed Immo's page can
+ * still be put on « Mazed ».
+ */
+export type RequestLane = "seller" | "featured";
+
+export function requestLane(r: { initiated_by: string | null; consent_version?: string | null }): RequestLane {
+  return isFeaturedRequest(r) ? "featured" : "seller";
+}
+
+/**
+ * Where a new ask in `lane` stands among the annonce's asks: the live ask of
+ * that lane already in its place, if any, and the wanted channels no live
+ * ask — of either lane — covers yet.
+ */
+export function laneRoom<A extends LaneAsk>(
+  asks: readonly A[],
+  lane: RequestLane,
+  wanted: readonly SocialChannel[],
+): { taken: A | null; left: SocialChannel[] } {
+  const live = asks.filter((a) => isOpenRequest(a.status));
+  const covered = new Set(live.flatMap((a) => a.channels));
+  return {
+    taken: live.find((a) => requestLane(a) === lane) ?? null,
+    left: wanted.filter((c) => !covered.has(c)),
+  };
+}
 
 /**
  * The ask's status from its publish jobs: online as soon as one channel is,
