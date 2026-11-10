@@ -62,6 +62,7 @@ export const EVENT_NAMES = [
   "voice_publish_finish",
   "upload_failed",
   "demande_create",
+  "demande_cta",
   "agence_request",
   "listing_import",
   "sign_up",

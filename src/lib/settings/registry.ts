@@ -207,6 +207,17 @@ export const SETTINGS = {
   compare_max: { group: "buyers", type: "int", default: 3, min: 2, max: 4, client: true },
   requests_max_active: { group: "buyers", type: "int", default: 10, min: 1, max: 50 },
   requests_days: { group: "buyers", type: "int", default: 60, min: 7, max: 365, unit: "days" },
+  // Where « Enregistrer une demande » is offered besides the bottom of the
+  // results (the owner, 2026-11-10: the demande was out of sight, fifteen
+  // phone screens down the catalogue). A line above the results, a card among
+  // them after this many annonces (0 = none), a strip under an annonce and a
+  // line under the home search. The annonce's demande starts from its price
+  // plus `requests_listing_margin` percent as the budget.
+  requests_cta_top: { group: "buyers", type: "bool", default: true },
+  requests_cta_card_after: { group: "buyers", type: "int", default: 8, min: 0, max: 24, choices: [0, 4, 8, 12] },
+  requests_cta_listing: { group: "buyers", type: "bool", default: true },
+  requests_cta_home: { group: "buyers", type: "bool", default: true },
+  requests_listing_margin: { group: "buyers", type: "int", default: 10, min: 0, max: 50, unit: "percent", choices: [0, 10, 20, 30] },
   // The strip's size, and the smallest plan that earns a place in it: the plan's
   // annonces (10 Starter and up, 40 Pro and up, 120 Business only).
   agency_strip_max: { group: "buyers", type: "int", default: 6, min: 2, max: 12, choices: [4, 6, 8, 12] },

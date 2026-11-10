@@ -81,7 +81,8 @@ counted once whatever the browser did: `sign_up`, `login`, `logout`,
 | `publish_abandon` | the form is left before sending | `step`, `index` |
 | `voice_publish_start` / `voice_publish_finish` | the conversation publisher | `status` |
 | `upload_failed` | a photo or a receipt did not upload | `kind`, `reason`, `status` |
-| `demande_create` | a demande saved | `deal`, `govs`, `mode` |
+| `demande_create` | a demande saved | `deal`, `govs`, `mode`, `via` (new demandes started from one of the site's offers) |
+| `demande_cta` | a tap on « Enregistrer ma demande » (2026-11-10) | `via`: `top` / `card` / `empty` / `bottom` (catalogue), `map`, `listing`, `home`. Statistiques → Demande → « D'où viennent les demandes » |
 | `agence_request` | an agence asked to open | `plan`, `method`, `value` |
 | `listing_import` | a spreadsheet imported (server) | `count` |
 | `sign_up` / `login` / `logout` | accounts (server) | `method` |

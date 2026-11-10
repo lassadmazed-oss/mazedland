@@ -49,6 +49,8 @@ import { cleanSearchTerm } from "@/lib/analytics/ga";
 import { governorateSlug } from "@/lib/market/stats";
 import { Optional } from "@/components/ui/Optional";
 import { CatalogueMap } from "@/components/map/CatalogueMap";
+import { DemandeCard, DemandeLine } from "@/components/requests/DemandeCta";
+import type { DemandeVia } from "@/lib/requests/prefill";
 import { spreadAround, type MapPoint } from "@/lib/geo/mapPoints";
 import { GOVERNORATE_CENTER } from "@/lib/geo/location";
 import { delegationCenter } from "@/lib/geo/places";
@@ -887,6 +889,15 @@ export default async function AnnoncesPage({
   // /marche when the governorate is a real one, the page's top otherwise.
   const marketGov = sp.gov && (TUNISIAN_GOVERNORATES as readonly string[]).includes(sp.gov) ? sp.gov : null;
 
+  // « Enregistrer une demande » for this very search (0168): the form opens on
+  // its filters, and `via` says which of the page's offers was tapped.
+  const demandesOn = settings.feature_requests;
+  const demandeHref = (via: DemandeVia) => qs({ sort: undefined, via }).replace("/annonces", "/demandes/nouvelle");
+  const narrowed = Boolean(sp.cat || sp.gov || sp.q || min || max || moreActive || deal);
+  // The card among the annonces, after this many of them (0 = none) — only
+  // where the list goes on past it; a shorter one ends on the band below.
+  const cardAfter = demandesOn && !mapView ? settings.requests_cta_card_after : 0;
+
   return (
     <main className="mx-auto max-w-[var(--max-w-wide)] px-4 pb-6 pt-4 lg:px-8 lg:pb-12 lg:pt-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdSafe(breadcrumbLd(crumbs)) }} />
@@ -1126,23 +1137,51 @@ export default async function AnnoncesPage({
         )}
       </div>
 
+      {/* The demande, on the first screen: above the results, not only under
+          the last of them. Not over an empty list (its own box offers it) nor
+          the map (its zone button does). */}
+      {demandesOn && settings.requests_cta_top && rows.length > 0 && !mapView && (
+        <DemandeLine
+          href={demandeHref("top")}
+          via="top"
+          title={narrowed ? t("demandeTopTitle") : t("demandeTopTitleAny")}
+          body={t("demandeBody")}
+          className="mt-3"
+        />
+      )}
+
       {rows.length === 0 ? (
         <div className="mt-6 rounded-3xl border border-dashed border-border bg-surface-2/40 px-6 py-14 text-center">
           <span className="inline-grid size-12 place-items-center rounded-full bg-surface text-muted ring-1 ring-border">
             <SearchX className="size-5" aria-hidden />
           </span>
           <p className="mt-4 text-[15px] font-extrabold text-foreground">{t("emptyTitle")}</p>
-          <p className="mt-1 text-[13px] text-muted">{t("emptyBody")}</p>
-          {/* A way out. Seven of the eight category chips are empty at this
-              catalogue size, and this state used to be text only. */}
-          {(sp.cat || sp.gov || sp.q || min || max || moreActive || deal) && (
-            <Link
-              href={"/annonces" as never}
-              className="tap-target mt-5 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12.5px] font-bold text-[var(--background)]"
-            >
-              <X className="size-3.5" aria-hidden /> {t("clearFilters")}
-            </Link>
-          )}
+          <p className="mt-1 text-[13px] text-muted">{demandesOn ? t("emptyBodyDemande") : t("emptyBody")}</p>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            {/* Nothing here yet: keep the search, be told when it comes. */}
+            {demandesOn && (
+              <Link
+                href={demandeHref("empty") as never}
+                data-track="demande_cta"
+                data-track-via="empty"
+                className="tap-target inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12.5px] font-bold text-[var(--background)]"
+              >
+                <BellRing className="size-3.5" aria-hidden /> {t("requestCta")}
+              </Link>
+            )}
+            {/* A way out. Seven of the eight category chips are empty at this
+                catalogue size, and this state used to be text only. */}
+            {narrowed && (
+              <Link
+                href={"/annonces" as never}
+                className={`tap-target inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[12.5px] font-bold ${
+                  demandesOn ? "bg-surface text-foreground ring-1 ring-border hover:ring-foreground/40" : "bg-foreground text-[var(--background)]"
+                }`}
+              >
+                <X className="size-3.5" aria-hidden /> {t("clearFilters")}
+              </Link>
+            )}
+          </div>
         </div>
       ) : mapView ? (
         <Optional name="catalogue-map">
@@ -1151,7 +1190,7 @@ export default async function AnnoncesPage({
             unplaced={unplaced}
             start={mapStart}
             initialZone={zone}
-            alertBase={settings.feature_requests ? qs({ sort: undefined, vue: undefined, zone: undefined }).replace("/annonces", "/demandes/nouvelle") : null}
+            alertBase={settings.feature_requests ? qs({ sort: undefined, vue: undefined, zone: undefined, via: "map" }).replace("/annonces", "/demandes/nouvelle") : null}
             locale={locale}
           />
         </Optional>
@@ -1177,6 +1216,16 @@ export default async function AnnoncesPage({
               {i === Math.min(3, rows.length - 1) && (
                 <AdSlot placement="catalogue" as="li" className="col-span-full" />
               )}
+              {cardAfter > 0 && i === cardAfter - 1 && rows.length > cardAfter && (
+                <li>
+                  <DemandeCard
+                    href={demandeHref("card")}
+                    title={narrowed ? t("demandeCardTitle") : t("demandeCardTitleAny")}
+                    body={t("demandeBody")}
+                    cta={t("requestCta")}
+                  />
+                </li>
+              )}
             </Fragment>
           ))}
         </ul>
@@ -1187,14 +1236,17 @@ export default async function AnnoncesPage({
           told when it is answered (0168). Same filters, nothing to retype —
           the words too: the form keeps them in « Autres souhaits » and says
           they are not a criterion (src/lib/requests/prefill.ts). */}
-      {settings.feature_requests && (
+      {/* Over an empty list the box above already offers it. */}
+      {demandesOn && rows.length > 0 && (
         <section className="mazed-band-warm mt-10 flex flex-col items-start gap-3 rounded-3xl border border-border p-5 sm:flex-row sm:items-center sm:justify-between lg:p-7">
           <div>
             <p className="text-[15px] font-extrabold text-foreground">{t("requestCtaTitle")}</p>
             <p className="mt-0.5 max-w-xl text-[12.5px] leading-relaxed text-muted">{t("requestCtaBody")}</p>
           </div>
           <Link
-            href={qs({ sort: undefined }).replace("/annonces", "/demandes/nouvelle") as never}
+            href={demandeHref("bottom") as never}
+            data-track="demande_cta"
+            data-track-via="bottom"
             className="mazed-btn-luxe tap-target inline-flex shrink-0 items-center gap-1.5 px-4 py-2.5 text-[13px]"
           >
             <BellRing className="size-4" aria-hidden /> {t("requestCta")}

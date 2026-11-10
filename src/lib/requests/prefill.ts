@@ -87,3 +87,50 @@ export function requestFormFromSearch(
     anyDeal: searched && sp.deal !== "sale" && sp.deal !== "rent",
   };
 }
+
+/**
+ * Where a demande was started from (2026-11-10): the catalogue's line above
+ * the results, its card among them, its empty state and its bottom band, the
+ * map's zone button, an annonce, the home page. Carried as `via=` to the form
+ * and counted twice: the tap (`demande_cta`) and the demande saved
+ * (`demande_create`), so the console shows which place brings demandes.
+ */
+export const DEMANDE_VIA = ["top", "card", "empty", "bottom", "map", "listing", "home"] as const;
+export type DemandeVia = (typeof DEMANDE_VIA)[number];
+
+/** A `via=` value as the form may count it; anything else is no place at all. */
+export function demandeVia(raw: string | undefined | null): DemandeVia | null {
+  return (DEMANDE_VIA as readonly string[]).includes(raw ?? "") ? (raw as DemandeVia) : null;
+}
+
+/**
+ * A budget a person would type: rounded UP to two significant digits
+ * (316 250 → 320 000, 825 → 830, 1 595 → 1 600), so the ceiling never falls
+ * under what was asked.
+ */
+export function roundBudgetUp(n: number): number {
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  const step = 10 ** Math.max(0, Math.floor(Math.log10(n)) - 1);
+  return Math.ceil(n / step) * step;
+}
+
+/**
+ * « Pas tout à fait ? » under an annonce: a demande like this one — the same
+ * deal, type and governorate, and a budget up to its price plus `marginPercent`
+ * (none when the price is on request). The form opens on it; every field can
+ * still be changed there.
+ */
+export function requestHrefFromListing(
+  l: { deal: DealType; categorySlug: string | null; governorate: string | null; price: number | null; priceOnRequest: boolean },
+  marginPercent: number,
+): string {
+  const p = new URLSearchParams({ deal: l.deal });
+  if (l.categorySlug) p.set("cat", l.categorySlug);
+  if (l.governorate && (TUNISIAN_GOVERNORATES as readonly string[]).includes(l.governorate)) p.set("gov", l.governorate);
+  if (!l.priceOnRequest && l.price != null && l.price > 0) {
+    const max = roundBudgetUp(l.price * (1 + Math.max(0, marginPercent) / 100));
+    if (max > 0) p.set("max", String(max));
+  }
+  p.set("via", "listing");
+  return `/demandes/nouvelle?${p.toString()}`;
+}

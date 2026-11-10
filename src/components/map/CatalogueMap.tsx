@@ -439,7 +439,7 @@ export function CatalogueMap({
         {geoError && <p role="alert" className="mt-1 text-[12px] font-bold text-[var(--tone-warn)]">{t("geoFailed")}</p>}
         {drawError && <p role="alert" className="mt-1 text-[12px] font-bold text-[var(--tone-warn)]">{t("drawFailed")}</p>}
         {alertHref && (
-          <Link href={alertHref as never} className="mazed-btn-luxe tap-target mt-2 inline-flex h-10 items-center justify-center gap-1.5 rounded-full px-4 text-[13px]">
+          <Link href={alertHref as never} data-track="demande_cta" data-track-via="map" className="mazed-btn-luxe tap-target mt-2 inline-flex h-10 items-center justify-center gap-1.5 rounded-full px-4 text-[13px]">
             <Bell className="size-4" /> {t("alertZone")}
           </Link>
         )}

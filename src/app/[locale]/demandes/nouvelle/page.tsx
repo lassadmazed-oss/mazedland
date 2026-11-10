@@ -4,7 +4,7 @@ import { getServerSupabase } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { categoryLabel } from "@/lib/i18n";
 import { asDealType, type Furnished } from "@/lib/listings/deal";
-import { requestFormFromSearch, type RequestFormValue } from "@/lib/requests/prefill";
+import { demandeVia, requestFormFromSearch, type RequestFormValue } from "@/lib/requests/prefill";
 import { parseZone } from "@/lib/geo/zone";
 import { getSettings } from "@/lib/settings/server";
 import { RequestForm } from "./RequestForm";
@@ -130,6 +130,7 @@ export default async function NewRequestPage({
         locale={locale}
         searchWords={fromSearch.words}
         anyDeal={fromSearch.anyDeal}
+        via={demandeVia(sp.via)}
       />
     </main>
   );
