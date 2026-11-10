@@ -20,6 +20,8 @@
  * these words changed.
  */
 
+import { timeoutSignal } from "@/lib/timeoutSignal";
+
 export type WatchlistState = {
   hydrated: boolean;
   loggedIn: boolean;
@@ -61,7 +63,7 @@ export function subscribeWatchlist(fn: () => void): () => void {
  */
 export function ensureWatchlistHydrated(): void {
   if (state.hydrated || inflight || typeof window === "undefined") return;
-  inflight = fetch("/api/watchlist", { cache: "no-store", signal: AbortSignal.timeout(10000) })
+  inflight = fetch("/api/watchlist", { cache: "no-store", signal: timeoutSignal(10000) })
     .then((r) => (r.ok ? r.json() : { loggedIn: false, ids: [] }))
     .then((d: { loggedIn?: boolean; ids?: string[] }) => {
       state = {
