@@ -18,6 +18,12 @@ const FOREIGN: readonly RegExp[] = [
   /ResizeObserver loop (?:limit exceeded|completed with undelivered notifications)/i,
   // A script from another origin failed and the browser hides why: nothing to read.
   /^(?:Uncaught )?Script error\.?$/i,
+  // React found a part of the page it could not take over from the HTML the browser
+  // holds — a translator or in-app browser changed it, or the download was cut — and
+  // drew that part itself; the visitor sees the page. Seen on the home page from one
+  // Android that also raised #418 and from Facebook's iOS browser. A server render
+  // that really failed is logged on the server (instrumentation.ts), not here.
+  /Minified React error #419\b/,
 ];
 
 /** True when the message is browser or app noise that the error log should not keep. */
