@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { AdSlot } from "@/components/ads/AdSlot";
+import { AdBanners, slotBanners } from "@/components/ads/AdSlot";
 import { Link } from "@/i18n/navigation";
 import { HomeRailSection } from "@/components/landing/HomeRail";
 import { HomeSearch } from "@/components/landing/HomeSearch";
@@ -7,6 +7,7 @@ import { IntentChooser } from "@/components/landing/IntentChooser";
 import { HeroPhoto } from "@/components/landing/HeroPhoto";
 import { SellBand, WhyBand } from "@/components/landing/HomeBands";
 import { GuidesStrip } from "@/components/guides/GuidesStrip";
+import { publishedGuides } from "@/lib/guides/server";
 import { HomeMap } from "@/components/landing/HomeMap";
 import { isRtl } from "@/lib/i18n";
 import { getHomeFeed } from "@/lib/home/feed";
@@ -198,6 +199,19 @@ export default async function LandingPage({
   // show under the result, and how to reach Mazed Immo (Réglages → Contact).
   const origin = siteUrl() ?? PRODUCTION_ORIGIN;
   const settings = await getSettings();
+  // Both advertising spaces are read here, before the tree. As two <AdSlot>s,
+  // each waiting on its own query, they reached the page's code in whichever
+  // order the database answered: the same page came out in two versions, and
+  // Vercel stored each switch as a new page (ISR writes, ~2 MB a language,
+  // up to once a minute). The guides strip's read goes with them (React's
+  // cache hands GuidesStrip the same answer), so no part of the tree waits on
+  // the database any more and the page comes out the same, byte for byte,
+  // until its data changes.
+  const [topBanners, middleBanners] = await Promise.all([
+    slotBanners("home_top"),
+    slotBanners("home_middle"),
+    publishedGuides(),
+  ]);
   const siteLd = [
     websiteLd(origin, locale, "Mazed Immo"),
     organizationLd(origin, "Mazed Immo", { whatsapp: settings.contact_whatsapp, email: settings.contact_email }),
@@ -281,7 +295,7 @@ export default async function LandingPage({
 
       {/* An advertiser's banner (/admin/publicites): under the search, above
           the first rail. Nothing when no campaign runs here. */}
-      <AdSlot placement="home_top" className="mt-6 px-4 lg:mt-12 lg:px-0" sizes="(min-width: 1280px) 1200px, 100vw" />
+      <AdBanners banners={topBanners} className="mt-6 px-4 lg:mt-12 lg:px-0" sizes="(min-width: 1280px) 1200px, 100vw" />
 
       {/* ══════════════════════════════════════════════════════════════
           BROWSE — the page's center of gravity: the rails of annonces,
@@ -294,7 +308,7 @@ export default async function LandingPage({
       ))}
 
       {/* A second banner, halfway down the rails. */}
-      <AdSlot placement="home_middle" className="mt-8 px-4 lg:mt-14 lg:px-0" sizes="(min-width: 1280px) 1200px, 100vw" />
+      <AdBanners banners={middleBanners} className="mt-8 px-4 lg:mt-14 lg:px-0" sizes="(min-width: 1280px) 1200px, 100vw" />
 
       {railsBelow.map((rail) => (
         <HomeRailSection key={rail.key} rail={rail} savedIds={savedIds} loggedIn={loggedIn} />
