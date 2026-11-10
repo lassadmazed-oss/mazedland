@@ -5,6 +5,7 @@ import { isSameOrigin } from "@/lib/sameOrigin";
 import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
+import { withPhotoSizes } from "@/lib/photoSizes";
 
 /**
  * DELETE /api/annonces/:id — the seller deletes one of their drafts.
@@ -41,7 +42,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (error) return fail("listing_delete_failed", 500, error);
   if (!gone || gone.length === 0) return NextResponse.json({ error: "not_a_draft" }, { status: 409 });
   // Orphaned bytes cost little; a failed cleanup does not undo the delete.
-  if (paths.length) await admin.storage.from("properties").remove(paths).then(() => {}, () => {});
+  if (paths.length) await admin.storage.from("properties").remove(withPhotoSizes(paths)).then(() => {}, () => {});
 
   logAction(req, user, "listing.draft_delete", { id, title: listing.title });
   return NextResponse.json({ ok: true });

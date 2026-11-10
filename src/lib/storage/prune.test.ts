@@ -33,6 +33,21 @@ describe("abandonedObjects", () => {
   it("with no references, every old object goes", () => {
     expect(abandonedObjects(objects, new Set(), 2, now)).toEqual(["u1/annonce-1.webp", "u1/annonce-2.webp", "ads/banner.webp"]);
   });
+
+  it("keeps the sizes of a photo still in use, and removes them with an abandoned one", () => {
+    const u = "0f2c3b4a-1111-2222-3333-444455556666";
+    const sized = [
+      { path: `${u}/annonce-1-2-0.webp`, createdAt: ago(10) }, // in an annonce
+      { path: `${u}/annonce-1-2-0.w384.webp`, createdAt: ago(10) },
+      { path: `${u}/annonce-1-2-0.w1600.webp`, createdAt: ago(10) },
+      { path: `${u}/annonce-1-2-1.webp`, createdAt: ago(10) }, // abandoned
+      { path: `${u}/annonce-1-2-1.w640.webp`, createdAt: ago(10) },
+    ];
+    expect(abandonedObjects(sized, new Set([`${u}/annonce-1-2-0.webp`]), 2, now)).toEqual([
+      `${u}/annonce-1-2-1.webp`,
+      `${u}/annonce-1-2-1.w640.webp`,
+    ]);
+  });
 });
 
 describe("referencedPath", () => {

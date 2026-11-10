@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { jsonObject } from "@/lib/http/body";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
@@ -10,6 +10,7 @@ import { listingFields, listingPhotos, num, text, titleTooShort, type ListingBod
 import { suspendedResponse } from "@/lib/moderation/ban";
 import { can, roleIn } from "@/lib/pro/shops";
 import { getSettings } from "@/lib/settings/server";
+import { ensurePhotoSizes } from "@/lib/photoSizes.server";
 import { asPin } from "@/lib/geo/location";
 import { pinColumns, pinUpdate } from "@/lib/geo/server";
 
@@ -207,6 +208,9 @@ export async function POST(req: NextRequest) {
     if (photos.length > 0) {
       const { error } = await admin.from("listing_photos").insert(photos.map((p) => ({ ...p, listing_id: listingId })));
       if (error) return fail("photos_save_failed", 500, error);
+      // Their sizes, after the answer (src/lib/photoSizes.ts): a photo already
+      // sized at the previous save is skipped.
+      after(() => ensurePhotoSizes(admin, photos.map((p) => p.storage_path)).then(() => {}));
     }
   }
 

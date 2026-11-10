@@ -14,6 +14,7 @@
  * running): the console suspends those instead.
  */
 import type { getServiceSupabase } from "@/lib/supabase/admin";
+import { photoSizePaths } from "@/lib/photoSizes";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -69,7 +70,10 @@ export async function deleteListings(admin: Admin, ids: readonly string[]): Prom
     if (error) return { listings, photos: 0, error };
     listings += data?.length ?? 0;
   }
-  return { listings, photos: await removeFiles(admin, "properties", paths) };
+  const photos = await removeFiles(admin, "properties", paths);
+  // Their sizes made in advance (src/lib/photoSizes.ts) go too; they are not counted as photos.
+  await removeFiles(admin, "properties", paths.flatMap(photoSizePaths));
+  return { listings, photos };
 }
 
 export type ShopDeletion =
