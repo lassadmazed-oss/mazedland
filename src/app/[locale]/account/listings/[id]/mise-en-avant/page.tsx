@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
-import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { annoncePhotoUrl } from "@/lib/imageUrl";
 import { formatDate, formatTND } from "@/lib/utils";
 import { activePromo, canBuy, placementOf, type PromoColumn } from "@/lib/promo";
 import { getSettings } from "@/lib/settings/server";
@@ -82,7 +82,7 @@ export default async function BoostPage({ params }: { params: Promise<{ id: stri
         <span className="size-14 shrink-0 overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border">
           {photo && (
             // eslint-disable-next-line @next/next/no-img-element -- a small thumbnail
-            <img src={propertyPhotoUrl(photo.storage_path, { transform: { width: 120, quality: 70 } })} alt="" className="size-full object-cover" />
+            <img src={annoncePhotoUrl(photo.storage_path, 120, 70)} alt="" className="size-full object-cover" />
           )}
         </span>
         <div className="min-w-0">

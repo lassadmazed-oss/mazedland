@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getServiceSupabase } from "@/lib/supabase/admin";
-import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { annoncePhotoUrl } from "@/lib/imageUrl";
 import { categoryLabel } from "@/lib/i18n";
 import { governorateLabel } from "@/lib/tunisia";
 import { shownDelegation } from "@/lib/delegations";
@@ -194,7 +194,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
                       <span className="block aspect-[4/3]">
                         {photo ? (
                           // eslint-disable-next-line @next/next/no-img-element -- a compact thumbnail
-                          <img src={propertyPhotoUrl(photo, { transform: { width: 400, quality: 70 } })} alt="" className="size-full object-cover" />
+                          <img src={annoncePhotoUrl(photo, 400, 70)} alt="" className="size-full object-cover" />
                         ) : (
                           <span className="grid size-full place-items-center"><Home className="size-6 text-muted" /></span>
                         )}

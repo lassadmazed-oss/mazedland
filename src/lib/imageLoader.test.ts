@@ -15,6 +15,20 @@ describe("image loader", () => {
     );
   });
 
+  it("serves an annonce photo's size made in advance, never the paid resizer", () => {
+    const photo = "0f2c3b4a-1111-2222-3333-444455556666/annonce-1-2-0";
+    expect(imageLoader({ src: `${SB}/storage/v1/object/public/properties/${photo}.webp`, width: 640, quality: 72 })).toBe(
+      `${SB}/storage/v1/object/public/properties/${photo}.w640.webp`,
+    );
+    expect(imageLoader({ src: `${SB}/storage/v1/object/public/properties/${photo}.webp`, width: 1920 })).toBe(
+      `${SB}/storage/v1/object/public/properties/${photo}.w1600.webp`,
+    );
+    // An address already pointing at the resizer is turned back into the size.
+    expect(imageLoader({ src: `${SB}/storage/v1/render/image/public/properties/${photo}.webp?width=120&quality=70`, width: 200 })).toBe(
+      `${SB}/storage/v1/object/public/properties/${photo}.w384.webp`,
+    );
+  });
+
   it("re-sizes an address that was already a resized one", () => {
     const out = imageLoader({ src: `${SB}/storage/v1/render/image/public/properties/a.webp?width=120&quality=70`, width: 384 });
     expect(new URL(out).searchParams.get("width")).toBe("384");

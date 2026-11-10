@@ -1,3 +1,5 @@
+import { hasPhotoSizes, photoSizePath, photoWidthFor } from "./photoSizes";
+
 /**
  * Resolve a storage path (bucket-relative) to a public URL on the
  * Supabase storage CDN. We don't go through `storage.from(...).getPublicUrl`
@@ -30,4 +32,18 @@ export function propertyPhotoUrl(
     return `${base}/storage/v1/render/image/public/${bucket}/${storagePath}?${params}`;
   }
   return `${base}/storage/v1/object/public/${bucket}/${storagePath}`;
+}
+
+/**
+ * An annonce photo at a width, for a plain `<img>`: its size made in advance
+ * (src/lib/photoSizes.ts), not Supabase's paid resizer. Only for annonce
+ * photos — the agences' logos and covers come through the same uploader but
+ * have no sizes made, and keep `propertyPhotoUrl(…, { transform })`.
+ */
+export function annoncePhotoUrl(storagePath: string, width: number, quality = 70): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (base && hasPhotoSizes(storagePath)) {
+    return `${base}/storage/v1/object/public/properties/${photoSizePath(storagePath, photoWidthFor(width))}`;
+  }
+  return propertyPhotoUrl(storagePath, { transform: { width, quality } });
 }

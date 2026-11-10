@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SafeImage } from "@/components/media/SafeImage";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { formatNumber, formatTND } from "@/lib/utils";
@@ -105,7 +105,7 @@ export async function AnnonceCard({
     <article className="group relative">
       <div className="mazed-photo-frame aspect-[4/3]">
         {cover ? (
-          <Image
+          <SafeImage
             src={propertyPhotoUrl(cover.storage_path)}
             alt={listing.title}
             fill

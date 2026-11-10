@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { propertyPhotoUrl } from "./imageUrl";
+import { annoncePhotoUrl, propertyPhotoUrl } from "./imageUrl";
 
 describe("propertyPhotoUrl", () => {
   const prev = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,5 +31,25 @@ describe("propertyPhotoUrl", () => {
   it("falls back to a placeholder when the base URL is missing", () => {
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     expect(propertyPhotoUrl("user-1/p.jpg")).toBe("/placeholder.jpg");
+  });
+});
+
+describe("annoncePhotoUrl", () => {
+  const prev = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://proj.supabase.co";
+  });
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = prev;
+  });
+
+  it("serves an annonce photo's size made in advance", () => {
+    const photo = "0f2c3b4a-1111-2222-3333-444455556666/annonce-1-2-0";
+    expect(annoncePhotoUrl(`${photo}.webp`, 240, 60)).toBe(
+      `https://proj.supabase.co/storage/v1/object/public/properties/${photo}.w384.webp`,
+    );
+  });
+  it("sends anything else through the resizer, as before", () => {
+    expect(annoncePhotoUrl("user-1/p.jpg", 240, 60)).toContain("/storage/v1/render/image/public/properties/user-1/p.jpg?");
   });
 });

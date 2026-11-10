@@ -1,7 +1,7 @@
 "use client";
 
 import { WhatsAppHelp } from "@/components/ui/WhatsAppHelp";
-import Image from "next/image";
+import { SafeImage } from "@/components/media/SafeImage";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -342,7 +342,7 @@ export function CheckoutClient({
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 text-center">
           {listing?.heroPhotoPath && (
             <div className="relative mb-4 hidden aspect-[16/10] overflow-hidden rounded-xl bg-[var(--surface-2)] lg:block">
-              <Image
+              <SafeImage
                 src={propertyPhotoUrl(listing.heroPhotoPath)}
                 alt=""
                 fill
