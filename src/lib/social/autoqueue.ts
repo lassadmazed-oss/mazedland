@@ -9,14 +9,16 @@
  * from the annonce (createFeaturedRequest); the owner reads it, edits it,
  * approves or refuses. The seller's CGU (2026-11-05) stand for their consent,
  * so an annonce whose seller has not accepted them yet is left alone and is
- * picked up on a later run, once they have.
+ * picked up on a later run, once they have. An annonce its seller promoted
+ * themselves (Mazed Immo's page, Instagram) is proposed beside that ask, for
+ * the pages it does not cover — « Mazed » first of all (0215).
  *
  * Run by the Social Publisher's worker every five minutes (api/cron/social-publish).
  */
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { loadSettings } from "@/lib/settings/server";
 import { currentConsents, type ConsentRow } from "@/lib/consents/model";
-import { FEATURED_CHANNELS, type SocialChannel } from "./channels";
+import { FEATURED_CHANNELS, isFeaturedRequest, type LaneAsk, type SocialChannel } from "./channels";
 import { createFeaturedRequest, termsCoverFeaturing } from "./server";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
@@ -40,26 +42,42 @@ export function autoQueueChannels(on: { mazed: boolean; page: boolean; instagram
   return FEATURED_CHANNELS.filter((c) => wanted[c]);
 }
 
-export type AutoQueueCandidate = { id: string; seller_id: string; photos: number };
+/**
+ * What the site may still propose for an annonce, from every ask it ever had
+ * (0215): nothing once Mazed has asked about it — its proposal, in any state,
+ * is an answer, it is not asked again — nor once an admin refused one;
+ * otherwise the switched-on channels that no ask of the seller's has (the
+ * annonce is on those pages already, or the seller took them back). So an
+ * annonce its seller promoted on Mazed Immo's page and Instagram still comes
+ * up for « Mazed ».
+ */
+export function channelsToPropose(wanted: readonly SocialChannel[], asks: readonly LaneAsk[]): SocialChannel[] {
+  if (asks.some((a) => isFeaturedRequest(a) || a.status === "rejected")) return [];
+  const taken = new Set(asks.flatMap((a) => a.channels));
+  return wanted.filter((c) => !taken.has(c));
+}
+
+/** An online annonce, with the channels channelsToPropose leaves for it. */
+export type AutoQueueCandidate = { id: string; seller_id: string; photos: number; channels: SocialChannel[] };
 
 /**
  * Which of the annonces to propose now, in the order given (the sweep gives
- * the newest first): not already asked about (in any state — a refused ask is
- * an answer, it is not asked again), a seller whose CGU cover it, enough
- * photos, and no more than the room the waiting list has left.
+ * the newest first): something left to propose (channelsToPropose), a seller
+ * whose CGU cover it, enough photos, and no more than the room the waiting
+ * list has left.
  */
 export function pickAutoQueue(
   candidates: readonly AutoQueueCandidate[],
-  rules: { asked: ReadonlySet<string>; covered: ReadonlySet<string>; minPhotos: number; room: number },
-): string[] {
-  const picked: string[] = [];
+  rules: { covered: ReadonlySet<string>; minPhotos: number; room: number },
+): AutoQueueCandidate[] {
+  const picked: AutoQueueCandidate[] = [];
   const limit = Math.min(Math.max(0, rules.room), PER_RUN);
   for (const c of candidates) {
     if (picked.length >= limit) break;
-    if (rules.asked.has(c.id)) continue;
+    if (c.channels.length === 0) continue;
     if (!rules.covered.has(c.seller_id)) continue;
     if (c.photos < rules.minPhotos) continue;
-    picked.push(c.id);
+    picked.push(c);
   }
   return picked;
 }
@@ -98,8 +116,17 @@ async function sellersCovered(admin: Admin, sellerIds: string[]): Promise<Set<st
 
 type OnlineAnnonce = { id: string; seller_id: string; title: string; photos: { id: string }[] | null };
 
-/** The online annonces of the last `days` days, newest first, and which of them already have an ask (in any state). */
-async function recentAnnonces(admin: Admin, days: number, now: Date): Promise<{ rows: OnlineAnnonce[]; asked: Set<string> }> {
+/**
+ * The online annonces of the last `days` days, newest first, each with the
+ * channels left to propose for it (channelsToPropose, from all its asks, in
+ * any state).
+ */
+async function recentAnnonces(
+  admin: Admin,
+  days: number,
+  wanted: readonly SocialChannel[],
+  now: Date,
+): Promise<{ rows: OnlineAnnonce[]; candidates: AutoQueueCandidate[] }> {
   const since = new Date(now.getTime() - days * 86_400_000).toISOString();
   const { data } = await admin
     .from("listings")
@@ -109,12 +136,26 @@ async function recentAnnonces(admin: Admin, days: number, now: Date): Promise<{ 
     .order("published_at", { ascending: false })
     .limit(LOOKED_AT);
   const rows = (data ?? []) as unknown as OnlineAnnonce[];
-  if (rows.length === 0) return { rows, asked: new Set() };
-  const { data: askedRows } = await admin
+  if (rows.length === 0) return { rows, candidates: [] };
+  const { data: askRows } = await admin
     .from("social_publication_requests")
-    .select("listing_id")
+    .select("listing_id, status, channels, initiated_by, consent_version")
     .in("listing_id", rows.map((r) => r.id));
-  return { rows, asked: new Set(((askedRows ?? []) as { listing_id: string }[]).map((r) => r.listing_id)) };
+  const asks = new Map<string, LaneAsk[]>();
+  for (const a of (askRows ?? []) as (LaneAsk & { listing_id: string })[]) {
+    const list = asks.get(a.listing_id) ?? [];
+    list.push(a);
+    asks.set(a.listing_id, list);
+  }
+  return {
+    rows,
+    candidates: rows.map((r) => ({
+      id: r.id,
+      seller_id: r.seller_id,
+      photos: r.photos?.length ?? 0,
+      channels: channelsToPropose(wanted, asks.get(r.id) ?? []),
+    })),
+  };
 }
 
 export type WaitingSeller = { seller_id: string; full_name: string | null; phone: string | null; annonces: number };
@@ -127,8 +168,8 @@ export type WaitingSeller = { seller_id: string; full_name: string | null; phone
  */
 export async function sellersWaitingForTerms(admin: Admin, opts: { now?: Date } = {}): Promise<WaitingSeller[]> {
   const settings = await autoQueueSettings(admin);
-  const { rows, asked } = await recentAnnonces(admin, settings.days, opts.now ?? new Date());
-  const open = rows.filter((r) => !asked.has(r.id));
+  const { candidates } = await recentAnnonces(admin, settings.days, settings.channels, opts.now ?? new Date());
+  const open = candidates.filter((c) => c.channels.length > 0);
   const sellerIds = [...new Set(open.map((r) => r.seller_id))];
   const covered = await sellersCovered(admin, sellerIds);
   const counts = new Map<string, number>();
@@ -158,26 +199,23 @@ export async function queueFeaturedListings(
   const room = settings.waitingMax - (waiting ?? 0);
   if (room <= 0) return { queued: 0, full: true };
 
-  const { rows, asked } = await recentAnnonces(admin, settings.days, opts.now ?? new Date());
+  const { rows, candidates } = await recentAnnonces(admin, settings.days, settings.channels, opts.now ?? new Date());
   if (rows.length === 0) return { queued: 0 };
 
-  const open = rows.filter((r) => !asked.has(r.id));
-  const covered = await sellersCovered(admin, [...new Set(open.map((r) => r.seller_id))]);
-  const ids = pickAutoQueue(
-    rows.map((r) => ({ id: r.id, seller_id: r.seller_id, photos: r.photos?.length ?? 0 })),
-    { asked, covered, minPhotos: settings.minPhotos, room },
-  );
+  const open = candidates.filter((c) => c.channels.length > 0);
+  const covered = await sellersCovered(admin, [...new Set(open.map((c) => c.seller_id))]);
+  const picked = pickAutoQueue(candidates, { covered, minPhotos: settings.minPhotos, room });
 
   const titles: string[] = [];
-  for (const id of ids) {
+  for (const c of picked) {
     const made = await createFeaturedRequest(admin, {
       adminId: null,
-      listingId: id,
-      channels: settings.channels,
+      listingId: c.id,
+      channels: c.channels,
       language: "both",
       origin: opts.origin,
     });
-    if (made.ok) titles.push(rows.find((r) => r.id === id)?.title ?? "");
+    if (made.ok) titles.push(rows.find((r) => r.id === c.id)?.title ?? "");
   }
 
   // One notice for the run, not one per annonce.

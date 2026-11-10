@@ -1,15 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Check, Loader2, Megaphone } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { chipClass } from "@/lib/chips";
 import { FEATURED_CHANNELS, SOCIAL_LANGUAGES, type SocialChannel, type SocialLanguage } from "@/lib/social/channels";
 
-/** The promotion already open on this annonce, whoever asked for it. */
+/** Mazed's promotion already open on this annonce (an admin's or the site's). */
 export type OpenFeature = { ref: string; status: string };
+
+/** The seller's own promotion, open beside it (0215): its pages are not offered again. */
+export type SellerPromotion = { ref: string; status: string; channels: SocialChannel[] };
 
 /**
  * « Publier sur nos pages » (0214) — for an admin only, on any annonce online:
@@ -19,26 +22,32 @@ export type OpenFeature = { ref: string; status: string };
  * The seller's CGU stand for their consent; until they have accepted the
  * version that allows it, the card says so instead of offering the form.
  * Chips, not typing: the pages (« Mazed », Mazed Immo, Instagram, the groups
- * by hand) and the language.
+ * by hand) and the language. A seller who promoted the annonce themselves
+ * keeps their pages; the card offers the others (« Mazed », typically).
  */
 export function FeatureOnPages({
   listingId,
   open,
+  sellerPromotion,
   sellerTerms,
   connected,
   hasPhotos,
 }: {
   listingId: string;
   open: OpenFeature | null;
+  sellerPromotion: SellerPromotion | null;
   sellerTerms: boolean;
   /** Which API channels have a connected account; the others become a task for a person. */
   connected: Partial<Record<SocialChannel, boolean>>;
   hasPhotos: boolean;
 }) {
   const t = useTranslations("featureOnPages");
+  const locale = useLocale();
   const { toast } = useToast();
+  const covered =FEATURED_CHANNELS.filter((c) => sellerPromotion?.channels.includes(c));
+  const choices = FEATURED_CHANNELS.filter((c) => !covered.includes(c));
   const [channels, setChannels] = useState<SocialChannel[]>(() =>
-    FEATURED_CHANNELS.filter((c) => c !== "facebook_groups" && (c !== "instagram" || hasPhotos)),
+    choices.filter((c) => c !== "facebook_groups" && (c !== "instagram" || hasPhotos)),
   );
   const [language, setLanguage] = useState<SocialLanguage>("both");
   const [busy, setBusy] = useState(false);
@@ -70,11 +79,34 @@ export function FeatureOnPages({
     );
   }
 
+  const sellerLine = sellerPromotion ? (
+    <p className="mt-1.5 text-[12px] leading-snug text-muted">
+      {t("sellerPromotion", {
+        ref: `MZ-${sellerPromotion.ref}`,
+        status: t(`status.${sellerPromotion.status}`),
+        pages: new Intl.ListFormat(locale, { type: "conjunction" }).format(covered.map((c) => t(`channels.${c}`))),
+      })}
+    </p>
+  ) : null;
+
   if (!sellerTerms) {
     return (
       <section className={shell}>
         {head}
         <p className="mt-1.5 text-[12px] leading-snug text-muted">{t("sellerTerms")}</p>
+      </section>
+    );
+  }
+
+  // Every page is in the seller's promotion already: nothing left to offer.
+  if (choices.length === 0) {
+    return (
+      <section className={shell}>
+        {head}
+        {sellerLine}
+        <Link href={"/admin/social" as never} className="mt-2 inline-block text-[12.5px] font-bold text-gold hover:underline">
+          {t("openConsole")}
+        </Link>
       </section>
     );
   }
@@ -109,10 +141,11 @@ export function FeatureOnPages({
     <section className={shell}>
       {head}
       <p className="mt-1 text-[12px] leading-snug text-muted">{t("hint")}</p>
+      {sellerLine}
 
       <p className="mt-3 text-[11.5px] font-bold text-foreground">{t("pagesLabel")}</p>
       <div role="group" aria-label={t("pagesLabel")} className="mt-1.5 flex flex-wrap gap-2">
-        {FEATURED_CHANNELS.map((c) => {
+        {choices.map((c) => {
           const on = channels.includes(c);
           const disabled = c === "instagram" && !hasPhotos;
           return (

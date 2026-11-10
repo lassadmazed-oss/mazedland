@@ -12,8 +12,8 @@ import { PRODUCTION_ORIGIN, siteUrl } from "@/lib/siteUrl";
 import { coverPhoto } from "@/lib/listingCover";
 import { asDealType, type DealType } from "@/lib/listings/deal";
 import {
-  FEATURED_CHANNELS, MAX_PHOTOS, OFFERED_CHANNELS, OPEN_REQUEST_STATUSES, isApiChannel, isPageChannel, requestStatusFrom,
-  type JobAction, type JobStatus, type RequestStatus, type SocialChannel, type SocialLanguage,
+  FEATURED_CHANNELS, MAX_PHOTOS, OFFERED_CHANNELS, OPEN_REQUEST_STATUSES, isApiChannel, isPageChannel, laneRoom, requestStatusFrom,
+  type JobAction, type JobStatus, type LaneAsk, type RequestStatus, type SocialChannel, type SocialLanguage,
 } from "./channels";
 import { generatePost, socialListingFrom, type SocialListing } from "./content";
 import { consentHistory } from "@/lib/consents/server";
@@ -188,9 +188,21 @@ export type CreateResult =
   | { ok: true; id: string; status: RequestStatus }
   | { ok: false; error: "disabled" | "not_found" | "forbidden" | "not_online" | "no_channel" | "consent" | "already_open" | "no_photo" | "db" };
 
+/** The annonce's live asks, both lanes (0215), newest first. */
+async function liveAsks(admin: Admin, listingId: string): Promise<(LaneAsk & { id: string })[]> {
+  const { data } = await admin
+    .from("social_publication_requests")
+    .select("id, status, channels, initiated_by, consent_version")
+    .eq("listing_id", listingId)
+    .in("status", OPEN_REQUEST_STATUSES as string[])
+    .order("created_at", { ascending: false });
+  return (data ?? []) as (LaneAsk & { id: string })[];
+}
+
 /**
  * A seller asks for their annonce to be promoted. Refused unless it is theirs,
- * it is online, they ticked the consent, and it has no other ask open. The
+ * it is online, they ticked the consent, and they have no other ask open. A
+ * page Mazed already put the annonce on (its own ask, 0215) is left out. The
  * texts are generated now, so what the admin approves is what gets posted.
  */
 export async function createSocialRequest(
@@ -200,22 +212,18 @@ export async function createSocialRequest(
   const settings = await socialSettings(admin);
   if (!settings.enabled) return { ok: false, error: "disabled" };
   if (!input.consent) return { ok: false, error: "consent" };
-  const channels = [...new Set(input.channels)].filter((c) => OFFERED_CHANNELS.includes(c));
-  if (channels.length === 0) return { ok: false, error: "no_channel" };
+  const wanted = [...new Set(input.channels)].filter((c) => OFFERED_CHANNELS.includes(c));
+  if (wanted.length === 0) return { ok: false, error: "no_channel" };
 
   const row = await loadSocialListing(admin, input.listingId);
   if (!row) return { ok: false, error: "not_found" };
   if (row.seller_id !== input.userId) return { ok: false, error: "forbidden" };
   if (row.status !== "published") return { ok: false, error: "not_online" };
-  if (channels.includes("instagram") && row.photos.length === 0) return { ok: false, error: "no_photo" };
 
-  const { data: open } = await admin
-    .from("social_publication_requests")
-    .select("id")
-    .eq("listing_id", row.id)
-    .in("status", OPEN_REQUEST_STATUSES as string[])
-    .limit(1);
-  if (open && open.length > 0) return { ok: false, error: "already_open" };
+  const room = laneRoom(await liveAsks(admin, row.id), "seller", wanted);
+  if (room.taken || room.left.length === 0) return { ok: false, error: "already_open" };
+  const channels = room.left;
+  if (channels.includes("instagram") && row.photos.length === 0) return { ok: false, error: "no_photo" };
 
   const { data: created, error } = await admin
     .from("social_publication_requests")
@@ -282,6 +290,10 @@ export type FeatureResult =
  * (`adminId` null) it is the site proposing the annonce on its own (the
  * auto-queue, ./autoqueue.ts): the seller's CGU are then the only consent,
  * whoever the seller is.
+ *
+ * It takes Mazed's lane (0215): beside an ask of the seller's own, which
+ * keeps its pages — only the pages that ask does not cover are asked for
+ * (« Mazed », typically, next to a seller's Mazed Immo page and Instagram).
  */
 export async function createFeaturedRequest(
   admin: Admin,
@@ -289,21 +301,19 @@ export async function createFeaturedRequest(
 ): Promise<FeatureResult> {
   const settings = await socialSettings(admin);
   if (!settings.enabled) return { ok: false, error: "disabled" };
-  const channels = FEATURED_CHANNELS.filter((c) => input.channels.includes(c));
-  if (channels.length === 0) return { ok: false, error: "no_channel" };
+  const wanted = FEATURED_CHANNELS.filter((c) => input.channels.includes(c));
+  if (wanted.length === 0) return { ok: false, error: "no_channel" };
 
   const row = await loadSocialListing(admin, input.listingId);
   if (!row) return { ok: false, error: "not_found" };
   if (row.status !== "published") return { ok: false, error: "not_online" };
-  if (channels.includes("instagram") && row.photos.length === 0) return { ok: false, error: "no_photo" };
 
-  const { data: open } = await admin
-    .from("social_publication_requests")
-    .select("id")
-    .eq("listing_id", row.id)
-    .in("status", OPEN_REQUEST_STATUSES as string[])
-    .limit(1);
-  if (open && open.length > 0) return { ok: false, error: "already_open", id: open[0].id as string };
+  const live = await liveAsks(admin, row.id);
+  const room = laneRoom(live, "featured", wanted);
+  if (room.taken) return { ok: false, error: "already_open", id: room.taken.id };
+  if (room.left.length === 0) return { ok: false, error: "already_open", id: live[0].id };
+  const channels = room.left;
+  if (channels.includes("instagram") && row.photos.length === 0) return { ok: false, error: "no_photo" };
 
   let consentAt = new Date().toISOString();
   let consentVersion = CONSENT_VERSION;
@@ -330,14 +340,11 @@ export async function createFeaturedRequest(
     .select("id, ref")
     .single();
   if (error || !created) {
+    // Mazed's lane taken in the meantime, or a page another ask just took (the 0215 trigger).
     if (error?.code === "23505") {
-      const { data: again } = await admin
-        .from("social_publication_requests")
-        .select("id")
-        .eq("listing_id", row.id)
-        .in("status", OPEN_REQUEST_STATUSES as string[])
-        .limit(1);
-      if (again?.[0]) return { ok: false, error: "already_open", id: again[0].id as string };
+      const again = await liveAsks(admin, row.id);
+      const id = laneRoom(again, "featured", channels).taken?.id ?? again[0]?.id;
+      if (id) return { ok: false, error: "already_open", id };
     }
     return { ok: false, error: "db" };
   }

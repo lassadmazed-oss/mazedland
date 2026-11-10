@@ -89,22 +89,32 @@ export default async function PromotePage({ params }: { params: Promise<{ id: st
       )
       .eq("listing_id", id)
       .order("created_at", { ascending: false })
-      .limit(1),
+      .limit(20),
   ]);
-  const last = ((reqRows ?? []) as RequestRow[])[0] ?? null;
-  const open = last && (OPEN_REQUEST_STATUSES as readonly string[]).includes(last.status) ? last : null;
+  // Two lanes (0215): the seller's own ask — where it stands, or the form —
+  // and, beside it, the one Mazed made for its pages (« Proposée par Mazed Immo »).
+  const asks = (reqRows ?? []) as RequestRow[];
+  const live = (r: RequestRow) => (OPEN_REQUEST_STATUSES as readonly string[]).includes(r.status);
+  const last = asks.find((r) => !isFeaturedRequest(r)) ?? null;
+  const open = last && live(last) ? last : null;
+  const featured = asks.find((r) => isFeaturedRequest(r) && live(r)) ?? null;
   // Free at launch. Once it has a price it is paid like the rest, and with no
   // payee to pay the form is not offered — the API refuses too
   // (`payments_closed`), so nobody fills it in to be told no at the end.
   const closed = settings.priceTnd > 0 && !open && !(await paymentsAreOpen());
 
-  let visits = 0;
-  let contacts = 0;
-  if (open) {
-    const { data: events } = await admin.from("social_tracking_events").select("event").eq("request_id", open.id);
-    for (const e of events ?? []) {
-      if (e.event === "visit") visits += 1;
-      else if (e.event === "contact") contacts += 1;
+  const stats = new Map<string, { visits: number; contacts: number }>();
+  const shown = [featured, open].filter((r): r is RequestRow => r !== null);
+  if (shown.length > 0) {
+    const { data: events } = await admin
+      .from("social_tracking_events")
+      .select("request_id, event")
+      .in("request_id", shown.map((r) => r.id));
+    for (const e of (events ?? []) as { request_id: string; event: string }[]) {
+      const s = stats.get(e.request_id) ?? { visits: 0, contacts: 0 };
+      if (e.event === "visit") s.visits += 1;
+      else if (e.event === "contact") s.contacts += 1;
+      stats.set(e.request_id, s);
     }
   }
 
@@ -122,15 +132,76 @@ export default async function PromotePage({ params }: { params: Promise<{ id: st
   ) as Record<SocialLanguage, Record<SocialChannel, string>>;
   const photos = row.photos.slice(0, 4).map((p) => propertyPhotoUrl(p, { transform: { width: 640, quality: 70 } }));
 
-  const channelState = (channel: SocialChannel) => {
-    const jobs = (open?.jobs ?? []).filter((j) => j.channel === channel && j.action === "publish" && j.status !== "cancelled");
+  const channelState = (ask: RequestRow, channel: SocialChannel) => {
+    const jobs = (ask.jobs ?? []).filter((j) => j.channel === channel && j.action === "publish" && j.status !== "cancelled");
     if (channel === "facebook_groups") {
       const shared = jobs.filter((j) => j.status === "published").length;
       return { label: shared > 0 ? t("groupsShared", { count: shared }) : t("job.groups"), url: null };
     }
     const job = jobs[0];
-    if (!job) return { label: t(`status.${open?.status ?? "pending_approval"}`), url: null };
+    if (!job) return { label: t(`status.${ask.status}`), url: null };
     return { label: t(`job.${job.status}`), url: job.status === "published" ? job.external_url : null };
+  };
+
+  // Where an ask stands: its pages and their posts, the visits they brought, the way back.
+  const askSection = (ask: RequestRow) => {
+    const s = stats.get(ask.id) ?? { visits: 0, contacts: 0 };
+    return (
+      <section key={ask.id} className="mt-6 rounded-2xl border border-border bg-surface p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[14px] font-extrabold text-foreground">
+            {t(isFeaturedRequest(ask) ? "featuredOn" : "askedOn", { date: formatDate(ask.created_at, locale, "medium") })}
+          </p>
+          <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-bold ${TONE[ask.status] ?? ""}`}>
+            {t(`status.${ask.status}`)}
+          </span>
+        </div>
+        <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{t(`statusHint.${ask.status}`)}</p>
+
+        <ul className="mt-4 divide-y divide-border rounded-xl ring-1 ring-border">
+          {ask.channels.map((c) => {
+            const state = channelState(ask, c);
+            return (
+              <li key={c} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                <span className="text-[13px] font-bold text-foreground">{t(`channels.${c}.name`)}</span>
+                {state.url ? (
+                  <a
+                    href={state.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[12.5px] font-bold text-gold hover:underline"
+                  >
+                    {t("seePost")} <ExternalLink className="size-3.5" />
+                  </a>
+                ) : (
+                  <span className="text-[12.5px] text-muted">{state.label}</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-surface-2 p-3 text-center ring-1 ring-border">
+            <p className="mazed-tabular text-[20px] font-extrabold text-foreground">{s.visits}</p>
+            <p className="text-[11.5px] text-muted">{t("visits")}</p>
+          </div>
+          <div className="rounded-xl bg-surface-2 p-3 text-center ring-1 ring-border">
+            <p className="mazed-tabular text-[20px] font-extrabold text-foreground">{s.contacts}</p>
+            <p className="text-[11.5px] text-muted">{t("contacts")}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[11.5px] text-muted">
+          <span>
+            {t("ref")} <span className="mazed-tabular font-bold text-foreground" dir="ltr">MZ-{ask.ref}</span>
+            {" · "}
+            {Number(ask.price_tnd) > 0 ? t("paid", { amount: formatTND(Number(ask.price_tnd), "fr") }) : t("free")}
+          </span>
+          <WithdrawButton requestId={ask.id} published={ask.status !== "pending_approval"} />
+        </div>
+      </section>
+    );
   };
 
   return (
@@ -152,61 +223,10 @@ export default async function PromotePage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
+      {featured && askSection(featured)}
+
       {open ? (
-        <section className="mt-6 rounded-2xl border border-border bg-surface p-4 sm:p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[14px] font-extrabold text-foreground">
-              {t(isFeaturedRequest(open) ? "featuredOn" : "askedOn", { date: formatDate(open.created_at, locale, "medium") })}
-            </p>
-            <span className={`rounded-full px-2.5 py-1 text-[11.5px] font-bold ${TONE[open.status] ?? ""}`}>
-              {t(`status.${open.status}`)}
-            </span>
-          </div>
-          <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{t(`statusHint.${open.status}`)}</p>
-
-          <ul className="mt-4 divide-y divide-border rounded-xl ring-1 ring-border">
-            {open.channels.map((c) => {
-              const s = channelState(c);
-              return (
-                <li key={c} className="flex items-center justify-between gap-3 px-3 py-2.5">
-                  <span className="text-[13px] font-bold text-foreground">{t(`channels.${c}.name`)}</span>
-                  {s.url ? (
-                    <a
-                      href={s.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[12.5px] font-bold text-gold hover:underline"
-                    >
-                      {t("seePost")} <ExternalLink className="size-3.5" />
-                    </a>
-                  ) : (
-                    <span className="text-[12.5px] text-muted">{s.label}</span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <div className="rounded-xl bg-surface-2 p-3 text-center ring-1 ring-border">
-              <p className="mazed-tabular text-[20px] font-extrabold text-foreground">{visits}</p>
-              <p className="text-[11.5px] text-muted">{t("visits")}</p>
-            </div>
-            <div className="rounded-xl bg-surface-2 p-3 text-center ring-1 ring-border">
-              <p className="mazed-tabular text-[20px] font-extrabold text-foreground">{contacts}</p>
-              <p className="text-[11.5px] text-muted">{t("contacts")}</p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[11.5px] text-muted">
-            <span>
-              {t("ref")} <span className="mazed-tabular font-bold text-foreground" dir="ltr">MZ-{open.ref}</span>
-              {" · "}
-              {Number(open.price_tnd) > 0 ? t("paid", { amount: formatTND(Number(open.price_tnd), "fr") }) : t("free")}
-            </span>
-            <WithdrawButton requestId={open.id} published={open.status !== "pending_approval"} />
-          </div>
-        </section>
+        askSection(open)
       ) : row.status !== "published" ? (
         <section className="mt-6 flex gap-3 rounded-2xl border border-border bg-surface-2/50 p-4 text-[13px] leading-relaxed text-foreground">
           <Info className="mt-0.5 size-4 shrink-0 text-muted" />
@@ -233,6 +253,7 @@ export default async function PromotePage({ params }: { params: Promise<{ id: st
             photos={photos}
             hasPhotos={row.photos.length > 0}
             priceTnd={settings.priceTnd}
+            covered={featured?.channels ?? []}
           />
         </>
       )}

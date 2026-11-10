@@ -21,12 +21,12 @@ import { StickyContact } from "./StickyContact";
 import { ReportListing } from "./ReportListing";
 import { VisitRequest } from "./VisitRequest";
 import { PriceOffer, type OpenOffer } from "./PriceOffer";
-import { FeatureOnPages, type OpenFeature } from "./FeatureOnPages";
+import { FeatureOnPages, type OpenFeature, type SellerPromotion } from "./FeatureOnPages";
 import { getAdminSession } from "@/lib/admin/session";
 import { canOpen } from "@/lib/admin/sections";
 import { consentHistory } from "@/lib/consents/server";
 import { currentConsents } from "@/lib/consents/model";
-import { OPEN_REQUEST_STATUSES, type SocialChannel } from "@/lib/social/channels";
+import { OPEN_REQUEST_STATUSES, isFeaturedRequest, type SocialChannel } from "@/lib/social/channels";
 import { connectedAccounts, termsCoverFeaturing } from "@/lib/social/server";
 import { CompareToggle } from "@/components/compare/CompareToggle";
 import type { VisitSlot, VisitStatus } from "@/lib/visits";
@@ -542,23 +542,33 @@ export default async function AnnoncePage({
   const editOn = settings.feature_listing_edit;
 
   // « Publier sur nos pages » (0214): an admin who runs the social pages, on any annonce online.
-  let feature: { open: OpenFeature | null; sellerTerms: boolean; connected: Partial<Record<SocialChannel, boolean>> } | null = null;
+  let feature: {
+    open: OpenFeature | null;
+    sellerPromotion: SellerPromotion | null;
+    sellerTerms: boolean;
+    connected: Partial<Record<SocialChannel, boolean>>;
+  } | null = null;
   if (user && !isPreview && admin && settings.social_enabled) {
     const session = await getAdminSession();
     if (session.isAdmin && canOpen(session.scopes, "social")) {
-      const [{ data: openReq }, history, accounts] = await Promise.all([
+      const [{ data: openReqs }, history, accounts] = await Promise.all([
         admin
           .from("social_publication_requests")
-          .select("ref, status")
+          .select("ref, status, channels, initiated_by, consent_version")
           .eq("listing_id", l.id)
           .in("status", OPEN_REQUEST_STATUSES as string[])
-          .limit(1)
-          .maybeSingle(),
+          .order("created_at", { ascending: false }),
         isOwner ? Promise.resolve([]) : consentHistory(admin, l.seller_id),
         connectedAccounts(admin, settings.social_mazed_page.trim().replace(/^@/, "")),
       ]);
+      // Two lanes (0215): Mazed's ask is the card's; the seller's own keeps its pages.
+      type Live = { ref: string; status: string; channels: SocialChannel[]; initiated_by: string | null; consent_version: string | null };
+      const live = (openReqs ?? []) as Live[];
+      const mazed = live.find((r) => isFeaturedRequest(r));
+      const sellers = live.find((r) => !isFeaturedRequest(r));
       feature = {
-        open: openReq ? { ref: openReq.ref as string, status: openReq.status as string } : null,
+        open: mazed ? { ref: mazed.ref, status: mazed.status } : null,
+        sellerPromotion: sellers ? { ref: sellers.ref, status: sellers.status, channels: sellers.channels } : null,
         sellerTerms: isOwner || termsCoverFeaturing(currentConsents(history).terms),
         connected: { facebook_mazed: !!accounts.facebook_mazed, facebook_page: !!accounts.facebook_page, instagram: !!accounts.instagram },
       };
@@ -568,6 +578,7 @@ export default async function AnnoncePage({
     <FeatureOnPages
       listingId={l.id}
       open={feature.open}
+      sellerPromotion={feature.sellerPromotion}
       sellerTerms={feature.sellerTerms}
       connected={feature.connected}
       hasPhotos={photos.length > 0}
