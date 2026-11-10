@@ -16,11 +16,17 @@ export async function Demand({ admin, period, settings, locale }: { admin: Supab
   const f = formatters(locale, t("common.tnd"));
   const rules = reactiveRules(settings);
   let d: q.Demand;
+  // Where the demandes come from: its own read, so a failure there leaves the rest of the tab.
+  const sourcesRead = q.demandeSources(admin, period).then(
+    (rows) => ({ rows, error: null }),
+    (e: unknown) => ({ rows: null, error: errorText(e) }),
+  );
   try {
     d = await q.demand(admin, period, settings.analytics_top_limit, rules.hours);
   } catch (e) {
     return <ErrorNote text={t("error", { message: errorText(e) })} />;
   }
+  const sources = await sourcesRead;
   const row = (key: string, cells: Record<string, React.ReactNode>, csv: (string | number | null)[]): TableRow => ({ _key: key, _csv: csv, ...cells });
   const understoodTotal = d.understood.yes + d.understood.no;
   const filterName = (k: string) => (t.has(`demand.filterNames.${k}`) ? t(`demand.filterNames.${k}`) : k);
@@ -36,6 +42,26 @@ export async function Demand({ admin, period, settings, locale }: { admin: Supab
         <KpiTile label={t("kpi.demandes")} value={f.n(d.demandes)} />
         <KpiTile label={t("demand.shares")} value={f.n(d.shares)} />
       </div>
+
+      {/* Which « Enregistrer une demande » is tapped, and which brings demandes. */}
+      <Section title={t("demand.sources.title")} hint={t("demand.sources.hint")}>
+        {sources.rows === null ? (
+          <ErrorNote text={t("error", { message: sources.error ?? "" })} />
+        ) : (
+          <Table name={t("demand.sources.title")} exportLabel={t("common.export")} empty={t("common.nothingYet")}
+            columns={[
+              { key: "place", label: t("demand.sources.cols.place") },
+              { key: "taps", label: t("demand.sources.cols.taps"), num: true },
+              { key: "demandes", label: t("demand.sources.cols.demandes"), num: true },
+              { key: "rate", label: t("demand.sources.cols.rate"), num: true },
+            ]}
+            rows={sources.rows.map((s) => {
+              const place = t(`demand.sources.places.${s.via}`);
+              const r = s.taps > 0 ? rate(s.demandes, s.taps) : null;
+              return row(s.via, { place, taps: f.n(s.taps), demandes: f.n(s.demandes), rate: f.pct(r) }, [place, s.taps, s.demandes, r]);
+            })} />
+        )}
+      </Section>
 
       <Grid>
         <Section title={t("demand.topSearches")} hint={t("demand.catalogueViews", { count: f.n(d.catalogue_views) })}>

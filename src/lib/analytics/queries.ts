@@ -8,8 +8,40 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { log } from "@/lib/log";
 import type { Period } from "./period";
 import { fetchGa4Data, parseServiceAccount, type Ga4Data, type ServiceAccount } from "./ga4-data";
+import { countDemandeSources, type DemandeSource, type DemandeSourceEvent } from "./demandeSources";
 
 const qLog = log.scope("analytics");
+
+/** Pages of `site_events` read for « D'où viennent les demandes » (PostgREST serves 1000 rows a page). */
+const SOURCE_PAGE = 1000;
+const SOURCE_PAGES_MAX = 20;
+
+/**
+ * « D'où viennent les demandes » (2026-11-10): the taps on each « Enregistrer
+ * une demande » and the demandes saved from it, over the period. Read from
+ * `site_events` (two event names, on the name + date index) and counted here,
+ * so no SQL function had to change.
+ */
+export async function demandeSources(admin: SupabaseClient, p: Period): Promise<DemandeSource[]> {
+  const events: DemandeSourceEvent[] = [];
+  for (let page = 0; page < SOURCE_PAGES_MAX; page++) {
+    const { data, error } = await admin
+      .from("site_events")
+      .select("name, via:params->>via, mode:params->>mode")
+      .in("name", ["demande_cta", "demande_create"])
+      .gte("created_at", iso(p.from))
+      .lt("created_at", iso(p.to))
+      .order("id")
+      .range(page * SOURCE_PAGE, (page + 1) * SOURCE_PAGE - 1);
+    if (error) {
+      qLog.error(`demande sources failed: ${error.message}`);
+      throw new Error(`demande sources: ${error.message}`);
+    }
+    events.push(...((data ?? []) as DemandeSourceEvent[]));
+    if (!data || data.length < SOURCE_PAGE) break;
+  }
+  return countDemandeSources(events);
+}
 
 export type Kpis = {
   page_views: number; visitors: number; listing_views: number; searches: number;

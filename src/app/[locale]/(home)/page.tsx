@@ -22,6 +22,7 @@ import { organizationLd, pageAlternates, websiteLd } from "@/lib/seo";
 import type { Metadata } from "next";
 import {
   ArrowUpRight,
+  BellRing,
   Building2,
   ChevronLeft,
   ChevronRight,
@@ -285,6 +286,23 @@ export default async function LandingPage({
           ))}
         </ul>
       </div>
+
+      {/* Looking for something the site does not have yet: say it once, be
+          told when it comes (0168). One quiet line, counted as `via=home`. */}
+      {settings.feature_requests && settings.requests_cta_home && (
+        <div className="mt-3 px-4 lg:px-8 xl:px-12">
+          <Link
+            href={"/demandes/nouvelle?via=home" as never}
+            data-track="demande_cta"
+            data-track-via="home"
+            className="tap-target inline-flex items-center gap-1.5 text-[13px] font-semibold text-foreground underline-offset-4 hover:underline"
+          >
+            <BellRing className="size-4" strokeWidth={2.2} aria-hidden />
+            {t("home.demandeLine")}
+            <ChevronEnd className="size-3.5 text-muted" aria-hidden />
+          </Link>
+        </div>
+      )}
 
       {/* Where the annonces are (the owner, 2026-11-04): Tunisia by
           governorate, each a touch from its map. Light SVG, no map library;

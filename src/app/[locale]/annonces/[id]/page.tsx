@@ -43,6 +43,8 @@ import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 import { shareText } from "@/lib/share";
 import { RelatedListings } from "@/components/listing/RelatedListings";
 import { GuidesStrip } from "@/components/guides/GuidesStrip";
+import { DemandeLine } from "@/components/requests/DemandeCta";
+import { requestHrefFromListing } from "@/lib/requests/prefill";
 import { ViewTracker } from "@/components/listing/ViewTracker";
 import { AdSlot } from "@/components/ads/AdSlot";
 import {
@@ -977,6 +979,28 @@ export default async function AnnoncePage({
         dealType={asDealType(l.deal_type)}
         locale={locale}
       />
+
+      {/* Not quite it? A demande like this annonce — its deal, type, place and
+          a budget a little above its price — and the next one comes to you. */}
+      {settings.feature_requests && settings.requests_cta_listing && !isOwner && !isPreview && (
+        <div className="mt-8 px-4 lg:px-0">
+          <DemandeLine
+            href={requestHrefFromListing(
+              {
+                deal: asDealType(l.deal_type),
+                categorySlug: category?.slug ?? null,
+                governorate: l.governorate,
+                price: l.price == null ? null : Number(l.price),
+                priceOnRequest: !!l.price_on_request,
+              },
+              settings.requests_listing_margin,
+            )}
+            via="listing"
+            title={t("demandeTitle")}
+            body={t("demandeBody")}
+          />
+        </div>
+      )}
 
       {/* « Guides utiles » (0208): how to buy or rent this kind of property,
           picked by the deal and the category. Nothing while no guide is online. */}

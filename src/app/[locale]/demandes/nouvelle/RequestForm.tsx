@@ -55,6 +55,7 @@ export function RequestForm({
   locale,
   searchWords = null,
   anyDeal = false,
+  via = null,
 }: {
   id: string | null;
   initial: RequestFormValue;
@@ -64,6 +65,8 @@ export function RequestForm({
   searchWords?: string | null;
   /** That search showed sales and rentals: ask which this demande is. */
   anyDeal?: boolean;
+  /** Where the demande was offered (`demandeVia`), counted with it; null from anywhere else. */
+  via?: string | null;
 }) {
   const t = useTranslations("requests");
   const tc = useTranslations("common");
@@ -174,7 +177,7 @@ export function RequestForm({
         return;
       }
       toast(t("saved"), "success");
-      trackEvent("demande_create", { deal: v.deal_type, govs: v.governorates.length, mode: id ? "edit" : "new" });
+      trackEvent("demande_create", { deal: v.deal_type, govs: v.governorates.length, mode: id ? "edit" : "new", ...(via && !id ? { via } : {}) });
       router.push("/account/requests" as never);
     } catch {
       toast(t("saveFailed"), "error");

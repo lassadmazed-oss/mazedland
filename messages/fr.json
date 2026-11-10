@@ -773,7 +773,8 @@
       }
     },
     "marketTitle": "Le marché en chiffres",
-    "marketBody": "Prix médians demandés, offre par gouvernorat, demande des acheteurs : les chiffres du site, mis à jour automatiquement."
+    "marketBody": "Prix médians demandés, offre par gouvernorat, demande des acheteurs : les chiffres du site, mis à jour automatiquement.",
+    "demandeLine": "Vous ne trouvez pas ? Dites-nous ce que vous cherchez"
   },
   "homeMap": {
     "eyebrow": "Carte",
@@ -951,7 +952,7 @@
     "clearMore": "Effacer ces filtres",
     "availUnconfirmed": "Date de disponibilité non précisée",
     "requestCtaTitle": "Vous ne trouvez pas ?",
-    "requestCtaBody": "Enregistrez une demande avec ces critères : on vous prévient dès qu'un bien qui correspond est publié.",
+    "requestCtaBody": "Enregistrez une demande avec ces critères : on vous prévient dès qu'un bien qui correspond est publié, et les agences peuvent vous proposer les leurs.",
     "requestCta": "Enregistrer ma demande",
     "understood": "Recherche comprise : « {query} » — les filtres ci-dessous ont été remplis.",
     "searchAsTyped": "Chercher le texte tel quel",
@@ -973,7 +974,13 @@
     "view": {
       "list": "Liste",
       "map": "Carte"
-    }
+    },
+    "demandeTopTitle": "Être prévenu pour cette recherche",
+    "demandeTopTitleAny": "Dites-nous ce que vous cherchez",
+    "demandeBody": "On vous prévient dès qu'un bien correspond, et les agences peuvent vous proposer les leurs.",
+    "demandeCardTitle": "Pas encore trouvé ?",
+    "demandeCardTitleAny": "Vous cherchez quelque chose de précis ?",
+    "emptyBodyDemande": "Enregistrez cette recherche : on vous prévient dès qu'un bien correspond. Ou élargissez les critères."
   },
   "catalogueMap": {
     "mapLabel": "Carte des annonces",
@@ -1130,7 +1137,9 @@
       "interest": "Intérêts",
       "total": "Total remboursé",
       "disclaimer": "Estimation indicative, hors assurance et frais de dossier. Le taux réel dépend de votre banque et de votre profil."
-    }
+    },
+    "demandeTitle": "Pas tout à fait ce que vous cherchez ?",
+    "demandeBody": "Enregistrez une demande comme celle-ci : on vous prévient dès qu'un bien proche est publié."
   },
   "listingMap": {
     "title": "Position sur la carte",
@@ -6180,6 +6189,26 @@
     "social_auto_queue_min_photos": {
       "label": "Photos minimum pour être proposée",
       "hint": "Une annonce avec moins de photos n'est pas proposée. 0 : toutes."
+    },
+    "requests_cta_top": {
+      "label": "Demande au-dessus des résultats",
+      "hint": "Une ligne « Être prévenu » en haut du catalogue, visible dès le premier écran."
+    },
+    "requests_cta_card_after": {
+      "label": "Carte demande parmi les annonces",
+      "hint": "Après combien d'annonces. 0 : aucune carte."
+    },
+    "requests_cta_listing": {
+      "label": "Demande sous une annonce",
+      "hint": "« Pas tout à fait ? » sous les annonces similaires, avec les critères de l'annonce."
+    },
+    "requests_cta_home": {
+      "label": "Demande sur l'accueil",
+      "hint": "Une ligne sous la recherche de la page d'accueil."
+    },
+    "requests_listing_margin": {
+      "label": "Marge du budget depuis une annonce",
+      "hint": "Le budget maximum proposé : le prix de l'annonce plus ce pourcentage."
     }
   },
   "ads": {
@@ -7131,6 +7160,26 @@
         "value": "Prix au m²",
         "dear": "Prix décroissant",
         "big": "Surface"
+      },
+      "sources": {
+        "title": "D'où viennent les demandes",
+        "hint": "Taps sur « Enregistrer ma demande » et demandes enregistrées, par emplacement, chez les visiteurs qui acceptent la mesure du site.",
+        "cols": {
+          "place": "Emplacement",
+          "taps": "Taps",
+          "demandes": "Demandes",
+          "rate": "Taux"
+        },
+        "places": {
+          "top": "Catalogue · en haut",
+          "card": "Catalogue · carte parmi les annonces",
+          "empty": "Catalogue · aucun résultat",
+          "bottom": "Catalogue · en bas",
+          "map": "Carte · zone",
+          "listing": "Page d'annonce",
+          "home": "Accueil",
+          "other": "Autre (Mes demandes, lien direct)"
+        }
       }
     },
     "pro": {
