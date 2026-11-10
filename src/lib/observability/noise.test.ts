@@ -20,6 +20,13 @@ describe("isForeignNoise", () => {
     expect(isForeignNoise("Uncaught Script error")).toBe(true);
   });
 
+  it("drops React's notice that it redrew a part of the page the browser had changed", () => {
+    expect(isForeignNoise("Uncaught Error: Minified React error #419; visit https://react.dev/errors/419 for the full message")).toBe(true);
+    // Safari's in-app browsers leave out « Uncaught ».
+    expect(isForeignNoise("Error: Minified React error #419; visit https://react.dev/errors/419 for the full message")).toBe(true);
+    expect(isForeignNoise("Uncaught Error: Minified React error #4190")).toBe(false);
+  });
+
   it("keeps the site's own errors", () => {
     expect(isForeignNoise("Uncaught Error: Minified React error #418; visit https://react.dev/errors/418")).toBe(false);
     expect(isForeignNoise("TypeError: Cannot read properties of null (reading 'name')")).toBe(false);
