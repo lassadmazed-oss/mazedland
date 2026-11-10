@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { jsonObject } from "@/lib/http/body";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
@@ -9,6 +9,7 @@ import { apiTranslator } from "@/lib/i18n/server";
 import { listingFields, listingPhotos, titleTooShort, type ListingBody } from "@/lib/listings/input";
 import { dropEdit, editWaiting, isEditable, proposeEdit } from "@/lib/listings/edit";
 import { missingObjects } from "@/lib/listings/storage";
+import { ensurePhotoSizes } from "@/lib/photoSizes.server";
 import { suspendedResponse } from "@/lib/moderation/ban";
 import { featureOff } from "@/lib/settings/gate";
 import { getSettings } from "@/lib/settings/server";
@@ -101,6 +102,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (photos && (await missingObjects(admin, "properties", photos.map((p) => p.storage_path))).length > 0) {
     return NextResponse.json({ error: "photo_missing", detail: t("photoMissing") }, { status: 400 });
   }
+  // The new photos' sizes, after the answer: the moderator and then the
+  // visitors are served those, never Supabase's paid resizer (src/lib/photoSizes.ts).
+  if (photos) after(() => ensurePhotoSizes(admin, photos.map((p) => p.storage_path)).then(() => {}));
   if (typeof fields.category_id === "string") {
     const { data: cat } = await admin.from("categories").select("parent_id, is_active").eq("id", fields.category_id).maybeSingle();
     if (!cat || !cat.is_active || cat.parent_id == null) {

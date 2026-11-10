@@ -12,6 +12,8 @@
  * and the rows, this decides.
  */
 
+import { photoSizePaths } from "@/lib/photoSizes";
+
 export type StoredObject = {
   /** The object's key in its bucket, « <userId>/annonce-…webp ». */
   path: string;
@@ -53,7 +55,8 @@ export function referencedPath(bucket: string, value: unknown): string | null {
  * The objects nothing references and that are older than `days` — the only
  * ones removed. The delay keeps an upload still in flight (photos picked, the
  * annonce not yet sent; a receipt whose payment is being filled in) out of
- * the sweep.
+ * the sweep. The sizes of an annonce photo (src/lib/photoSizes.ts) are named
+ * by no row: they stay while their photo does, and go with it.
  */
 export function abandonedObjects(
   objects: readonly StoredObject[],
@@ -61,11 +64,12 @@ export function abandonedObjects(
   days: number,
   now: number = Date.now(),
 ): string[] {
+  const kept = new Set([...referenced].flatMap((p) => [p, ...photoSizePaths(p)]));
   const cutoff = now - Math.max(1, days) * 24 * 60 * 60 * 1000;
   const out: string[] = [];
   for (const o of objects) {
     if (!o.path || o.path.endsWith(PLACEHOLDER)) continue;
-    if (referenced.has(o.path)) continue;
+    if (kept.has(o.path)) continue;
     const written = o.createdAt ? Date.parse(o.createdAt) : NaN;
     if (!Number.isFinite(written) || written >= cutoff) continue;
     out.push(o.path);
