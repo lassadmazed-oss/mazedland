@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/components/media/SafeImage";
 import { useTranslations } from "next-intl";
 import { Images } from "lucide-react";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
@@ -91,7 +91,7 @@ function Tile({
   const src = propertyPhotoUrl(photo.storage_path);
   const blur = IMAGE_BLUR_MAP[photo.storage_path];
   const img = (
-    <Image
+    <SafeImage
       src={src}
       alt={alt}
       fill

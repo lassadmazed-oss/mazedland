@@ -56,7 +56,7 @@ import { GOVERNORATE_CENTER } from "@/lib/geo/location";
 import { delegationCenter } from "@/lib/geo/places";
 import { parseZone, zoneParam } from "@/lib/geo/zone";
 import { coverPhoto } from "@/lib/listingCover";
-import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { annoncePhotoUrl } from "@/lib/imageUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -478,7 +478,7 @@ export default async function AnnoncesPage({
         price: r.price_on_request ? null : r.price,
         deal: r.deal_type === "rent" ? "rent" : "sale",
         place: [governorateLabel(r.governorate, locale), r.delegation ? delegationLabel(canonicalDelegation(r.governorate, r.delegation) ?? r.delegation, locale) : null].filter(Boolean).join(" · "),
-        photo: cover ? propertyPhotoUrl(cover.storage_path, { transform: { width: 240, quality: 70 } }) : null,
+        photo: cover ? annoncePhotoUrl(cover.storage_path, 240, 70) : null,
         zone: !pinned,
         ...at,
       });

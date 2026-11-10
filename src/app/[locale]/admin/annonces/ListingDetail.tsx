@@ -15,7 +15,7 @@ import { mapsUrl } from "@/lib/geo/location";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { Optional } from "@/components/ui/Optional";
 import { LocationPicker } from "@/components/map/LocationPicker";
-import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { annoncePhotoUrl } from "@/lib/imageUrl";
 import {
   Check, X, Archive, Trash2, CalendarPlus, BadgeCheck,
   Pencil, RotateCcw, ExternalLink, ImageOff, ChevronLeft,
@@ -172,7 +172,7 @@ export function ListingDetail({
                     so the optimizer buys nothing and adds a failure mode. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={propertyPhotoUrl(p.path, { transform: { width: 300, quality: 60 } })}
+                  src={annoncePhotoUrl(p.path, 300, 60)}
                   alt={t("photoAlt", { n: i + 1 })}
                   className="size-full object-cover"
                 />
@@ -220,7 +220,7 @@ export function ListingDetail({
                   {l.pendingEdit.photos.map((p, i) => (
                     <div key={`${p}-${i}`} className="aspect-[4/3] w-[110px] shrink-0 overflow-hidden bg-surface-2">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={propertyPhotoUrl(p, { transform: { width: 240, quality: 60 } })} alt="" className="size-full object-cover" />
+                      <img src={annoncePhotoUrl(p, 240, 60)} alt="" className="size-full object-cover" />
                     </div>
                   ))}
                 </div>

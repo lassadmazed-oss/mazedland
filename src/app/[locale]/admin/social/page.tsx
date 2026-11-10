@@ -7,7 +7,7 @@ import { Toolbar, type Tab } from "@/components/admin/kit/Toolbar";
 import { PostPreview } from "@/components/social/PostPreview";
 import { Ltr } from "@/components/ui/Ltr";
 import { Link } from "@/i18n/navigation";
-import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { annoncePhotoUrl } from "@/lib/imageUrl";
 import { governorateLabel } from "@/lib/tunisia";
 import { formatDate, formatNumber } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
@@ -192,7 +192,7 @@ export default async function AdminSocialPage({
                     <PostPreview
                       channel={v.channel}
                       body={v.body}
-                      photos={(v.photo_paths ?? []).slice(0, v.channel === "instagram" ? 10 : 4).map((p) => propertyPhotoUrl(p, { transform: { width: 480, quality: 60 } }))}
+                      photos={(v.photo_paths ?? []).slice(0, v.channel === "instagram" ? 10 : 4).map((p) => annoncePhotoUrl(p, 480, 60))}
                       label={channelName(v.channel)}
                     />
                     <VariantEditor variantId={v.id} body={v.body} edited={!!v.edited_at} />

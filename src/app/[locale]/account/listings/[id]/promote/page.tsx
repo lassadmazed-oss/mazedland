@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
-import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { annoncePhotoUrl } from "@/lib/imageUrl";
 import { formatDate, formatTND } from "@/lib/utils";
 import { ArrowLeft, ExternalLink, Info, Megaphone } from "lucide-react";
 import {
@@ -130,7 +130,7 @@ export default async function PromotePage({ params }: { params: Promise<{ id: st
       ),
     ]),
   ) as Record<SocialLanguage, Record<SocialChannel, string>>;
-  const photos = row.photos.slice(0, 4).map((p) => propertyPhotoUrl(p, { transform: { width: 640, quality: 70 } }));
+  const photos = row.photos.slice(0, 4).map((p) => annoncePhotoUrl(p, 640, 70));
 
   const channelState = (ask: RequestRow, channel: SocialChannel) => {
     const jobs = (ask.jobs ?? []).filter((j) => j.channel === channel && j.action === "publish" && j.status !== "cancelled");

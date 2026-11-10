@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Ltr } from "@/components/ui/Ltr";
-import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { annoncePhotoUrl } from "@/lib/imageUrl";
 import { formatDate, formatTND } from "@/lib/utils";
 import { agreedAmount, percentBelow, shownStatus, type OfferSide } from "@/lib/offers";
 import type { OfferView } from "@/lib/offers-server";
@@ -39,7 +39,7 @@ export async function OfferCard({ offer, side, locale, highlight = false }: { of
         <span className="grid aspect-[4/3] w-[76px] shrink-0 place-items-center overflow-hidden rounded-[var(--radius-lg)] bg-surface-2 ring-1 ring-border">
           {offer.listing?.photo ? (
             // eslint-disable-next-line @next/next/no-img-element -- a small thumbnail
-            <img src={propertyPhotoUrl(offer.listing.photo, { transform: { width: 120, quality: 70 } })} alt="" className="size-full object-cover" />
+            <img src={annoncePhotoUrl(offer.listing.photo, 120, 70)} alt="" className="size-full object-cover" />
           ) : (
             <Home className="size-5 text-muted" />
           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { SafeImage } from "@/components/media/SafeImage";
 import { useLocale, useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
@@ -275,7 +275,7 @@ export function PhotoCarousel({
                     {(() => {
                       const zoomed = zoomOn && i === index && zoom.zoom.scale > 1;
                       const img = (
-                        <Image
+                        <SafeImage
                           src={src}
                           alt={alt}
                           fill
@@ -434,7 +434,7 @@ export function PhotoCarousel({
                     : "opacity-60 hover:opacity-100"
                 } ${modal ? "ring-offset-black" : ""}`}
               >
-                <Image
+                <SafeImage
                   src={src}
                   alt=""
                   fill
