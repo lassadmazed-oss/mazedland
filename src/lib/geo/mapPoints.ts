@@ -6,7 +6,8 @@
  * the console allows it (map_show_without_pin), stands in its délégation: at
  * the délégation's centre, moved a little by its id so a dozen annonces of
  * the same délégation are a dozen bubbles and not one — and drawn as a zone,
- * so nobody reads it as an address.
+ * so nobody reads it as an address. With no délégation it stands in its
+ * governorate (src/lib/geo/approximate.ts).
  */
 import { round6, type LatLng } from "./location";
 

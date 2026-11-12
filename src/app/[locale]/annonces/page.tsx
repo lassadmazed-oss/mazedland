@@ -51,9 +51,9 @@ import { Optional } from "@/components/ui/Optional";
 import { CatalogueMap } from "@/components/map/CatalogueMap";
 import { DemandeCard, DemandeLine } from "@/components/requests/DemandeCta";
 import type { DemandeVia } from "@/lib/requests/prefill";
-import { spreadAround, type MapPoint } from "@/lib/geo/mapPoints";
+import type { MapPoint } from "@/lib/geo/mapPoints";
+import { approximatePoint } from "@/lib/geo/approximate";
 import { GOVERNORATE_CENTER } from "@/lib/geo/location";
-import { delegationCenter } from "@/lib/geo/places";
 import { parseZone, zoneParam } from "@/lib/geo/zone";
 import { coverPhoto } from "@/lib/listingCover";
 import { annoncePhotoUrl } from "@/lib/imageUrl";
@@ -449,7 +449,8 @@ export default async function AnnoncesPage({
 
   // ── The map's points (?vue=carte) ─────────────────────────────────────────
   // At its public point an annonce with a pin; one without, in its délégation
-  // (map_show_without_pin), drawn as a zone; the rest are counted, not placed.
+  // or, lacking one, its governorate (map_show_without_pin, src/lib/geo/approximate.ts),
+  // drawn as a zone; the rest are counted, not placed.
   let mapPoints: MapPoint[] = [];
   let unplaced = 0;
   if (mapView && total > 0) {
@@ -465,8 +466,7 @@ export default async function AnnoncesPage({
       .limit(settings.catalogue_map_max);
     for (const r of (mapRows ?? []) as unknown as MapRow[]) {
       const pinned = r.lat != null && r.lng != null ? { lat: Number(r.lat), lng: Number(r.lng) } : null;
-      const centre = !pinned && settings.map_show_without_pin ? delegationCenter(r.governorate, r.delegation) : null;
-      const at = pinned ?? (centre ? spreadAround(centre, r.id) : null);
+      const at = pinned ?? (settings.map_show_without_pin ? approximatePoint(r.governorate, r.delegation, r.id) : null);
       if (!at) {
         unplaced += 1;
         continue;
