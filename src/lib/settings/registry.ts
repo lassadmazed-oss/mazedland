@@ -44,6 +44,10 @@ export const SETTINGS = {
   // « Carte » in the catalogue (?vue=carte): the search as price bubbles on a
   // map, with the annonces in its frame beside it.
   feature_catalogue_map: { group: "features", type: "bool", default: true, client: true },
+  // « Quartier » in the form suggests the délégation's quartiers (OpenStreetMap,
+  // src/lib/geo/quartiers.ts), and picking one fills an empty délégation. Off:
+  // the field is plain text again.
+  feature_quartier_suggestions: { group: "features", type: "bool", default: true, client: true },
   // « Publier en parlant » (version B): an annonce made in a conversation, voice
   // first. Off until the owner turns it on (asked 2026-10-31).
   feature_publish_chat: { group: "features", type: "bool", default: false, client: true },

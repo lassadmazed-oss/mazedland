@@ -406,6 +406,41 @@ export function PublishWizard({
         .sort((a, b) => a.label.localeCompare(b.label, locale)),
     [governorate, locale],
   );
+  // What « Quartier » suggests (src/lib/geo/quartiers.ts, from OpenStreetMap):
+  // the délégation's quartiers, or the whole governorate's while the délégation
+  // is empty — picking one then fills it. The list is large, so it comes from
+  // the server, one délégation or governorate at a time.
+  const quartierHints = useSetting("feature_quartier_suggestions");
+  const [quartierOptions, setQuartierOptions] = useState<{ value: string; name: string; delegation: string }[]>([]);
+  useEffect(() => {
+    if (!quartierHints || !governorate) {
+      setQuartierOptions([]);
+      return;
+    }
+    const ac = new AbortController();
+    const q = new URLSearchParams({ gov: governorate, ...(delegation ? { del: delegation } : {}) });
+    fetch(`/api/geo/quartiers?${q}`, { signal: ac.signal })
+      .then((r) => (r.ok ? r.json() : { quartiers: [] }))
+      .then((j: { quartiers?: { fr: string; ar: string; delegation?: string }[] }) => {
+        const list = (j.quartiers ?? []).map((x) => ({ name: locale === "ar" ? x.ar || x.fr : x.fr, delegation: x.delegation ?? delegation }));
+        // A name two délégations share (« Sahloul »: Hammam Sousse and Sousse
+        // Jawhara) is offered once per délégation, with it in the text, so the
+        // one picked says which délégation to fill.
+        const seen = new Map<string, number>();
+        for (const o of list) seen.set(o.name, (seen.get(o.name) ?? 0) + 1);
+        // Two quartiers of one délégation can share their Arabic name: the
+        // suggestion is offered once.
+        const options = new Map<string, { value: string; name: string; delegation: string }>();
+        for (const o of list) {
+          const value = (seen.get(o.name) ?? 0) > 1 ? `${o.name} (${delegationLabel(o.delegation, locale)})` : o.name;
+          if (!options.has(value)) options.set(value, { ...o, value });
+        }
+        setQuartierOptions([...options.values()]);
+      })
+      // Suggestions are a help: without them the field is plain text.
+      .catch(() => {});
+    return () => ac.abort();
+  }, [quartierHints, governorate, delegation, locale]);
   const [contactName, setContactName] = useState(d?.contact_name ?? defaultContactName);
   const [contactPhone, setContactPhone] = useState(d?.contact_phone ?? defaultContactPhone);
   // A number already known (the profile's, or the annonce's) shows as chosen,
@@ -1765,9 +1800,25 @@ export function PublishWizard({
                     <Field
                       label={t("quartierLabel")}
                       value={quartier}
-                      onChange={setQuartier}
+                      onChange={(v) => {
+                        // A quartier picked from the suggestions names its
+                        // délégation: an empty one is filled, and the quartier
+                        // keeps its own name without the délégation added to
+                        // tell two of them apart.
+                        const picked = !delegation ? quartierOptions.find((o) => o.value === v) : undefined;
+                        setQuartier(picked ? picked.name : v);
+                        if (picked) setDelegation(picked.delegation);
+                      }}
                       placeholder={t("quartierPlaceholder")}
+                      list={quartierOptions.length > 0 ? "f-quartier-list" : undefined}
                     />
+                    {quartierOptions.length > 0 && (
+                      <datalist id="f-quartier-list">
+                        {quartierOptions.map((o) => (
+                          <option key={o.value} value={o.value} label={delegation ? undefined : delegationLabel(o.delegation, locale)} />
+                        ))}
+                      </datalist>
+                    )}
                   </div>
                   {mapOn && (
                     <div className="col-span-2">
@@ -2958,7 +3009,7 @@ function Req() {
 }
 
 function Field({
-  label, labelledBy, value, onChange, placeholder, type = "text", required, suffix, compact, dir, autoComplete, error,
+  label, labelledBy, value, onChange, placeholder, type = "text", required, suffix, compact, dir, autoComplete, error, list,
 }: {
   label?: string;
   /** Without a label of its own: the id of what names it (the chips' question, for « Autre montant »). */
@@ -2974,6 +3025,8 @@ function Field({
   autoComplete?: string;
   /** What is missing, once the seller was sent here. */
   error?: string | null;
+  /** The id of a <datalist> of suggestions (« Quartier »). */
+  list?: string;
 }) {
   const id = useId();
   // The unit is read as the field's description, not as part of its name:
@@ -2991,6 +3044,7 @@ function Field({
           aria-invalid={error ? true : undefined}
           aria-describedby={[unitId, errorId].filter(Boolean).join(" ") || undefined}
           autoComplete={autoComplete}
+          list={list}
           type={type}
           inputMode={type === "number" ? "numeric" : undefined}
           dir={dir}
