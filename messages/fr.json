@@ -6138,6 +6138,10 @@
       "label": "Vue carte des annonces",
       "hint": "Le bouton « Liste | Carte » du catalogue : la recherche en bulles de prix sur une carte, avec les annonces de la zone à côté."
     },
+    "feature_quartier_suggestions": {
+      "label": "Quartiers proposés dans le formulaire",
+      "hint": "« Quartier » propose les quartiers de la délégation (OpenStreetMap) ; en choisir un remplit la délégation si elle est vide. Coupé : le vendeur tape le quartier à la main."
+    },
     "map_show_without_pin": {
       "label": "Annonces sans position sur la carte",
       "hint": "Activé : une annonce sans épingle apparaît dans sa délégation (ou dans son gouvernorat si la délégation manque), en bulle pointillée. Coupé : seules les annonces avec une position sont sur la carte."

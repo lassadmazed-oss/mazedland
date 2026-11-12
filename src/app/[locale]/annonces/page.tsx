@@ -448,25 +448,27 @@ export default async function AnnoncesPage({
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
 
   // ── The map's points (?vue=carte) ─────────────────────────────────────────
-  // At its public point an annonce with a pin; one without, in its délégation
-  // or, lacking one, its governorate (map_show_without_pin, src/lib/geo/approximate.ts),
-  // drawn as a zone; the rest are counted, not placed.
+  // At its public point an annonce with a pin; one without, in the quartier its
+  // address names, else its délégation, else its governorate
+  // (map_show_without_pin, src/lib/geo/approximate.ts), drawn as a zone; the
+  // rest are counted, not placed. The address only places the point: it does
+  // not go to the browser.
   let mapPoints: MapPoint[] = [];
   let unplaced = 0;
   if (mapView && total > 0) {
     type MapRow = {
       id: string; title: string; price: number | null; price_on_request: boolean; deal_type: string | null;
-      governorate: string; delegation: string | null; lat: number | string | null; lng: number | string | null;
+      governorate: string; delegation: string | null; address: string | null; lat: number | string | null; lng: number | string | null;
       photos: { storage_path: string; sort_order: number; is_cover?: boolean | null }[] | null;
     };
     const { data: mapRows } = await filtered(
-      "id, title, price, price_on_request, deal_type, governorate, delegation, lat, lng, photos:listing_photos (storage_path, sort_order, is_cover)",
+      "id, title, price, price_on_request, deal_type, governorate, delegation, address, lat, lng, photos:listing_photos (storage_path, sort_order, is_cover)",
     )
       .order("published_at", { ascending: false })
       .limit(settings.catalogue_map_max);
     for (const r of (mapRows ?? []) as unknown as MapRow[]) {
       const pinned = r.lat != null && r.lng != null ? { lat: Number(r.lat), lng: Number(r.lng) } : null;
-      const at = pinned ?? (settings.map_show_without_pin ? approximatePoint(r.governorate, r.delegation, r.id) : null);
+      const at = pinned ?? (settings.map_show_without_pin ? approximatePoint(r.governorate, r.delegation, r.id, r.address) : null);
       if (!at) {
         unplaced += 1;
         continue;
