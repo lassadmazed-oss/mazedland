@@ -28,11 +28,12 @@ export const CHANNELS = ["whatsapp", "sms", "call", "messenger", "other"] as con
 export type Channel = (typeof CHANNELS)[number];
 
 /** Where a lead stands while it is not a yes. */
-export const OUTCOMES = ["no_answer", "thinking", "refused", "wrong_number"] as const;
+// « interested »: an agency that wants to hear more (an owner says yes through the yes step).
+export const OUTCOMES = ["no_answer", "thinking", "interested", "refused", "wrong_number"] as const;
 export type Outcome = (typeof OUTCOMES)[number];
 
 export const EVENT_KINDS = [
-  "created", "contacted", "no_answer", "thinking", "refused", "wrong_number",
+  "created", "contacted", "no_answer", "thinking", "interested", "refused", "wrong_number",
   "confirmed", "published", "sms", "note", "assigned", "broker",
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
@@ -187,7 +188,7 @@ export function draftToListingBody(
 // ── What stands in the way ──────────────────────────────────────────────────
 
 export type ConfirmBlocker =
-  | "wrong_step" | "no_phone" | "do_not_contact" | "no_category" | "no_governorate" | "no_title" | "no_reply" | "no_channel";
+  | "wrong_step" | "is_agency" | "no_phone" | "do_not_contact" | "no_category" | "no_governorate" | "no_title" | "no_reply" | "no_channel";
 
 /**
  * Why a lead cannot be marked « the owner said yes » yet. The reply is what
@@ -200,9 +201,12 @@ export function confirmBlockers(input: {
   draft: ListingDraft;
   reply: string;
   channel: Channel | null;
+  /** An agency is not an owner: it opens an agence on the site, nothing is published for it. */
+  isBroker?: boolean;
 }): ConfirmBlocker[] {
   const out: ConfirmBlocker[] = [];
   if (input.status !== "to_contact" && input.status !== "contacted") out.push("wrong_step");
+  if (input.isBroker) out.push("is_agency");
   if (!input.phone) out.push("no_phone");
   if (input.doNotContact) out.push("do_not_contact");
   if (!input.draft.categorySlug) out.push("no_category");
@@ -240,6 +244,7 @@ export function statusAfter(current: LeadStatus, kind: EventKind): LeadStatus {
     case "contacted":
     case "no_answer":
     case "thinking":
+    case "interested":
       return current === "to_contact" ? "contacted" : current;
     case "refused":
     case "wrong_number":
@@ -369,4 +374,13 @@ export function digestsOf(rows: readonly WaitingRow[], now: Date = new Date()): 
     }
   }
   return out;
+}
+
+/**
+ * Does a post read like an agency's rather than a private owner's? A hint for the
+ * member, never a decision: a commission, an office, « agence », « وكالة ». The
+ * member says which it is (the lead's « agence / particulier » choice).
+ */
+export function looksLikeAgency(text: string): boolean {
+  return /\b(agence|agences|immobili[eè]re|promoteur|commission|frais d'agence)\b|وكالة|وكالات|عمولة|سمسار|مكتب|وساطة|شركة عقارية/i.test(text);
 }

@@ -7,6 +7,7 @@ import {
   draftToListingBody,
   extractPhones,
   fillTemplate,
+  looksLikeAgency,
   normalizePhone,
   photoPathOf,
   propertyLine,
@@ -16,7 +17,7 @@ import {
   statusAfter,
   TEAM_ATTESTATION,
 } from "./model";
-import { ASK_AR, ASK_FR, SMS_AR, SMS_FR } from "./templates";
+import { ASK_AGENCY_AR, ASK_AGENCY_FR, ASK_AR, ASK_FR, SMS_AR, SMS_FR } from "./templates";
 
 describe("normalizePhone", () => {
   it("writes a Tunisian number as +216XXXXXXXX however it was typed", () => {
@@ -207,6 +208,39 @@ describe("statusAfter", () => {
   it("leaves a note where it found the lead", () => {
     expect(statusAfter("contacted", "note")).toBe("contacted");
   });
+
+  it("counts an agency's interest as contact made, nothing more", () => {
+    expect(statusAfter("to_contact", "interested")).toBe("contacted");
+    expect(statusAfter("contacted", "interested")).toBe("contacted");
+    expect(statusAfter("online", "interested")).toBe("online");
+  });
+});
+
+describe("agence or particulier", () => {
+  const draft = readDraft({ categorySlug: "maisons", governorate: "Sfax", title: "دار" });
+  const ok = { status: "contacted" as const, phone: "+21658415521", doNotContact: false, draft, reply: "نعم", channel: "whatsapp" as const };
+
+  it("never takes an agency's yes: nothing is published for it", () => {
+    expect(confirmBlockers({ ...ok, isBroker: true })).toEqual(["is_agency"]);
+    expect(confirmBlockers({ ...ok, isBroker: false })).toEqual([]);
+    // the flag is optional: a caller that does not say is asking about an owner
+    expect(confirmBlockers(ok)).toEqual([]);
+  });
+
+  it("guesses an agency from a commission, an office, the word itself, in both languages", () => {
+    expect(looksLikeAgency("Villa à vendre, frais d'agence 2 %")).toBe(true);
+    expect(looksLikeAgency("Agence Immobilière Les Jasmins")).toBe(true);
+    expect(looksLikeAgency("Commission 1 mois")).toBe(true);
+    expect(looksLikeAgency("وكالة النخيل العقارية")).toBe(true);
+    expect(looksLikeAgency("نبيع دار، عمولة على المشتري")).toBe(true);
+    expect(looksLikeAgency("للبيع دار في صفاقس مكتب")).toBe(true);
+  });
+
+  it("does not take a private owner for an agency", () => {
+    expect(looksLikeAgency("Je vends ma maison à Sfax, 3 chambres, parking")).toBe(false);
+    expect(looksLikeAgency("نبيع داري في صفاقس، 3 غرف")).toBe(false);
+    expect(looksLikeAgency("")).toBe(false);
+  });
 });
 
 describe("the day", () => {
@@ -255,7 +289,7 @@ describe("the first message", () => {
     expect(out).not.toContain("نتكفّلو بكل شي");
     expect(out).not.toContain("المعلومات صحيحة");
     expect(out).toContain(vars.terms);
-    expect(out).not.toMatch(/{w+}/);
+    expect(out).not.toMatch(/\{\w+\}/);
   });
 
   it("says the same in French", () => {
@@ -267,6 +301,36 @@ describe("the first message", () => {
 
   it("tidies the sentence when the deal is not known", () => {
     expect(fillTemplate(ASK_FR, { ...vars, deal: "" })).toContain("votre annonce (");
+  });
+
+  describe("to an agency", () => {
+    const link = "https://www.mazed.immo/ar/pro";
+
+    it("is another message: it invites the agency to open an agence, and asks for no yes", () => {
+      const ar = fillTemplate(ASK_AGENCY_AR, { name: "وكالة النخيل", link });
+      expect(ar).toContain("وكالة النخيل");
+      expect(ar).toContain(link);
+      expect(ar).toContain("Mazed Immo");
+      expect(ar).not.toMatch(/\{\w+\}/);
+      // nothing of the owner's message: no annonce of theirs, no terms to accept
+      expect(ar).not.toContain("ننشرو إعلانك");
+      expect(ar).not.toContain("وتقبل الشروط");
+      expect(ASK_AGENCY_AR).not.toBe(ASK_AR);
+    });
+
+    it("says the same in French", () => {
+      const fr = fillTemplate(ASK_AGENCY_FR, { name: "Agence Palmier", link: "https://www.mazed.immo/fr/pro" });
+      expect(fr).toContain("Agence Palmier");
+      expect(fr).toContain("https://www.mazed.immo/fr/pro");
+      expect(fr).toContain("Mazed Immo");
+      expect(fr).not.toMatch(/\{\w+\}/);
+      expect(fr).not.toContain("votre annonce");
+    });
+
+    it("writes no figure of the offer: the page the link opens shows the real ones", () => {
+      expect(ASK_AGENCY_AR).not.toMatch(/\d/);
+      expect(ASK_AGENCY_FR).not.toMatch(/\d/);
+    });
   });
 
   it("says what the annonce is for, in each language", () => {

@@ -28,11 +28,13 @@ export async function generateMetadata() {
 export default async function ProspectionBoard({
   searchParams,
 }: {
-  searchParams: Promise<{ mine?: string; range?: string }>;
+  searchParams: Promise<{ mine?: string; range?: string; kind?: string }>;
 }) {
   const { user, scopes } = await requireAdmin("prospection");
-  const { mine, range: rangeParam } = await searchParams;
+  const { mine, range: rangeParam, kind: kindParam } = await searchParams;
   const onlyMine = mine === "1";
+  // Private owners and agencies are not worked the same way: the board can show one or the other.
+  const kind = kindParam === "agency" || kindParam === "owner" ? kindParam : "all";
   const range = asRange(rangeParam);
   const t = await getTranslations("adminProspection");
   const locale = await getLocale();
@@ -46,6 +48,7 @@ export default async function ProspectionBoard({
   const fetchColumn = async (status: LeadStatus, limit: number) => {
     let q = admin.from("prospect_leads").select(LEAD_COLUMNS).eq("status", status);
     if (onlyMine) q = q.eq("assigned_to", user.id);
+    if (kind !== "all") q = q.eq("is_broker", kind === "agency");
     // Waiting work oldest first (the follow-ups come due), what is done newest first.
     return q.order("created_at", { ascending: status === "to_contact" || status === "contacted" }).limit(limit);
   };
@@ -101,6 +104,7 @@ export default async function ProspectionBoard({
           {l.status === "to_contact" && d.questions.length > 0 ? <StatusBadge tone="warn">{t("tag.questions", { n: d.questions.length })}</StatusBadge> : null}
           {due ? <StatusBadge tone="warn">{t("tag.followUp")}</StatusBadge> : null}
           {l.is_broker ? <StatusBadge tone="info">{t("tag.broker")}</StatusBadge> : null}
+          {l.outcome === "interested" ? <StatusBadge tone="ok">{t("tag.interested")}</StatusBadge> : null}
           {l.status === "confirmed" ? <StatusBadge tone="ok">{t("tag.yes")}</StatusBadge> : null}
           {l.status === "online" && !l.sms_sent_at ? <StatusBadge tone="warn">{t("tag.noSms")}</StatusBadge> : null}
         </div>
@@ -146,21 +150,31 @@ export default async function ProspectionBoard({
         ))}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-1.5">
-        {[{ key: "all", href: "/admin/prospection" as const }, { key: "mine", href: "/admin/prospection?mine=1" as const }].map((f) => {
-          const active = (f.key === "mine") === onlyMine;
-          return (
-            <Link
-              key={f.key}
-              href={f.href}
-              className={`inline-flex h-8 items-center rounded-full border px-3 text-xs font-bold transition-colors ${
-                active ? "border-[var(--gold)] bg-[var(--gold)] text-[var(--background)]" : "border-border bg-surface text-muted hover:border-gold-soft"
-              }`}
-            >
-              {t(f.key === "mine" ? "mine" : "all")}
-            </Link>
-          );
-        })}
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        {[
+          { group: "who", items: [{ key: "all", mine: false }, { key: "mine", mine: true }] },
+          { group: "kind", items: [{ key: "all" }, { key: "owner" }, { key: "agency" }] },
+        ].map((g) => (
+          <div key={g.group} className="flex flex-wrap gap-1.5">
+            {g.items.map((f) => {
+              const nextMine = g.group === "who" ? (f as { mine: boolean }).mine : onlyMine;
+              const nextKind = g.group === "kind" ? f.key : kind;
+              const active = g.group === "who" ? nextMine === onlyMine : f.key === kind;
+              const q = [nextMine ? "mine=1" : "", nextKind !== "all" ? `kind=${nextKind}` : ""].filter(Boolean).join("&");
+              return (
+                <Link
+                  key={`${g.group}-${f.key}`}
+                  href={(q ? `/admin/prospection?${q}` : "/admin/prospection") as "/admin/prospection"}
+                  className={`inline-flex h-8 items-center rounded-full border px-3 text-xs font-bold transition-colors ${
+                    active ? "border-[var(--gold)] bg-[var(--gold)] text-[var(--background)]" : "border-border bg-surface text-muted hover:border-gold-soft"
+                  }`}
+                >
+                  {g.group === "who" ? t(f.key === "mine" ? "mine" : "all") : t(`kindFilter.${f.key}`)}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -194,7 +208,7 @@ export default async function ProspectionBoard({
             {RANGES.map((r: Range) => (
               <Link
                 key={r}
-                href={`/admin/prospection?range=${r}${onlyMine ? "&mine=1" : ""}` as "/admin/prospection"}
+                href={`/admin/prospection?range=${r}${onlyMine ? "&mine=1" : ""}${kind !== "all" ? `&kind=${kind}` : ""}` as "/admin/prospection"}
                 className={`inline-flex h-7 items-center rounded-full border px-3 text-[11.5px] font-bold transition-colors ${
                   r === range ? "border-[var(--gold)] bg-[var(--gold)] text-[var(--background)]" : "border-border bg-surface text-muted hover:border-gold-soft"
                 }`}
