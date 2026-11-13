@@ -270,6 +270,9 @@ export const SETTINGS = {
   // ── Prospection (0218): the team that brings private owners to the site.
   //    Off: the screen and its API refuse; the leads and the annonces made stay.
   feature_prospection: { group: "features", type: "bool", default: true, href: "/admin/prospection" },
+  // « Vérifier les photos »: the model looks at each photo of an owner's annonce (a phone number, another agency's
+  // mark, a face, a screenshot, quality, which room) and the site tells whether the picture is already on another annonce (0220).
+  feature_prospect_photo_check: { group: "features", type: "bool", default: true, href: "/admin/prospection" },
   // The daily notice in the bell of each member who has owners to write to again,
   // « oui » waiting for photos, or an SMS that never left (0219).
   prospect_reminders: { group: "features", type: "bool", default: true, href: "/admin/prospection" },

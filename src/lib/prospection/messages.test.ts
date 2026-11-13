@@ -45,6 +45,8 @@ describe("Prospection messages", () => {
       ["adminProspection.col", ["to_contact", "contacted", "confirmed", "online", "declined"]],
       ["adminProspection.empty", ["to_contact", "contacted", "confirmed", "online"]],
       ["adminProspection.range", ["1", "7", "30"]],
+      ["adminProspection.work.check.kind", ["exterior", "living", "kitchen", "bedroom", "bathroom", "plot", "plan", "other"]],
+      ["adminProspection.work.check.flag", ["phone", "overlay", "people", "not_property", "low_quality", "duplicate"]],
       ["adminProspection.extension.steps", ["download", "unzip", "developer", "load", "pin", "use"]],
       ["adminProspection.extension.privacy", ["reads", "sends", "account", "review"]],
       ["adminProspection.work.outcome", ["no_answer", "thinking", "refused", "wrong_number"]],
