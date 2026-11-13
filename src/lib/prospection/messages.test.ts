@@ -18,6 +18,7 @@ const SCREENS: [namespace: string, file: string][] = [
   ["adminProspection", "src/app/[locale]/admin/prospection/LeadWorkspace.tsx"],
   ["adminProspection", "src/app/[locale]/admin/prospection/nouveau/page.tsx"],
   ["adminProspection", "src/app/[locale]/admin/prospection/[id]/page.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/extension/page.tsx"],
   ["manage", "src/app/[locale]/gerer/[token]/page.tsx"],
   ["manage", "src/app/[locale]/gerer/[token]/ManageActions.tsx"],
 ];
@@ -44,6 +45,8 @@ describe("Prospection messages", () => {
       ["adminProspection.col", ["to_contact", "contacted", "confirmed", "online", "declined"]],
       ["adminProspection.empty", ["to_contact", "contacted", "confirmed", "online"]],
       ["adminProspection.range", ["1", "7", "30"]],
+      ["adminProspection.extension.steps", ["download", "unzip", "developer", "load", "pin", "use"]],
+      ["adminProspection.extension.privacy", ["reads", "sends", "account", "review"]],
       ["adminProspection.work.outcome", ["no_answer", "thinking", "refused", "wrong_number"]],
       ["adminProspection.work.channel", ["whatsapp", "sms", "call", "messenger", "other"]],
       ["adminProspection.work.event", ["created", "contacted", "no_answer", "thinking", "refused", "wrong_number", "confirmed", "published", "sms", "note", "assigned", "broker"]],

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>Mazed Immo — Prospection</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <h1>ابعث البوست لمازد</h1>
+  <p id="hint" class="hint" role="status"></p>
+
+  <label>نص البوست
+    <textarea id="text" rows="9" maxlength="8000"></textarea>
+  </label>
+  <label>رابط البوست
+    <input id="url" dir="ltr" inputmode="url">
+  </label>
+  <label>إسم الشخص
+    <input id="name" maxlength="120">
+  </label>
+  <label>لغة الصفحة في مازد
+    <select id="lang">
+      <option value="ar">العربية</option>
+      <option value="fr">Français</option>
+    </select>
+  </label>
+
+  <button id="send" type="button">افتح مازد والفورم معمّر</button>
+  <p class="small">الإضافة تقرا الصفحة كي تحلّها برك، وما تبعث شي وحدها. بعد ما تحلّ مازد، راجع النص وابعثو بيدك.</p>
+
+  <script src="config.js"></script>
+  <script src="extract.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

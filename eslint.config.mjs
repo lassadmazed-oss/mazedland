@@ -45,7 +45,7 @@ const eslintConfig = [
   {
     // public/maplibre: MapLibre's worker and the Arabic text plugin, copied as
     // published (src/components/map/maplibre.ts) — vendor code, not ours.
-    ignores: [".next/**", "node_modules/**", "desing/**", "scripts/**", ".claude/**", "public/maplibre/**"],
+    ignores: [".next/**", "node_modules/**", "desing/**", "scripts/**", ".claude/**", "public/maplibre/**", "extension/**"],
   },
 ];
 
