@@ -227,6 +227,10 @@ export const SETTINGS = {
   requests_cta_listing: { group: "buyers", type: "bool", default: true },
   requests_cta_home: { group: "buyers", type: "bool", default: true },
   requests_listing_margin: { group: "buyers", type: "int", default: 10, min: 0, max: 50, unit: "percent", choices: [0, 10, 20, 30] },
+  // A visitor fills the demande signed out and confirms the number by SMS at
+  // the end, which makes the account (POST /api/requests/guest). Off, or
+  // without SMS: login first, as before.
+  requests_guest_form: { group: "buyers", type: "bool", default: true },
   // The strip's size, and the smallest plan that earns a place in it: the plan's
   // annonces (10 Starter and up, 40 Pro and up, 120 Business only).
   agency_strip_max: { group: "buyers", type: "int", default: 6, min: 2, max: 12, choices: [4, 6, 8, 12] },
