@@ -8,12 +8,14 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { PhotoUploader, type UploadedPhoto } from "@/components/listing/PhotoUploader";
 import { Ltr } from "@/components/ui/Ltr";
 import { formatDate } from "@/lib/utils";
+import { annoncePhotoUrl } from "@/lib/imageUrl";
+import type { PhotoCheckResult } from "@/lib/prospection/photoCheck.server";
 import type { ListingDraft } from "@/lib/ai/listing";
 import {
   CHANNELS, confirmBlockers, publishBlockers, type Channel, type LeadStatus,
 } from "@/lib/prospection/model";
 import type { Warnings } from "@/lib/prospection/server";
-import { Check, Copy, ExternalLink, MessageCircle } from "lucide-react";
+import { Check, CircleAlert, Copy, ExternalLink, MessageCircle, Search, Star } from "lucide-react";
 
 export type WorkspaceEvent = { id: string; kind: string; channel: string | null; note: string | null; by: string | null; at: string };
 
@@ -101,6 +103,7 @@ export function LeadWorkspace(props: {
   const [pending, setPending] = useState(0);
   const [checkedNoPhone, setCheckedNoPhone] = useState(false);
   const [checkedNoMark, setCheckedNoMark] = useState(false);
+  const [check, setCheck] = useState<PhotoCheckResult | null>(null);
   const editable = lead.status !== "online";
   const locked = lead.status === "online" || lead.status === "declined";
 
@@ -226,6 +229,20 @@ export function LeadWorkspace(props: {
       router.refresh();
       return null;
     });
+
+  // « Vérifier les photos »: what each photo shows, what a person would object to, which are already on the site.
+  const sameSet = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join("|") === [...b].sort().join("|");
+  const checkNow = check && sameSet(check.photos.map((p) => p.path), photos.map((p) => p.path)) ? check : null;
+  const runCheck = () =>
+    run("check", async () => {
+      const r = await call(`${base}/photo-check`, "POST");
+      if (!r.ok) return { tone: "bad", text: errorText(r.json.error) };
+      setCheck(r.json as unknown as PhotoCheckResult);
+      return null;
+    });
+  const applyOrder = () => {
+    if (checkNow) setPhotos(checkNow.order.map((path) => ({ path })));
+  };
 
   // The gallery is saved as soon as every upload has landed.
   const firstRun = useRef(true);
@@ -461,6 +478,59 @@ export function LeadWorkspace(props: {
                 <p className={`mt-2 text-[12px] font-bold ${photos.length >= Math.max(1, minPhotos) ? "text-[var(--tone-ok)]" : "text-[var(--tone-bad)]"}`}>
                   {t("work.photosCount", { n: photos.length, min: minPhotos })}
                 </p>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <AdminButton icon={<Search className="size-3.5" />} pending={busy === "check"} pendingLabel={t("work.check.running")} disabled={photos.length === 0 || pending > 0} disabledReason={pending > 0 ? t("work.uploading") : t("work.check.needPhotos")} onClick={() => void runCheck()}>
+                    {t("work.check.button")}
+                  </AdminButton>
+                  {checkNow?.cover ? (
+                    <AdminButton icon={<Star className="size-3.5" />} onClick={applyOrder}>{t("work.check.applyOrder")}</AdminButton>
+                  ) : null}
+                </div>
+                {checkNow ? (
+                  <div className="mt-3">
+                    <p className={`text-[12.5px] font-bold ${checkNow.photos.some((p) => p.flags.length > 0) ? "text-[var(--tone-warn)]" : "text-[var(--tone-ok)]"}`}>
+                      {checkNow.photos.some((p) => p.flags.length > 0) ? t("work.check.summary", { n: checkNow.photos.filter((p) => p.flags.length > 0).length }) : t("work.check.clean")}
+                    </p>
+                    {!checkNow.ai ? <p className="mt-1 text-[12px] text-muted">{t("work.check.aiOff")}</p> : null}
+                    <ul className="mt-2 space-y-2">
+                      {checkNow.photos.map((p, i) => (
+                        <li key={p.path} className="flex gap-3 rounded-xl bg-surface-2 p-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={annoncePhotoUrl(p.path, 384)} alt="" className="size-16 shrink-0 rounded-lg object-cover" />
+                          <div className="min-w-0 text-[12.5px]">
+                            <div className="font-bold">
+                              {t("work.check.photoN", { n: i + 1 })}
+                              {p.finding ? <span className="ms-1 font-normal text-muted">· {t(`work.check.kind.${p.finding.kind}`)} · {t("work.check.quality", { n: p.finding.quality })}</span> : null}
+                              {checkNow.cover === p.path ? <span className="ms-1 text-[var(--tone-ok)]">· {t("work.check.bestCover")}</span> : null}
+                            </div>
+                            {p.flags.length === 0 ? (
+                              <div className="text-[var(--tone-ok)]">{p.finding ? t("work.check.nothing") : t("work.check.notRead")}</div>
+                            ) : (
+                              <ul className="mt-0.5 space-y-0.5">
+                                {p.flags.map((flag) => (
+                                  <li key={flag} className="flex items-start gap-1 text-[var(--tone-bad)]">
+                                    <CircleAlert className="mt-0.5 size-3.5 shrink-0" />
+                                    <span className="min-w-0 break-words">
+                                      {flag === "overlay" ? t("work.check.flag.overlay", { text: p.finding?.overlayText ?? "" }) : null}
+                                      {flag === "duplicate" ? t("work.check.flag.duplicate") : null}
+                                      {flag !== "overlay" && flag !== "duplicate" ? t(`work.check.flag.${flag}`) : null}
+                                      {flag === "duplicate"
+                                        ? p.duplicates.map((d) => (
+                                            <a key={d.listingId} href={`/${locale}/annonces/${d.listingId}`} target="_blank" rel="noopener noreferrer" className="ms-1 font-bold underline">« {d.title} »</a>
+                                          ))
+                                        : null}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
                 <div className="mt-3 space-y-1.5 text-[12.5px]">
                   <label className="flex items-center gap-2"><input type="checkbox" checked={checkedNoPhone} onChange={(e) => setCheckedNoPhone(e.target.checked)} />{t("work.checkNoPhone")}</label>
                   <label className="flex items-center gap-2"><input type="checkbox" checked={checkedNoMark} onChange={(e) => setCheckedNoMark(e.target.checked)} />{t("work.checkNoMark")}</label>

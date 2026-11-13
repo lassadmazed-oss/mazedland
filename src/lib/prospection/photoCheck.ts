@@ -36,6 +36,7 @@ For every photo, report only what you can SEE:
 - quality: 1 to 5. 5 is sharp, well lit and straight; 1 is blurred, very dark, or crooked.
 - phone_visible: true if a telephone number, or what looks like one (8 digits, +216, a WhatsApp number), is written anywhere in the photo: a sign, a banner, a text added over the picture. Never guess one that is not there.
 - overlay_text: the words of any watermark, logo, agency name, website or caption ADDED on the photo (not text that belongs to the scene, like a street sign far away), copied as they read, at most 60 characters. null when there is none.
+  The site's own mark does NOT count: a small logo (a golden building) with the word MAZED or Mazed Immo, usually in a corner, is put on every photo by Mazed Immo itself. Report null for it, and never take it for another agency's mark.
 - people: true if a person's face is clearly visible.
 - not_property: true if it is not a photograph of the property: a screenshot, a map, a document, a flyer, a collage of several pictures.
 

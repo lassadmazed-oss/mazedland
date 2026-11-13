@@ -3677,7 +3677,8 @@
     "prospect_update": "Fiche de Prospection modifiée",
     "prospect_confirm": "Propriétaire confirmé : compte et brouillon créés",
     "prospect_publish": "Annonce du propriétaire mise en ligne par l'équipe",
-    "prospect_sms": "SMS envoyé au propriétaire"
+    "prospect_sms": "SMS envoyé au propriétaire",
+    "prospect_photo_check": "Photos d'un propriétaire vérifiées"
   },
   "adminApi": {
     "bulk": {
@@ -6267,6 +6268,10 @@
     "prospect_keep_days": {
       "label": "Durée de conservation du texte des posts",
       "hint": "Une fois la fiche terminée (refusée, ou en ligne), le texte du post et le nom de la personne sont effacés après ce délai : ce sont les mots d'un tiers. La réponse du propriétaire (la preuve de son accord) reste, et la liste « ne pas contacter » garde ses numéros."
+    },
+    "feature_prospect_photo_check": {
+      "label": "Vérifier les photos (Prospection)",
+      "hint": "Un modèle regarde chaque photo de l'annonce d'un propriétaire (numéro de téléphone écrit dessus, marque d'une autre agence, visage, capture d'écran, qualité, pièce montrée) et le site dit si la photo est déjà sur une autre annonce. Il lit et suggère, il ne change rien. Chaque vérification coûte un appel au modèle."
     }
   },
   "ads": {
@@ -8166,9 +8171,43 @@
         "listing_failed": "Le brouillon n'a pas pu être créé. Réessayez.",
         "rate_limited": "Trop de demandes à la suite. Réessayez dans un moment.",
         "sms_not_configured": "Les SMS ne sont pas configurés.",
-        "no_listing": "Il n'y a pas encore d'annonce."
+        "no_listing": "Il n'y a pas encore d'annonce.",
+        "no_photos": "Ajoutez d'abord des photos.",
+        "unreadable": "Les photos n'ont pas pu être lues. Renvoyez-les."
       },
-      "contactedDone": "Noté. Il vous reste {n} messages aujourd'hui."
+      "contactedDone": "Noté. Il vous reste {n} messages aujourd'hui.",
+      "check": {
+        "button": "Vérifier les photos",
+        "running": "Les photos sont examinées…",
+        "needPhotos": "Ajoutez d'abord les photos.",
+        "summary": "{n} photo(s) à regarder avant de publier",
+        "clean": "Rien à signaler sur ces photos.",
+        "aiOff": "L'analyse des photos est indisponible pour le moment : seuls les doublons sont vérifiés.",
+        "applyOrder": "Mettre la meilleure photo en premier",
+        "photoN": "Photo {n}",
+        "quality": "qualité {n}/5",
+        "bestCover": "meilleure couverture",
+        "nothing": "Rien à signaler.",
+        "notRead": "Pas analysée.",
+        "kind": {
+          "exterior": "extérieur",
+          "living": "salon",
+          "kitchen": "cuisine",
+          "bedroom": "chambre",
+          "bathroom": "salle de bain",
+          "plot": "terrain",
+          "plan": "plan",
+          "other": "autre"
+        },
+        "flag": {
+          "phone": "Un numéro de téléphone est écrit sur la photo.",
+          "overlay": "Marque ou texte ajouté sur la photo : « {text} ».",
+          "people": "Un visage est visible.",
+          "not_property": "Ce n'est pas une photo du bien (capture d'écran, plan, montage…).",
+          "low_quality": "Photo floue, sombre ou de travers.",
+          "duplicate": "Déjà sur Mazed Immo, sur l'annonce :"
+        }
+      }
     },
     "range": {
       "1": "Aujourd'hui",
