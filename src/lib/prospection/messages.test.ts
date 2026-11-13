@@ -45,16 +45,19 @@ describe("Prospection messages", () => {
       ["adminProspection.col", ["to_contact", "contacted", "confirmed", "online", "declined"]],
       ["adminProspection.empty", ["to_contact", "contacted", "confirmed", "online"]],
       ["adminProspection.range", ["1", "7", "30"]],
-      ["adminProspection.work.steps", ["draft", "write", "yes", "publish"]],
-      ["adminProspection.work.stepHint", ["draft", "write", "yes", "publish"]],
+      ["adminProspection.kindFilter", ["all", "owner", "agency"]],
+      ["adminProspection.tag", ["broker", "interested"]],
+      ["adminProspection.work.kind", ["label", "owner", "agency", "ownerHint", "agencyHint", "guess"]],
+      ["adminProspection.work.steps", ["draft", "write", "yes", "publish", "agency"]],
+      ["adminProspection.work.stepHint", ["draft", "write", "yes", "publish", "agency", "writeAgency"]],
       ["adminProspection.work.check.kind", ["exterior", "living", "kitchen", "bedroom", "bathroom", "plot", "plan", "other"]],
       ["adminProspection.work.check.flag", ["phone", "overlay", "people", "not_property", "low_quality", "duplicate"]],
       ["adminProspection.extension.steps", ["download", "unzip", "developer", "load", "pin", "use"]],
       ["adminProspection.extension.privacy", ["reads", "sends", "account", "review"]],
-      ["adminProspection.work.outcome", ["no_answer", "thinking", "refused", "wrong_number"]],
+      ["adminProspection.work.outcome", ["no_answer", "thinking", "interested", "refused", "wrong_number"]],
       ["adminProspection.work.channel", ["whatsapp", "sms", "call", "messenger", "other"]],
-      ["adminProspection.work.event", ["created", "contacted", "no_answer", "thinking", "refused", "wrong_number", "confirmed", "published", "sms", "note", "assigned", "broker"]],
-      ["adminProspection.work.confirmBlockers", ["wrong_step", "no_phone", "do_not_contact", "no_category", "no_governorate", "no_title", "no_reply", "no_channel"]],
+      ["adminProspection.work.event", ["created", "contacted", "no_answer", "thinking", "interested", "refused", "wrong_number", "confirmed", "published", "sms", "note", "assigned", "broker"]],
+      ["adminProspection.work.confirmBlockers", ["wrong_step", "is_agency", "no_phone", "do_not_contact", "no_category", "no_governorate", "no_title", "no_reply", "no_channel"]],
       ["adminProspection.work.publishBlockers", ["wrong_step", "no_listing", "photos", "photos_not_checked", "no_price"]],
       ["adminProspection.new.errors", ["too_short", "do_not_contact", "rate_limited", "failed"]],
       ["manage.status", ["published", "pending_review", "draft", "rejected", "sold", "rented", "archived", "expired", "pending_payment"]],
@@ -73,7 +76,7 @@ describe("Prospection messages", () => {
   it("escapes the {holes} of a message in the settings hints, so the console can print them", () => {
     for (const msgs of [fr, ar]) {
       const reg = (msgs as unknown as { settingsRegistry: Record<string, { hint: string }> }).settingsRegistry;
-      for (const key of ["prospect_ask_ar", "prospect_ask_fr", "prospect_sms_ar", "prospect_sms_fr"]) {
+      for (const key of ["prospect_ask_ar", "prospect_ask_fr", "prospect_ask_agency_ar", "prospect_ask_agency_fr", "prospect_sms_ar", "prospect_sms_fr"]) {
         // An unquoted {name} would be read as an argument nobody passes.
         expect(reg[key].hint.replace(/'\{\w+\}'/g, "")).not.toMatch(/\{\w+\}/);
       }

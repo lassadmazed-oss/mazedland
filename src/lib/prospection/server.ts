@@ -197,6 +197,7 @@ export async function confirmLead(
     draft,
     reply: input.reply,
     channel: input.channel,
+    isBroker: lead.is_broker,
   });
   if (blockers.length > 0) return { ok: false, error: "blocked", blockers };
 
@@ -445,6 +446,14 @@ export async function touchManageToken(admin: Admin, token: string): Promise<voi
 /** The message that asks the owner for their yes, filled in for this lead. */
 export async function askMessage(lead: LeadRow, origin: string): Promise<string> {
   const s = await getSettings();
+  // An agency gets the agencies' message: it is invited to open an agence, nothing is published for it.
+  // (A lead that already said yes, or has its annonce, is an owner's whatever its old « broker » flag says.)
+  if (lead.is_broker && !lead.listing_id && lead.status !== "confirmed" && lead.status !== "online") {
+    return fillTemplate(lead.language === "fr" ? s.prospect_ask_agency_fr : s.prospect_ask_agency_ar, {
+      name: lead.poster_name,
+      link: `${origin}/${lead.language}/pro`,
+    });
+  }
   return fillTemplate(lead.language === "fr" ? s.prospect_ask_fr : s.prospect_ask_ar, {
     name: lead.poster_name,
     property: propertyLine(readDraft(lead.draft)),

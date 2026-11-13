@@ -19,7 +19,7 @@ import {
  *
  *   { action: "update", draft?, phone?, name?, url?, is_broker?, assigned_to?, follow_up_at? }
  *   { action: "contacted", channel }                 — wrote to the owner (counts against the daily cap)
- *   { action: "result", kind, note?, follow_up_at? } — no_answer | thinking | refused | wrong_number
+ *   { action: "result", kind, note?, follow_up_at? } — no_answer | thinking | interested (an agency) | refused | wrong_number
  *   { action: "note", note }
  *   { action: "reopen" }                             — a declined lead back to « à contacter »
  *
@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (action === "result") {
     const kind = body.kind;
-    if (kind !== "no_answer" && kind !== "thinking" && kind !== "refused" && kind !== "wrong_number") {
+    if (kind !== "no_answer" && kind !== "thinking" && kind !== "interested" && kind !== "refused" && kind !== "wrong_number") {
       return NextResponse.json({ error: "bad_kind" }, { status: 400 });
     }
     if (lead.status === "online" || lead.status === "confirmed") return NextResponse.json({ error: "wrong_step" }, { status: 409 });
@@ -72,7 +72,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .update({
         status: statusAfter(lead.status, kind as EventKind),
         outcome: kind,
-        follow_up_at: kind === "no_answer" || kind === "thinking" ? date(body.follow_up_at) : null,
+        follow_up_at: kind === "no_answer" || kind === "thinking" || kind === "interested" ? date(body.follow_up_at) : null,
       })
       .eq("id", id);
     if ((kind === "refused" || kind === "wrong_number") && lead.phone) {
@@ -111,6 +111,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if ("url" in body) patch.source_url = typeof body.url === "string" && /^https?:\/\//i.test(body.url.trim()) ? body.url.trim().slice(0, 600) : null;
     if ("follow_up_at" in body) patch.follow_up_at = date(body.follow_up_at);
     if ("is_broker" in body) {
+      // Once the owner said yes there is an account and an annonce: it is not an agency any more than it was.
+      if (lead.listing_id && (body.is_broker === true) !== lead.is_broker) return NextResponse.json({ error: "kind_locked" }, { status: 409 });
       patch.is_broker = body.is_broker === true;
       if (patch.is_broker !== lead.is_broker) await addEvent(admin, id, actor, "broker", { note: patch.is_broker ? "broker" : "owner" });
     }

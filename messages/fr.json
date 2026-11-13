@@ -6272,6 +6272,14 @@
     "feature_prospect_photo_check": {
       "label": "Vérifier les photos (Prospection)",
       "hint": "Un modèle regarde chaque photo de l'annonce d'un propriétaire (numéro de téléphone écrit dessus, marque d'une autre agence, visage, capture d'écran, qualité, pièce montrée) et le site dit si la photo est déjà sur une autre annonce. Il lit et suggère, il ne change rien. Chaque vérification coûte un appel au modèle."
+    },
+    "prospect_ask_agency_ar": {
+      "label": "Message à une agence (arabe)",
+      "hint": "Pour un post publié par une agence, pas par un propriétaire : elle est invitée à ouvrir son agence, rien n'est publié pour elle. Trous : '{name}' '{link}' (la page des agences)."
+    },
+    "prospect_ask_agency_fr": {
+      "label": "Message à une agence (français)",
+      "hint": "Pour un post publié par une agence, pas par un propriétaire : elle est invitée à ouvrir son agence, rien n'est publié pour elle. Trous : '{name}' '{link}' (la page des agences)."
     }
   },
   "ads": {
@@ -7966,9 +7974,10 @@
       "noPhone": "Numéro manquant",
       "questions": "{n} question(s)",
       "followUp": "À relancer",
-      "broker": "Courtier ?",
+      "broker": "Agence",
       "yes": "Oui reçu",
-      "noSms": "SMS non envoyé"
+      "noSms": "SMS non envoyé",
+      "interested": "Intéressée"
     },
     "kpi": {
       "contacts": "Premiers messages aujourd'hui",
@@ -8048,8 +8057,6 @@
       "bathrooms": "Salles de bain",
       "titleField": "Titre",
       "description": "Description",
-      "broker": "C'est un courtier, pas le propriétaire",
-      "brokerHint": "Proposez-lui l'offre des agences plutôt que l'annonce de particulier.",
       "save": "Enregistrer",
       "sourceText": "Le texte du post",
       "contactTitle": "Écrire au propriétaire",
@@ -8075,7 +8082,8 @@
         "no_answer": "Pas de réponse",
         "thinking": "Il réfléchit",
         "refused": "Il refuse",
-        "wrong_number": "Mauvais numéro"
+        "wrong_number": "Mauvais numéro",
+        "interested": "Intéressée"
       },
       "sureDnc": "Ce numéro ne sera plus jamais contacté. Appuyez encore pour confirmer.",
       "sureAgain": "Confirmer",
@@ -8093,7 +8101,8 @@
         "no_governorate": "le gouvernorat",
         "no_title": "le titre",
         "no_reply": "sa réponse",
-        "no_channel": "le canal de sa réponse"
+        "no_channel": "le canal de sa réponse",
+        "is_agency": "c'est une agence : rien n'est publié pour elle"
       },
       "photosTitle": "Photos et publication",
       "photosHint": "Au moins {min} photos, de préférence celles que le propriétaire envoie lui-même par WhatsApp. Celles de son post seulement si son « oui » les couvre et qu'elles sont propres.",
@@ -8144,7 +8153,8 @@
         "sms": "SMS",
         "note": "Note",
         "assigned": "Responsable changé",
-        "broker": "Courtier"
+        "broker": "Courtier",
+        "interested": "Intéressée"
       },
       "errors": {
         "failed": "Ça n'a pas marché. Réessayez.",
@@ -8173,7 +8183,8 @@
         "sms_not_configured": "Les SMS ne sont pas configurés.",
         "no_listing": "Il n'y a pas encore d'annonce.",
         "no_photos": "Ajoutez d'abord des photos.",
-        "unreadable": "Les photos n'ont pas pu être lues. Renvoyez-les."
+        "unreadable": "Les photos n'ont pas pu être lues. Renvoyez-les.",
+        "kind_locked": "Le propriétaire a déjà dit oui : ce n'est plus une agence."
       },
       "contactedDone": "Noté. Il vous reste {n} messages aujourd'hui.",
       "check": {
@@ -8213,13 +8224,16 @@
         "draft": "L'annonce",
         "write": "Lui écrire",
         "yes": "Il a dit oui",
-        "publish": "Photos et mise en ligne"
+        "publish": "Photos et mise en ligne",
+        "agency": "L'agence"
       },
       "stepHint": {
         "draft": "Vérifiez l'annonce : la catégorie, le gouvernorat, le prix et le titre.",
         "write": "Envoyez-lui le message, puis notez sa réponse.",
         "yes": "Quand il dit oui, collez sa réponse ici.",
-        "publish": "Ajoutez les photos, vérifiez-les, puis publiez."
+        "publish": "Ajoutez les photos, vérifiez-les, puis publiez.",
+        "agency": "Vérifiez qui c'est : une agence, pas un propriétaire.",
+        "writeAgency": "Envoyez-lui le message des agences, puis notez sa réponse."
       },
       "next": "Suivant",
       "prev": "Retour",
@@ -8231,7 +8245,17 @@
       "goYes": "Aller à « Il a dit oui »",
       "doneYes": "Son accord est noté.",
       "nextYes": "Il a répondu oui",
-      "historyCount": "Historique ({n})"
+      "historyCount": "Historique ({n})",
+      "kind": {
+        "label": "Qui a publié ce post ?",
+        "owner": "Un particulier (le propriétaire)",
+        "agency": "Une agence immobilière",
+        "ownerHint": "On lui propose de publier son annonce, avec son accord.",
+        "agencyHint": "On ne publie rien pour elle : on l'invite à ouvrir son agence sur le site, avec l'offre des agences.",
+        "guess": "Ce post ressemble à celui d'une agence (commission, bureau…). À vous de confirmer."
+      },
+      "contactTitleAgency": "Écrire à l'agence",
+      "contactHintAgency": "Envoyez ce message tel quel : il présente l'offre des agences. Rien n'est publié pour elle, c'est elle qui ouvre son agence."
     },
     "range": {
       "1": "Aujourd'hui",
@@ -8287,6 +8311,11 @@
         "account": "Elle n'accède ni à votre compte Facebook, ni à vos messages, ni à vos amis.",
         "review": "Vous relisez le texte et l'envoyez vous-même : le numéro, le nom et le lien se corrigent avant."
       }
+    },
+    "kindFilter": {
+      "all": "Tous",
+      "owner": "Particuliers",
+      "agency": "Agences"
     }
   }
 }

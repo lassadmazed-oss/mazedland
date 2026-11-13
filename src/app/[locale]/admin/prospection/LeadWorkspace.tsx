@@ -12,7 +12,7 @@ import { annoncePhotoUrl } from "@/lib/imageUrl";
 import type { PhotoCheckResult } from "@/lib/prospection/photoCheck.server";
 import type { ListingDraft } from "@/lib/ai/listing";
 import {
-  CHANNELS, confirmBlockers, publishBlockers, type Channel, type LeadStatus,
+  CHANNELS, confirmBlockers, looksLikeAgency, publishBlockers, type Channel, type LeadStatus,
 } from "@/lib/prospection/model";
 import type { Warnings } from "@/lib/prospection/server";
 import { Check, CircleAlert, Copy, ExternalLink, MessageCircle, Phone, Search, Star } from "lucide-react";
@@ -121,8 +121,14 @@ export function LeadWorkspace(props: {
     lead.status === "confirmed" || lead.status === "online" ? 4 : lead.status === "contacted" || lead.status === "declined" ? 2 : 1,
   );
   const draftReady = !!(category && governorate && title.trim());
+  // An agency is invited to open an agence of its own: nothing is published for it, so no « oui » and no photos.
+  // A lead that already said yes (or has its annonce) keeps the owner's four steps, whatever its old « broker » flag says.
+  const agency = broker && !lead.listingId && lead.status !== "confirmed" && lead.status !== "online";
+  const visible: Step[] = agency ? [1, 2] : [1, 2, 3, 4];
+  const stepKey = (n: Step) => (n === 1 && agency ? "agency" : STEPS[n - 1]);
+  const cur: Step = agency && step > 2 ? 2 : step;
   const done: Record<Step, boolean> = {
-    1: draftReady,
+    1: agency ? !!phone : draftReady,
     2: lead.status === "contacted" || lead.status === "confirmed" || lead.status === "online",
     3: lead.status === "confirmed" || lead.status === "online",
     4: lead.status === "online",
@@ -185,14 +191,14 @@ export function LeadWorkspace(props: {
       return { tone: "ok", text: t("work.contactedDone", { n: Number(r.json.left ?? 0) }) };
     });
 
-  const result = (kind: "no_answer" | "thinking" | "refused" | "wrong_number") =>
+  const result = (kind: "no_answer" | "thinking" | "interested" | "refused" | "wrong_number") =>
     run(kind, async () => {
       if ((kind === "refused" || kind === "wrong_number") && armed !== kind) {
         setArmed(kind);
         return { tone: "bad", text: t("work.sureDnc") };
       }
       setArmed(null);
-      const r = await call(base, "PATCH", { action: "result", kind, note, follow_up_at: kind === "no_answer" || kind === "thinking" ? followUp : null });
+      const r = await call(base, "PATCH", { action: "result", kind, note, follow_up_at: kind === "no_answer" || kind === "thinking" || kind === "interested" ? followUp : null });
       if (!r.ok) return { tone: "bad", text: errorText(r.json.error) };
       setNote("");
       router.refresh();
@@ -306,7 +312,7 @@ export function LeadWorkspace(props: {
     }
   };
 
-  const panel = (n: Step) => (step === n ? "space-y-4" : "hidden");
+  const panel = (n: Step) => (cur === n ? "space-y-4" : "hidden");
   const back = (to: Step) => (
     <AdminButton variant="quiet" size="md" onClick={() => go(to)}>{t("work.prev")}</AdminButton>
   );
@@ -316,9 +322,9 @@ export function LeadWorkspace(props: {
       {/* ── the four steps ── */}
       <nav aria-label={t("work.stepsLabel")} className="-mx-1 overflow-x-auto px-1 pb-1">
         <ol className="flex min-w-max gap-2">
-          {STEPS.map((key, i) => {
-            const n = (i + 1) as Step;
-            const current = step === n;
+          {visible.map((n) => {
+            const key = stepKey(n);
+            const current = cur === n;
             return (
               <li key={key}>
                 <button
@@ -349,13 +355,14 @@ export function LeadWorkspace(props: {
         <StatusBadge tone={STATUS_TONE[lead.status]}>{t(`col.${lead.status}`)}</StatusBadge>
         {lead.status === "declined" ? <StatusBadge tone="bad">{lead.outcome ? t(`work.outcome.${lead.outcome}`) : t("col.declined")}</StatusBadge> : null}
         {broker ? <StatusBadge tone="info">{t("tag.broker")}</StatusBadge> : null}
+        {lead.outcome === "interested" ? <StatusBadge tone="ok">{t("work.outcome.interested")}</StatusBadge> : null}
         {lead.url ? (
           <a href={lead.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[12.5px] font-bold text-muted underline">
             {t("work.openPost")} <ExternalLink className="size-3" />
           </a>
         ) : null}
       </div>
-      <p className="mt-2 text-[13px] text-muted">{t(`work.stepHint.${STEPS[step - 1]}`)}</p>
+      <p className="mt-2 text-[13px] text-muted">{t(`work.stepHint.${agency && cur === 2 ? "writeAgency" : stepKey(cur)}`)}</p>
 
       {lead.status === "declined" ? (
         <div className={`${card} mt-3`}>
@@ -376,7 +383,7 @@ export function LeadWorkspace(props: {
           {warnings.doNotContact ? <p role="alert" className="rounded-xl bg-[var(--tone-bad-bg)] px-3 py-2.5 text-[13px] font-bold text-[var(--tone-bad)]">{t("work.warn.dnc")}</p> : null}
           {warnings.member ? <p className="rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2.5 text-[13px] text-[var(--tone-warn)]">{t("work.warn.member", { name: warnings.member.name ?? "—" })}</p> : null}
           {warnings.others.length > 0 ? <p className="rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2.5 text-[13px] text-[var(--tone-warn)]">{t("work.warn.others", { n: warnings.others.length })}</p> : null}
-          {draft.questions.length > 0 && editable ? (
+          {draft.questions.length > 0 && editable && !agency ? (
             <div className="rounded-2xl bg-surface-2 px-4 py-3 text-[13px]">
               <div className="font-bold">{t("work.questions")}</div>
               <ul className="mt-1 list-disc ps-5 text-muted">{draft.questions.map((q) => <li key={q}>{q}</li>)}</ul>
@@ -393,11 +400,28 @@ export function LeadWorkspace(props: {
                 <input value={name} onChange={(e) => setName(e.target.value)} disabled={locked} className={field} maxLength={120} />
               </label>
             </div>
-            <label className="mt-3 flex items-center gap-2 text-[13px] text-muted">
-              <input type="checkbox" checked={broker} onChange={(e) => setBroker(e.target.checked)} disabled={locked} className="size-4" />
-              {t("work.broker")}
-            </label>
-            {broker ? <p className="mt-1 text-[12.5px] text-muted">{t("work.brokerHint")}</p> : null}
+            <fieldset className="mt-4" disabled={locked || !!lead.listingId}>
+              <legend className="text-[12.5px] font-bold text-muted">{t("work.kind.label")}</legend>
+              <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {([false, true] as const).map((isAgency) => (
+                  <button
+                    key={String(isAgency)}
+                    type="button"
+                    aria-pressed={broker === isAgency}
+                    onClick={() => setBroker(isAgency)}
+                    className={`flex h-12 items-center justify-center rounded-xl border px-3 text-[13.5px] font-bold transition disabled:opacity-60 ${
+                      broker === isAgency
+                        ? "border-[var(--gold)] bg-[var(--gold)] text-[var(--background)]"
+                        : "border-border bg-surface text-foreground hover:border-[var(--gold-soft)]"
+                    }`}
+                  >
+                    {t(isAgency ? "work.kind.agency" : "work.kind.owner")}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <p className="mt-2 text-[12.5px] text-muted">{t(broker ? "work.kind.agencyHint" : "work.kind.ownerHint")}</p>
+            {!broker && looksLikeAgency(lead.sourceText) ? <p className="mt-2 rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2 text-[12.5px] text-[var(--tone-warn)]">{t("work.kind.guess")}</p> : null}
             <label className={`${label} mt-3`}>{t("work.assignedTo")}
               <select value={lead.assignedTo ?? ""} onChange={(e) => void assign(e.target.value)} className={field}>
                 <option value="">{t("unassigned")}</option>
@@ -406,6 +430,7 @@ export function LeadWorkspace(props: {
             </label>
           </section>
 
+          {!agency ? (
           <section className={card}>
             <h2 className="mb-3 text-[14px] font-extrabold">{t("work.draft")}</h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -456,6 +481,7 @@ export function LeadWorkspace(props: {
               </label>
             </details>
           </section>
+          ) : null}
 
           <details className={card}>
             <summary className="cursor-pointer text-[14px] font-extrabold">{t("work.sourceText")}</summary>
@@ -472,10 +498,10 @@ export function LeadWorkspace(props: {
         <div role="tabpanel" className={panel(2)}>
           <section className={card}>
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-[14px] font-extrabold">{t("work.contactTitle")}</h2>
+              <h2 className="text-[14px] font-extrabold">{t(agency ? "work.contactTitleAgency" : "work.contactTitle")}</h2>
               {lead.phone ? <Ltr className="text-[15px] font-bold">{lead.phone}</Ltr> : null}
             </div>
-            <p className="mt-1 text-[12.5px] text-muted">{t("work.contactHint")}</p>
+            <p className="mt-1 text-[12.5px] text-muted">{t(agency ? "work.contactHintAgency" : "work.contactHint")}</p>
             <textarea readOnly value={ask} rows={7} className={`${field} mt-3`} />
             <div className="mt-3 grid grid-cols-2 gap-2">
               {waUrl ? (
@@ -514,7 +540,7 @@ export function LeadWorkspace(props: {
                 <input type="date" value={followUp} onChange={(e) => setFollowUp(e.target.value)} dir="ltr" className={field} />
               </label>
               <div className="mt-3 grid grid-cols-2 gap-2">
-                {(["no_answer", "thinking"] as const).map((k) => (
+                {(agency ? (["no_answer", "thinking", "interested"] as const) : (["no_answer", "thinking"] as const)).map((k) => (
                   <AdminButton key={k} size="md" className="!h-11 !text-[13.5px]" pending={busy === k} onClick={() => void result(k)}>{t(`work.outcome.${k}`)}</AdminButton>
                 ))}
                 {(["refused", "wrong_number"] as const).map((k) => (
@@ -528,7 +554,7 @@ export function LeadWorkspace(props: {
 
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
             {back(1)}
-            <AdminButton variant="default" size="md" className={big} onClick={() => go(3)}>{t("work.nextYes")}</AdminButton>
+            {!agency ? <AdminButton variant="default" size="md" className={big} onClick={() => go(3)}>{t("work.nextYes")}</AdminButton> : null}
           </div>
         </div>
 

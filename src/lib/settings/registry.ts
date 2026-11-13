@@ -13,7 +13,7 @@
  */
 import type { SettingDef, ValueOf } from "./define";
 import { GA_ID_PATTERN } from "@/lib/analytics/ga";
-import { ASK_AR, ASK_FR, SMS_AR, SMS_FR } from "@/lib/prospection/templates";
+import { ASK_AGENCY_AR, ASK_AGENCY_FR, ASK_AR, ASK_FR, SMS_AR, SMS_FR } from "@/lib/prospection/templates";
 
 export const SETTINGS = {
   // ── Features: each one switched off disappears from the site and its API
@@ -288,6 +288,8 @@ export const SETTINGS = {
   // The messages (src/lib/prospection/templates.ts lists the {holes}).
   prospect_ask_ar: { group: "publication", type: "text", default: ASK_AR, max: 800, multiline: true, href: "/admin/prospection" },
   prospect_ask_fr: { group: "publication", type: "text", default: ASK_FR, max: 800, multiline: true, href: "/admin/prospection" },
+  prospect_ask_agency_ar: { group: "publication", type: "text", default: ASK_AGENCY_AR, max: 900, multiline: true, href: "/admin/prospection" },
+  prospect_ask_agency_fr: { group: "publication", type: "text", default: ASK_AGENCY_FR, max: 900, multiline: true, href: "/admin/prospection" },
   prospect_sms_ar: { group: "publication", type: "text", default: SMS_AR, max: 400, multiline: true, href: "/admin/prospection" },
   prospect_sms_fr: { group: "publication", type: "text", default: SMS_FR, max: 400, multiline: true, href: "/admin/prospection" },
   ai_daily_budget_usd: { group: "social", type: "number", default: 2, min: 0, max: 100, step: 0.5 },
