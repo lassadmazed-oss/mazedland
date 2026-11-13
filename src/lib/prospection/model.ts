@@ -277,3 +277,90 @@ export function photoPathOf(sellerId: string, path: unknown): string | null {
   const escaped = sellerId.replace(/[^a-f0-9-]/gi, "");
   return new RegExp(`^${escaped}/annonce-[0-9]+-[0-9]+-[0-9]+\\.[a-z0-9]{1,5}$`).test(path) ? path : null;
 }
+
+// ── The daily reminder and the team's figures ───────────────────────────────
+
+/** What is waiting for one member of the team (src/lib/prospection/daily.ts). */
+export type Digest = { followUps: number; yes: number; noSms: number };
+
+export function digestIsEmpty(d: Digest): boolean {
+  return d.followUps + d.yes + d.noSms === 0;
+}
+
+/** The notice's own words in French (the bell translates it from the kind and its variables). */
+export function digestText(d: Digest): string {
+  return [
+    d.followUps > 0 ? `${d.followUps} à relancer` : null,
+    d.yes > 0 ? `${d.yes} « oui » à finaliser` : null,
+    d.noSms > 0 ? `${d.noSms} SMS à renvoyer` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** Leads that ended before this instant lose the post's text and the poster's name. */
+export function retentionCutoff(days: number, now: Date = new Date()): string {
+  return new Date(now.getTime() - Math.max(1, days) * 86_400_000).toISOString();
+}
+
+/** A share as a whole percent, or null when there is nothing to divide by. */
+export function percent(part: number, whole: number): number | null {
+  return whole > 0 ? Math.round((part / whole) * 100) : null;
+}
+
+/** The ranges the board's figures can be read over, in days (1 = today). */
+export const RANGES = [1, 7, 30] as const;
+export type Range = (typeof RANGES)[number];
+
+export function asRange(v: unknown): Range {
+  const n = Number(v);
+  return (RANGES as readonly number[]).includes(n) ? (n as Range) : 7;
+}
+
+/** Where a range starts: today's midnight in Tunisia, or that many days back from it. */
+export function rangeStart(range: Range, now: Date = new Date()): string {
+  const today = Date.parse(startOfTunisiaDay(now));
+  return new Date(today - (range - 1) * 86_400_000).toISOString();
+}
+
+/** How long a « oui » may wait for its photos before the member is reminded. */
+const YES_WAITING_HOURS = 24;
+
+export type WaitingRow = {
+  id: string;
+  status: string;
+  assigned_to: string | null;
+  created_by: string | null;
+  confirmed_by: string | null;
+  follow_up_at: string | null;
+  confirmed_at: string | null;
+  sms_sent_at: string | null;
+  published_at: string | null;
+};
+
+/**
+ * What is waiting for each member of the team: owners to write to again (a
+ * follow-up date that has come), « oui » whose photos are still missing after a
+ * day, and annonces online whose SMS never left. Each goes to the lead's
+ * responsible member (else whoever made it).
+ */
+export function digestsOf(rows: readonly WaitingRow[], now: Date = new Date()): Map<string, Digest> {
+  const out = new Map<string, Digest>();
+  const bump = (member: string | null, key: keyof Digest) => {
+    if (!member) return;
+    const d = out.get(member) ?? { followUps: 0, yes: 0, noSms: 0 };
+    d[key]++;
+    out.set(member, d);
+  };
+  for (const r of rows) {
+    const member = r.assigned_to ?? r.confirmed_by ?? r.created_by;
+    if ((r.status === "to_contact" || r.status === "contacted") && r.follow_up_at && Date.parse(r.follow_up_at) <= now.getTime()) {
+      bump(member, "followUps");
+    } else if (r.status === "confirmed" && r.confirmed_at && Date.parse(r.confirmed_at) <= now.getTime() - YES_WAITING_HOURS * 3_600_000) {
+      bump(member, "yes");
+    } else if (r.status === "online" && !r.sms_sent_at && r.published_at && Date.parse(r.published_at) <= now.getTime() - 3_600_000) {
+      bump(member, "noSms");
+    }
+  }
+  return out;
+}

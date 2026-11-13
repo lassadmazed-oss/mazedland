@@ -1616,6 +1616,10 @@
         "title": "Votre prix a expiré",
         "body": "L'acheteur n'a pas répondu à temps à votre prix de {amount} TND pour « {title} »."
       }
+    },
+    "admin_prospect_followup": {
+      "title": "Prospection : à traiter aujourd'hui",
+      "body": "{followUps} à relancer · {yes} « oui » à finaliser · {noSms} SMS à renvoyer"
     }
   },
   "publish": {
@@ -6255,6 +6259,14 @@
     "prospect_sms_fr": {
       "label": "SMS une fois l'annonce en ligne (français)",
       "hint": "Envoyé par le site. Trous : '{link}' '{manage}' '{phone}'."
+    },
+    "prospect_reminders": {
+      "label": "Rappel du matin pour l'équipe de Prospection",
+      "hint": "Chaque matin, une notification pour chaque membre qui a des propriétaires à relancer, des « oui » sans photos depuis un jour ou un SMS non parti."
+    },
+    "prospect_keep_days": {
+      "label": "Durée de conservation du texte des posts",
+      "hint": "Une fois la fiche terminée (refusée, ou en ligne), le texte du post et le nom de la personne sont effacés après ce délai : ce sont les mots d'un tiers. La réponse du propriétaire (la preuve de son accord) reste, et la liste « ne pas contacter » garde ses numéros."
     }
   },
   "ads": {
@@ -7959,7 +7971,9 @@
       "left": "Encore {n} aujourd'hui",
       "yes": "Oui aujourd'hui",
       "online": "En ligne aujourd'hui",
-      "waiting": "À traiter"
+      "waiting": "À traiter",
+      "followUps": "À relancer",
+      "followUpsHint": "Dont la date est arrivée"
     },
     "col": {
       "to_contact": "À contacter",
@@ -7982,7 +7996,8 @@
       "yes": "Oui",
       "online": "En ligne",
       "settings": "Les messages, le plafond du jour et la pastille se règlent dans les Réglages.",
-      "settingsLink": "Ouvrir les réglages"
+      "settingsLink": "Ouvrir les réglages",
+      "mine": "Mes chiffres"
     },
     "new": {
       "title": "Nouvelle annonce trouvée",
@@ -8001,7 +8016,8 @@
         "do_not_contact": "Ce numéro a refusé d'être contacté. On ne lui écrit plus.",
         "rate_limited": "Trop de posts à la suite. Réessayez dans un moment.",
         "failed": "Ça n'a pas marché. Réessayez."
-      }
+      },
+      "fromExtension": "Le post vient de l'extension. Relisez le texte, puis envoyez."
     },
     "work": {
       "pageTitle": "Fiche propriétaire",
@@ -8153,6 +8169,61 @@
         "no_listing": "Il n'y a pas encore d'annonce."
       },
       "contactedDone": "Noté. Il vous reste {n} messages aujourd'hui."
+    },
+    "range": {
+      "1": "Aujourd'hui",
+      "7": "7 jours",
+      "30": "30 jours"
+    },
+    "stats": {
+      "created": "Posts ajoutés",
+      "contacted": "Premiers messages",
+      "yes": "Oui reçus",
+      "online": "Mises en ligne",
+      "refused": "Refus",
+      "noAnswer": "Sans réponse",
+      "ofContacted": "{n} % des contactés",
+      "ofYes": "{n} % des oui"
+    },
+    "extensionLink": "Bouton Chrome",
+    "extension": {
+      "title": "Le bouton Chrome",
+      "description": "Une petite extension qui envoie le post Facebook que vous regardez vers « Nouvelle annonce trouvée », le texte déjà rempli. Elle ne lit la page que lorsque vous cliquez dessus.",
+      "download": "Télécharger l'extension",
+      "version": "Version {v}",
+      "steps": {
+        "download": {
+          "title": "Téléchargez le fichier",
+          "body": "Cliquez sur le bouton ci-dessus : vous recevez un fichier .zip."
+        },
+        "unzip": {
+          "title": "Décompressez-le",
+          "body": "Clic droit sur le fichier, « Extraire tout… », dans un dossier que vous gardez. Ne le supprimez pas : Chrome le relit à chaque démarrage."
+        },
+        "developer": {
+          "title": "Ouvrez la page des extensions",
+          "body": "Dans Chrome, ouvrez l'adresse ci-dessous et activez « Mode développeur » en haut de la page."
+        },
+        "load": {
+          "title": "Chargez le dossier",
+          "body": "Cliquez sur « Charger l'extension non empaquetée » et choisissez le dossier décompressé (celui qui contient manifest.json)."
+        },
+        "pin": {
+          "title": "Épinglez-la",
+          "body": "Cliquez sur l'icône puzzle de Chrome, puis sur l'épingle à côté de « Mazed Immo — Prospection » : le bouton reste visible."
+        },
+        "use": {
+          "title": "Utilisez-la sur Facebook",
+          "body": "Sur le post, sélectionnez son texte à la souris, cliquez sur le bouton, vérifiez, puis « Ouvrir Mazed ». Le formulaire s'ouvre rempli ; c'est vous qui l'envoyez."
+        }
+      },
+      "privacyTitle": "Ce que fait l'extension, et ce qu'elle ne fait pas",
+      "privacy": {
+        "reads": "Elle ne lit la page que lorsque vous cliquez sur son bouton, et seulement le post affiché.",
+        "sends": "Elle n'envoie rien toute seule : elle ouvre Mazed Immo avec le texte dans l'adresse, après le #, que le navigateur n'envoie jamais à un serveur.",
+        "account": "Elle n'accède ni à votre compte Facebook, ni à vos messages, ni à vos amis.",
+        "review": "Vous relisez le texte et l'envoyez vous-même : le numéro, le nom et le lien se corrigent avant."
+      }
     }
   }
 }
