@@ -265,6 +265,12 @@ export function startOfTunisiaDay(now: Date = new Date()): string {
   return new Date(day - 3_600_000).toISOString();
 }
 
+/** « للبيع » / « للكراء » (« à vendre » / « à louer »): what the annonce is for, in the message's language. */
+export function dealWord(deal: "sale" | "rent", language: "ar" | "fr"): string {
+  if (language === "fr") return deal === "rent" ? "à louer" : "à vendre";
+  return deal === "rent" ? "للكراء" : "للبيع";
+}
+
 /** The one line that names the property in a message: the title, else what the draft says. */
 export function propertyLine(d: ListingDraft): string {
   if (d.title) return d.title;
