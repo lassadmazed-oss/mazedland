@@ -2,3 +2,6 @@
 # their packages (src/components/map/maplibre.ts, checked by maplibre.test.ts):
 # never converted to CRLF on a Windows checkout.
 public/maplibre/** -text
+
+# The extension download: a binary, never converted (scripts/build-extension.mjs, checked by extension.test.ts).
+public/downloads/** -text
