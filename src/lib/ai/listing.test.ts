@@ -20,6 +20,8 @@ const answer = (over: Record<string, unknown> = {}) => ({
   rooms: null,
   bathrooms: null,
   floor: null,
+  levels: null,
+  floor_only: false,
   furnished: null,
   deposit_tnd: null,
   charges_tnd: null,
@@ -46,6 +48,21 @@ describe("normalizeListingDraft", () => {
       areaSqm: 180,
       questions: ["قدّاش من بيت فيها؟"],
     });
+  });
+
+  it("keeps the levels and one floor of a house, within reason", () => {
+    const read = (over: Record<string, unknown>) => normalizeListingDraft(answer(over), { categories: CATS, sourceText: SOURCE });
+    expect(read({ levels: 2 })).toMatchObject({ levels: 2, floorOnly: false });
+    expect(read({ floor_only: true, floor: 1 })).toMatchObject({ floorOnly: true, floor: 1, levels: null });
+    expect(read({ levels: 40 }).levels).toBeNull();
+    expect(read({ levels: 0 }).levels).toBeNull();
+    expect(read({ floor_only: "yes" }).floorOnly).toBe(false);
+  });
+
+  it("asks the model for the levels and one floor of a house", () => {
+    const prompt = buildSystemPrompt(CATS);
+    expect(prompt).toContain("levels:");
+    expect(prompt).toContain("floor_only:");
   });
 
   it("drops a category or a governorate the site does not have", () => {

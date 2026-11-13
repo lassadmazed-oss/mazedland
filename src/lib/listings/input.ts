@@ -157,6 +157,8 @@ const ATTRIBUTE_BOUNDS: Record<string, [min: number, max: number]> = {
   rooms: [0, 50],
   bathrooms: [0, 20],
   floor: [0, 100],
+  // How many levels it spans (src/lib/listings/levels.ts): 2 is a duplex.
+  levels: [1, 20],
   year_built: [1850, new Date().getFullYear() + 3],
 };
 

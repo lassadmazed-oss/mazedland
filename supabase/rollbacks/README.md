@@ -10,6 +10,7 @@ node scripts/backup-db.mjs
 
 | Migration | Rollback | What is lost |
 |---|---|---|
+| 0217 floors and levels | `0217_floor_levels.down.sql` | nothing the sellers gave: « Étage » is asked of maisons and villas again and « Niveaux » goes, while every `levels` / `floor_only` answer stays in `attributes`; a search for « duplex » again matches only the annonces that write it; roll the code back first, or the form shows a villa's floor as an apartment's |
 | 0215 social: two lanes | `0215_social_two_lanes.down.sql` | an annonce can again have only one live ask: where the seller's and Mazed's are both live, cancel one first (the script's header shows the query); roll the code back first, or it keeps asking beside the seller's ask |
 | 0209 founding plan | `0209_founding_plan.down.sql` | which plan each waiting agence picked with the founding offer (« Ouvrir » then gives `founding_offer_plan`); roll the code back first |
 | 0208 articles (guides) | `0208_articles.down.sql` | every guide written in the console, published or draft (export the table first); the covers stay in storage until the nightly sweep |

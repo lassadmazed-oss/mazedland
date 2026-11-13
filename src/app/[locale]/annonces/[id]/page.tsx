@@ -63,6 +63,7 @@ import {
   Hammer,
   Hash,
   Home,
+  Layers,
   MapPin,
   PencilLine,
   Plug,
@@ -73,6 +74,7 @@ import {
   Trees,
   Waves,
 } from "lucide-react";
+import { langOf, levelsFact } from "@/lib/listings/levels";
 import type { Metadata } from "next";
 import { jsonLdSafe } from "@/lib/jsonld";
 import { breadcrumbLd, listingDescription } from "@/lib/seo";
@@ -153,6 +155,7 @@ const FACT_ICONS: Record<string, React.ComponentType<{ className?: string; strok
   rooms: BedDouble,
   bathrooms: Bath,
   floor: Building2,
+  levels: Layers,
   year_built: CalendarDays,
   buildable: Hammer,
   titled: FileCheck,
@@ -383,11 +386,22 @@ export default async function AnnoncePage({
   // `attributes.<field_key>` message when there is one (the stored label is
   // French), and the stored label for anything an admin added since.
   const attrs = (l.attributes ?? {}) as Record<string, unknown>;
-  const specs = ((attrDefs ?? []) as {
+  const defList = (attrDefs ?? []) as {
     field_key: string; label: string; unit: string | null;
     options: { value: string; label: string }[] | null;
-  }[])
+  }[];
+  const defKeys = defList.map((d) => d.field_key);
+  const specs = defList
     .map((d) => {
+      // The floor and the levels in words: « طابق أرضي », « الطابق الثالث
+      // والرابع » beside « دوبلكس », a villa's « زوز طوابق · دوبلكس » — and
+      // never an old « 0 » floor on a whole villa (src/lib/listings/levels.ts).
+      const fact = levelsFact(d.field_key, attrs, defKeys, langOf(locale), category?.slug);
+      if (fact !== undefined) {
+        if (fact === null) return null;
+        const label = tRoot.has(`attributes.${d.field_key}`) ? tRoot(`attributes.${d.field_key}`) : d.label;
+        return { key: d.field_key, label, value: fact };
+      }
       const raw = attrs[d.field_key];
       if (raw == null || raw === "" || raw === false) return null;
       const unit = d.unit === "m²" ? tRoot("common.sqm") : d.unit;

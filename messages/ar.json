@@ -1228,6 +1228,7 @@
     "rooms": "البيوت (S+)",
     "bathrooms": "الحمّامات",
     "floor": "الطابق",
+    "levels": "الطوابق",
     "year_built": "سنة البناء",
     "buildable": "صالحة للبناء",
     "titled": "رسم عقاري",
@@ -1739,6 +1740,11 @@
     "dealRent": "للكراء",
     "categoryTitleRent": "شنوّة تحب تكري؟",
     "titleForRent": "{category} للكراء",
+    "titleFloorOf": "طابق من {noun}",
+    "levels": {
+      "unitQuestion": "{kind, select, flat {الشقة على قدّاش من طابق؟} other {على قدّاش من طابق؟}}",
+      "whichFloor": "أما طابق؟"
+    },
     "rentTitle": "العنوان والكراء",
     "rentHint": "نقترح العنوان حسب ما أدخلته. الكراء هو المبلغ في الشهر؛ والباقي عمّر اللي تعرفو.",
     "rentLabel": "الكراء في الشهر",
@@ -1938,8 +1944,7 @@
       "sale": "للبيع",
       "rent": "للكراء",
       "area": "{n} م²",
-      "rooms": "S+{n}",
-      "floor": "الطابق {n}"
+      "rooms": "S+{n}"
     }
   },
   "photoUploader": {
