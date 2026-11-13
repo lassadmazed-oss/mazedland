@@ -10,6 +10,7 @@ import { PHONE_PROOF_COOKIE, verifyPhoneProof } from "@/lib/otp";
 import { requestLocale } from "@/lib/i18n/server";
 import { getSettings } from "@/lib/settings/server";
 import { recordConsents } from "@/lib/consents/server";
+import { phoneEmail } from "@/lib/auth/phoneEmail";
 
 /**
  * Phone-only signup — fully server-side.
@@ -38,12 +39,8 @@ import { recordConsents } from "@/lib/consents/server";
  * still runs in front of this when configured.
  */
 
-// Synthetic email domain for phone accounts. Nothing is ever sent here; the
-// address only exists so Supabase has a unique handle. Per-app default, but
-// override with SIGNUP_EMAIL_DOMAIN to point at a domain you actually OWN
-// (audit #16/#19 — the hardcoded default isn't owned, a latent recovery/
-// takeover vector if email-based recovery is ever turned on).
-const PHONE_EMAIL_DOMAIN = process.env.SIGNUP_EMAIL_DOMAIN || "phone.mazedland.app";
+// The synthetic email of a phone account (src/lib/auth/phoneEmail.ts, shared
+// with Prospection, which makes accounts for owners who said yes to the team).
 
 const BUCKET = new Map<string, number[]>();
 const WINDOW_MS = 60_000;
@@ -143,7 +140,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "phone_taken" }, { status: 409 });
   }
 
-  const email = `${phone.replace(/\D/g, "")}@${PHONE_EMAIL_DOMAIN}`;
+  const email = phoneEmail(phone);
   const { data: created, error: createErr } = await admin.auth.admin.createUser({
     email,
     password,

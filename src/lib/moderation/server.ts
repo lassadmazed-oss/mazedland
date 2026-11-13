@@ -80,13 +80,15 @@ const area = (attrs: Record<string, unknown> | null) => {
 /**
  * Every reason this annonce cannot publish itself. Empty means it may.
  * `photoCount` judges a gallery that is not saved yet (an edit of a
- * published annonce, 0172) instead of the one in the database.
+ * published annonce, 0172) instead of the one in the database. `vouched`: a
+ * person at Mazed confirmed this annonce with its owner (Prospection, 0218), so
+ * it is not a stranger's first annonce; every other rule still applies.
  */
 export async function reviewFlagsFor(
   admin: Admin,
   listing: ListingRow,
   settings: ModerationSettings,
-  opts: { photoCount?: number } = {},
+  opts: { photoCount?: number; vouched?: boolean } = {},
 ): Promise<ReviewFlag[]> {
   const [{ count: savedPhotos }, { data: cat }, { data: siblings }, trusted] = await Promise.all([
     admin.from("listing_photos").select("id", { count: "exact", head: true }).eq("listing_id", listing.id),
@@ -129,7 +131,7 @@ export async function reviewFlagsFor(
     },
     settings,
   );
-  return trusted ? flags : ["first_listing", ...flags];
+  return trusted || opts.vouched ? flags : ["first_listing", ...flags];
 }
 
 /**
@@ -146,6 +148,7 @@ export async function publishOrQueue(
   listingId: string,
   settings: ModerationSettings,
   extra: Record<string, unknown> = {},
+  opts: { vouched?: boolean } = {},
 ): Promise<
   | { status: "published"; expiresAt: Date; flags: [] }
   | { status: "pending_review"; flags: ReviewFlag[] }
@@ -159,7 +162,7 @@ export async function publishOrQueue(
   if (readErr || !listing) return { status: "error", error: readErr ?? new Error("listing_not_found") };
 
   const row = listing as unknown as ListingRow;
-  const flags = await reviewFlagsFor(admin, row, settings);
+  const flags = await reviewFlagsFor(admin, row, settings, { vouched: opts.vouched });
 
   if (flags.length === 0 && settings.autoPublish) {
     const out = await publishListing(admin, row, { reviewerId: null, extra });

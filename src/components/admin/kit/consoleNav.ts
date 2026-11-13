@@ -1,7 +1,7 @@
 import {
   BarChart3, BellRing, BookOpen, Megaphone, Store, GalleryHorizontalEnd,
   LayoutDashboard, Inbox, Receipt, Tag, Users, FolderTree,
-  SlidersHorizontal, TrendingUp,
+  SlidersHorizontal, TrendingUp, UserPlus,
   type LucideIcon,
 } from "lucide-react";
 import type { ConsoleSection } from "@/lib/admin/sections";
@@ -32,6 +32,8 @@ export const NAV: NavItem[] = [
   { key: "listings", href: "/admin/annonces", Icon: Inbox, countKey: "annonces", section: "annonces" },
   { key: "demandes", href: "/admin/demandes", Icon: BellRing, section: "demandes" },
   { key: "social", href: "/admin/social", Icon: Megaphone, countKey: "social", section: "social" },
+  // The owners the team brings in (0218).
+  { key: "prospection", href: "/admin/prospection", Icon: UserPlus, section: "prospection" },
   { key: "ads", href: "/admin/publicites", Icon: GalleryHorizontalEnd, section: "publicites" },
   { key: "payments", href: "/admin/paiements", Icon: Receipt, countKey: "paiements", section: "paiements" },
   { key: "shops", href: "/admin/agences", Icon: Store, countKey: "boutiques", section: "agences" },
