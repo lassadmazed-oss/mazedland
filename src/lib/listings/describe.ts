@@ -16,6 +16,7 @@
  * Pure, so the tests can pin every sentence.
  */
 import type { DealType, Furnished } from "./deal";
+import { arLevelCount, arOrdinal, frOrdinal, type LevelsStyle } from "./levels";
 import { listOfFields } from "./wizard";
 import { delegationLabel } from "@/lib/delegations";
 import { governorateLabel } from "@/lib/tunisia";
@@ -58,8 +59,15 @@ export type DescribeInput = {
   categorySlug: string | null;
   /** The category as the form shows it, for one this file has no noun for. */
   categoryLabel: string | null;
-  /** The numbers answered: area_sqm, rooms, bathrooms, floor, year_built. */
-  numbers: Partial<Record<"area_sqm" | "rooms" | "bathrooms" | "floor" | "year_built", number | null>>;
+  /** The numbers answered: area_sqm, rooms, bathrooms, floor, levels, year_built. */
+  numbers: Partial<Record<"area_sqm" | "rooms" | "bathrooms" | "floor" | "levels" | "year_built", number | null>>;
+  /**
+   * How the category asks its levels (src/lib/listings/levels.ts): a flat's
+   * duplex, or a whole house's levels. Left out, a floor is said as given.
+   */
+  levelsStyle?: LevelsStyle | null;
+  /** A house or a villa of which one floor only is offered: « Étage de villa ». */
+  floorOnly?: boolean;
   /** The yes/no questions answered yes, with the label the form shows for each. */
   yes: { key: string; label: string }[];
   governorate: string | null;
@@ -102,6 +110,28 @@ function floorText(floor: number, lang: Lang): string {
   return floor <= 10 ? `في الطابق ${AR_ORDINAL[floor]}` : `في الطابق ${floor}`;
 }
 
+/** A flat's duplex or triplex, on the floors it takes: « duplex aux 3e et 4e étages ». */
+function unitLevelsText(levels: number, floor: number | null, lang: Lang): string {
+  if (lang === "fr") {
+    const name = levels === 2 ? "duplex" : levels === 3 ? "triplex" : `sur ${levels} niveaux`;
+    if (floor === null || floor < 0) return name;
+    const top = floor + levels - 1;
+    if (levels === 2) return floor === 0 ? `${name} au rez-de-chaussée et au 1er étage` : `${name} aux ${frOrdinal(floor)} et ${frOrdinal(top)} étages`;
+    return `${name} du ${floor === 0 ? "rez-de-chaussée" : frOrdinal(floor)} au ${frOrdinal(top)} étage`;
+  }
+  const name = levels === 2 ? "دوبلكس" : levels === 3 ? "تريبلكس" : `على ${arLevelCount(levels)}`;
+  if (floor === null || floor < 0) return name;
+  const top = floor + levels - 1;
+  if (levels === 2) return `${name} في الطابق ${arOrdinal(floor)} و${arOrdinal(top)}`;
+  return `${name} من الطابق ${arOrdinal(floor)} للطابق ${arOrdinal(top)}`;
+}
+
+/** A whole house's levels: « sur 2 niveaux », « على زوز طوابق ». */
+function buildingLevelsText(levels: number, lang: Lang): string {
+  if (lang === "fr") return levels === 1 ? "de plain-pied" : `sur ${levels} niveaux`;
+  return `على ${arLevelCount(levels)}`;
+}
+
 /** The place, from the most precise to the governorate: « La Marsa (Tunis), quartier Gammarth ». */
 function place(input: DescribeInput, lang: Lang): string {
   const gov = input.governorate ? governorateLabel(input.governorate, lang) : "";
@@ -121,8 +151,12 @@ export function describeListing(input: DescribeInput): string {
   const lang = langOf(input.locale);
   const fr = lang === "fr";
   const noun = input.categorySlug ? NOUNS[input.categorySlug]?.[lang] : undefined;
-  const word = noun?.word ?? input.categoryLabel?.trim() ?? (fr ? "Bien" : "عقار");
-  const g: Gender = noun?.g ?? "m";
+  const style = input.levelsStyle ?? null;
+  // One floor of a villa is « Étage de villa », not « Villa »: it is what is offered.
+  const floorOfBuilding = style === "building" && input.floorOnly === true;
+  const whole = noun?.word ?? input.categoryLabel?.trim() ?? (fr ? "Bien" : "عقار");
+  const word = floorOfBuilding ? (fr ? `Étage de ${whole.toLowerCase()}` : `طابق من ${whole}`) : whole;
+  const g: Gender = floorOfBuilding ? "m" : noun?.g ?? "m";
   const rent = input.deal === "rent";
   const n = input.numbers;
   const lines: string[] = [];
@@ -145,7 +179,21 @@ export function describeListing(input: DescribeInput): string {
         : arCount(n.bathrooms, "حمّام واحد", "زوز حمّامات", "حمّامات", "حمّام"),
     );
   }
-  if (n.floor != null && Number.isInteger(n.floor)) sizes.push(floorText(n.floor, lang));
+  // The floor and the levels: a flat « au 2e étage » or « duplex aux 3e et 4e
+  // étages »; a whole house « sur 2 niveaux », never « au rez-de-chaussée ».
+  const floor = n.floor != null && Number.isInteger(n.floor) ? n.floor : null;
+  const levels = n.levels != null && Number.isInteger(n.levels) && n.levels >= 1 ? n.levels : null;
+  if (style === "building") {
+    if (floorOfBuilding) {
+      if (floor !== null) sizes.push(floorText(floor, lang));
+    } else if (levels !== null) {
+      sizes.push(buildingLevelsText(levels, lang));
+    }
+  } else if (levels !== null && levels >= 2) {
+    sizes.push(unitLevelsText(levels, floor, lang));
+  } else if (floor !== null) {
+    sizes.push(floorText(floor, lang));
+  }
   if (sizes.length > 0) lines.push(`${capitalize(sizes.join(fr ? ", " : "، "))}.`);
 
   // The year: « neuf » when it is this one.

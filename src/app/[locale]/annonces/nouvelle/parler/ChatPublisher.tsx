@@ -12,6 +12,7 @@ import { PhotoUploader, type UploadedPhoto } from "@/components/listing/PhotoUpl
 import { useDictation, useDictationProblem } from "@/components/listing/useDictation";
 import { speechLang } from "@/components/search/speech";
 import { appliesTo } from "@/lib/listings/deal";
+import { FLOOR_KEY, LEVELS_KEY, langOf, levelsFact } from "@/lib/listings/levels";
 import { governorateLabel } from "@/lib/tunisia";
 import { formatTND, cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics/events";
@@ -106,9 +107,16 @@ export function ChatPublisher({
     if (draft.rooms != null) said.rooms = String(draft.rooms);
     if (draft.bathrooms != null) said.bathrooms = String(draft.bathrooms);
     if (draft.floor != null) said.floor = String(draft.floor);
+    if (draft.levels != null) said.levels = String(draft.levels);
+    // One floor of a house: levels 1, and the floor said (src/lib/listings/levels.ts).
+    if (draft.floorOnly) {
+      said.floor_only = "true";
+      said.levels = "1";
+    }
     for (const [k, v] of Object.entries(draft.legal)) said[k] = v ? "true" : "false";
   }
   const attributes = typedAttributes(defs, said);
+  const defKeys = defs.map((d) => d.field_key);
 
   /** What the conversation still has to give (the form's required questions). */
   const toSay = [
@@ -130,7 +138,8 @@ export function ChatPublisher({
         draft.price != null ? (deal === "rent" ? tp("perMonth", { amount: money(draft.price) }) : money(draft.price)) : null,
         draft.areaSqm != null ? t("fields.area", { n: draft.areaSqm }) : null,
         draft.rooms != null ? t("fields.rooms", { n: draft.rooms }) : null,
-        draft.floor != null ? t("fields.floor", { n: draft.floor }) : null,
+        // « الطابق الثالث », « دوبلكس », « زوز طوابق · دوبلكس »: the words the annonce will show.
+        ...[FLOOR_KEY, LEVELS_KEY].map((k) => levelsFact(k, attributes, defKeys, langOf(locale), category?.slug) ?? null),
         draft.furnished ? tp(`furnished.${draft.furnished}`) : null,
       ].filter((x): x is string => !!x)
     : [];

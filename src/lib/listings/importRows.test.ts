@@ -78,6 +78,8 @@ describe("columns", () => {
     expect(columnOf("Titre")).toBe("title");
     expect(columnOf("السعر")).toBe("price");
     expect(columnOf("Référence interne")).toBeNull();
+    expect(columnOf("Niveaux")).toBe("levels");
+    expect(columnOf("عدد الطوابق")).toBe("levels");
   });
 });
 
@@ -124,6 +126,10 @@ describe("values", () => {
     expect(id("appartement S+2")).toBe("appartements");
     expect(id("Studio")).toBe("appartements");
     expect(id("Villa jumelée")).toBe("villas");
+    // A villa can be a duplex too; a « Duplex » alone is a flat.
+    expect(id("Villa duplex")).toBe("villas");
+    expect(id("Duplex")).toBe("appartements");
+    expect(id("Appartement triplex")).toBe("appartements");
     expect(id("Maison")).toBe("maisons");
     expect(id("Terrain")).toBe("terrain");
     expect(id("Lotissement")).toBe("terrain");
@@ -187,6 +193,25 @@ describe("one line", () => {
     expect(r.status).toBe("ok");
     expect(r.body).toMatchObject({ deal_type: "rent", deposit_amount: 3600, available_from: "2026-12-01" });
     expect(r.preview.title).toBe("Villa S+4 à louer · 250 m² · Sfax");
+  });
+
+  it("reads the levels from « Niveaux », or from a duplex said in the type", () => {
+    // After 0217: villas ask the levels instead of the floor, flats beside it.
+    const attributes = [
+      ...ATTRIBUTES.filter((a) => !(a.category_id === "villas" && a.field_key === "floor")),
+      def("villas", "levels", "number"),
+      def("appartements", "levels", "number"),
+    ];
+    const c = ctx({ attributes });
+    const [villa] = rows("Type;Prix;Surface;Pièces\nVilla duplex;900000;300;S+4", c);
+    expect(villa.body).toMatchObject({ category_id: "villas", attributes: { area_sqm: 300, rooms: 4, levels: 2 } });
+    const [flat] = rows("Type;Prix;Surface;Pièces;Étage;Niveaux\nAppartement;450000;160;S+3;3;Duplex", c);
+    expect(flat.body).toMatchObject({ category_id: "appartements", attributes: { floor: 3, levels: 2 } });
+    const [bad] = rows("Type;Prix;Surface;Pièces;Niveaux\nVilla;900000;300;S+4;beaucoup", c);
+    expect(bad.errors.map((e) => e.code)).toContain("answer_invalid");
+    // No levels question for the category: the column is not read.
+    const [old] = rows("Type;Prix;Surface;Pièces;Niveaux\nMaison;200000;150;4;2", c);
+    expect(old.body?.attributes).not.toHaveProperty("levels");
   });
 
   it("keeps the agence's governorate when the file has no column for it", () => {

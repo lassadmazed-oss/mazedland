@@ -57,8 +57,11 @@ const GOV_ALIASES: Record<string, string[]> = {
   Kebili: ["kébili"],
 };
 
+// « duplex » and « triplex » are not a category: a villa can be one too. They
+// stay keywords, which 0217's search_text matches on every annonce whose
+// levels are 2 or 3 (src/lib/listings/levels.ts), whatever its type.
 const CATEGORY_WORDS: [string, string[]][] = [
-  ["appartements", ["appartement", "appartements", "appart", "apart", "studio", "duplex", "شقة", "شقق", "ستوديو", "دوبلكس"]],
+  ["appartements", ["appartement", "appartements", "appart", "apart", "studio", "شقة", "شقق", "ستوديو"]],
   ["villas", ["villa", "villas", "فيلا", "فيلات", "فيلة"]],
   ["maisons", ["maison", "maisons", "houch", "hawch", "dar", "حوش", "دار", "منزل", "منازل"]],
   ["terrain", ["terrain", "terrains", "lot", "lotissement", "أرض", "أراضي", "مقسم", "قطعة"]],

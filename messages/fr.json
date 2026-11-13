@@ -1228,6 +1228,7 @@
     "rooms": "Chambres (S+)",
     "bathrooms": "Salles de bain",
     "floor": "Étage",
+    "levels": "Niveaux",
     "year_built": "Année de construction",
     "buildable": "Constructible",
     "titled": "Titre foncier",
@@ -1739,6 +1740,11 @@
     "dealRent": "À louer",
     "categoryTitleRent": "Que louez-vous ?",
     "titleForRent": "{category} à louer",
+    "titleFloorOf": "Étage de {noun}",
+    "levels": {
+      "unitQuestion": "{kind, select, flat {L'appartement est sur combien de niveaux ?} other {Sur combien de niveaux ?}}",
+      "whichFloor": "Quel étage ?"
+    },
     "rentTitle": "Titre et loyer",
     "rentHint": "Le titre est proposé d'après ce que vous avez saisi. Le loyer est le montant par mois ; le reste, remplissez ce que vous savez.",
     "rentLabel": "Loyer mensuel",
@@ -1938,8 +1944,7 @@
       "sale": "À vendre",
       "rent": "À louer",
       "area": "{n} m²",
-      "rooms": "S+{n}",
-      "floor": "Étage {n}"
+      "rooms": "S+{n}"
     }
   },
   "photoUploader": {

@@ -72,6 +72,22 @@ import {
   toggleLine,
   writeDescription,
 } from "@/lib/listings/describe";
+import {
+  BUILDING_LEVELS,
+  FLOOR_KEY,
+  FLOOR_OF_BUILDING,
+  FLOOR_ONLY_KEY,
+  LEVELS_KEY,
+  UNIT_LEVELS,
+  floorOfBuildingAnswers,
+  floorOnlyWords,
+  langOf,
+  levelsAnswers,
+  levelsFact,
+  levelsStyle,
+  levelsWords,
+  type LevelsStyle,
+} from "@/lib/listings/levels";
 
 /**
  * Publier une annonce — the sell-or-let flow.
@@ -465,6 +481,11 @@ export function PublishWizard({
    */
   function switchCategory(next: WizardCategory) {
     const keep = new Set((attributesByCategory[next.id] ?? []).map((a) => a.field_key));
+    // A whole house's levels question also holds « one floor of it » and which floor.
+    if (levelsStyle(keep) === "building") {
+      keep.add(FLOOR_ONLY_KEY);
+      keep.add(FLOOR_KEY);
+    }
     setCategoryId(next.id);
     setAttrs((a) => Object.fromEntries(Object.entries(a).filter(([k]) => keep.has(k))));
   }
@@ -599,6 +620,12 @@ export function PublishWizard({
       if (dr.rooms != null) read.rooms = String(dr.rooms);
       if (dr.bathrooms != null) read.bathrooms = String(dr.bathrooms);
       if (dr.floor != null) read.floor = String(dr.floor);
+      if (dr.levels != null) read.levels = String(dr.levels);
+      // One floor of a house: the levels question's own chip, and levels 1.
+      if (dr.floorOnly) {
+        read.floor_only = "true";
+        read.levels = "1";
+      }
       for (const [k, v] of Object.entries(dr.legal)) read[k] = v ? "true" : "false";
       setAttrs((a) => ({ ...a, ...read }));
       if (dr.deal === "rent") {
@@ -645,14 +672,17 @@ export function PublishWizard({
     // rooms the way Tunisians say them for a home, the surface grouped.
     const area = Number(attrs.area_sqm) > 0 ? formatNumber(Number(attrs.area_sqm), locale) : null;
     const noun = t.has(`titleNoun.${category.slug}`) ? t(`titleNoun.${category.slug}` as "titleNoun.appartements") : category.label;
+    // One floor of a villa is « Étage de villa S+3 », the way those annonces are written.
+    const floorOnly = levelsStyle(defs.map((def) => def.field_key)) === "building" && attrs.floor_only === "true";
+    const thing = floorOnly ? t("titleFloorOf", { noun: locale === "ar" ? noun : noun.toLowerCase() }) : noun;
     const rooms = category.kind === "residential" && Number(attrs.rooms) > 0 ? `S+${Number(attrs.rooms)}` : null;
-    const kind = [noun, rooms].filter(Boolean).join(" ");
+    const kind = [thing, rooms].filter(Boolean).join(" ");
     const where = delegation ? delegationLabel(delegation, locale) : governorateLabel(governorate, locale);
     const what = rent ? t("titleForRent", { category: kind }) : kind;
     return [what, area ? t("suggestedArea", { area }) : null, where]
       .filter(Boolean)
       .join(" · ");
-  }, [category, attrs.area_sqm, attrs.rooms, delegation, governorate, locale, t, rent]);
+  }, [category, defs, attrs.area_sqm, attrs.rooms, attrs.floor_only, delegation, governorate, locale, t, rent]);
 
   const title = titleTouched ? typedTitle : suggestedTitle;
   const setTitle = (v: string) => { setTitleTouched(true); setTypedTitle(v); };
@@ -670,6 +700,9 @@ export function PublishWizard({
       const raw = attrs[key]?.trim() ?? "";
       return raw !== "" && Number.isFinite(Number(raw)) ? Number(raw) : null;
     };
+    // A whole house's floor is only « one floor of it »: an old « RDC » on a villa says nothing.
+    const style = levelsStyle(defs.map((def) => def.field_key));
+    const levels = levelsAnswers(typedAttributes(defs, attrs));
     return describeListing({
       locale,
       deal,
@@ -679,9 +712,12 @@ export function PublishWizard({
         area_sqm: numberOf("area_sqm"),
         rooms: numberOf("rooms"),
         bathrooms: numberOf("bathrooms"),
-        floor: numberOf("floor"),
+        floor: style === "building" ? levels.floor : numberOf("floor"),
+        levels: numberOf("levels"),
         year_built: numberOf("year_built"),
       },
+      levelsStyle: style,
+      floorOnly: levels.floorOnly,
       yes: defs
         .filter((def) => def.data_type === "boolean" && (attrs[def.field_key] === "true" || attrs[def.field_key] === "1"))
         .map((def) => ({ key: def.field_key, label: def.label })),
@@ -732,10 +768,13 @@ export function PublishWizard({
   }
   for (const def of defs) {
     const v = attrs[def.field_key];
+    // « One floor of the house » keeps which floor under the levels question.
+    const floorOfHouse =
+      def.field_key === LEVELS_KEY && attrs.floor_only === "true" && levelsStyle(defs.map((d) => d.field_key)) === "building";
     // A figure no property has — a surface of 0 or −10 m² — is not an answer:
     // it is said under the field and in the summary, required or not, and the
     // form does not go on with it (2026-10-27 audit).
-    if (attributeOutOfBounds(def.field_key, v)) {
+    if (attributeOutOfBounds(def.field_key, v) || (floorOfHouse && attributeOutOfBounds(FLOOR_KEY, attrs.floor))) {
       missing.push({
         label: t("invalidAttribute", { label: def.label.toLowerCase() }),
         fieldId: attributeFieldId(def.field_key),
@@ -1356,8 +1395,13 @@ export function PublishWizard({
     : null;
 
   /** The details the seller gave, as one line a buyer would read. */
+  const defKeys = defs.map((def) => def.field_key);
+  const sentAttributes = typedAttributes(defs, attrs);
   const attributeSummary = defs
     .map((def) => {
+      // The floor and the levels in the words the annonce will show (src/lib/listings/levels.ts).
+      const fact = levelsFact(def.field_key, sentAttributes, defKeys, langOf(locale), category?.slug);
+      if (fact !== undefined) return fact === null ? null : `${def.label} : ${fact}`;
       const raw = attrs[def.field_key];
       if (raw == null || String(raw).trim() === "") return null;
       const value =
@@ -1365,9 +1409,7 @@ export function PublishWizard({
           ? raw === "true" || raw === "1"
             ? t("yes")
             : t("no")
-          : def.field_key === "floor" && def.data_type === "number" && Number(raw) === 0
-            ? t("chips.groundFloor")
-            : def.options?.find((o) => o.value === raw)?.label ?? raw;
+          : def.options?.find((o) => o.value === raw)?.label ?? raw;
       return `${def.label} : ${value}${def.unit ? ` ${def.unit}` : ""}`;
     })
     .filter(Boolean)
@@ -2060,17 +2102,35 @@ export function PublishWizard({
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
                     {defs.map((def) => {
                       const fid = attributeFieldId(def.field_key);
+                      // « Niveaux » asks a flat's duplex, or a whole house's levels (src/lib/listings/levels.ts).
+                      const levels = def.field_key === LEVELS_KEY && def.data_type === "number" ? levelsStyle(defKeys) : null;
                       return (
-                        <div key={def.field_key} id={fid} className={`scroll-mt-24 rounded-xl${flagCls(fid)}`}>
-                          <AttributeField
-                            def={def}
-                            value={attrs[def.field_key] ?? ""}
-                            onChange={(v) => setAttrs((s) => ({ ...s, [def.field_key]: v }))}
-                            error={errorFor(fid)}
-                            categorySlug={category?.slug ?? null}
-                            currentYear={Number(today.slice(0, 4))}
-                            locale={locale}
-                          />
+                        <div
+                          key={def.field_key}
+                          id={fid}
+                          className={`scroll-mt-24 rounded-xl${levels === "building" ? " sm:col-span-2" : ""}${flagCls(fid)}`}
+                        >
+                          {levels ? (
+                            <LevelsField
+                              def={def}
+                              style={levels}
+                              attrs={attrs}
+                              onPatch={(patch) => setAttrs((s) => ({ ...s, ...patch }))}
+                              error={errorFor(fid)}
+                              categorySlug={category?.slug ?? null}
+                              locale={locale}
+                            />
+                          ) : (
+                            <AttributeField
+                              def={def}
+                              value={attrs[def.field_key] ?? ""}
+                              onChange={(v) => setAttrs((s) => ({ ...s, [def.field_key]: v }))}
+                              error={errorFor(fid)}
+                              categorySlug={category?.slug ?? null}
+                              currentYear={Number(today.slice(0, 4))}
+                              locale={locale}
+                            />
+                          )}
                         </div>
                       );
                     })}
@@ -2608,6 +2668,10 @@ export function typedAttributes(
       out[def.field_key] = String(v).trim();
     }
   }
+  // A whole house's « one floor of it » rides on its levels question: the
+  // flag, levels 1 and which floor (src/lib/listings/levels.ts).
+  const floorOfHouse = floorOfBuildingAnswers(defs.map((def) => def.field_key), raw);
+  if (floorOfHouse) Object.assign(out, floorOfHouse);
   return out;
 }
 
@@ -2833,6 +2897,165 @@ function CountField({
       {showBox && (
         <div className="mt-2 max-w-40">
           <Field labelledBy={`${id}-label`} type="number" value={value} onChange={onChange} suffix={def.unit ?? undefined} compact />
+        </div>
+      )}
+      {error && <FieldError id={errorId}>{error}</FieldError>}
+    </div>
+  );
+}
+
+/**
+ * « الطوابق » (src/lib/listings/levels.ts). Beside a floor question it is a
+ * flat's: one level, duplex or triplex. Without one it is a whole house's:
+ * 1, 2 (duplex), 3 (triplex), « 4 et + » with the box — or « one floor of the
+ * house », which then asks which floor. Tapping the lit chip again clears it.
+ */
+function LevelsField({
+  def, style, attrs, onPatch, error, categorySlug, locale,
+}: {
+  def: AttributeDef;
+  style: LevelsStyle;
+  /** The whole form: the house's answer spans levels, floor_only and floor. */
+  attrs: Record<string, string>;
+  onPatch: (patch: Record<string, string>) => void;
+  error?: string | null;
+  categorySlug: string | null;
+  locale: string;
+}) {
+  const t = useTranslations("publish");
+  const id = useId();
+  const errorId = `${id}-error`;
+  const lang = langOf(locale);
+  // « 4 et + » and « 3 et + » tapped: their box stays open while the seller types.
+  const [typing, setTyping] = useState(false);
+  const [floorTyping, setFloorTyping] = useState(false);
+  const value = attrs[LEVELS_KEY] ?? "";
+  const group = {
+    role: "radiogroup",
+    "aria-labelledby": `${id}-label`,
+    "aria-required": def.required || undefined,
+    "aria-invalid": error ? true : undefined,
+    "aria-describedby": error ? errorId : undefined,
+    className: "mt-1.5 flex flex-wrap gap-2",
+  } as const;
+
+  if (style === "unit") {
+    const n = Number(value);
+    const picked = value.trim() !== "" && Number.isInteger(n) && n >= 1 ? n : null;
+    // An answer no chip holds (four levels, from an agence's file) stays in sight, lit.
+    const values = picked !== null && !UNIT_LEVELS.includes(picked) ? [...UNIT_LEVELS, picked] : UNIT_LEVELS;
+    return (
+      <div>
+        <Label id={`${id}-label`}>
+          {t("levels.unitQuestion", { kind: categorySlug === "appartements" ? "flat" : "other" })} {def.required && <Req />}
+        </Label>
+        <div {...group}>
+          {values.map((v) => {
+            const on = picked === v;
+            return (
+              <Chip key={v} on={on} onClick={() => onPatch({ [LEVELS_KEY]: on ? "" : String(v) })}>
+                {levelsWords(v, "unit", lang, categorySlug)}
+              </Chip>
+            );
+          })}
+        </div>
+        {error && <FieldError id={errorId}>{error}</FieldError>}
+      </div>
+    );
+  }
+
+  const floorOnly = attrs[FLOOR_ONLY_KEY] === "true";
+  const picked = floorOnly ? null : countChipOf(BUILDING_LEVELS, value);
+  const moreOn = !floorOnly && (typing || picked === "more");
+  const showBox = moreOn || (!floorOnly && value.trim() !== "" && picked === null);
+  const floor = attrs[FLOOR_KEY] ?? "";
+  const floorPicked = countChipOf(FLOOR_OF_BUILDING, floor);
+  const floorMoreOn = floorTyping || floorPicked === "more";
+  const showFloorBox = floorMoreOn || (floor.trim() !== "" && floorPicked === null);
+  return (
+    <div>
+      <Label id={`${id}-label`}>{def.label} {def.required && <Req />}</Label>
+      <div {...group}>
+        {BUILDING_LEVELS.values.map((v) => {
+          const on = !typing && picked === v;
+          return (
+            <Chip
+              key={v}
+              on={on}
+              onClick={() => {
+                setTyping(false);
+                onPatch({ [LEVELS_KEY]: on ? "" : String(v), [FLOOR_ONLY_KEY]: "" });
+              }}
+            >
+              {levelsWords(v, "building", lang, categorySlug)}
+            </Chip>
+          );
+        })}
+        <Chip
+          on={moreOn}
+          onClick={() => {
+            setTyping(!moreOn);
+            onPatch({ [LEVELS_KEY]: moreOn ? "" : String(BUILDING_LEVELS.orMore), [FLOOR_ONLY_KEY]: "" });
+          }}
+        >
+          {t("chips.orMore", { count: BUILDING_LEVELS.orMore })}
+        </Chip>
+        <Chip
+          on={floorOnly}
+          onClick={() => {
+            setTyping(false);
+            // One floor of the house spans one level; which floor is asked under it.
+            onPatch(floorOnly ? { [FLOOR_ONLY_KEY]: "", [LEVELS_KEY]: "" } : { [FLOOR_ONLY_KEY]: "true", [LEVELS_KEY]: "1" });
+          }}
+        >
+          {floorOnlyWords(lang)}
+        </Chip>
+      </div>
+      {showBox && (
+        <div className="mt-2 max-w-40">
+          <Field
+            labelledBy={`${id}-label`}
+            type="number"
+            value={value}
+            onChange={(v) => onPatch({ [LEVELS_KEY]: v, [FLOOR_ONLY_KEY]: "" })}
+            compact
+          />
+        </div>
+      )}
+      {floorOnly && (
+        <div className="mt-3">
+          <Label id={`${id}-floor`}>{t("levels.whichFloor")}</Label>
+          <div role="radiogroup" aria-labelledby={`${id}-floor`} className="mt-1.5 flex flex-wrap gap-2">
+            {FLOOR_OF_BUILDING.values.map((n) => {
+              const on = !floorTyping && floorPicked === n;
+              return (
+                <Chip
+                  key={n}
+                  on={on}
+                  onClick={() => {
+                    setFloorTyping(false);
+                    onPatch({ [FLOOR_KEY]: on ? "" : String(n) });
+                  }}
+                >
+                  {n === 0 ? t("chips.groundFloor") : n}
+                </Chip>
+              );
+            })}
+            <Chip
+              on={floorMoreOn}
+              onClick={() => {
+                setFloorTyping(!floorMoreOn);
+                onPatch({ [FLOOR_KEY]: floorMoreOn ? "" : String(FLOOR_OF_BUILDING.orMore) });
+              }}
+            >
+              {t("chips.orMore", { count: FLOOR_OF_BUILDING.orMore })}
+            </Chip>
+          </div>
+          {showFloorBox && (
+            <div className="mt-2 max-w-40">
+              <Field labelledBy={`${id}-floor`} type="number" value={floor} onChange={(v) => onPatch({ [FLOOR_KEY]: v })} compact />
+            </div>
+          )}
         </div>
       )}
       {error && <FieldError id={errorId}>{error}</FieldError>}
