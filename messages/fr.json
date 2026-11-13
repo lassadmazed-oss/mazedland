@@ -8052,7 +8052,7 @@
       "brokerHint": "Proposez-lui l'offre des agences plutôt que l'annonce de particulier.",
       "save": "Enregistrer",
       "sourceText": "Le texte du post",
-      "contactTitle": "1. Écrire au propriétaire",
+      "contactTitle": "Écrire au propriétaire",
       "contactHint": "Envoyez ce message tel quel : il dit tout ce que son « oui » couvre. Une personne l'envoie, pas un robot.",
       "openWhatsapp": "Ouvrir WhatsApp",
       "openSms": "Ouvrir les SMS",
@@ -8068,7 +8068,7 @@
         "messenger": "Messenger",
         "other": "Autre"
       },
-      "resultTitle": "2. Sa réponse",
+      "resultTitle": "Sa réponse",
       "note": "Note (facultatif)",
       "followUp": "À relancer le",
       "outcome": {
@@ -8079,7 +8079,7 @@
       },
       "sureDnc": "Ce numéro ne sera plus jamais contacté. Appuyez encore pour confirmer.",
       "sureAgain": "Confirmer",
-      "yesTitle": "3. Il a dit oui",
+      "yesTitle": "Il a dit oui",
       "yesHint": "Collez sa réponse mot pour mot : c'est la preuve de son accord. Le site crée son compte à son numéro et met l'annonce dedans, sans la publier.",
       "reply": "Sa réponse",
       "yesButton": "Il a dit oui",
@@ -8095,7 +8095,7 @@
         "no_reply": "sa réponse",
         "no_channel": "le canal de sa réponse"
       },
-      "photosTitle": "4. Photos et publication",
+      "photosTitle": "Photos et publication",
       "photosHint": "Au moins {min} photos, de préférence celles que le propriétaire envoie lui-même par WhatsApp. Celles de son post seulement si son « oui » les couvre et qu'elles sont propres.",
       "proof": "Son accord, noté par {by}",
       "waitingReview": "L'annonce attend la vérification d'un administrateur : elle sera en ligne dès qu'elle est approuvée.",
@@ -8207,7 +8207,31 @@
           "low_quality": "Photo floue, sombre ou de travers.",
           "duplicate": "Déjà sur Mazed Immo, sur l'annonce :"
         }
-      }
+      },
+      "stepsLabel": "Étapes",
+      "steps": {
+        "draft": "L'annonce",
+        "write": "Lui écrire",
+        "yes": "Il a dit oui",
+        "publish": "Photos et mise en ligne"
+      },
+      "stepHint": {
+        "draft": "Vérifiez l'annonce : la catégorie, le gouvernorat, le prix et le titre.",
+        "write": "Envoyez-lui le message, puis notez sa réponse.",
+        "yes": "Quand il dit oui, collez sa réponse ici.",
+        "publish": "Ajoutez les photos, vérifiez-les, puis publiez."
+      },
+      "next": "Suivant",
+      "prev": "Retour",
+      "saveNext": "Enregistrer et continuer",
+      "call": "Appeler",
+      "moreDetails": "Plus de détails (délégation, pièces, description)",
+      "whoTitle": "La personne",
+      "lockedPublish": "Il faut d'abord le « oui » du propriétaire.",
+      "goYes": "Aller à « Il a dit oui »",
+      "doneYes": "Son accord est noté.",
+      "nextYes": "Il a répondu oui",
+      "historyCount": "Historique ({n})"
     },
     "range": {
       "1": "Aujourd'hui",
