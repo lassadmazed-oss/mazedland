@@ -26,6 +26,7 @@ import { tunisDay } from "@/lib/visits";
 import { hasPhrase, togglePhrase } from "@/lib/phrases";
 import { chipClass } from "@/lib/chips";
 import { trackEvent } from "@/lib/analytics/events";
+import { GuestPhoneStep, type GuestSaved } from "@/components/requests/GuestPhoneStep";
 import { Bell, Check, KeyRound, ListChecks, Loader2, MapPin, Plus, Search } from "lucide-react";
 
 const MAX_GOVERNORATES = 5;
@@ -56,6 +57,7 @@ export function RequestForm({
   searchWords = null,
   anyDeal = false,
   via = null,
+  guest = false,
 }: {
   id: string | null;
   initial: RequestFormValue;
@@ -67,8 +69,11 @@ export function RequestForm({
   anyDeal?: boolean;
   /** Where the demande was offered (`demandeVia`), counted with it; null from anywhere else. */
   via?: string | null;
+  /** Signed out: the form is filled first, the number confirmed at the end (/api/requests/guest). */
+  guest?: boolean;
 }) {
   const t = useTranslations("requests");
+  const [phoneStep, setPhoneStep] = useState(false);
   const tc = useTranslations("common");
   const router = useRouter();
   const { toast } = useToast();
@@ -134,6 +139,32 @@ export function RequestForm({
     setV((s) => ({ ...s, budget_max: String(n), budget_min: "" }));
   }
 
+  /** The demande as the API reads it. */
+  const payload = () => ({
+    id,
+    deal_type: v.deal_type,
+    category_ids: v.category_ids,
+    governorates: v.governorates,
+    budget_min: v.budget_min || null,
+    budget_max: v.budget_max || null,
+    surface_min: v.surface_min || null,
+    rooms_min: v.rooms_min || null,
+    furnished: rent && v.furnished ? v.furnished : null,
+    move_in_by: rent && v.move_in_by ? v.move_in_by : null,
+    note: v.note,
+    alerts: v.alerts,
+    zone: v.zone,
+  });
+
+  const countSaved = (account?: GuestSaved["account"]) =>
+    trackEvent("demande_create", {
+      deal: v.deal_type,
+      govs: v.governorates.length,
+      mode: id ? "edit" : "new",
+      ...(via && !id ? { via } : {}),
+      ...(account ? { account } : {}),
+    });
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!(Number(v.budget_max) > 0)) {
@@ -150,26 +181,17 @@ export function RequestForm({
       document.getElementById("r-budget-min")?.focus();
       return;
     }
+    // A visitor: the number and its code come now, at the end (GuestPhoneStep).
+    if (guest) {
+      setPhoneStep(true);
+      return;
+    }
     setBusy(true);
     try {
       const res = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id,
-          deal_type: v.deal_type,
-          category_ids: v.category_ids,
-          governorates: v.governorates,
-          budget_min: v.budget_min || null,
-          budget_max: v.budget_max || null,
-          surface_min: v.surface_min || null,
-          rooms_min: v.rooms_min || null,
-          furnished: rent && v.furnished ? v.furnished : null,
-          move_in_by: rent && v.move_in_by ? v.move_in_by : null,
-          note: v.note,
-          alerts: v.alerts,
-          zone: v.zone,
-        }),
+        body: JSON.stringify(payload()),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -177,7 +199,7 @@ export function RequestForm({
         return;
       }
       toast(t("saved"), "success");
-      trackEvent("demande_create", { deal: v.deal_type, govs: v.governorates.length, mode: id ? "edit" : "new", ...(via && !id ? { via } : {}) });
+      countSaved();
       router.push("/account/requests" as never);
     } catch {
       toast(t("saveFailed"), "error");
@@ -219,6 +241,7 @@ export function RequestForm({
   const lastRooms = ROOMS_PRESETS[ROOMS_PRESETS.length - 1];
 
   return (
+    <>
     <form onSubmit={submit} className="mt-5 space-y-4">
       {/* Buy or rent — it decides the budget's scale and the rental questions. */}
       <section className="rounded-2xl border border-border bg-surface p-4">
@@ -665,6 +688,23 @@ export function RequestForm({
         {busy && <Loader2 className="size-4 animate-spin" />}
         {id ? t("submitEdit") : t("submitNew")}
       </button>
+      {guest && <p className="text-center text-[12px] leading-relaxed text-muted">{t("guest.submitHint")}</p>}
     </form>
+    {/* Outside the form: its own forms must not submit this one through the portal. */}
+    {guest && (
+      <GuestPhoneStep
+        open={phoneStep}
+        onClose={() => setPhoneStep(false)}
+        payload={payload}
+        onSaved={(saved) => {
+          countSaved(saved.account);
+          // A full load: the auth cookie came with the answer, and the first
+          // render of « Mes demandes » must carry it.
+          // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload so the first render carries the new cookie
+          window.location.assign(`/${locale}/account/requests${saved.account === "new" ? "?bienvenue=1" : ""}`);
+        }}
+      />
+    )}
+    </>
   );
 }

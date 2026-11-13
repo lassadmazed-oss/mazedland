@@ -194,9 +194,13 @@ export async function proxy(req: NextRequest) {
   // own redirect() ran after the response had started (a 200 with a meta
   // refresh), so they are gated here as well. On the decoded path: the raw
   // one let /fr/%61ccount through.
-  const accountMatch = decodedPath.match(
-    /^\/(fr|ar|en)\/(?:account(?:\/.*)?|watchlist|demandes\/nouvelle|annonces\/nouvelle(?:\/.*)?)\/?$/i,
-  );
+  // The demande form is open to visitors since 2026-11-13: they confirm their
+  // number at the end (/api/requests/guest), and the page itself sends to
+  // login when that cannot be (setting off, no SMS). Editing one (?id=) is
+  // still an account's.
+  const accountMatch =
+    decodedPath.match(/^\/(fr|ar|en)\/(?:account(?:\/.*)?|watchlist|annonces\/nouvelle(?:\/.*)?)\/?$/i) ??
+    (req.nextUrl.searchParams.has("id") ? decodedPath.match(/^\/(fr|ar|en)\/demandes\/nouvelle\/?$/i) : null);
   if (accountMatch && !authUserId) {
     const next = `${pathname}${search}`;
     const target = new URL(

@@ -3937,7 +3937,23 @@
     "zoneHint": "L'alerte ne part que pour une annonce dans cette zone.",
     "zoneView": "Voir la zone",
     "zoneRemove": "Retirer la zone",
-    "zoneDrawn": "Zone sur la carte"
+    "zoneDrawn": "Zone sur la carte",
+    "guestIntro": "Pas besoin de compte pour commencer : votre numéro vous sera demandé à la fin, avec un code par SMS.",
+    "guest": {
+      "title": "Dernière étape : votre numéro",
+      "body": "On vous envoie un code par SMS. Il confirme votre numéro, crée votre compte si vous n'en avez pas, et enregistre la demande. Votre numéro n'est jamais montré aux agences.",
+      "send": "Recevoir le code",
+      "verify": "Valider et enregistrer la demande",
+      "submitHint": "Après ce bouton, dernière étape : votre numéro, avec un code par SMS.",
+      "savedTitle": "Demande enregistrée",
+      "takenTitle": "Ce numéro a déjà un compte",
+      "existingBody": "Ce numéro a déjà un compte : la demande y est enregistrée. Connectez-vous pour la suivre et voir les annonces qui correspondent.",
+      "newNoSessionBody": "Votre compte est créé avec ce numéro et la demande est enregistrée. Pour entrer, choisissez « Mot de passe oublié ? » : un code par SMS vous laisse choisir un mot de passe.",
+      "takenBody": "Connectez-vous avec ce numéro, puis enregistrez la demande : elle reprend la même recherche.",
+      "login": "Se connecter",
+      "welcomeTitle": "Votre compte est prêt",
+      "welcomeBody": "Il est lié à votre numéro, et votre demande est enregistrée. Pour entrer depuis un autre téléphone, choisissez « Mot de passe oublié ? » sur la page de connexion : un code par SMS vous laisse choisir un mot de passe."
+    }
   },
   "requestsApi": {
     "budgetRequired": "Indiquez un budget maximum.",
@@ -6344,6 +6360,10 @@
     "prospect_ask_agency_fr": {
       "label": "Message à une agence (français)",
       "hint": "Pour un post publié par une agence, pas par un propriétaire : elle est invitée à ouvrir son agence, rien n'est publié pour elle. Trous : '{name}' '{link}' (la page des agences)."
+    },
+    "requests_guest_form": {
+      "label": "Demande sans compte",
+      "hint": "Le visiteur remplit sa demande, puis confirme son numéro par SMS : le compte se crée à ce moment. Éteint : connexion d'abord."
     }
   },
   "ads": {
