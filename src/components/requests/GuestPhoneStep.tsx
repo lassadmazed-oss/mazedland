@@ -52,6 +52,8 @@ export function GuestPhoneStep({
   const [phase, setPhase] = useState<"phone" | "code" | "login">("phone");
   const [phone, setPhone] = useState<string | null>(null);
   const [code, setCode] = useState("");
+  // The number whose code /verify accepted: a failed save is retried without it.
+  const [verifiedPhone, setVerifiedPhone] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
   const [error, setError] = useState<string | null>(null);
   // Saved in an account that is not signed in here, or nothing saved because the
@@ -81,6 +83,11 @@ export function GuestPhoneStep({
     });
     const j = (await res.json().catch(() => ({}))) as { ok?: boolean; configured?: boolean; error?: string; retryAfter?: number };
     if (res.ok && j.ok && j.configured !== false) return toCode(normalized, 60);
+    // Too many tries from this connection: no code went out, nothing to type.
+    if (res.status === 429 && j.error === "rate_limited") {
+      setError(ta("errors.tooManyAttempts"));
+      return;
+    }
     // A code is already out (a recent send) or the hour's cap is reached: the one they have still works.
     if (res.status === 429) return toCode(normalized, j.error === "cooldown" ? j.retryAfter ?? 60 : 60);
     setError(res.status === 400 && j.error === "invalid_phone" ? ta("errors.invalidPhone") : ta("errors.smsSendFailed"));
@@ -135,6 +142,13 @@ export function GuestPhoneStep({
     if (!phone) return;
     startTransition(async () => {
       try {
+        // The code was already accepted and only the save failed: the proof
+        // still holds (the server spends it once the demande is in), and the
+        // code itself is spent — sending it again would read « wrong code ».
+        if (verifiedPhone === phone) {
+          await save(phone);
+          return;
+        }
         const v = await fetch("/api/auth/phone/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -151,6 +165,7 @@ export function GuestPhoneStep({
           setError(map[vj.error ?? ""] ?? ta("otp.failed"));
           return;
         }
+        setVerifiedPhone(phone);
         await save(phone);
       } catch {
         setError(ta("errors.networkError"));
@@ -181,6 +196,7 @@ export function GuestPhoneStep({
       return;
     }
     if (j.error === "phone_not_verified") {
+      setVerifiedPhone(null);
       setPhase("phone");
       setError(ta("signup.phoneNotVerified"));
       return;

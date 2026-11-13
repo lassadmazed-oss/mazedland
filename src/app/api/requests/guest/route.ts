@@ -15,6 +15,7 @@ import { recordConsents } from "@/lib/consents/server";
 import { recordServerEvent } from "@/lib/analytics/server-events";
 import { phoneEmail } from "@/lib/auth/phoneEmail";
 import { insertRequest, readRequestBody } from "@/lib/requests/create";
+import { suspendedResponse } from "@/lib/moderation/ban";
 
 /** How long after /api/auth/phone/verify the proof is good for — the signup's window. */
 const VERIFY_WINDOW_MS = 15 * 60 * 1000;
@@ -100,6 +101,10 @@ export async function POST(req: NextRequest) {
   // answer would tell anyone which numbers have an account.
   const { data: profile } = await admin.from("profiles").select("id").eq("phone", phone).maybeSingle();
   if (profile?.id) {
+    // A suspended account cannot sign in; its number must not keep feeding it
+    // demandes the agences would answer.
+    const banned = await suspendedResponse(admin, req, profile.id as string);
+    if (banned) return banned;
     return spend(await insertRequest(req, admin, { id: profile.id as string }, value, settings, { account: "existing", signedIn: false }));
   }
 

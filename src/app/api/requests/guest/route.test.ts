@@ -1,19 +1,22 @@
 /**
  * POST /api/requests/guest decides who gets an account and who is signed in,
  * so each of its answers is pinned here with Supabase mocked: no proof, no
- * account; a number with an account gets the demande and NO session; a new
- * number gets an account, the CGU recorded, a session and the demande; the
- * proof is spent only once the demande is in.
+ * account; a number with an account gets the demande and NO session (unless
+ * that account is suspended); a new number gets an account, the CGU
+ * recorded, a session and the demande; the proof — for THAT number — is spent
+ * only once the demande is in.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
 
 const state = vi.hoisted(() => ({
+  phone: "+21698000000",
   settings: { requests_guest_form: true, legal_version: "2026-11-05", requests_max_active: 10, requests_days: 60 } as Record<string, unknown>,
   sms: true,
   proofOk: true,
   verifiedAt: null as string | null,
   profile: null as { id: string } | null,
+  banned: false,
   currentUser: null as { id: string } | null,
   createError: null as { message: string } | null,
   signInError: null as { message: string } | null,
@@ -23,7 +26,8 @@ const state = vi.hoisted(() => ({
     signIn: [] as unknown[],
     insert: [] as { userId: string; extra: Record<string, unknown> }[],
     consents: [] as unknown[],
-    otpDeleted: 0,
+    proofChecks: [] as unknown[][],
+    otpDeletedFor: [] as unknown[],
   },
 }));
 
@@ -39,9 +43,15 @@ vi.mock("@/lib/consents/server", () => ({
     return true;
   },
 }));
+vi.mock("@/lib/moderation/ban", () => ({
+  suspendedResponse: async () => (state.banned ? NextResponse.json({ error: "account_suspended" }, { status: 403 }) : null),
+}));
 vi.mock("@/lib/otp", async (orig) => ({
   ...(await orig<typeof import("@/lib/otp")>()),
-  verifyPhoneProof: () => state.proofOk,
+  verifyPhoneProof: (...args: unknown[]) => {
+    state.calls.proofChecks.push(args);
+    return state.proofOk;
+  },
 }));
 vi.mock("@/lib/requests/create", () => ({
   readRequestBody: async (_req: unknown, _admin: unknown, body: Record<string, unknown>) =>
@@ -68,17 +78,29 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/lib/supabase/admin", () => ({
   getServiceSupabase: () => {
+    // Rows answer only to the filter that names them: a lookup or a delete
+    // on another number finds and spends nothing.
     const query = (table: string) => {
+      const filters: Record<string, unknown> = {};
+      let deleting = false;
       const q = {
         select: () => q,
-        eq: () => q,
         delete: () => {
-          if (table === "phone_otps") state.calls.otpDeleted++;
+          deleting = true;
           return q;
         },
-        maybeSingle: async () => ({
-          data: table === "phone_otps" ? (state.verifiedAt ? { verified_at: state.verifiedAt } : null) : state.profile,
-        }),
+        eq: (column: string, value: unknown) => {
+          filters[column] = value;
+          if (deleting && table === "phone_otps" && column === "phone") state.calls.otpDeletedFor.push(value);
+          return q;
+        },
+        maybeSingle: async () => {
+          if (table === "phone_otps") {
+            return { data: filters.phone === state.phone && state.verifiedAt ? { verified_at: state.verifiedAt } : null };
+          }
+          if (table === "profiles") return { data: filters.phone === state.phone ? state.profile : null };
+          return { data: null };
+        },
       };
       return q;
     };
@@ -101,7 +123,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 const { POST } = await import("./route");
 
-const PHONE = "+21698000000";
+const PHONE = state.phone;
 const post = (body: Record<string, unknown>) =>
   POST(
     new NextRequest("https://www.mazed.immo/api/requests/guest", {
@@ -111,6 +133,7 @@ const post = (body: Record<string, unknown>) =>
     }),
   );
 const demande = { phone: PHONE, accepted: true, deal_type: "sale", budget_max: 200000, governorates: ["Sfax"] };
+const proofCleared = (res: Response) => /mz_phone_proof=;/.test(res.headers.get("set-cookie") ?? "");
 
 beforeEach(() => {
   state.settings.requests_guest_form = true;
@@ -118,11 +141,12 @@ beforeEach(() => {
   state.proofOk = true;
   state.verifiedAt = new Date().toISOString();
   state.profile = null;
+  state.banned = false;
   state.currentUser = null;
   state.createError = null;
   state.signInError = null;
   state.insertStatus = 200;
-  state.calls = { createUser: [], signIn: [], insert: [], consents: [], otpDeleted: 0 };
+  state.calls = { createUser: [], signIn: [], insert: [], consents: [], proofChecks: [], otpDeletedFor: [] };
 });
 
 describe("POST /api/requests/guest", () => {
@@ -130,6 +154,7 @@ describe("POST /api/requests/guest", () => {
     const res = await post(demande);
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ ok: true, id: "req-1", account: "new", signedIn: true });
+    expect(state.calls.proofChecks).toEqual([["proof", PHONE]]);
     expect(state.calls.createUser).toHaveLength(1);
     expect(state.calls.createUser[0]).toMatchObject({
       email_confirm: true,
@@ -138,9 +163,9 @@ describe("POST /api/requests/guest", () => {
     expect(state.calls.consents).toHaveLength(1);
     expect(state.calls.signIn).toHaveLength(1);
     expect(state.calls.insert).toEqual([{ userId: "new-user", extra: { account: "new", signedIn: true } }]);
-    // The proof is spent: the row and the cookie.
-    expect(state.calls.otpDeleted).toBe(1);
-    expect(res.headers.get("set-cookie") ?? "").toMatch(/mz_phone_proof=;/);
+    // The proof of this number is spent: the row and the cookie.
+    expect(state.calls.otpDeletedFor).toEqual([PHONE]);
+    expect(proofCleared(res)).toBe(true);
   });
 
   it("saves into the account that holds the number and signs NOBODY in", async () => {
@@ -150,7 +175,18 @@ describe("POST /api/requests/guest", () => {
     expect(state.calls.insert).toEqual([{ userId: "someone", extra: { account: "existing", signedIn: false } }]);
     expect(state.calls.createUser).toHaveLength(0);
     expect(state.calls.signIn).toHaveLength(0);
-    expect(state.calls.otpDeleted).toBe(1);
+    expect(state.calls.otpDeletedFor).toEqual([PHONE]);
+    expect(proofCleared(res)).toBe(true);
+  });
+
+  it("does not feed a suspended account, and keeps nothing spent", async () => {
+    state.profile = { id: "someone" };
+    state.banned = true;
+    const res = await post(demande);
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: "account_suspended" });
+    expect(state.calls.insert).toHaveLength(0);
+    expect(state.calls.otpDeletedFor).toEqual([]);
   });
 
   it("refuses without this browser's proof, and makes nothing", async () => {
@@ -169,9 +205,17 @@ describe("POST /api/requests/guest", () => {
     expect(state.calls.insert).toHaveLength(0);
   });
 
+  it("refuses a number that was never verified, even with a proof cookie for it", async () => {
+    const res = await post({ ...demande, phone: "+21697000000" });
+    expect(res.status).toBe(403);
+    expect(state.calls.proofChecks).toEqual([["proof", "+21697000000"]]);
+    expect(state.calls.insert).toHaveLength(0);
+  });
+
   it("refuses a bad demande before anything about the number", async () => {
     const res = await post({ ...demande, budget_max: 0 });
     expect(res.status).toBe(400);
+    expect(state.calls.proofChecks).toHaveLength(0);
     expect(state.calls.createUser).toHaveLength(0);
     expect(state.calls.insert).toHaveLength(0);
   });
@@ -197,7 +241,8 @@ describe("POST /api/requests/guest", () => {
     state.insertStatus = 409;
     const res = await post(demande);
     expect(res.status).toBe(409);
-    expect(state.calls.otpDeleted).toBe(0);
+    expect(state.calls.otpDeletedFor).toEqual([]);
+    expect(proofCleared(res)).toBe(false);
   });
 
   it("does not open an older account whose address is taken without a profile", async () => {
