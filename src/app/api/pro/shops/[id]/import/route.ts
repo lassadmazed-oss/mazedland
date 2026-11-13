@@ -89,6 +89,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     forRent: (category) => tp("titleForRent", { category }),
     locale,
     existing,
+    onRequest: { sale: settings.price_on_request_sale, rent: settings.price_on_request_rent },
   });
   const ok = rows.filter((r) => r.status === "ok");
   const summary = {

@@ -186,6 +186,7 @@ async function anonymise(admin: Admin, userId: string): Promise<{ error?: unknow
     admin.from("shop_members").delete().eq("user_id", userId),
     admin.from("visit_requests").update({ buyer_name: "Compte supprimé", buyer_phone: null, message: null }).eq("buyer_id", userId),
     admin.from("price_offers").update({ buyer_name: "Compte supprimé", buyer_phone: null, message: null }).eq("buyer_id", userId),
+    admin.from("price_questions").update({ buyer_name: "Compte supprimé", buyer_phone: null, message: null }).eq("buyer_id", userId),
     admin.from("leads").update({ name: "Compte supprimé", phone: null }).eq("buyer_id", userId),
   ]);
   // The login: no e-mail, phone or name left in it, and locked for good.

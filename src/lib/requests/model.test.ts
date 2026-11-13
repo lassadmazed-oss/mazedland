@@ -148,7 +148,14 @@ describe("catalogueQueryFor", () => {
       request({ deal_type: "rent", budget_max: 800, furnished: "furnished", move_in_by: "2026-12-01" }),
       new Map([[FLAT, "appartements"]]),
     );
-    expect(q).toBe("/annonces?deal=rent&cat=appartements&gov=Sfax&max=800&rooms=2&furnished=furnished&avail=2026-12-01");
+    expect(q).toBe("/annonces?deal=rent&cat=appartements&gov=Sfax&max=800&por=1&rooms=2&furnished=furnished&avail=2026-12-01");
+  });
+
+  it("keeps the annonces « Prix sur demande » the alert matched, when the demande has a budget (0222)", () => {
+    const withBudget = new URL(catalogueQueryFor(request({ budget_max: 300000 }), new Map([[FLAT, "appartements"]])), "https://x").searchParams;
+    expect(withBudget.get("por")).toBe("1");
+    const noBudget = new URL(catalogueQueryFor(request({ budget_min: null, budget_max: null }), new Map([[FLAT, "appartements"]])), "https://x").searchParams;
+    expect(noBudget.get("por")).toBeNull();
   });
 
   it("keeps every type and governorate of a demande that names several (2026-10-27 audit)", () => {

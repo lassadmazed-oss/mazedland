@@ -13,6 +13,7 @@ import { ensurePhotoSizes } from "@/lib/photoSizes.server";
 import { suspendedResponse } from "@/lib/moderation/ban";
 import { featureOff } from "@/lib/settings/gate";
 import { getSettings } from "@/lib/settings/server";
+import { asDealType } from "@/lib/listings/deal";
 
 /**
  * POST /api/annonces/:id/edit — the seller's new version of an annonce that is
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const { data: listing } = await admin
     .from("listings")
-    .select("id, seller_id, status, review_flags, pending_edit_at")
+    .select("id, seller_id, status, review_flags, pending_edit_at, price_on_request, deal_type")
     .eq("id", id)
     .maybeSingle();
   if (!listing || listing.seller_id !== user.id) return NextResponse.json({ error: "not_owner" }, { status: 403 });
@@ -90,6 +91,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   if ("price" in fields && fields.price == null && fields.price_on_request !== true) {
     return NextResponse.json({ error: "price_required", detail: t("priceRequired") }, { status: 400 });
+  }
+  // Hiding a price that shows needs « Prix sur demande » offered for this deal
+  // (0222); an annonce that already says it keeps it.
+  if (fields.price_on_request === true && listing.price_on_request !== true) {
+    const rentDeal = asDealType((fields.deal_type ?? listing.deal_type) as string | null) === "rent";
+    if (!(rentDeal ? settings.price_on_request_rent : settings.price_on_request_sale)) {
+      return NextResponse.json({ error: "price_on_request_off", detail: t("priceOnRequestOff") }, { status: 400 });
+    }
   }
   if ("contact_phone" in body && !fields.contact_phone) {
     return NextResponse.json({ error: "contact_required", detail: t("contactRequired") }, { status: 400 });

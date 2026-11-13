@@ -163,7 +163,7 @@ const W = {
     rent: "للكراء",
     currency: "د.ت",
     perMonth: "في الشهر",
-    onRequest: "السعر عند الطلب",
+    onRequest: "السوم عند الطلب",
     furnished: { furnished: "مفروش", semi: "نصف مفروش", unfurnished: "فارغ" },
     availableNow: "متوفّر حالًا",
     availableOn: (d: string) => `متوفّر من ${d}`,

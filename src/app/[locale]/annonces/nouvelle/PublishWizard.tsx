@@ -37,6 +37,7 @@ import {
 } from "@/lib/listings/deal";
 import type { ListingDraft } from "@/lib/ai/listing";
 import { estimateRange, priceInWords, suggestPriceFix, type PriceRef } from "@/lib/listings/priceCheck";
+import { priceInText } from "@/lib/listings/priceInText";
 import { attributeOutOfBounds, titleTooShort } from "@/lib/listings/input";
 import {
   attributeFieldId,
@@ -297,6 +298,11 @@ export function PublishWizard({
   const chatOn = useSetting("feature_publish_chat");
   // « Décrivez votre bien en une phrase », switched in /admin/settings.
   const aiFillOn = useSetting("feature_publish_ai_fill");
+  // « Prix sur demande » offered for a sale, for a rent (0222), and whether the
+  // buyer can then ask it with « Demander le prix ».
+  const onRequestSale = useSetting("price_on_request_sale");
+  const onRequestRent = useSetting("price_on_request_rent");
+  const priceQuestionsOn = useSetting("feature_price_questions");
 
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState<"idle" | "saving" | "ok">("idle");
@@ -516,6 +522,19 @@ export function PublishWizard({
   // A deposit in months needs the rent — and not one kept « sur demande »,
   // which two months of it would print on the annonce.
   const rentGiven = !onRequest && Number(price) > 0;
+
+  // « Prix sur demande » is the seller's choice where the console offers it
+  // for this deal (0222). An annonce online that already says it keeps it on
+  // an edit; a draft with it where it is no longer offered asks for a price.
+  const onRequestOffered = (rent ? onRequestRent : onRequestSale) || (editing && d?.price_on_request === true);
+  useEffect(() => {
+    if (!onRequestOffered && onRequest) setOnRequest(false);
+  }, [onRequestOffered, onRequest]);
+  // A price the description already gives, under « sur demande »: the form
+  // offers to put it in the box. « Non » keeps it hidden for that figure.
+  const [keptOnRequest, setKeptOnRequest] = useState<number | null>(null);
+  const priceFound = onRequest ? priceInText(description, rent) : null;
+  const priceFoundShown = priceFound && priceFound.price !== keptOnRequest ? priceFound : null;
   const chargesMode: "none" | "other" | null = chargesOther
     ? "other"
     : charges.trim() === ""
@@ -967,7 +986,10 @@ export function PublishWizard({
     },
     ...(priceKnown
       ? [
-          priceFix != null
+          // « Sur demande » over a description that gives the price (0222).
+          priceFoundShown
+            ? { key: "price", ok: false, text: t("tipPriceInText", { price: `${formatTND(priceFoundShown.price, locale)} ${tc("tnd")}` }), fieldId: "f-price" }
+            : priceFix != null
             ? { key: "price", ok: false, text: t("tipPriceTypo", { fix: `${formatTND(priceFix, locale)} ${tc("tnd")}` }), fieldId: "f-price" }
             : { key: "price", ok: priceOk, text: priceOk ? t("tipPriceOk") : t(rent ? "tipPriceRent" : "tipPrice"), fieldId: "f-price" },
         ]
@@ -1058,7 +1080,7 @@ export function PublishWizard({
         category_id: categoryId,
         title: title.trim() || "Brouillon",
         description: description.trim() || null,
-        price: onRequest ? null : Number(price) || 0,
+        price: onRequest || !(Number(price) > 0) ? null : Number(price),
         price_on_request: onRequest,
         negotiable,
         deal_type: deal,
@@ -1185,7 +1207,7 @@ export function PublishWizard({
           category_id: categoryId,
           title: title.trim(),
           description: description.trim() || null,
-          price: onRequest ? null : Number(price) || 0,
+          price: onRequest || !(Number(price) > 0) ? null : Number(price),
           price_on_request: onRequest,
           negotiable,
           deal_type: deal,
@@ -1863,8 +1885,60 @@ export function PublishWizard({
                 <p className="mt-1 text-[13px] text-muted">{t(rent ? "rentHint" : "priceHint")}</p>
 
                 <div className="mt-5 space-y-4">
+                  {/* Show the price, or be asked it (0222): a choice, not a box ticked by default. */}
+                  {onRequestOffered && (
+                    <div role="radiogroup" aria-label={t("priceMode.label")} className="flex flex-wrap gap-2">
+                      <Chip on={!onRequest} onClick={() => setOnRequest(false)}>
+                        {t(rent ? "priceMode.showRent" : "priceMode.show")}
+                      </Chip>
+                      <Chip on={onRequest} onClick={() => setOnRequest(true)}>
+                        {t("priceMode.onRequest")}
+                      </Chip>
+                    </div>
+                  )}
+
+                  {onRequest && (
+                    <div className="space-y-3">
+                      {/* What « sur demande » costs, said once, plainly: our own rules, not a guess. */}
+                      <p className="text-[12.5px] leading-relaxed text-muted">
+                        {t("priceMode.onRequestNote")}
+                        {priceQuestionsOn && <> {t("priceMode.onRequestAsk")}</>}
+                      </p>
+                      {priceFoundShown && (
+                        <div role="note" className="rounded-xl bg-[var(--tone-warn-bg)] p-3 text-[12.5px] leading-relaxed text-foreground ring-1 ring-[var(--tone-warn-ring)]">
+                          <p className="flex items-start gap-1.5 font-bold">
+                            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--tone-warn)]" />
+                            <span>
+                              {t("priceMode.foundTitle", { quote: priceFoundShown.quote, price: rent ? `${money(priceFoundShown.price)} ${t("perMonthWords")}` : money(priceFoundShown.price) })}
+                            </span>
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOnRequest(false);
+                                changePrice(String(priceFoundShown.price));
+                              }}
+                              className="tap-target inline-flex h-9 items-center rounded-full bg-foreground px-3.5 text-[12.5px] font-bold text-[var(--background)]"
+                            >
+                              {t("priceMode.foundUse")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setKeptOnRequest(priceFoundShown.price)}
+                              className="tap-target inline-flex h-9 items-center rounded-full border border-border bg-surface px-3.5 text-[12.5px] font-bold text-foreground"
+                            >
+                              {t("priceMode.foundKeep")}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!onRequest && (
                   <div>
-                    <Label htmlFor="f-price-input">{t(rent ? "rentLabel" : "priceLabel")} {!onRequest && <Req />}</Label>
+                    <Label htmlFor="f-price-input">{t(rent ? "rentLabel" : "priceLabel")} <Req /></Label>
                     {/* The box is left-to-right as a whole, not only the input:
                         with just the input flipped, its padding sat on the right
                         while the currency label followed the page to the left,
@@ -1964,9 +2038,9 @@ export function PublishWizard({
                     )}
                     <div className="mt-2.5 flex flex-wrap gap-2">
                       <Toggle label={t("negotiable")} on={negotiable} onClick={() => setNegotiable((v) => !v)} />
-                      <Toggle label={t("onRequest")} on={onRequest} onClick={() => setOnRequest((v) => !v)} />
                     </div>
                   </div>
+                  )}
 
                   {rent && (
                     <div id="f-rent" className="grid scroll-mt-24 gap-4 sm:grid-cols-2">

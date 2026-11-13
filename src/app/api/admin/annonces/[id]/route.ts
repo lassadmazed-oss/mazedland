@@ -95,7 +95,7 @@ export async function POST(
   const { data: listing } = await admin
     .from("listings")
     .select(
-      "id, seller_id, title, status, seller_credit_id, fee_payment_id, contact_phone, expires_at, deal_type, pending_edit, taken_down_at, shop_id",
+      "id, seller_id, title, status, seller_credit_id, fee_payment_id, contact_phone, expires_at, deal_type, pending_edit, taken_down_at, shop_id, price, price_on_request",
     )
     .eq("id", id)
     .maybeSingle();
@@ -451,6 +451,17 @@ export async function POST(
 
     if (Object.keys(patch).length === 0) {
       return NextResponse.json({ error: "nothing_to_update" }, { status: 400 });
+    }
+
+    // « Prix sur demande » hides the price, the way the seller's own form
+    // does (src/lib/listings/input.ts): a row with both counted in the price
+    // statistics as a price nobody can see. And an annonce out of draft keeps
+    // a price or « sur demande » — said here, not as the database's 500 (0222).
+    if (patch.price_on_request === true) patch.price = null;
+    const onRequestAfter = "price_on_request" in patch ? patch.price_on_request === true : listing.price_on_request === true;
+    const priceAfter = "price" in patch ? patch.price : listing.price;
+    if (!onRequestAfter && priceAfter == null && listing.status !== "draft") {
+      return NextResponse.json({ error: "price_required", detail: t("priceRequired") }, { status: 400 });
     }
 
     // A published annonce with no phone is unreachable — the same rule the

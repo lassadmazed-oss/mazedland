@@ -241,6 +241,25 @@ describe("one line", () => {
     expect(r.body).toMatchObject({ price: null, price_on_request: true });
   });
 
+  it("reads the words the site prints and the ones agences write for « on request » (0222)", () => {
+    for (const cell of ["عند الطلب", "السوم عند الطلب", "السعر عند الطلب", "في الخاص", "السوم في الخاص", "Prix sur demande", "Prix à consulter", "en privé"]) {
+      const [r] = rows(`Type;Prix;Surface;Pièces\nVilla;${cell};300;5`);
+      expect(r.status, cell).toBe("ok");
+      expect(r.body, cell).toMatchObject({ price: null, price_on_request: true });
+    }
+    // A cell that only mentions it is no « on request »: a price is still asked.
+    const [mixed] = rows("Type;Prix;Surface;Pièces\nVilla;350000 sur demande;300;5");
+    expect(mixed.body?.price_on_request).not.toBe(true);
+  });
+
+  it("refuses « on request » where the console does not offer it for that deal (0222)", () => {
+    const [sale] = rows("Type;Prix;Surface;Pièces\nVilla;sur demande;300;5", ctx({ onRequest: { sale: false, rent: true } }));
+    expect(sale.status).toBe("error");
+    expect(sale.errors.map((e) => e.code)).toContain("price_on_request_off");
+    const [rent] = rows("Transaction;Type;Prix;Surface;Pièces\nLocation;Villa;sur demande;250;5", ctx({ onRequest: { sale: false, rent: true } }));
+    expect(rent.errors.map((e) => e.code)).not.toContain("price_on_request_off");
+  });
+
   it("refuses an answer the form would drop, and one it cannot read", () => {
     const [bad] = rows("Type;Prix;Surface;Pièces;Parking\nAppartement;100000;99999999;3;peut-être");
     expect(bad.errors.map((e) => e.code).sort()).toEqual(["answer_invalid", "answer_unclear"]);
