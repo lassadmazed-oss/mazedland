@@ -8016,7 +8016,8 @@
         "do_not_contact": "Ce numéro a refusé d'être contacté. On ne lui écrit plus.",
         "rate_limited": "Trop de posts à la suite. Réessayez dans un moment.",
         "failed": "Ça n'a pas marché. Réessayez."
-      }
+      },
+      "fromExtension": "Le post vient de l'extension. Relisez le texte, puis envoyez."
     },
     "work": {
       "pageTitle": "Fiche propriétaire",
@@ -8183,6 +8184,46 @@
       "noAnswer": "Sans réponse",
       "ofContacted": "{n} % des contactés",
       "ofYes": "{n} % des oui"
+    },
+    "extensionLink": "Bouton Chrome",
+    "extension": {
+      "title": "Le bouton Chrome",
+      "description": "Une petite extension qui envoie le post Facebook que vous regardez vers « Nouvelle annonce trouvée », le texte déjà rempli. Elle ne lit la page que lorsque vous cliquez dessus.",
+      "download": "Télécharger l'extension",
+      "version": "Version {v}",
+      "steps": {
+        "download": {
+          "title": "Téléchargez le fichier",
+          "body": "Cliquez sur le bouton ci-dessus : vous recevez un fichier .zip."
+        },
+        "unzip": {
+          "title": "Décompressez-le",
+          "body": "Clic droit sur le fichier, « Extraire tout… », dans un dossier que vous gardez. Ne le supprimez pas : Chrome le relit à chaque démarrage."
+        },
+        "developer": {
+          "title": "Ouvrez la page des extensions",
+          "body": "Dans Chrome, ouvrez l'adresse ci-dessous et activez « Mode développeur » en haut de la page."
+        },
+        "load": {
+          "title": "Chargez le dossier",
+          "body": "Cliquez sur « Charger l'extension non empaquetée » et choisissez le dossier décompressé (celui qui contient manifest.json)."
+        },
+        "pin": {
+          "title": "Épinglez-la",
+          "body": "Cliquez sur l'icône puzzle de Chrome, puis sur l'épingle à côté de « Mazed Immo — Prospection » : le bouton reste visible."
+        },
+        "use": {
+          "title": "Utilisez-la sur Facebook",
+          "body": "Sur le post, sélectionnez son texte à la souris, cliquez sur le bouton, vérifiez, puis « Ouvrir Mazed ». Le formulaire s'ouvre rempli ; c'est vous qui l'envoyez."
+        }
+      },
+      "privacyTitle": "Ce que fait l'extension, et ce qu'elle ne fait pas",
+      "privacy": {
+        "reads": "Elle ne lit la page que lorsque vous cliquez sur son bouton, et seulement le post affiché.",
+        "sends": "Elle n'envoie rien toute seule : elle ouvre Mazed Immo avec le texte dans l'adresse, après le #, que le navigateur n'envoie jamais à un serveur.",
+        "account": "Elle n'accède ni à votre compte Facebook, ni à vos messages, ni à vos amis.",
+        "review": "Vous relisez le texte et l'envoyez vous-même : le numéro, le nom et le lien se corrigent avant."
+      }
     }
   }
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { AdminButton } from "@/components/admin/AdminButton";
+import { decodeImport } from "@/lib/prospection/importLink";
 
 /**
  * One post pasted: the text of a Facebook post, its link, the poster's name.
@@ -19,6 +20,19 @@ export function NewLeadForm() {
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fromExtension, setFromExtension] = useState(false);
+
+  // The Chrome extension opens this page with the post in the fragment (src/lib/prospection/importLink.ts):
+  // it fills the form and is taken off the address, so the post does not stay in the history.
+  useEffect(() => {
+    const post = decodeImport(window.location.hash);
+    if (!post) return;
+    setText(post.text);
+    setUrl(post.url);
+    setName(post.name);
+    setFromExtension(true);
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,6 +65,9 @@ export function NewLeadForm() {
   const field = "mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-[13px] outline-none focus:border-[var(--gold)]";
   return (
     <form onSubmit={submit} className="mt-6 max-w-3xl space-y-4">
+      {fromExtension ? (
+        <p role="status" className="rounded-lg bg-surface-2 px-3 py-2 text-[12.5px] font-bold text-muted">{t("new.fromExtension")}</p>
+      ) : null}
       <label className="block text-[12px] font-bold text-muted">
         {t("new.text")}
         <textarea
