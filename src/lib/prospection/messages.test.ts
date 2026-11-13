@@ -43,6 +43,7 @@ describe("Prospection messages", () => {
     const expected: [string, string[]][] = [
       ["adminProspection.col", ["to_contact", "contacted", "confirmed", "online", "declined"]],
       ["adminProspection.empty", ["to_contact", "contacted", "confirmed", "online"]],
+      ["adminProspection.range", ["1", "7", "30"]],
       ["adminProspection.work.outcome", ["no_answer", "thinking", "refused", "wrong_number"]],
       ["adminProspection.work.channel", ["whatsapp", "sms", "call", "messenger", "other"]],
       ["adminProspection.work.event", ["created", "contacted", "no_answer", "thinking", "refused", "wrong_number", "confirmed", "published", "sms", "note", "assigned", "broker"]],

@@ -454,23 +454,27 @@ export async function askMessage(lead: LeadRow, origin: string): Promise<string>
 
 // ── The team's figures ──────────────────────────────────────────────────────
 
-export type MemberFigures = { actorId: string; contacted: number; yes: number; online: number };
+export type MemberFigures = { actorId: string; created: number; contacted: number; yes: number; online: number; refused: number; noAnswer: number };
 
-/** Per member, since a date: first contacts, yeses, annonces put online. */
-export async function teamFigures(admin: Admin, sinceIso: string): Promise<MemberFigures[]> {
-  const { data } = await admin
+/** Per member, since a date: leads made, first contacts, yeses, annonces put online, refusals and silences. */
+export async function teamFigures(admin: Admin, sinceIso: string, only?: string): Promise<MemberFigures[]> {
+  let q = admin
     .from("prospect_events")
     .select("actor_id, kind")
-    .in("kind", ["contacted", "confirmed", "published"])
+    .in("kind", ["created", "contacted", "confirmed", "published", "refused", "no_answer"])
     .gte("created_at", sinceIso)
-    .not("actor_id", "is", null)
-    .limit(20_000);
+    .not("actor_id", "is", null);
+  if (only) q = q.eq("actor_id", only);
+  const { data } = await q.limit(20_000);
   const by = new Map<string, MemberFigures>();
   for (const r of (data ?? []) as { actor_id: string; kind: string }[]) {
-    const m = by.get(r.actor_id) ?? { actorId: r.actor_id, contacted: 0, yes: 0, online: 0 };
-    if (r.kind === "contacted") m.contacted++;
+    const m = by.get(r.actor_id) ?? { actorId: r.actor_id, created: 0, contacted: 0, yes: 0, online: 0, refused: 0, noAnswer: 0 };
+    if (r.kind === "created") m.created++;
+    else if (r.kind === "contacted") m.contacted++;
     else if (r.kind === "confirmed") m.yes++;
-    else m.online++;
+    else if (r.kind === "published") m.online++;
+    else if (r.kind === "refused") m.refused++;
+    else m.noAnswer++;
     by.set(r.actor_id, m);
   }
   return [...by.values()].sort((a, b) => b.contacted - a.contacted);

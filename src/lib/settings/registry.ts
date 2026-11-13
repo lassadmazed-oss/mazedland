@@ -270,6 +270,11 @@ export const SETTINGS = {
   // ── Prospection (0218): the team that brings private owners to the site.
   //    Off: the screen and its API refuse; the leads and the annonces made stay.
   feature_prospection: { group: "features", type: "bool", default: true, href: "/admin/prospection" },
+  // The daily notice in the bell of each member who has owners to write to again,
+  // « oui » waiting for photos, or an SMS that never left (0219).
+  prospect_reminders: { group: "features", type: "bool", default: true, href: "/admin/prospection" },
+  // How long a finished lead keeps the post's text and the poster's name: they are a stranger's words.
+  prospect_keep_days: { group: "privacy", type: "int", default: 180, min: 30, max: 1825, unit: "days", choices: [90, 180, 365], href: "/admin/prospection" },
   // How many owners one member may write to in a day: the number the team
   // writes from is a private one, and a platform that sees a burst may block it.
   prospect_daily_cap: { group: "limits", type: "int", default: 30, min: 1, max: 500, unit: "per_day", choices: [10, 20, 30, 50, 100], href: "/admin/prospection" },
