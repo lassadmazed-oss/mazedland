@@ -5,22 +5,25 @@
  * Placeholders, filled by `fillTemplate` (model.ts):
  *   {name}      the owner's name as the post shows it (may be empty)
  *   {property}  one line naming the property (« دار 180 م² · صفاقس »)
+ *   {deal}      « للبيع » or « للكراء » (« à vendre » / « à louer »), so the owner can correct it
  *   {terms}     the link to the terms of use
  *   {link}      the link to the owner's annonce, once it is online
  *   {manage}    the owner's private link to take it down or mark it sold
  *   {phone}     the number of the team, for any question
  *
  * The first message carries everything the owner's « yes » stands for: the
- * publication, the attestation that they own the property or act for its
- * owner, the terms, and the photos of their post. It is what the team pastes
- * back as proof, so it must say all of that in words the owner reads.
+ * publication, who they are to the property (the owner or their representative:
+ * they say it in their answer, instead of signing a statement), the terms, and
+ * the photos of their post. It is what the team pastes back as proof, so it
+ * must say all of that in words the owner reads. The brand is written in Latin
+ * letters too: « مازد » dictated by voice came out as « مزاد » (an auction).
  */
 
 export const ASK_AR =
-  "سلام {name}، نحبو ننشرو إعلانك ({property}) في مازد إيمو ببلاش، ونتكفّلو بكل شي. كان موافق ردّ بـ«نعم»: تشهد إنك المالك ولا الوكيل وإن المعلومات صحيحة، وتقبل الشروط ({terms})، وتسمحلنا نستعملو صور بوستك. وكان ما تحبش ردّ بـ«لا» وما نعاودوش.";
+  "سلام {name}، كان تحب ننشرو إعلانك {deal} ({property}) في مازد إيمو (Mazed Immo) ببلاش؟ كان موافق ردّ بـ«نعم» وقلّنا إنت المالك متاعو ولا الوكيل، وتقبل الشروط ({terms})، وتسمحلنا نستعملو صور بوستك. وكان ما تحبش ردّ بـ«لا» وما نعاودوش.";
 
 export const ASK_FR =
-  "Bonjour {name}, nous aimerions publier votre annonce ({property}) gratuitement sur Mazed Immo, et nous nous occupons de tout. Si vous êtes d'accord, répondez « oui » : vous attestez être le propriétaire ou son mandataire et que les informations sont exactes, vous acceptez les conditions d'utilisation ({terms}) et vous nous autorisez à utiliser les photos de votre publication. Sinon répondez « non » et nous ne vous écrirons plus.";
+  "Bonjour {name}, souhaitez-vous que nous publiions votre annonce {deal} ({property}) gratuitement sur Mazed Immo ? Si oui, répondez « oui » en nous disant si vous êtes le propriétaire ou son mandataire, acceptez les conditions d'utilisation ({terms}) et autorisez-nous à utiliser les photos de votre publication. Sinon, répondez « non » et nous ne vous écrirons plus.";
 
 // An SMS in Arabic letters costs three segments or so; the details are on the page the link opens.
 export const SMS_AR =

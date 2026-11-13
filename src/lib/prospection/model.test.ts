@@ -3,6 +3,7 @@ import { listingFields } from "@/lib/listings/input";
 import {
   confirmBlockers,
   contactsLeft,
+  dealWord,
   draftToListingBody,
   extractPhones,
   fillTemplate,
@@ -79,6 +80,7 @@ describe("fillTemplate", () => {
   it("ships messages with every hole the owner needs", () => {
     for (const t of [ASK_AR, ASK_FR]) {
       expect(t).toContain("{property}");
+      expect(t).toContain("{deal}");
       expect(t).toContain("{terms}");
     }
     for (const t of [SMS_AR, SMS_FR]) {
@@ -239,5 +241,38 @@ describe("photoPathOf", () => {
     expect(photoPathOf(seller, `${seller}/logo.png`)).toBeNull();
     expect(photoPathOf(seller, `${seller}/annonce-1-2-0.exe;rm`)).toBeNull();
     expect(photoPathOf(seller, 42)).toBeNull();
+  });
+});
+
+describe("the first message", () => {
+  const vars = { name: "سامي", property: "دار 180 م² · صفاقس", deal: dealWord("sale", "ar"), terms: "https://www.mazed.immo/ar/terms" };
+
+  it("asks the owner, does not make him sign a statement, and names the site in Latin letters too", () => {
+    const out = fillTemplate(ASK_AR, vars);
+    expect(out).toContain("للبيع (دار 180 م² · صفاقس)");
+    expect(out).toContain("Mazed Immo");
+    expect(out).toContain("المالك متاعو ولا الوكيل");
+    expect(out).not.toContain("نتكفّلو بكل شي");
+    expect(out).not.toContain("المعلومات صحيحة");
+    expect(out).toContain(vars.terms);
+    expect(out).not.toMatch(/{w+}/);
+  });
+
+  it("says the same in French", () => {
+    const out = fillTemplate(ASK_FR, { ...vars, name: "Sami", property: "Villa 300 m²", deal: dealWord("rent", "fr") });
+    expect(out).toContain("votre annonce à louer (Villa 300 m²)");
+    expect(out).toContain("propriétaire ou son mandataire");
+    expect(out).not.toContain("attestez");
+  });
+
+  it("tidies the sentence when the deal is not known", () => {
+    expect(fillTemplate(ASK_FR, { ...vars, deal: "" })).toContain("votre annonce (");
+  });
+
+  it("says what the annonce is for, in each language", () => {
+    expect(dealWord("sale", "ar")).toBe("للبيع");
+    expect(dealWord("rent", "ar")).toBe("للكراء");
+    expect(dealWord("sale", "fr")).toBe("à vendre");
+    expect(dealWord("rent", "fr")).toBe("à louer");
   });
 });

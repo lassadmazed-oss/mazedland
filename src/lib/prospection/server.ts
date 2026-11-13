@@ -17,7 +17,7 @@ import { redactContacts } from "@/lib/moderation/rules";
 import { takePlace } from "@/lib/places/server";
 import { getSettings } from "@/lib/settings/server";
 import {
-  confirmBlockers, draftToListingBody, fillTemplate, photoPathOf, propertyLine, publishBlockers, readDraft, startOfTunisiaDay, statusAfter,
+  confirmBlockers, dealWord, draftToListingBody, fillTemplate, photoPathOf, propertyLine, publishBlockers, readDraft, startOfTunisiaDay, statusAfter,
   type Channel, type ConfirmBlocker, type PublishBlocker,
 } from "./model";
 import { addEvent, loadLead, syncLeadWithListing, tokenHash, type LeadRow } from "./online";
@@ -448,6 +448,7 @@ export async function askMessage(lead: LeadRow, origin: string): Promise<string>
   return fillTemplate(lead.language === "fr" ? s.prospect_ask_fr : s.prospect_ask_ar, {
     name: lead.poster_name,
     property: propertyLine(readDraft(lead.draft)),
+    deal: dealWord(readDraft(lead.draft).deal, lead.language),
     terms: `${origin}/${lead.language}/terms`,
   });
 }

@@ -6247,11 +6247,11 @@
     },
     "prospect_ask_ar": {
       "label": "Premier message au propriétaire (arabe)",
-      "hint": "Il demande l'accord. Trous : '{name}' '{property}' '{terms}'. Il dit tout ce que le « oui » couvre : la publication, l'attestation, les conditions, les photos du post."
+      "hint": "Il demande l'accord. Trous : '{name}' '{property}' '{deal}' '{terms}'. Il dit tout ce que le « oui » couvre : la publication, qui répond (propriétaire ou mandataire, dit dans sa réponse), les conditions, les photos du post."
     },
     "prospect_ask_fr": {
       "label": "Premier message au propriétaire (français)",
-      "hint": "Il demande l'accord. Trous : '{name}' '{property}' '{terms}'. Il dit tout ce que le « oui » couvre : la publication, l'attestation, les conditions, les photos du post."
+      "hint": "Il demande l'accord. Trous : '{name}' '{property}' '{deal}' '{terms}'. Il dit tout ce que le « oui » couvre : la publication, qui répond (propriétaire ou mandataire, dit dans sa réponse), les conditions, les photos du post."
     },
     "prospect_sms_ar": {
       "label": "SMS une fois l'annonce en ligne (arabe)",
@@ -8080,7 +8080,7 @@
       "sureDnc": "Ce numéro ne sera plus jamais contacté. Appuyez encore pour confirmer.",
       "sureAgain": "Confirmer",
       "yesTitle": "Il a dit oui",
-      "yesHint": "Collez sa réponse mot pour mot : c'est la preuve de son accord. Le site crée son compte à son numéro et met l'annonce dedans, sans la publier.",
+      "yesHint": "Collez sa réponse mot pour mot : c'est la preuve de son accord. Vérifiez qu'il dit s'il est le propriétaire ou le mandataire. Le site crée son compte à son numéro et met l'annonce dedans, sans la publier.",
       "reply": "Sa réponse",
       "yesButton": "Il a dit oui",
       "missing": "Il manque :",
