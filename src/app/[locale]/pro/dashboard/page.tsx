@@ -292,9 +292,12 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
                     <p className="truncate text-[13.5px] font-bold text-foreground" dir="auto">{l.title}</p>
                     <p className="text-[11.5px] text-muted">
                       {t(`listingStatus.${l.status}`)} ·{" "}
-                      {l.price_on_request || l.price == null
+                      {l.price_on_request
                         ? t("onRequest")
-                        : `${formatTND(Number(l.price), locale)} ${asDealType(l.deal_type) === "rent" ? t("perMonth") : t("tnd")}`}{" "}
+                        : !(Number(l.price) > 0)
+                          // A draft whose price is not said yet (0222) is not « sur demande ».
+                          ? "—"
+                          : `${formatTND(Number(l.price), locale)} ${asDealType(l.deal_type) === "rent" ? t("perMonth") : t("tnd")}`}{" "}
                       · {t("viewsShort", { count: l.view_count ?? 0 })}
                     </p>
                   </div>

@@ -212,6 +212,9 @@ export function catalogueQueryFor(
   else if (r.governorates.length > 1) p.set("govs", r.governorates.join(","));
   if (r.budget_min) p.set("min", String(Math.floor(r.budget_min)));
   if (r.budget_max) p.set("max", String(Math.floor(r.budget_max)));
+  // The alert counts an annonce « Prix sur demande » as a match (its budget is
+  // unknown, matchListing): the list it opens keeps it too (0222).
+  if (r.budget_min || r.budget_max) p.set("por", "1");
   if (r.surface_min) p.set("surface", String(Math.floor(r.surface_min)));
   if (r.rooms_min) p.set("rooms", String(r.rooms_min));
   if (r.deal_type === "rent" && r.furnished) p.set("furnished", r.furnished);

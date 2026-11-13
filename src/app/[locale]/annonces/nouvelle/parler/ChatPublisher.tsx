@@ -218,8 +218,10 @@ export function ChatPublisher({
       category_id: category.id,
       title,
       description: draft.description || null,
+      // No price said yet is not « sur demande »: that stays the seller's
+      // choice, in the form (0222). A draft may wait without a price.
       price: draft.price,
-      price_on_request: draft.price == null,
+      price_on_request: false,
       negotiable: false,
       deal_type: deal,
       deposit_amount: rent ? draft.deposit : null,

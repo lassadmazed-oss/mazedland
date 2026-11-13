@@ -316,7 +316,17 @@ export type ImportContext = {
   locale: string;
   /** The duplicate keys of what the agence already has. */
   existing: ReadonlySet<string>;
+  /** Whether « Prix sur demande » is offered for a sale and for a rent (0222, the console); both when unsaid. */
+  onRequest?: { sale: boolean; rent: boolean };
 };
+
+/**
+ * A price cell that says « ask » rather than a figure: the words the site
+ * itself prints (« Sur demande », « عند الطلب ») and the ones agences write
+ * (« Prix à consulter », « السوم في الخاص »), the whole cell and nothing else.
+ */
+export const ON_REQUEST_CELL =
+  /^(?:prix\s+)?(?:sur\s+demande|à\s+consulter|a\s+consulter|nous\s+consulter|en\s+privé|en\s+prive)$|^(?:(?:السوم|السعر|الثمن)\s+)?(?:عند\s+الطلب|على\s+الطلب|في\s+الخاص|بالخاص)$/i;
 
 /** What makes two lines the same annonce: the title, the price, the surface, the governorate. */
 export function duplicateKey(title: string, price: number | null, area: number | null, governorate: string): string {
@@ -377,8 +387,11 @@ export function interpretLine(
   }
 
   const priceRaw = get("price");
-  const onRequest = /^(sur demande|nous consulter|على الطلب)$/i.test(priceRaw.trim());
+  const onRequest = ON_REQUEST_CELL.test(priceRaw.trim().replace(/\s+/g, " "));
   const price = onRequest ? null : priceRaw === "" ? null : parseNumber(priceRaw);
+  if (onRequest && ctx.onRequest && !(rent ? ctx.onRequest.rent : ctx.onRequest.sale)) {
+    errors.push({ code: "price_on_request_off", value: priceRaw });
+  }
   if (!onRequest) {
     if (priceRaw === "") errors.push({ code: "price_missing" });
     else if (price === null || num(price) === null || price <= 0) errors.push({ code: "price_invalid", value: priceRaw });

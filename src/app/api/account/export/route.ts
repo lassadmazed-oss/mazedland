@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   const id = user.id;
 
   const [
-    profile, listings, requests, visits, offers, watchlist, payments, invoices, consents,
+    profile, listings, requests, visits, offers, questions, watchlist, payments, invoices, consents,
     shops, memberships, notifications, reveals, reports, social, credits, activity,
   ] = await Promise.all([
     admin.from("profiles")
@@ -43,6 +43,9 @@ export async function GET(req: NextRequest) {
       .eq("buyer_id", id).order("created_at"),
     admin.from("price_offers")
       .select("listing_id, asking_price, amount, counter_amount, financing, buyer_name, buyer_phone, message, status, created_at")
+      .eq("buyer_id", id).order("created_at"),
+    admin.from("price_questions")
+      .select("listing_id, buyer_name, buyer_phone, message, status, answer_price, answered_at, created_at")
       .eq("buyer_id", id).order("created_at"),
     admin.from("watchlist").select("listing_id, created_at").eq("user_id", id).order("created_at"),
     admin.from("payments")
@@ -76,6 +79,7 @@ export async function GET(req: NextRequest) {
     property_requests: requests.data ?? [],
     visit_requests: visits.data ?? [],
     price_offers: offers.data ?? [],
+    price_questions: questions.data ?? [],
     favourites: watchlist.data ?? [],
     payments: payments.data ?? [],
     invoices: invoices.data ?? [],

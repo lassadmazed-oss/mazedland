@@ -115,7 +115,9 @@
       "visitsTitle": "Mes visites",
       "visitsBody": "Les visites demandées et reçues, et leurs réponses.",
       "offersTitle": "Mes offres",
-      "offersBody": "Les prix proposés sur vos annonces, et ceux que vous avez proposés."
+      "offersBody": "Les prix proposés sur vos annonces, et ceux que vous avez proposés.",
+      "priceQuestionsTitle": "Demandes de prix",
+      "priceQuestionsBody": "Les prix demandés sur vos annonces « sur demande », et ceux que vous avez demandés."
     }
   },
   "account": {
@@ -1561,6 +1563,20 @@
       "title": "Votre abonnement se termine bientôt",
       "body": "L'abonnement {plan} de « {shop} » se termine le {date}. Vous pouvez le renouveler dès maintenant."
     },
+    "price_question": {
+      "title": "Demande de prix",
+      "body": "{name} demande le prix de « {title} ». Répondez depuis Demandes de prix."
+    },
+    "price_answered": {
+      "sale": {
+        "title": "Prix : {amount} TND",
+        "body": "Le vendeur de « {title} » vous répond : {amount} TND."
+      },
+      "rent": {
+        "title": "Loyer : {amount} TND par mois",
+        "body": "Le propriétaire de « {title} » vous répond : {amount} TND par mois."
+      }
+    },
     "offer_received": {
       "title": "Nouvelle offre : {amount} TND",
       "body": "{name} propose {amount} TND pour « {title} » (prix affiché {asking} TND). Répondez depuis Mes offres."
@@ -1653,6 +1669,17 @@
     "priceLabel": "Prix",
     "negotiable": "Négociable",
     "onRequest": "Prix sur demande",
+    "priceMode": {
+      "label": "Le prix",
+      "show": "J'écris le prix",
+      "showRent": "J'écris le loyer",
+      "onRequest": "Prix sur demande",
+      "onRequestNote": "Votre annonce n'apparaît pas quand un acheteur cherche par budget, et n'a pas « Négocier le prix ».",
+      "onRequestAsk": "L'acheteur vous le demande avec « Demander le prix », et vous recevez un SMS.",
+      "foundTitle": "Votre description dit « {quote} ». Mettre {price} dans la case du prix ?",
+      "foundUse": "Oui, le mettre",
+      "foundKeep": "Non, garder sur demande"
+    },
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Situation, exposition, état, charges, ce qu'il y a à refaire, papiers disponibles. Soyez honnête : c'est ce qui évite les visites pour rien.",
     "contactTitle": "Contact et publication",
@@ -1824,6 +1851,7 @@
     "editWaitingTitle": "Correction enregistrée",
     "editWaitingBody": "Votre annonce attend encore la vérification, avec vos corrections. Vous serez prévenu dès qu'elle est en ligne.",
     "tipPriceTypo": "Un zéro de trop dans le prix ? Les annonces semblables sont plutôt autour de {fix}.",
+    "tipPriceInText": "« Prix sur demande », mais votre description donne {price} : mettez-le dans la case du prix, ou enlevez-le du texte.",
     "estimateLocal": "D'après {count, plural, one {# annonce semblable} other {# annonces semblables}} à {governorate} : entre {low} et {high} pour cette surface.",
     "estimateNational": "D'après {count, plural, one {# annonce semblable} other {# annonces semblables}} en Tunisie : entre {low} et {high} pour cette surface.",
     "priceNotGiven": "Prix non renseigné",
@@ -1983,7 +2011,8 @@
   "publishApi": {
     "incomplete": "Catégorie, titre et gouvernorat sont requis.",
     "categoryNotLeaf": "Choisissez une sous-catégorie.",
-    "priceRequired": "Indiquez un prix, ou cochez « prix sur demande ».",
+    "priceRequired": "Écrivez le prix, ou choisissez « Prix sur demande ».",
+    "priceOnRequestOff": "« Prix sur demande » n'est plus proposé pour ce type d'annonce : écrivez le prix.",
     "notEditable": "Cette annonce est déjà en cours de traitement.",
     "photoRateLimited": "Trop d'envois de photos. Réessayez dans une heure.",
     "notSubmittable": "Cette annonce est déjà « {status} ».",
@@ -3618,6 +3647,9 @@
     "visit_decline": "Visite refusée",
     "visit_done": "Visite faite",
     "visit_cancel": "Visite annulée",
+    "price_question_ask": "Prix demandé",
+    "price_question_answer": "Prix donné à l'acheteur",
+    "price_question_done": "Demande de prix traitée",
     "lead_create": "Client ajouté (agence)",
     "lead_update": "Client mis à jour (agence)",
     "lead_delete": "Client supprimé (agence)",
@@ -3706,6 +3738,7 @@
       "badGovernorate": "Gouvernorat inconnu.",
       "badPhone": "Numéro de téléphone invalide.",
       "badPrice": "Prix invalide.",
+      "priceRequired": "Écrivez un prix, ou cochez « Prix sur demande » : une annonce envoyée garde l'un ou l'autre.",
       "titleTooShort": "Le titre doit faire au moins 3 caractères.",
       "photoMissing": "Une photo de l'annonce est introuvable dans le stockage : demandez au vendeur de la renvoyer.",
       "shopClosed": "L'agence de cette annonce est fermée : elle attend sa réouverture.",
@@ -4595,7 +4628,8 @@
         "visit": "Visite",
         "manual": "Ajouté",
         "suggestion": "Demande",
-        "offer": "Offre"
+        "offer": "Offre",
+        "price_question": "Prix demandé"
       },
       "quickLabel": "Ajouter à la note",
       "quick": {
@@ -4883,6 +4917,7 @@
         "governorate_unknown": "Gouvernorat non reconnu : « {value} ».",
         "price_missing": "Prix manquant (ou écrivez « sur demande »).",
         "price_invalid": "Prix illisible : « {value} ».",
+        "price_on_request_off": "« {value} » : le prix sur demande n'est pas proposé pour ce type d'annonce. Écrivez le prix.",
         "answer_missing": "Information manquante : {value}.",
         "answer_invalid": "Valeur impossible — {value}.",
         "answer_unclear": "Réponse oui / non attendue — {value}.",
@@ -5239,6 +5274,19 @@
     "transition": "Cette visite a déjà changé d'état. Rechargez la page.",
     "slot": "Choisissez un des moments proposés."
   },
+  "priceQuestionsApi": {
+    "tooMany": "Trop de demandes de prix aujourd'hui. Réessayez demain.",
+    "phone": "Numéro de téléphone invalide.",
+    "name": "Indiquez votre nom.",
+    "nameLetters": "Votre nom, en lettres seulement (2 à 60 caractères).",
+    "notOnline": "Cette annonce n'est plus en ligne.",
+    "hasPrice": "Le prix de cette annonce est affiché.",
+    "own": "C'est votre annonce.",
+    "alreadyOpen": "Vous avez déjà demandé le prix de cette annonce : le vendeur va vous répondre.",
+    "transition": "Cette demande a déjà reçu une réponse. Rechargez la page.",
+    "price": "Écrivez le prix en chiffres.",
+    "sellerOnly": "Seul le vendeur répond à cette demande."
+  },
   "compare": {
     "title": "Comparer des annonces",
     "subtitle": "Côte à côte : prix, surface, lieu et tous les détails remplis par les vendeurs.",
@@ -5502,6 +5550,14 @@
     "listing_max_photos": {
       "label": "Photos maximum par annonce",
       "hint": "Le formulaire n'en accepte pas plus."
+    },
+    "price_on_request_sale": {
+      "label": "« Prix sur demande » pour une vente",
+      "hint": "Le vendeur peut choisir de ne pas afficher son prix : l'annonce dit « Prix sur demande » et l'acheteur le lui demande. Coupé : il doit écrire un prix ; les annonces déjà « sur demande » restent comme elles sont."
+    },
+    "price_on_request_rent": {
+      "label": "« Prix sur demande » pour une location",
+      "hint": "La même chose pour le loyer. Coupé : il doit écrire le loyer ; les annonces déjà « sur demande » restent comme elles sont."
     },
     "gallery_zoom": {
       "label": "Zoom sur les photos",
@@ -6109,6 +6165,10 @@
       "label": "Négocier le prix",
       "hint": "Le bouton « Négocier le prix » sur les annonces à vendre. Coupé : plus de nouvelle offre ; celles en cours restent dans « Mes offres »."
     },
+    "feature_price_questions": {
+      "label": "Demander le prix",
+      "hint": "Le bouton « Demander le prix » sur les annonces « Prix sur demande » : l'acheteur demande, le vendeur reçoit un SMS et répond avec le prix. Coupé : plus de nouvelle demande ; celles en cours restent dans « Demandes de prix »."
+    },
     "offers_only_negotiable": {
       "label": "Offres sur les prix négociables seulement",
       "hint": "Le bouton n'apparaît que si le vendeur a coché « Prix négociable ». Coupé : sur toutes les annonces à vendre qui ont un prix."
@@ -6139,6 +6199,10 @@
     },
     "limit_offers_per_day": {
       "label": "Offres de prix par acheteur",
+      "hint": "Au-delà, il attend le lendemain."
+    },
+    "limit_price_questions_per_day": {
+      "label": "Demandes de prix par acheteur",
       "hint": "Au-delà, il attend le lendemain."
     },
     "feature_listing_map": {
@@ -7753,6 +7817,65 @@
     "dataset": {
       "name": "Le marché immobilier tunisien en chiffres — Mazed Immo",
       "description": "Prix médians demandés, offre par gouvernorat et par type de bien, demande des acheteurs, calculés à partir des annonces publiées sur Mazed Immo."
+    }
+  },
+  "priceQuestions": {
+    "request": {
+      "cta": "Demander le prix",
+      "title": "Demander le prix",
+      "close": "Fermer",
+      "hint": "Le vendeur a choisi de donner son prix sur demande : il reçoit votre question par SMS et vous répond ici.",
+      "message": "Votre message",
+      "defaultMessage": "Bonjour, quel est le prix de l'annonce {ref} ?",
+      "name": "Votre nom",
+      "phone": "Votre numéro",
+      "shared": "Votre nom et votre numéro sont transmis au vendeur avec la question.",
+      "send": "Envoyer la question",
+      "sentToast": "Question envoyée au vendeur.",
+      "failed": "La question n'est pas partie. Réessayez.",
+      "sentTitle": "Prix demandé",
+      "sentBody": "Le vendeur répond ici et par SMS, ou il vous appelle.",
+      "follow": "Suivre mes demandes de prix",
+      "answeredTitle": "Le vendeur vous a répondu",
+      "perMonth": "par mois"
+    },
+    "page": {
+      "title": "Demandes de prix",
+      "subtitle": "Les prix demandés sur vos annonces « sur demande », et ceux que vous avez demandés.",
+      "tabs": {
+        "received": "Reçues",
+        "sent": "Envoyées"
+      },
+      "emptyReceived": "Personne n'a encore demandé le prix de vos annonces. Une annonce « Prix sur demande » affiche le bouton « Demander le prix ».",
+      "emptySent": "Vous n'avez demandé aucun prix. Sur une annonce « Prix sur demande », le bouton « Demander le prix » pose la question au vendeur.",
+      "unavailable": "Indisponible pour le moment."
+    },
+    "status": {
+      "open": "En attente",
+      "answered": "Répondu",
+      "done": "Traité"
+    },
+    "card": {
+      "listingGone": "Annonce supprimée",
+      "asked": "Demandé le {date}",
+      "whatsapp": "WhatsApp",
+      "answer": "Prix :",
+      "yourAnswer": "Votre réponse :",
+      "perMonth": "par mois",
+      "waitingSeller": "Le vendeur n'a pas encore répondu.",
+      "doneBuyer": "Le vendeur a traité votre demande : il vous a appelé ou va le faire."
+    },
+    "actions": {
+      "priceLabel": "Le prix à lui donner",
+      "rentLabel": "Le loyer à lui donner",
+      "perMonth": "par mois",
+      "hint": "Il le reçoit dans le site et par SMS. Vous l'avez appelé ? « Fait » ferme la demande.",
+      "send": "Envoyer le prix",
+      "done": "Fait, je l'ai appelé",
+      "priceMissing": "Écrivez le prix en chiffres.",
+      "answeredToast": "Prix envoyé à l'acheteur.",
+      "doneToast": "Demande fermée.",
+      "failed": "Ça n'a pas marché. Réessayez."
     }
   },
   "offers": {

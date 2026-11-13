@@ -23,6 +23,9 @@ export const SETTINGS = {
   // « Proposer un prix » (0211): a buyer's offer below the asking price, which
   // the seller accepts, refuses or answers once (src/lib/offers.ts).
   feature_offers: { group: "features", type: "bool", default: true, client: true },
+  // « Demander le prix » on an annonce « sur demande » (0222): the buyer asks,
+  // the seller hears it by SMS and answers with the price.
+  feature_price_questions: { group: "features", type: "bool", default: true, client: true },
   feature_compare: { group: "features", type: "bool", default: true, client: true },
   feature_requests: { group: "features", type: "bool", default: true, client: true, href: "/admin/demandes" },
   feature_pro_signup: { group: "features", type: "bool", default: true, client: true, href: "/admin/agences" },
@@ -143,6 +146,11 @@ export const SETTINGS = {
   // ── Publication.
   listing_default_days: { group: "publication", type: "int", default: 30, min: 1, max: 365, unit: "days" },
   listing_max_photos: { group: "publication", type: "int", default: 12, min: 1, max: 30, unit: "photos", client: true },
+  // « Prix sur demande » in the form, for a sale and for a rent (the owner,
+  // 2026-11-13: some sellers want to be asked). Off: the seller types a price;
+  // the annonces already « sur demande » stay as they are.
+  price_on_request_sale: { group: "publication", type: "bool", default: true, client: true },
+  price_on_request_rent: { group: "publication", type: "bool", default: true, client: true },
   // The full-screen gallery's zoom (the owner, 2026-11-05): on or off, and how
   // many times a photo grows. Uploads are 1600 px long, so past 3 it blurs.
   gallery_zoom: { group: "publication", type: "bool", default: true, client: true },
@@ -313,6 +321,7 @@ export const SETTINGS = {
   // ── Abuse limits: how often one person may do a thing.
   limit_visits_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
   limit_offers_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
+  limit_price_questions_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
   limit_drafts_per_account: { group: "limits", type: "int", default: 30, min: 1, max: 500 },
   limit_reports_per_hour: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_hour" },
   limit_edits_per_hour: { group: "limits", type: "int", default: 20, min: 1, max: 200, unit: "per_hour" },

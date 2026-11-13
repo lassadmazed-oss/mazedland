@@ -298,6 +298,8 @@ export default async function AnnoncesPage({
   // budget opens on the two numbers with the reason (src/lib/range.ts),
   // instead of « 0 bien » under a chip reading « 500 000 – 100 000 TND ».
   const { min, max, inverted: priceInverted } = usableRange(minAsked, maxAsked);
+  // With a budget, keep the annonces « Prix sur demande » too (a demande's link, 0222).
+  const withOnRequest = sp.por === "1";
   // « Plus de filtres ». Surface and rooms live in `attributes`, which the
   // wizard requires for every category that has them, so a hard minimum loses
   // nothing. Furnished and the date only mean something for a rental.
@@ -369,8 +371,16 @@ export default async function AnnoncesPage({
     // One ILIKE per word, against the accent-folded column: every word has to
     // appear, in any order. See searchTokens.
     for (const token of searchTokens(sp.q)) f = f.ilike("search_text", `%${token}%`);
-    if (min) f = f.gte("price", min);
-    if (max) f = f.lte("price", max);
+    if (min || max) {
+      // `por=1`, from a demande's « Voir les annonces » (0222): the annonces
+      // « sur demande » it matched stay in, their budget being unknown, not out.
+      const bounds = [min ? `price.gte.${min}` : null, max ? `price.lte.${max}` : null].filter((b): b is string => !!b);
+      if (withOnRequest) f = f.or(`price_on_request.eq.true,${bounds.length === 1 ? bounds[0] : `and(${bounds.join(",")})`}`);
+      else {
+        if (min) f = f.gte("price", min);
+        if (max) f = f.lte("price", max);
+      }
+    }
     // jsonb numbers compare as numbers through the arrow operator.
     if (surface) f = f.gte("attributes->area_sqm", surface);
     if (roomsMin) f = f.gte("attributes->rooms", roomsMin);
@@ -608,6 +618,7 @@ export default async function AnnoncesPage({
       ["govs", multiGovs.length ? multiGovs.join(",") : undefined],
       ["del", del ?? undefined], ["sort", sp.sort], ["q", sp.q],
       ["min", min ? String(min) : undefined], ["max", max ? String(max) : undefined],
+      ["por", withOnRequest ? "1" : undefined],
       ["surface", surface ? String(surface) : undefined], ["rooms", roomsMin ? String(roomsMin) : undefined],
       ["furnished", furnished ?? undefined], ["avail", availBy ?? undefined],
       ["vue", mapView ? "carte" : undefined],
