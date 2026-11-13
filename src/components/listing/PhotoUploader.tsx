@@ -73,6 +73,7 @@ export function PhotoUploader({
   onChange,
   onPendingChange,
   disabled = false,
+  mintUrl = "/api/annonces/photo-url",
 }: {
   photos: UploadedPhoto[];
   /**
@@ -84,6 +85,11 @@ export function PhotoUploader({
   /** Lets the step above know uploads are still in flight. */
   onPendingChange?: (pending: number) => void;
   disabled?: boolean;
+  /**
+   * Where the signed upload URLs come from. The publish form's own by default;
+   * Prospection (0218) mints them into the owner's folder for the team.
+   */
+  mintUrl?: string;
 }) {
   const { toast } = useToast();
   const t = useTranslations("photoUploader");
@@ -115,7 +121,7 @@ export function PhotoUploader({
   /** Signed upload URLs minted server-side (/api/annonces/photo-url). */
   const mint = useCallback(
     async (exts: string[], signal?: AbortSignal) => {
-      const res = await fetch("/api/annonces/photo-url", {
+      const res = await fetch(mintUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ exts }),
@@ -130,7 +136,7 @@ export function PhotoUploader({
       const { uploads } = (await res.json()) as { uploads?: Target[] };
       return uploads ?? [];
     },
-    [t],
+    [t, mintUrl],
   );
 
   // URLs asked for the whole batch the moment it is picked, so the round trip

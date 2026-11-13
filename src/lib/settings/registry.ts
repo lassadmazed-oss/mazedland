@@ -13,6 +13,7 @@
  */
 import type { SettingDef, ValueOf } from "./define";
 import { GA_ID_PATTERN } from "@/lib/analytics/ga";
+import { ASK_AR, ASK_FR, SMS_AR, SMS_FR } from "@/lib/prospection/templates";
 
 export const SETTINGS = {
   // ── Features: each one switched off disappears from the site and its API
@@ -265,6 +266,22 @@ export const SETTINGS = {
   // At most this many asks wait in « À valider » (the tab shows up to 40); no new one while it is full.
   social_auto_queue_waiting_max: { group: "social", type: "int", default: 40, min: 1, max: 40, choices: [10, 20, 40] },
   social_auto_queue_min_photos: { group: "social", type: "int", default: 1, min: 0, max: 10, choices: [0, 1, 2, 3] },
+
+  // ── Prospection (0218): the team that brings private owners to the site.
+  //    Off: the screen and its API refuse; the leads and the annonces made stay.
+  feature_prospection: { group: "features", type: "bool", default: true, href: "/admin/prospection" },
+  // How many owners one member may write to in a day: the number the team
+  // writes from is a private one, and a platform that sees a burst may block it.
+  prospect_daily_cap: { group: "limits", type: "int", default: 30, min: 1, max: 500, unit: "per_day", choices: [10, 20, 30, 50, 100], href: "/admin/prospection" },
+  // « Confirmé par l'équipe Mazed » on an annonce the team confirmed with its owner.
+  prospect_show_badge: { group: "publication", type: "bool", default: true, client: true, href: "/admin/prospection" },
+  // The number an owner can call about their annonce (the SMS carries it); the WhatsApp contact when empty.
+  prospect_team_phone: { group: "contact", type: "text", default: "", max: 30, ltr: true, href: "/admin/prospection" },
+  // The messages (src/lib/prospection/templates.ts lists the {holes}).
+  prospect_ask_ar: { group: "publication", type: "text", default: ASK_AR, max: 800, multiline: true, href: "/admin/prospection" },
+  prospect_ask_fr: { group: "publication", type: "text", default: ASK_FR, max: 800, multiline: true, href: "/admin/prospection" },
+  prospect_sms_ar: { group: "publication", type: "text", default: SMS_AR, max: 400, multiline: true, href: "/admin/prospection" },
+  prospect_sms_fr: { group: "publication", type: "text", default: SMS_FR, max: 400, multiline: true, href: "/admin/prospection" },
   ai_daily_budget_usd: { group: "social", type: "number", default: 2, min: 0, max: 100, step: 0.5 },
   // One account's share of it: at about 4 cents a call, half a dollar is a dozen conversations.
   ai_user_daily_budget_usd: { group: "social", type: "number", default: 0.5, min: 0, max: 100, step: 0.1 },

@@ -1139,7 +1139,8 @@
       "disclaimer": "Estimation indicative, hors assurance et frais de dossier. Le taux réel dépend de votre banque et de votre profil."
     },
     "demandeTitle": "Pas tout à fait ce que vous cherchez ?",
-    "demandeBody": "Enregistrez une demande comme celle-ci : on vous prévient dès qu'un bien proche est publié."
+    "demandeBody": "Enregistrez une demande comme celle-ci : on vous prévient dès qu'un bien proche est publié.",
+    "teamConfirmed": "Confirmée par l'équipe Mazed"
   },
   "listingMap": {
     "title": "Position sur la carte",
@@ -3049,7 +3050,9 @@
       "analytics": "Statistiques",
       "analyticsHint": "Visiteurs, recherches, annonces, agences et revenus, en chiffres",
       "content": "Guides",
-      "contentHint": "Articles et informations pratiques publiés sur le site"
+      "contentHint": "Articles et informations pratiques publiés sur le site",
+      "prospection": "Prospection",
+      "prospectionHint": "Les propriétaires trouvés sur Facebook : leur écrire, obtenir leur accord, publier leur annonce"
     },
     "siteTabs": {
       "label": "Sections du site",
@@ -3323,7 +3326,8 @@
       "editApproved": "Modification publiée.",
       "editRejected": "Modification refusée.",
       "rejectEditTitle": "Refuser cette modification ?",
-      "rejectEditBody": "L'annonce revient en ligne telle qu'elle était avant la modification. Le vendeur reçoit le motif."
+      "rejectEditBody": "L'annonce revient en ligne telle qu'elle était avant la modification. Le vendeur reçoit le motif.",
+      "attestationTeam": "Confirmée par l'équipe avec le propriétaire (v1-team)"
     },
     "forRent": "À louer",
     "perMonth": "{amount} / mois",
@@ -3664,7 +3668,12 @@
     "offer_counter": "Autre prix proposé",
     "offer_withdraw": "Offre retirée",
     "listing_location": "Position d'une annonce modifiée",
-    "admin_listing_location": "Position d'une annonce modifiée (console)"
+    "admin_listing_location": "Position d'une annonce modifiée (console)",
+    "prospect_create": "Annonce trouvée sur Facebook ajoutée à la Prospection",
+    "prospect_update": "Fiche de Prospection modifiée",
+    "prospect_confirm": "Propriétaire confirmé : compte et brouillon créés",
+    "prospect_publish": "Annonce du propriétaire mise en ligne par l'équipe",
+    "prospect_sms": "SMS envoyé au propriétaire"
   },
   "adminApi": {
     "bulk": {
@@ -6214,6 +6223,38 @@
     "requests_listing_margin": {
       "label": "Marge du budget depuis une annonce",
       "hint": "Le budget maximum proposé : le prix de l'annonce plus ce pourcentage."
+    },
+    "feature_prospection": {
+      "label": "Prospection",
+      "hint": "L'écran où l'équipe écrit aux propriétaires trouvés sur Facebook et publie leurs annonces avec leur accord. Éteint : l'écran et ses routes se ferment, les annonces déjà faites restent."
+    },
+    "prospect_daily_cap": {
+      "label": "Premiers messages par membre et par jour",
+      "hint": "Le numéro depuis lequel l'équipe écrit est un numéro privé : une plateforme qui voit une rafale de messages à des inconnus peut le bloquer. Au-delà, le membre attend le lendemain."
+    },
+    "prospect_show_badge": {
+      "label": "« Confirmée par l'équipe Mazed » sur l'annonce",
+      "hint": "Une pastille sur les annonces que l'équipe a confirmées avec leur propriétaire."
+    },
+    "prospect_team_phone": {
+      "label": "Numéro de l'équipe dans le SMS du propriétaire",
+      "hint": "Le numéro à appeler pour une question sur son annonce. Vide : le numéro WhatsApp du site."
+    },
+    "prospect_ask_ar": {
+      "label": "Premier message au propriétaire (arabe)",
+      "hint": "Il demande l'accord. Trous : '{name}' '{property}' '{terms}'. Il dit tout ce que le « oui » couvre : la publication, l'attestation, les conditions, les photos du post."
+    },
+    "prospect_ask_fr": {
+      "label": "Premier message au propriétaire (français)",
+      "hint": "Il demande l'accord. Trous : '{name}' '{property}' '{terms}'. Il dit tout ce que le « oui » couvre : la publication, l'attestation, les conditions, les photos du post."
+    },
+    "prospect_sms_ar": {
+      "label": "SMS une fois l'annonce en ligne (arabe)",
+      "hint": "Envoyé par le site. Trous : '{link}' '{manage}' '{phone}'. En lettres arabes, un SMS compte vite trois messages : restez court."
+    },
+    "prospect_sms_fr": {
+      "label": "SMS une fois l'annonce en ligne (français)",
+      "hint": "Envoyé par le site. Trous : '{link}' '{manage}' '{phone}'."
     }
   },
   "ads": {
@@ -6426,6 +6467,10 @@
       "custom": {
         "label": "Sur mesure",
         "hint": "Cochez les sections une par une."
+      },
+      "prospection": {
+        "label": "Prospection",
+        "hint": "Seulement l'écran Prospection : écrire aux propriétaires et publier leurs annonces avec leur accord."
       }
     },
     "sections": {
@@ -6445,7 +6490,8 @@
       "catalogue": "Catalogue",
       "activity": "Journal d'activité",
       "analytics": "Statistiques",
-      "content": "Guides"
+      "content": "Guides",
+      "prospection": "Prospection"
     },
     "members": {
       "title": "Membres de la console",
@@ -7861,6 +7907,252 @@
       "rejected": "Refusée",
       "cancelled": "Annulée",
       "withdrawn": "Retirée"
+    }
+  },
+  "manage": {
+    "title": "Votre annonce",
+    "eyebrow": "Mazed Immo",
+    "status": {
+      "published": "Votre annonce est en ligne.",
+      "pending_review": "Votre annonce est en cours de vérification : elle sera en ligne très vite.",
+      "draft": "Votre annonce n'est pas encore en ligne.",
+      "rejected": "Votre annonce n'a pas été acceptée.",
+      "sold": "Votre annonce est marquée comme vendue.",
+      "rented": "Votre annonce est marquée comme louée.",
+      "archived": "Votre annonce est retirée.",
+      "expired": "Votre annonce est arrivée à son terme.",
+      "pending_payment": "Votre annonce n'est pas encore en ligne."
+    },
+    "seeListing": "Voir mon annonce",
+    "markSold": "Marquer comme vendue",
+    "markRented": "Marquer comme louée",
+    "withdraw": "Retirer l'annonce",
+    "withdrawSure": "Appuyez encore pour retirer l'annonce",
+    "done": "C'est fait. Merci de nous avoir prévenus.",
+    "failed": "Ça n'a pas marché. Réessayez dans un instant.",
+    "account": "Pour modifier votre annonce ou la remettre en ligne, connectez-vous avec votre numéro de téléphone : choisissez « Mot de passe oublié » et recevez un code par SMS.",
+    "invalidTitle": "Ce lien ne marche plus",
+    "invalidBody": "Il a été remplacé par un plus récent, ou il a expiré. Connectez-vous avec votre numéro de téléphone pour gérer vos annonces.",
+    "login": "Me connecter"
+  },
+  "adminProspection": {
+    "title": "Prospection",
+    "eyebrow": "Propriétaires",
+    "description": "Les propriétaires trouvés sur Facebook : on leur écrit, on obtient leur accord, puis on publie leur annonce. Rien ne passe en ligne avant leur « oui ».",
+    "newLead": "Nouvelle annonce trouvée",
+    "mine": "Les miennes",
+    "all": "Toutes",
+    "untitled": "Annonce sans titre",
+    "unassigned": "Sans responsable",
+    "declined": "Refusés ({n})",
+    "tag": {
+      "noPhone": "Numéro manquant",
+      "questions": "{n} question(s)",
+      "followUp": "À relancer",
+      "broker": "Courtier ?",
+      "yes": "Oui reçu",
+      "noSms": "SMS non envoyé"
+    },
+    "kpi": {
+      "contacts": "Premiers messages aujourd'hui",
+      "capReached": "Plafond du jour atteint",
+      "left": "Encore {n} aujourd'hui",
+      "yes": "Oui aujourd'hui",
+      "online": "En ligne aujourd'hui",
+      "waiting": "À traiter"
+    },
+    "col": {
+      "to_contact": "À contacter",
+      "contacted": "Contacté",
+      "confirmed": "A dit oui",
+      "online": "En ligne",
+      "declined": "Refusé"
+    },
+    "empty": {
+      "to_contact": "Rien à contacter. Collez un post pour commencer.",
+      "contacted": "Personne en attente de réponse.",
+      "confirmed": "Aucun « oui » à finaliser.",
+      "online": "Pas encore d'annonce en ligne."
+    },
+    "team": {
+      "title": "L'équipe, 7 derniers jours",
+      "empty": "Aucune activité pour l'instant.",
+      "member": "Membre",
+      "contacted": "Contactés",
+      "yes": "Oui",
+      "online": "En ligne",
+      "settings": "Les messages, le plafond du jour et la pastille se règlent dans les Réglages.",
+      "settingsLink": "Ouvrir les réglages"
+    },
+    "new": {
+      "title": "Nouvelle annonce trouvée",
+      "description": "Collez le texte d'un post Facebook. Le numéro est lu dans le texte, et l'assistant prépare le brouillon : seulement ce que le post dit.",
+      "text": "Le texte du post",
+      "textPlaceholder": "Collez ici le texte du post, tel quel…",
+      "textHint": "Copiez le texte seulement. Les photos viennent après, avec l'accord du propriétaire.",
+      "url": "Lien du post",
+      "name": "Nom de la personne",
+      "phone": "Téléphone",
+      "phoneHint": "Laissez le téléphone vide si le texte le contient : il est lu tout seul.",
+      "submit": "Lire le post et créer la fiche",
+      "reading": "Lecture du post…",
+      "errors": {
+        "too_short": "Collez le texte complet du post.",
+        "do_not_contact": "Ce numéro a refusé d'être contacté. On ne lui écrit plus.",
+        "rate_limited": "Trop de posts à la suite. Réessayez dans un moment.",
+        "failed": "Ça n'a pas marché. Réessayez."
+      }
+    },
+    "work": {
+      "pageTitle": "Fiche propriétaire",
+      "back": "Retour à la liste",
+      "saved": "Enregistré.",
+      "recorded": "Noté.",
+      "copied": "Message copié.",
+      "openPost": "Ouvrir le post",
+      "assignedTo": "Responsable",
+      "questions": "Questions à poser au propriétaire",
+      "draft": "L'annonce, telle que le post la décrit",
+      "phone": "Téléphone",
+      "name": "Nom",
+      "deal": "Type",
+      "sale": "Vente",
+      "rent": "Location",
+      "category": "Catégorie",
+      "governorate": "Gouvernorat",
+      "delegation": "Délégation",
+      "price": "Prix (DT)",
+      "area": "Surface (m²)",
+      "rooms": "Pièces",
+      "bathrooms": "Salles de bain",
+      "titleField": "Titre",
+      "description": "Description",
+      "broker": "C'est un courtier, pas le propriétaire",
+      "brokerHint": "Proposez-lui l'offre des agences plutôt que l'annonce de particulier.",
+      "save": "Enregistrer",
+      "sourceText": "Le texte du post",
+      "contactTitle": "1. Écrire au propriétaire",
+      "contactHint": "Envoyez ce message tel quel : il dit tout ce que son « oui » couvre. Une personne l'envoie, pas un robot.",
+      "openWhatsapp": "Ouvrir WhatsApp",
+      "openSms": "Ouvrir les SMS",
+      "copy": "Copier le message",
+      "noPhone": "Il manque le téléphone : demandez-le par Messenger, puis saisissez-le plus haut.",
+      "markContacted": "J'ai écrit",
+      "contactsLeft": "Encore {n} messages aujourd'hui",
+      "channel": {
+        "label": "Par",
+        "whatsapp": "WhatsApp",
+        "sms": "SMS",
+        "call": "Appel",
+        "messenger": "Messenger",
+        "other": "Autre"
+      },
+      "resultTitle": "2. Sa réponse",
+      "note": "Note (facultatif)",
+      "followUp": "À relancer le",
+      "outcome": {
+        "no_answer": "Pas de réponse",
+        "thinking": "Il réfléchit",
+        "refused": "Il refuse",
+        "wrong_number": "Mauvais numéro"
+      },
+      "sureDnc": "Ce numéro ne sera plus jamais contacté. Appuyez encore pour confirmer.",
+      "sureAgain": "Confirmer",
+      "yesTitle": "3. Il a dit oui",
+      "yesHint": "Collez sa réponse mot pour mot : c'est la preuve de son accord. Le site crée son compte à son numéro et met l'annonce dedans, sans la publier.",
+      "reply": "Sa réponse",
+      "yesButton": "Il a dit oui",
+      "missing": "Il manque :",
+      "confirmedDone": "Compte et brouillon créés. Ajoutez maintenant les photos.",
+      "confirmBlockers": {
+        "wrong_step": "cette fiche n'est plus à cette étape",
+        "no_phone": "le téléphone",
+        "do_not_contact": "ce numéro est sur la liste « ne pas contacter »",
+        "no_category": "la catégorie",
+        "no_governorate": "le gouvernorat",
+        "no_title": "le titre",
+        "no_reply": "sa réponse",
+        "no_channel": "le canal de sa réponse"
+      },
+      "photosTitle": "4. Photos et publication",
+      "photosHint": "Au moins {min} photos, de préférence celles que le propriétaire envoie lui-même par WhatsApp. Celles de son post seulement si son « oui » les couvre et qu'elles sont propres.",
+      "proof": "Son accord, noté par {by}",
+      "waitingReview": "L'annonce attend la vérification d'un administrateur : elle sera en ligne dès qu'elle est approuvée.",
+      "photosCount": "{n} photo(s) sur {min} au minimum",
+      "checkNoPhone": "Aucune photo ne porte un numéro de téléphone",
+      "checkNoMark": "Aucune photo ne porte la marque d'une autre agence",
+      "uploading": "Les photos sont en cours d'envoi.",
+      "publish": "Publier l'annonce",
+      "publishBlockers": {
+        "wrong_step": "le propriétaire n'a pas dit oui",
+        "no_listing": "le brouillon n'existe pas",
+        "photos": "au moins {min} photos",
+        "photos_not_checked": "regarder les photos et cocher les deux cases",
+        "no_price": "le prix"
+      },
+      "publishedSms": "L'annonce est en ligne et le propriétaire a reçu son SMS.",
+      "publishedNoSms": "L'annonce est en ligne, mais le SMS n'est pas parti ({error}). Renvoyez-le depuis la fiche.",
+      "publishedPending": "L'annonce est envoyée à la vérification. Le SMS partira une fois qu'elle est en ligne.",
+      "onlineTitle": "En ligne",
+      "openListing": "Ouvrir l'annonce",
+      "smsSentAt": "SMS envoyé le {at}.",
+      "smsFailed": "SMS non parti : {error}",
+      "smsNotYet": "Le SMS n'est pas encore parti.",
+      "smsAgain": "Renvoyer le SMS",
+      "smsSend": "Envoyer le SMS",
+      "smsSent": "SMS envoyé.",
+      "declinedHint": "Cette fiche est fermée. Ce numéro ne sera plus contacté ; rouvrez-la seulement si elle a été fermée par erreur.",
+      "reopen": "Rouvrir",
+      "history": "Historique",
+      "addNote": "Ajouter une note",
+      "add": "Ajouter",
+      "warn": {
+        "dnc": "Ce numéro est sur la liste « ne pas contacter ». N'écrivez pas.",
+        "member": "Ce numéro a déjà un compte sur Mazed Immo ({name}) : le propriétaire est déjà membre.",
+        "others": "{n} autre(s) fiche(s) pour le même numéro ou le même post."
+      },
+      "event": {
+        "created": "Fiche créée",
+        "contacted": "Message envoyé",
+        "no_answer": "Pas de réponse",
+        "thinking": "Il réfléchit",
+        "refused": "A refusé",
+        "wrong_number": "Mauvais numéro",
+        "confirmed": "A dit oui",
+        "published": "Publiée",
+        "sms": "SMS",
+        "note": "Note",
+        "assigned": "Responsable changé",
+        "broker": "Courtier"
+      },
+      "errors": {
+        "failed": "Ça n'a pas marché. Réessayez.",
+        "daily_cap": "Plafond du jour atteint : reprenez demain.",
+        "wrong_step": "Cette fiche n'est plus à cette étape. Rechargez la page.",
+        "bad_channel": "Choisissez comment vous lui avez écrit.",
+        "no_phone": "Il manque le téléphone.",
+        "do_not_contact": "Ce numéro est sur la liste « ne pas contacter ».",
+        "bad_phone": "Ce n'est pas un numéro tunisien.",
+        "phone_locked": "Le compte du propriétaire est déjà fait à ce numéro : il ne change plus.",
+        "bad_governorate": "Gouvernorat inconnu.",
+        "bad_category": "Catégorie inconnue.",
+        "bad_member": "Ce membre n'existe pas.",
+        "blocked": "Il manque des informations.",
+        "not_found": "Fiche introuvable.",
+        "listing_missing": "Le brouillon de l'annonce n'existe pas.",
+        "photo_missing": "Une photo n'est pas arrivée : renvoyez-la.",
+        "attribute_required": "Il manque une réponse obligatoire de la catégorie (surface, pièces…).",
+        "not_submittable": "L'annonce n'est plus à publier.",
+        "taken_down": "Un administrateur a retiré cette annonce.",
+        "free_limit_reached": "Ce propriétaire a déjà le maximum d'annonces gratuites en ligne.",
+        "seller_suspended": "Le compte de ce propriétaire est suspendu.",
+        "account_failed": "Le compte n'a pas pu être créé. Réessayez.",
+        "listing_failed": "Le brouillon n'a pas pu être créé. Réessayez.",
+        "rate_limited": "Trop de demandes à la suite. Réessayez dans un moment.",
+        "sms_not_configured": "Les SMS ne sont pas configurés.",
+        "no_listing": "Il n'y a pas encore d'annonce."
+      },
+      "contactedDone": "Noté. Il vous reste {n} messages aujourd'hui."
     }
   }
 }

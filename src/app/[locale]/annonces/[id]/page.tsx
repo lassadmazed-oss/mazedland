@@ -127,6 +127,8 @@ type Row = {
   location_exact: boolean | null;
   shop_id: string | null;
   review_flags: string[] | null;
+  /** The Mazed team confirmed this annonce with its owner (Prospection, 0218). */
+  team_confirmed_at: string | null;
 };
 
 const SELECT = `
@@ -134,7 +136,7 @@ const SELECT = `
   governorate, delegation, address, attributes, contact_name, show_phone, status,
   published_at, expires_at, seller_id, reference, rejection_reason, review_flags,
   deal_type, deposit_amount, charges_amount, furnished, available_from,
-  min_lease_months, availability, shop_id, lat, lng, location_exact,
+  min_lease_months, availability, shop_id, lat, lng, location_exact, team_confirmed_at,
   category:categories (id, slug, label_fr, label_ar, kind),
   photos:listing_photos (storage_path, sort_order)
 `;
@@ -834,6 +836,11 @@ export default async function AnnoncePage({
             {badge === true && !shop && (
               <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-extrabold text-foreground ring-1 ring-border">
                 <BadgeCheck className="size-3.5" strokeWidth={2.4} aria-hidden /> {t("verifiedSeller")}
+              </span>
+            )}
+            {l.team_confirmed_at && settings.prospect_show_badge && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-extrabold text-foreground ring-1 ring-border">
+                <BadgeCheck className="size-3.5" strokeWidth={2.4} aria-hidden /> {t("teamConfirmed")}
               </span>
             )}
           </div>

@@ -1,0 +1,529 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
+import { AdminButton } from "@/components/admin/AdminButton";
+import { StatusBadge } from "@/components/admin/StatusBadge";
+import { PhotoUploader, type UploadedPhoto } from "@/components/listing/PhotoUploader";
+import { Ltr } from "@/components/ui/Ltr";
+import { formatDate } from "@/lib/utils";
+import type { ListingDraft } from "@/lib/ai/listing";
+import {
+  CHANNELS, confirmBlockers, publishBlockers, type Channel, type LeadStatus,
+} from "@/lib/prospection/model";
+import type { Warnings } from "@/lib/prospection/server";
+import { Check, Copy, ExternalLink, MessageCircle } from "lucide-react";
+
+export type WorkspaceEvent = { id: string; kind: string; channel: string | null; note: string | null; by: string | null; at: string };
+
+type Lead = {
+  id: string;
+  status: LeadStatus;
+  phone: string | null;
+  name: string | null;
+  url: string | null;
+  sourceText: string;
+  language: "ar" | "fr";
+  isBroker: boolean;
+  assignedTo: string | null;
+  followUpAt: string | null;
+  outcome: string | null;
+  confirmationText: string | null;
+  confirmedAt: string | null;
+  confirmedBy: string | null;
+  listingId: string | null;
+  listingStatus: string | null;
+  smsSentAt: string | null;
+  smsError: string | null;
+  createdAt: string;
+};
+
+type Notice = { tone: "ok" | "bad"; text: string };
+
+const STATUS_TONE: Record<LeadStatus, "neutral" | "info" | "ok" | "warn" | "bad"> = {
+  to_contact: "neutral", contacted: "info", confirmed: "ok", online: "ok", declined: "bad",
+};
+
+const card = "rounded-2xl bg-surface p-4 ring-1 ring-border";
+const field = "mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-[13px] outline-none focus:border-[var(--gold)] disabled:opacity-60";
+const label = "block text-[12px] font-bold text-muted";
+
+const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+
+export function LeadWorkspace(props: {
+  lead: Lead;
+  draft: ListingDraft;
+  photos: UploadedPhoto[];
+  events: WorkspaceEvent[];
+  warnings: Warnings;
+  ask: string;
+  members: { id: string; name: string }[];
+  categories: { slug: string; label: string }[];
+  governorates: { value: string; label: string }[];
+  minPhotos: number;
+  contactsLeft: number;
+  meId: string;
+}) {
+  const { lead, draft, events, warnings, ask, members, categories, governorates, minPhotos } = props;
+  const t = useTranslations("adminProspection");
+  const locale = useLocale();
+  const router = useRouter();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+
+  // ── the draft, as typed ──
+  const [phone, setPhone] = useState(lead.phone ?? "");
+  const [name, setName] = useState(lead.name ?? "");
+  const url = lead.url ?? "";
+  const [broker, setBroker] = useState(lead.isBroker);
+  const [deal, setDeal] = useState(draft.deal);
+  const [category, setCategory] = useState(draft.categorySlug ?? "");
+  const [governorate, setGovernorate] = useState(draft.governorate ?? "");
+  const [delegation, setDelegation] = useState(draft.delegation ?? "");
+  const [price, setPrice] = useState(draft.price != null ? String(draft.price) : "");
+  const [area, setArea] = useState(draft.areaSqm != null ? String(draft.areaSqm) : "");
+  const [rooms, setRooms] = useState(draft.rooms != null ? String(draft.rooms) : "");
+  const [bathrooms, setBathrooms] = useState(draft.bathrooms != null ? String(draft.bathrooms) : "");
+  const [title, setTitle] = useState(draft.title ?? "");
+  const [description, setDescription] = useState(draft.description ?? "");
+
+  // ── the conversation ──
+  const [channel, setChannel] = useState<Channel>("whatsapp");
+  const [note, setNote] = useState("");
+  const [followUp, setFollowUp] = useState(tomorrow());
+  const [reply, setReply] = useState("");
+  const [replyChannel, setReplyChannel] = useState<Channel | "">("whatsapp");
+  const [armed, setArmed] = useState<string | null>(null);
+
+  // ── photos ──
+  const [photos, setPhotos] = useState<UploadedPhoto[]>(props.photos);
+  const [pending, setPending] = useState(0);
+  const [checkedNoPhone, setCheckedNoPhone] = useState(false);
+  const [checkedNoMark, setCheckedNoMark] = useState(false);
+  const editable = lead.status !== "online";
+  const locked = lead.status === "online" || lead.status === "declined";
+
+  const call = async (path: string, method: string, body?: unknown) => {
+    const res = await fetch(path, { method, headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    return { ok: res.ok, status: res.status, json };
+  };
+  const base = `/api/admin/prospection/leads/${lead.id}`;
+
+  async function run(key: string, fn: () => Promise<Notice | null>) {
+    if (busy) return;
+    setBusy(key);
+    setNotice(null);
+    try {
+      const out = await fn();
+      if (out) setNotice(out);
+    } catch {
+      setNotice({ tone: "bad", text: t("work.errors.failed") });
+    } finally {
+      setBusy(null);
+    }
+  }
+  const errorText = (code: unknown) => (typeof code === "string" && t.has(`work.errors.${code}`) ? t(`work.errors.${code}`) : t("work.errors.failed"));
+
+  const draftBody = () => {
+    const n = (v: string) => (v.trim() === "" || !Number.isFinite(Number(v)) ? null : Number(v));
+    return {
+      deal, categorySlug: category || null, governorate: governorate || null, delegation: delegation.trim() || null,
+      price: n(price), areaSqm: n(area), rooms: n(rooms), bathrooms: n(bathrooms),
+      title: title.trim() || null, description: description.trim() || null,
+    };
+  };
+
+  const save = () =>
+    run("save", async () => {
+      const r = await call(base, "PATCH", { action: "update", phone, name, url, is_broker: broker, draft: draftBody() });
+      if (!r.ok) return { tone: "bad", text: errorText(r.json.error) };
+      router.refresh();
+      return { tone: "ok", text: t("work.saved") };
+    });
+
+  const contacted = () =>
+    run("contacted", async () => {
+      // What was typed is saved first: the message and the number must be the ones written to.
+      const s = await call(base, "PATCH", { action: "update", phone, name, url, is_broker: broker, draft: draftBody() });
+      if (!s.ok) return { tone: "bad", text: errorText(s.json.error) };
+      const r = await call(base, "PATCH", { action: "contacted", channel });
+      if (!r.ok) return { tone: "bad", text: errorText(r.json.error) };
+      router.refresh();
+      return { tone: "ok", text: t("work.contactedDone", { n: Number(r.json.left ?? 0) }) };
+    });
+
+  const result = (kind: "no_answer" | "thinking" | "refused" | "wrong_number") =>
+    run(kind, async () => {
+      if ((kind === "refused" || kind === "wrong_number") && armed !== kind) {
+        setArmed(kind);
+        return { tone: "bad", text: t("work.sureDnc") };
+      }
+      setArmed(null);
+      const r = await call(base, "PATCH", { action: "result", kind, note, follow_up_at: kind === "no_answer" || kind === "thinking" ? followUp : null });
+      if (!r.ok) return { tone: "bad", text: errorText(r.json.error) };
+      setNote("");
+      router.refresh();
+      return { tone: "ok", text: t("work.recorded") };
+    });
+
+  const confirm = () =>
+    run("confirm", async () => {
+      const s = await call(base, "PATCH", { action: "update", phone, name, url, is_broker: broker, draft: draftBody() });
+      if (!s.ok) return { tone: "bad", text: errorText(s.json.error) };
+      const r = await call(`${base}/confirm`, "POST", { reply, channel: replyChannel || null });
+      if (!r.ok) {
+        const blockers = Array.isArray(r.json.blockers) ? (r.json.blockers as string[]) : [];
+        return { tone: "bad", text: blockers.length ? blockers.map((b) => t(`work.confirmBlockers.${b}`)).join(" · ") : errorText(r.json.error) };
+      }
+      router.refresh();
+      return { tone: "ok", text: t("work.confirmedDone") };
+    });
+
+  const publish = () =>
+    run("publish", async () => {
+      const r = await call(`${base}/publish`, "POST", { photosChecked: checkedNoPhone && checkedNoMark });
+      if (!r.ok) {
+        const blockers = Array.isArray(r.json.blockers) ? (r.json.blockers as string[]) : [];
+        if (blockers.length) return { tone: "bad", text: blockers.map((b) => t(`work.publishBlockers.${b}`, { min: minPhotos })).join(" · ") };
+        return { tone: "bad", text: errorText(r.json.error) };
+      }
+      router.refresh();
+      const sms = r.json.sms as { sent?: boolean; error?: string } | null;
+      if (r.json.outcome === "pending_review") return { tone: "ok", text: t("work.publishedPending") };
+      return { tone: "ok", text: sms?.sent ? t("work.publishedSms") : t("work.publishedNoSms", { error: sms?.error ?? "—" }) };
+    });
+
+  const resendSms = () =>
+    run("sms", async () => {
+      const r = await call(`${base}/sms`, "POST");
+      router.refresh();
+      return r.ok ? { tone: "ok", text: t("work.smsSent") } : { tone: "bad", text: errorText((r.json.sms as { error?: string } | undefined)?.error ?? r.json.error) };
+    });
+
+  const reopen = () =>
+    run("reopen", async () => {
+      const r = await call(base, "PATCH", { action: "reopen" });
+      if (!r.ok) return { tone: "bad", text: errorText(r.json.error) };
+      router.refresh();
+      return null;
+    });
+
+  const addNote = () =>
+    run("note", async () => {
+      const r = await call(base, "PATCH", { action: "note", note });
+      if (!r.ok) return { tone: "bad", text: errorText(r.json.error) };
+      setNote("");
+      router.refresh();
+      return null;
+    });
+
+  const assign = (to: string) =>
+    run("assign", async () => {
+      const r = await call(base, "PATCH", { action: "update", assigned_to: to || null });
+      if (!r.ok) return { tone: "bad", text: errorText(r.json.error) };
+      router.refresh();
+      return null;
+    });
+
+  // The gallery is saved as soon as every upload has landed.
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    if (pending > 0 || lead.status !== "confirmed") return;
+    const timer = window.setTimeout(() => {
+      void call(`/api/admin/prospection/leads/${lead.id}/photos`, "PUT", { paths: photos.map((p) => p.path) });
+    }, 400);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photos, pending]);
+
+  const draftNow = useMemo(() => ({ ...draft, deal, categorySlug: category || null, governorate: governorate || null, title: title.trim() || null, price: price.trim() === "" ? null : Number(price) }), [draft, deal, category, governorate, title, price]);
+  const confirmHints = confirmBlockers({ status: lead.status, phone: phone ? phone : null, doNotContact: warnings.doNotContact, draft: draftNow, reply, channel: replyChannel || null });
+  const publishHints = publishBlockers({
+    status: lead.status, hasListing: !!lead.listingId, photoCount: photos.length, minPhotos, photosChecked: checkedNoPhone && checkedNoMark, draft: draftNow,
+  });
+  const waUrl = lead.phone ? `https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(ask)}` : null;
+  const smsUrl = lead.phone ? `sms:${lead.phone}?body=${encodeURIComponent(ask)}` : null;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(ask);
+      setNotice({ tone: "ok", text: t("work.copied") });
+    } catch {
+      setNotice({ tone: "bad", text: t("work.errors.failed") });
+    }
+  };
+
+  return (
+    <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+      <div className="space-y-4">
+        <section className={card}>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge tone={STATUS_TONE[lead.status]}>{t(`col.${lead.status}`)}</StatusBadge>
+            {lead.status === "declined" ? <StatusBadge tone="bad">{lead.outcome ? t(`work.outcome.${lead.outcome}`) : t("col.declined")}</StatusBadge> : null}
+            {broker ? <StatusBadge tone="info">{t("tag.broker")}</StatusBadge> : null}
+            {lead.url ? (
+              <a href={lead.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[12px] font-bold text-muted underline">
+                {t("work.openPost")} <ExternalLink className="size-3" />
+              </a>
+            ) : null}
+            <label className="ms-auto flex items-center gap-1.5 text-[12px] text-muted">
+              {t("work.assignedTo")}
+              <select value={lead.assignedTo ?? ""} onChange={(e) => void assign(e.target.value)} className="rounded-lg border border-border bg-surface px-2 py-1 text-[12px]">
+                <option value="">{t("unassigned")}</option>
+                {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </label>
+          </div>
+
+          {warnings.doNotContact ? <p role="alert" className="mt-3 rounded-lg bg-[var(--tone-bad-bg)] px-3 py-2 text-[12.5px] font-bold text-[var(--tone-bad)]">{t("work.warn.dnc")}</p> : null}
+          {warnings.member ? <p className="mt-3 rounded-lg bg-[var(--tone-warn-bg)] px-3 py-2 text-[12.5px] text-[var(--tone-warn)]">{t("work.warn.member", { name: warnings.member.name ?? "—" })}</p> : null}
+          {warnings.others.length > 0 ? <p className="mt-3 rounded-lg bg-[var(--tone-warn-bg)] px-3 py-2 text-[12.5px] text-[var(--tone-warn)]">{t("work.warn.others", { n: warnings.others.length })}</p> : null}
+          {draft.questions.length > 0 && lead.status !== "online" ? (
+            <div className="mt-3 rounded-lg bg-surface-2 px-3 py-2 text-[12.5px]">
+              <div className="font-bold">{t("work.questions")}</div>
+              <ul className="mt-1 list-disc ps-5 text-muted">{draft.questions.map((q) => <li key={q}>{q}</li>)}</ul>
+            </div>
+          ) : null}
+        </section>
+
+        <section className={card}>
+          <h2 className="mb-3 text-[13px] font-extrabold">{t("work.draft")}</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className={label}>{t("work.phone")}
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" inputMode="tel" disabled={locked || !!lead.listingId} className={field} />
+            </label>
+            <label className={label}>{t("work.name")}
+              <input value={name} onChange={(e) => setName(e.target.value)} disabled={locked} className={field} maxLength={120} />
+            </label>
+            <label className={label}>{t("work.deal")}
+              <select value={deal} onChange={(e) => setDeal(e.target.value as "sale" | "rent")} disabled={locked} className={field}>
+                <option value="sale">{t("work.sale")}</option>
+                <option value="rent">{t("work.rent")}</option>
+              </select>
+            </label>
+            <label className={label}>{t("work.category")}
+              <select value={category} onChange={(e) => setCategory(e.target.value)} disabled={locked} className={field}>
+                <option value="">—</option>
+                {categories.map((c) => <option key={c.slug} value={c.slug}>{c.label}</option>)}
+              </select>
+            </label>
+            <label className={label}>{t("work.governorate")}
+              <select value={governorate} onChange={(e) => setGovernorate(e.target.value)} disabled={locked} className={field}>
+                <option value="">—</option>
+                {governorates.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+              </select>
+            </label>
+            <label className={label}>{t("work.delegation")}
+              <input value={delegation} onChange={(e) => setDelegation(e.target.value)} disabled={locked} className={field} maxLength={80} />
+            </label>
+            <label className={label}>{t("work.price")}
+              <input value={price} onChange={(e) => setPrice(e.target.value)} inputMode="decimal" dir="ltr" disabled={locked} className={field} />
+            </label>
+            <label className={label}>{t("work.area")}
+              <input value={area} onChange={(e) => setArea(e.target.value)} inputMode="decimal" dir="ltr" disabled={locked} className={field} />
+            </label>
+            <label className={label}>{t("work.rooms")}
+              <input value={rooms} onChange={(e) => setRooms(e.target.value)} inputMode="numeric" dir="ltr" disabled={locked} className={field} />
+            </label>
+            <label className={label}>{t("work.bathrooms")}
+              <input value={bathrooms} onChange={(e) => setBathrooms(e.target.value)} inputMode="numeric" dir="ltr" disabled={locked} className={field} />
+            </label>
+          </div>
+          <label className={`${label} mt-3`}>{t("work.titleField")}
+            <input value={title} onChange={(e) => setTitle(e.target.value)} disabled={locked} className={field} maxLength={140} />
+          </label>
+          <label className={`${label} mt-3`}>{t("work.description")}
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} disabled={locked} className={field} maxLength={4000} />
+          </label>
+          <label className="mt-3 flex items-center gap-2 text-[12.5px] text-muted">
+            <input type="checkbox" checked={broker} onChange={(e) => setBroker(e.target.checked)} disabled={locked} />
+            {t("work.broker")}
+          </label>
+          {broker ? <p className="mt-1 text-[12px] text-muted">{t("work.brokerHint")}</p> : null}
+          {editable ? (
+            <div className="mt-3"><AdminButton variant="default" size="md" pending={busy === "save"} onClick={() => void save()}>{t("work.save")}</AdminButton></div>
+          ) : null}
+        </section>
+
+        <details className={card}>
+          <summary className="cursor-pointer text-[13px] font-extrabold">{t("work.sourceText")}</summary>
+          <p className="mt-3 whitespace-pre-wrap break-words text-[12.5px] leading-relaxed text-muted">{lead.sourceText}</p>
+        </details>
+      </div>
+
+      <div className="space-y-4">
+        {notice ? (
+          <p role="status" className={`rounded-xl px-4 py-3 text-[13px] font-bold ${notice.tone === "ok" ? "bg-[var(--tone-ok-bg)] text-[var(--tone-ok)]" : "bg-[var(--tone-bad-bg)] text-[var(--tone-bad)]"}`}>
+            {notice.text}
+          </p>
+        ) : null}
+
+        {(lead.status === "to_contact" || lead.status === "contacted") && (
+          <>
+            <section className={card}>
+              <h2 className="mb-2 text-[13px] font-extrabold">{t("work.contactTitle")}</h2>
+              <p className="text-[12px] text-muted">{t("work.contactHint")}</p>
+              <textarea readOnly value={ask} rows={7} className={`${field} mt-3`} />
+              <div className="mt-2 flex flex-wrap gap-2">
+                {waUrl ? (
+                  <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded border border-border px-3 text-[12.5px] font-semibold hover:border-[var(--gold-soft)]">
+                    <MessageCircle className="size-3.5" /> {t("work.openWhatsapp")}
+                  </a>
+                ) : null}
+                {smsUrl ? (
+                  <a href={smsUrl} className="inline-flex h-8 items-center gap-1.5 rounded border border-border px-3 text-[12.5px] font-semibold hover:border-[var(--gold-soft)]">
+                    {t("work.openSms")}
+                  </a>
+                ) : null}
+                <AdminButton icon={<Copy className="size-3.5" />} onClick={() => void copy()}>{t("work.copy")}</AdminButton>
+              </div>
+              {!lead.phone ? <p className="mt-2 text-[12px] font-bold text-[var(--tone-bad)]">{t("work.noPhone")}</p> : null}
+
+              <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-border pt-3">
+                <label className={label}>{t("work.channel.label")}
+                  <select value={channel} onChange={(e) => setChannel(e.target.value as Channel)} className={`${field} w-auto`}>
+                    {CHANNELS.map((c) => <option key={c} value={c}>{t(`work.channel.${c}`)}</option>)}
+                  </select>
+                </label>
+                <AdminButton variant="primary" size="md" pending={busy === "contacted"} disabled={!lead.phone || warnings.doNotContact || props.contactsLeft === 0} disabledReason={props.contactsLeft === 0 ? t("work.errors.daily_cap") : undefined} onClick={() => void contacted()}>
+                  {t("work.markContacted")}
+                </AdminButton>
+                <span className="text-[11.5px] text-muted">{t("work.contactsLeft", { n: props.contactsLeft })}</span>
+              </div>
+            </section>
+
+            <section className={card}>
+              <h2 className="mb-2 text-[13px] font-extrabold">{t("work.resultTitle")}</h2>
+              <label className={label}>{t("work.note")}
+                <input value={note} onChange={(e) => setNote(e.target.value)} className={field} maxLength={300} />
+              </label>
+              <label className={`${label} mt-2`}>{t("work.followUp")}
+                <input type="date" value={followUp} onChange={(e) => setFollowUp(e.target.value)} dir="ltr" className={`${field} w-auto`} />
+              </label>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(["no_answer", "thinking"] as const).map((k) => (
+                  <AdminButton key={k} pending={busy === k} onClick={() => void result(k)}>{t(`work.outcome.${k}`)}</AdminButton>
+                ))}
+                {(["refused", "wrong_number"] as const).map((k) => (
+                  <AdminButton key={k} variant="danger" pending={busy === k} onClick={() => void result(k)}>
+                    {armed === k ? t("work.sureAgain") : t(`work.outcome.${k}`)}
+                  </AdminButton>
+                ))}
+              </div>
+            </section>
+
+            <section className={card}>
+              <h2 className="mb-2 text-[13px] font-extrabold">{t("work.yesTitle")}</h2>
+              <p className="text-[12px] text-muted">{t("work.yesHint")}</p>
+              <label className={`${label} mt-3`}>{t("work.reply")}
+                <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={3} className={field} maxLength={2000} />
+              </label>
+              <label className={`${label} mt-2`}>{t("work.channel.label")}
+                <select value={replyChannel} onChange={(e) => setReplyChannel(e.target.value as Channel | "")} className={`${field} w-auto`}>
+                  {CHANNELS.map((c) => <option key={c} value={c}>{t(`work.channel.${c}`)}</option>)}
+                </select>
+              </label>
+              {confirmHints.length > 0 && (reply.trim() || category) ? (
+                <p className="mt-2 text-[12px] text-muted">{t("work.missing")} {confirmHints.map((b) => t(`work.confirmBlockers.${b}`)).join(" · ")}</p>
+              ) : null}
+              <div className="mt-3">
+                <AdminButton variant="primary" size="md" pending={busy === "confirm"} onClick={() => void confirm()} icon={<Check className="size-3.5" />}>
+                  {t("work.yesButton")}
+                </AdminButton>
+              </div>
+            </section>
+          </>
+        )}
+
+        {lead.status === "confirmed" && (
+          <section className={card}>
+            <h2 className="mb-1 text-[13px] font-extrabold">{t("work.photosTitle")}</h2>
+            <p className="text-[12px] text-muted">{t("work.photosHint", { min: minPhotos })}</p>
+            {lead.confirmationText ? (
+              <blockquote className="mt-3 rounded-lg bg-surface-2 px-3 py-2 text-[12.5px] text-muted">
+                <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.1em]">{t("work.proof", { by: lead.confirmedBy ?? "—" })}</div>
+                {lead.confirmationText}
+              </blockquote>
+            ) : null}
+            {lead.listingStatus === "pending_review" ? (
+              <p className="mt-3 rounded-lg bg-[var(--tone-warn-bg)] px-3 py-2 text-[12.5px] text-[var(--tone-warn)]">{t("work.waitingReview")}</p>
+            ) : (
+              <>
+                <div className="mt-3">
+                  <PhotoUploader photos={photos} onChange={setPhotos} onPendingChange={setPending} mintUrl={`${base}/photo-url`} />
+                </div>
+                <p className={`mt-2 text-[12px] font-bold ${photos.length >= Math.max(1, minPhotos) ? "text-[var(--tone-ok)]" : "text-[var(--tone-bad)]"}`}>
+                  {t("work.photosCount", { n: photos.length, min: minPhotos })}
+                </p>
+                <div className="mt-3 space-y-1.5 text-[12.5px]">
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={checkedNoPhone} onChange={(e) => setCheckedNoPhone(e.target.checked)} />{t("work.checkNoPhone")}</label>
+                  <label className="flex items-center gap-2"><input type="checkbox" checked={checkedNoMark} onChange={(e) => setCheckedNoMark(e.target.checked)} />{t("work.checkNoMark")}</label>
+                </div>
+                {publishHints.length > 0 && photos.length > 0 ? (
+                  <p className="mt-2 text-[12px] text-muted">{t("work.missing")} {publishHints.map((b) => t(`work.publishBlockers.${b}`, { min: minPhotos })).join(" · ")}</p>
+                ) : null}
+                <div className="mt-3">
+                  <AdminButton variant="primary" size="md" pending={busy === "publish"} disabled={pending > 0} disabledReason={t("work.uploading")} onClick={() => void publish()}>
+                    {t("work.publish")}
+                  </AdminButton>
+                </div>
+              </>
+            )}
+          </section>
+        )}
+
+        {lead.status === "online" && (
+          <section className={card}>
+            <h2 className="mb-2 text-[13px] font-extrabold">{t("work.onlineTitle")}</h2>
+            {lead.listingId ? (
+              <a href={`/${locale}/annonces/${lead.listingId}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[13px] font-bold underline">
+                {t("work.openListing")} <ExternalLink className="size-3" />
+              </a>
+            ) : null}
+            <p className="mt-3 text-[12.5px] text-muted">
+              {lead.smsSentAt ? t("work.smsSentAt", { at: formatDate(lead.smsSentAt, locale, "dateTime") }) : lead.smsError ? t("work.smsFailed", { error: lead.smsError }) : t("work.smsNotYet")}
+            </p>
+            <div className="mt-2">
+              <AdminButton pending={busy === "sms"} onClick={() => void resendSms()}>{lead.smsSentAt ? t("work.smsAgain") : t("work.smsSend")}</AdminButton>
+            </div>
+          </section>
+        )}
+
+        {lead.status === "declined" && (
+          <section className={card}>
+            <p className="text-[12.5px] text-muted">{t("work.declinedHint")}</p>
+            <div className="mt-2"><AdminButton pending={busy === "reopen"} onClick={() => void reopen()}>{t("work.reopen")}</AdminButton></div>
+          </section>
+        )}
+
+        <section className={card}>
+          <h2 className="mb-2 text-[13px] font-extrabold">{t("work.history")}</h2>
+          <div className="flex gap-2">
+            <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("work.addNote")} className={`${field} mt-0`} maxLength={300} />
+            <AdminButton pending={busy === "note"} disabled={!note.trim()} onClick={() => void addNote()}>{t("work.add")}</AdminButton>
+          </div>
+          <ul className="mt-3 divide-y divide-border text-[12.5px]">
+            {events.map((e) => (
+              <li key={e.id} className="py-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-bold">
+                    {t(`work.event.${e.kind}`)}
+                    {e.channel ? <span className="ms-1 font-normal text-muted">· {t(`work.channel.${e.channel}`)}</span> : null}
+                  </span>
+                  <span className="mazed-tabular text-[11px] text-muted">{formatDate(e.at, locale, "dateTime")}{e.by ? ` · ${e.by}` : ""}</span>
+                </div>
+                {e.note ? <div className="mt-0.5 break-words text-muted"><Ltr>{e.note}</Ltr></div> : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </div>
+  );
+}
