@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { log } from "@/lib/log";
+import { SAFE_DECODE, isPhoto } from "@/lib/imageSafety";
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { PHOTO_WIDTHS, hasPhotoSizes, photoSizePath } from "@/lib/photoSizes";
 
@@ -27,11 +28,16 @@ export async function makePhotoSizes(admin: Admin, path: string): Promise<boolea
     return false;
   }
   const original = Buffer.from(await blob.arrayBuffer());
+  // A file in the bucket is whatever its uploader sent: only a photo reaches the decoder.
+  if (!isPhoto(original)) {
+    sLog.warn("original is not a photo", { path });
+    return false;
+  }
   try {
     for (const width of PHOTO_WIDTHS) {
       // Upright first: a JPEG straight from a camera carries its turn in EXIF,
       // which the WebP would drop. The uploader's own WebPs are upright already.
-      const out = await sharp(original, { failOn: "none" })
+      const out = await sharp(original, SAFE_DECODE)
         .rotate()
         .resize({ width, withoutEnlargement: true })
         .webp({ quality: 72 })
