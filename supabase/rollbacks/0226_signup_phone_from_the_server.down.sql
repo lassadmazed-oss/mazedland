@@ -1,5 +1,9 @@
 -- Rollback of 0226 · the profile trigger reads the phone from user_metadata again
--- (the 0164 body). Only do this if account creation lost its phone.
+-- (the 0164 body) and the app_metadata door is closed. Only do this if account
+-- creation lost its phone.
+
+drop trigger if exists on_auth_user_phone on auth.users;
+drop function if exists public._on_auth_user_phone();
 
 create or replace function public._on_auth_user_created()
 returns trigger
