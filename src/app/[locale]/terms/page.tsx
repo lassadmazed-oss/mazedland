@@ -18,6 +18,8 @@ export async function generateMetadata({
 // Pure static content — prerender at build and serve from the edge CDN so
 // navigation is instant. (No cookies/data, nothing per-request.)
 export const dynamic = "force-static";
+// Its own number, not the layout's (a ceiling, 3600): rebuilt within a minute of a change.
+export const revalidate = 60;
 
 export default async function TermsPage({
   params,

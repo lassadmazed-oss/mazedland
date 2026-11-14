@@ -18,10 +18,13 @@ import { PriceTable } from "@/components/market/PriceTable";
 import { GovernorateBlock } from "@/components/market/GovernorateBlock";
 
 // The same figures for every visitor, so the page comes from the CDN and is
-// rebuilt at most a minute after a change: the figures themselves come from
-// analytics_cache (public_stats_cache_minutes), and a page switched off in the
-// console, or a changed sample, takes effect at the next rebuild.
-export const revalidate = 60;
+// rebuilt at most an hour after a change: the figures themselves come from
+// analytics_cache (public_stats_cache_minutes, a day by default), and a page
+// switched off in the console, or a changed sample, takes effect at once (saving
+// the settings revalidates the site). It was a minute, and this page comes out
+// different at every rebuild (the order of its parts, whatever its figures), so
+// each one was a new 0.5 MB page stored (ISR writes, 2026-11-14).
+export const revalidate = 3600;
 // A build that fails, naming the API, the day something here reads the
 // request (headers(), cookies(), searchParams) and silently turns the page
 // back into a render on every visit (src/app/[locale]/(home)/page.tsx).

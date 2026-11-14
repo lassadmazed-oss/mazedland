@@ -14,6 +14,7 @@ import { claimDecision, decidePayment, OPEN, releaseDecision, type PaymentRow } 
 import { refusalOutcome } from "@/lib/pro/agenceRequest";
 import { getSettings } from "@/lib/settings/server";
 import { formatDate } from "@/lib/utils";
+import { revalidatePublic } from "@/lib/revalidatePublic";
 
 /**
  * POST /api/admin/boutiques/:id — the console's decisions on a shop (0173).
@@ -102,6 +103,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       before: { name: out.name, status: shop.status, listings: out.listings, photos: out.photos, documents: out.documents },
       note: reason,
     });
+    revalidatePublic("/agences", "/pro");
     return NextResponse.json({ ok: true, deleted: { listings: out.listings, photos: out.photos, documents: out.documents } });
   }
 
@@ -134,6 +136,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       action: "shop.offer_plan", targetType: "shop", targetId: id,
       after: { name_fr: product.name_fr, quota, months, ends_at: period.endsAt.toISOString().slice(0, 10) },
     });
+    revalidatePublic("/pro");
     return NextResponse.json({ ok: true, plan: product.name_fr, months, until: period.endsAt.toISOString() });
   }
 
@@ -297,6 +300,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (refund) await releaseDecision(admin, refund.id, by);
     return NextResponse.json({ error: "wrong_status", detail: t("errors.wrongStatus") }, { status: 409 });
   }
+
+  // The directory and the Pro page's places left come from the CDN.
+  revalidatePublic("/agences", "/pro");
 
   // Refused for good: the plan's money goes back to the owner by hand, and
   // the payment says so — refunded, never invoiced (the invoice follows an
