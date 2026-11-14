@@ -387,6 +387,80 @@ export function digestsOf(rows: readonly WaitingRow[], now: Date = new Date()): 
   return out;
 }
 
+// ── The team's day, for the owner ───────────────────────────────────────────
+
+/** What one member did over a period: the events the figures count. */
+export type MemberFigures = { actorId: string; created: number; contacted: number; yes: number; online: number; refused: number; noAnswer: number };
+
+/** The event kinds the figures count (the rest — notes, SMS, assignments — is shown in the day's detail). */
+export const FIGURE_KINDS = ["created", "contacted", "confirmed", "published", "refused", "no_answer"] as const;
+
+/** Per member: leads made, first contacts, yeses, annonces put online, refusals and silences; most contacts first. */
+export function countFigures(rows: readonly { actor_id: string | null; kind: string }[]): MemberFigures[] {
+  const by = new Map<string, MemberFigures>();
+  for (const r of rows) {
+    if (!r.actor_id || !(FIGURE_KINDS as readonly string[]).includes(r.kind)) continue;
+    const m = by.get(r.actor_id) ?? { actorId: r.actor_id, created: 0, contacted: 0, yes: 0, online: 0, refused: 0, noAnswer: 0 };
+    if (r.kind === "created") m.created++;
+    else if (r.kind === "contacted") m.contacted++;
+    else if (r.kind === "confirmed") m.yes++;
+    else if (r.kind === "published") m.online++;
+    else if (r.kind === "refused") m.refused++;
+    else m.noAnswer++;
+    by.set(r.actor_id, m);
+  }
+  return [...by.values()].sort((a, b) => b.contacted - a.contacted);
+}
+
+/** The date in Tunisia (UTC+1, no daylight saving) as YYYY-MM-DD. */
+export function tunisiaDay(now: Date = new Date()): string {
+  return new Date(now.getTime() + 3_600_000).toISOString().slice(0, 10);
+}
+
+/** The hour of the day in Tunisia, 0–23. */
+export function tunisiaHour(now: Date = new Date()): number {
+  return new Date(now.getTime() + 3_600_000).getUTCHours();
+}
+
+/** The report page's `?day=`: a real date no later than today and no older than a year, else today. */
+export function asDay(v: unknown, now: Date = new Date()): string {
+  const today = tunisiaDay(now);
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return today;
+  const t = Date.parse(`${v}T00:00:00Z`);
+  if (!Number.isFinite(t) || new Date(t).toISOString().slice(0, 10) !== v) return today;
+  if (v > today || t < Date.parse(`${today}T00:00:00Z`) - 365 * 86_400_000) return today;
+  return v;
+}
+
+/** Midnight to midnight in Tunisia of a YYYY-MM-DD, as instants. */
+export function dayBounds(day: string): { start: string; end: string } {
+  const start = Date.parse(`${day}T00:00:00Z`) - 3_600_000;
+  return { start: new Date(start).toISOString(), end: new Date(start + 86_400_000).toISOString() };
+}
+
+/** Today and the days before it, newest first (the report page's day strip). */
+export function lastDays(now: Date = new Date(), count = 14): string[] {
+  const today = Date.parse(`${tunisiaDay(now)}T00:00:00Z`);
+  return Array.from({ length: count }, (_, i) => new Date(today - i * 86_400_000).toISOString().slice(0, 10));
+}
+
+/** « 14/11 » for 2026-11-14. */
+export function dayLabel(day: string): string {
+  return `${day.slice(8, 10)}/${day.slice(5, 7)}`;
+}
+
+/** One member's day, as the evening notice and the report page read it. */
+export type ReportRow = Omit<MemberFigures, "actorId"> & { name: string };
+
+/** « Smartimmo 12 · 3 · 1 »: first messages · yeses · annonces online. The bell words the rest around it. */
+export function reportLine(r: ReportRow): string {
+  return `${r.name} ${r.contacted} · ${r.yes} · ${r.online}`;
+}
+
+export function reportText(rows: readonly ReportRow[]): string {
+  return rows.map(reportLine).join(" | ");
+}
+
 /**
  * Does a post read like an agency's rather than a private owner's? A hint for the
  * member, never a decision: a commission, an office, « agence », « وكالة ». The

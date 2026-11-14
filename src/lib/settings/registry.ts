@@ -288,6 +288,10 @@ export const SETTINGS = {
   // The daily notice in the bell of each member who has owners to write to again,
   // « oui » waiting for photos, or an SMS that never left (0219).
   prospect_reminders: { group: "features", type: "bool", default: true, href: "/admin/prospection" },
+  // The evening notice to the whole-console admins: what each member of the team did that day (0223),
+  // and the hour of the evening (Tunis time) from which it goes.
+  prospect_report: { group: "features", type: "bool", default: true, href: "/admin/prospection/rapport" },
+  prospect_report_hour: { group: "features", type: "int", default: 21, min: 18, max: 23, unit: "hour_of_day", choices: [18, 19, 20, 21, 22, 23], href: "/admin/prospection/rapport" },
   // How long a finished lead keeps the post's text and the poster's name: they are a stranger's words.
   prospect_keep_days: { group: "privacy", type: "int", default: 180, min: 30, max: 1825, unit: "days", choices: [90, 180, 365], href: "/admin/prospection" },
   // How many owners one member may write to in a day: the number the team
