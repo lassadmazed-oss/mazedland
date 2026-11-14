@@ -328,6 +328,14 @@ describe("the first message", () => {
       expect(ASK_AGENCY_AR).not.toBe(ASK_AR);
     });
 
+    it("keeps the owner's paragraphs in Arabic, the link on a line of its own", () => {
+      const ar = fillTemplate(ASK_AGENCY_AR, { name: "", link });
+      expect(ar.startsWith("عسلامة، معاكم فريق مازد إيمو")).toBe(true);
+      expect(ar).toContain("Mazed Immo Pro");
+      expect(ar).toContain(`هنا 👇\n${link}\n\n`);
+      expect(ar.split("\n\n")).toHaveLength(5);
+    });
+
     it("says the same in French", () => {
       const fr = fillTemplate(ASK_AGENCY_FR, { name: "Agence Palmier", link: "https://www.mazed.immo/fr/pro" });
       expect(fr).toContain("Agence Palmier");
