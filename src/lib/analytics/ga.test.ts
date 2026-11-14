@@ -7,6 +7,7 @@ import {
   gaIdOrNull,
   gaInitScript,
   isConsolePath,
+  isPrivateLinkPath,
   track,
 } from "./ga";
 import { checkSetting, readSetting } from "@/lib/settings/define";
@@ -57,6 +58,16 @@ describe("the console", () => {
     }
     for (const p of ["/fr", "/ar/annonces", "/fr/annonces/admin", "/fr/administration", "/"]) {
       expect(isConsolePath(p), p).toBe(false);
+    }
+  });
+
+  it("an owner's private link is never measured either: its address is a credential", () => {
+    for (const p of ["/fr/gerer/Zk3p9Xv", "/ar/gerer/abc", "/FR/Gerer/x", "/gerer/x", "/fr/%67erer/abc"]) {
+      expect(isPrivateLinkPath(p), p).toBe(true);
+      expect(isConsolePath(p), p).toBe(true);
+    }
+    for (const p of ["/fr", "/fr/annonces/gerer", "/fr/gerant", "/fr/admin"]) {
+      expect(isPrivateLinkPath(p), p).toBe(false);
     }
   });
 });

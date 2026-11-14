@@ -5,6 +5,7 @@ import { recordServerEvent } from "@/lib/analytics/server-events";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { clientIp } from "@/lib/clientIp";
 import { assertSupabaseRef } from "@/lib/supabase/guard";
+import { loginBlocked, recordLoginFailure } from "@/lib/auth/loginFailures";
 
 /**
  * Phone sign-in — fully server-side.
@@ -72,14 +73,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
   }
 
-  // Per-PHONE cap — protects a specific account from brute-force spread across
-  // many IPs (the per-IP cap alone can't). 10 attempts / 15 min per number.
-  const { data: phoneBlocked } = await admin.rpc("check_rate_limit", {
-    p_key: `login:${phone}`,
-    p_max: 10,
-    p_window_secs: 900,
-  });
-  if (phoneBlocked === true) {
+  // Wrong guesses per number — protects an account from brute force, and only
+  // FAILURES count (src/lib/auth/loginFailures.ts): ten requests from anywhere
+  // used to lock the owner out, since a seller's number is on every annonce.
+  if (await loginBlocked(admin, phone, ip)) {
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
   }
 
@@ -92,6 +89,7 @@ export async function POST(req: NextRequest) {
   }
   if (!email) {
     // Unknown phone — same generic failure as a wrong password (no oracle).
+    await recordLoginFailure(admin, phone, ip);
     return NextResponse.json({ ok: false, error: "invalid_credentials" }, { status: 401 });
   }
 
@@ -99,6 +97,7 @@ export async function POST(req: NextRequest) {
   const supabase = await getServerSupabase();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    await recordLoginFailure(admin, phone, ip);
     return NextResponse.json({ ok: false, error: "invalid_credentials" }, { status: 401 });
   }
   recordServerEvent(req, "login", { userId: profile?.id, params: { method: "phone" } });

@@ -6,8 +6,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { Suspense } from "react";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { VercelMeasure } from "@/components/analytics/VercelMeasure";
 import { routing } from "@/i18n/routing";
 import { isRtl } from "@/lib/i18n";
 import { jakarta, cairo } from "../fonts";
@@ -192,8 +191,7 @@ export default async function LocaleLayout({
             console errors on every page. */}
         {process.env.VERCEL ? (
           <>
-            <Analytics />
-            <SpeedInsights />
+            <VercelMeasure />
           </>
         ) : null}
         <Suspense fallback={null}>

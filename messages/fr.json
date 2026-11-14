@@ -5727,6 +5727,14 @@
       "label": "Ajouts à l'équipe d'une agence par personne",
       "hint": "Chaque ajout dit si un numéro a un compte : la limite empêche d'en tester en série."
     },
+    "otp_daily_cap": {
+      "label": "Codes de vérification par jour (tout le site)",
+      "hint": "Chaque code coûte un SMS. Au-delà, plus aucun code ne part jusqu'au lendemain et les admins sont prévenus : c'est le plafond de ce qu'un script peut dépenser."
+    },
+    "otp_dial_codes": {
+      "label": "Pays où un code peut être envoyé",
+      "hint": "Indicatifs (+216, +33…). Un numéro d'un autre pays ne reçoit pas de code. Mettez seulement +216 si une attaque vise l'étranger."
+    },
     "sms_daily_cap": {
       "label": "SMS par personne",
       "hint": "Au-delà, les avis suivants restent dans le site ; un verdict (paiement, annonce refusée, visite confirmée) part toujours. 0 : aucun SMS."

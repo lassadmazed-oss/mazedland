@@ -106,6 +106,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   if (action === "offer_plan") {
+    // Free months of a paid plan are a money decision, like accepting or refusing a receipt.
+    if (!canOpen(gate.scopes, "paiements")) {
+      return NextResponse.json({ error: "forbidden_section", section: "paiements" }, { status: 403 });
+    }
     // A closed agence (refused, suspended) is not offered anything: it has to be reopened first.
     if (shop.status !== "pending" && shop.status !== "approved") {
       return NextResponse.json({ error: "wrong_status", detail: t("errors.offerClosed") }, { status: 409 });

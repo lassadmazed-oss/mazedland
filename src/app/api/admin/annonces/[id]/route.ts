@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jsonObject } from "@/lib/http/body";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin/guard";
+import { canOpen } from "@/lib/admin/sections";
 import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
@@ -122,6 +123,10 @@ export async function POST(
   // Neither publishes on its own: the annonce moves to the review queue and is
   // published by the normal approve path, so nothing skips the check.
   if (action === "mark_paid" || action === "waive_fee") {
+    // Marking a payment received, or waiving the fee, is a money decision: the payments section's (security audit, 2026-11-14).
+    if (!canOpen(gate.scopes, "paiements")) {
+      return NextResponse.json({ error: "forbidden_section", section: "paiements" }, { status: 403 });
+    }
     if (listing.status !== "pending_payment" && listing.status !== "pending_review") {
       return NextResponse.json(
         { error: "not_awaiting_payment", detail: t("notAwaitingPayment", { status: statusWord(listing.status) }) },

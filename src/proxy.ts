@@ -5,6 +5,7 @@ import { routing } from "./i18n/routing";
 import { log } from "./lib/log";
 import { isSupabaseAuthCookie } from "./lib/supabase/session-cookie";
 import { logActivity } from "./lib/activity";
+import { trustedIp } from "./lib/clientIp";
 import { publicPathOfTwin, queryViewPath } from "./lib/queryViews";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -247,7 +248,7 @@ export async function proxy(req: NextRequest) {
       userEmail: authUserEmail,
       path: pathname,
       method: req.method,
-      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      ip: trustedIp(req),
       userAgent: req.headers.get("user-agent") ?? null,
       referer: req.headers.get("referer") ?? null,
     });
