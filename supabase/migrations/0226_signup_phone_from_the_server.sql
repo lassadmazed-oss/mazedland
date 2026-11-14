@@ -12,10 +12,16 @@
 -- locks the real owner out of signing up, and the notices meant for the owner
 -- reach the squatter's account.
 --
--- The three server routes that create accounts after proving the number (sign-up,
--- the guest demande, Prospection) now pass it in `app_metadata`, which only the
--- admin API can write. The trigger reads it from there. A sign-up through the
--- public endpoint now gets a profile with no phone.
+-- The three server routes that create an account after proving the number
+-- (sign-up, the guest demande, Prospection) pass it in `app_metadata`, which only
+-- the admin API can write. The profile takes it from there.
+--
+-- Found on the first live try: the admin API stores app_metadata AFTER it inserts
+-- the user, so the INSERT trigger alone saw nothing and the account was born
+-- without its phone (rolled back within minutes, no real sign-up in between).
+-- So there are two doors, one rule: the INSERT trigger reads app_metadata in
+-- case it is there already, and an UPDATE trigger on raw_app_meta_data fills a
+-- profile that has no phone yet. Only ever fills: a number is never overwritten.
 --
 -- Deploy the code first (it sends both), then apply this.
 -- Rollback: supabase/rollbacks/0226_signup_phone_from_the_server.down.sql.
@@ -51,3 +57,32 @@ begin
   return new;
 end;
 $function$;
+
+create or replace function public._on_auth_user_phone()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $function$
+begin
+  if (new.raw_app_meta_data ->> 'phone') is not null
+     and (old.raw_app_meta_data ->> 'phone') is distinct from (new.raw_app_meta_data ->> 'phone') then
+    -- The profile guard keeps a person from setting their own phone; this is
+    -- the server's own write, local to the transaction.
+    perform set_config('app.bypass_profile_guard', 'on', true);
+    update public.profiles
+       set phone = new.raw_app_meta_data ->> 'phone'
+     where id = new.id
+       and phone is null;
+    perform set_config('app.bypass_profile_guard', 'off', true);
+  end if;
+  return null;
+end;
+$function$;
+
+revoke all on function public._on_auth_user_phone() from public, anon, authenticated;
+
+drop trigger if exists on_auth_user_phone on auth.users;
+create trigger on_auth_user_phone
+  after update of raw_app_meta_data on auth.users
+  for each row execute function public._on_auth_user_phone();
