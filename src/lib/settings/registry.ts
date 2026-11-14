@@ -115,7 +115,7 @@ export const SETTINGS = {
   // governorate with each one's count; shown from so many annonces online,
   // and a governorate gets its circle from so many of its own.
   home_map_enabled: { group: "home", type: "bool", default: true },
-  home_map_min_total: { group: "home", type: "int", default: 10, min: 0, max: 500, choices: [0, 10, 20, 50, 100] },
+  home_map_min_total: { group: "home", type: "int", default: 10, min: 0, max: 500, choices: [0, 10, 20, 50, 100, 200, 500] },
   home_map_min_count: { group: "home", type: "int", default: 1, min: 1, max: 20, choices: [1, 2, 3, 5] },
   home_rail_featured: { group: "home", type: "bool", default: true, href: "/admin/home" },
   home_rail_most_viewed: { group: "home", type: "bool", default: true },
