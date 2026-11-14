@@ -59,6 +59,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  Eye,
   FileCheck,
   Flame,
   Hammer,
@@ -76,6 +77,7 @@ import {
   Waves,
 } from "lucide-react";
 import { langOf, levelsFact } from "@/lib/listings/levels";
+import { viewsShown } from "@/lib/listings/views";
 import type { Metadata } from "next";
 import { jsonLdSafe } from "@/lib/jsonld";
 import { breadcrumbLd, listingDescription } from "@/lib/seo";
@@ -130,6 +132,8 @@ type Row = {
   review_flags: string[] | null;
   /** The Mazed team confirmed this annonce with its owner (Prospection, 0218). */
   team_confirmed_at: string | null;
+  /** Distinct visitors, the seller left out (0152): shown from `listing_views_public_min` on. */
+  view_count: number | null;
 };
 
 const SELECT = `
@@ -137,7 +141,7 @@ const SELECT = `
   governorate, delegation, address, attributes, contact_name, show_phone, status,
   published_at, expires_at, seller_id, reference, rejection_reason, review_flags,
   deal_type, deposit_amount, charges_amount, furnished, available_from,
-  min_lease_months, availability, shop_id, lat, lng, location_exact, team_confirmed_at,
+  min_lease_months, availability, shop_id, lat, lng, location_exact, team_confirmed_at, view_count,
   category:categories (id, slug, label_fr, label_ar, kind),
   photos:listing_photos (storage_path, sort_order)
 `;
@@ -577,6 +581,8 @@ export default async function AnnoncePage({
   // unless an admin has switched editing off.
   const settings = await getSettings();
   const editOn = settings.feature_listing_edit;
+  const views = l.view_count ?? 0;
+  const showViews = !isPreview && viewsShown(views, settings.listing_views_public_min);
 
   // « Publier sur nos pages » (0214): an admin who runs the social pages, on any annonce online.
   let feature: {
@@ -891,6 +897,14 @@ export default async function AnnoncePage({
               <span className="inline-flex items-center gap-1">
                 <Clock className="size-3.5" aria-hidden />
                 {t("publishedOn", { date: formatDate(l.published_at, locale, "short") })}
+              </span>
+            )}
+            {/* How many looked, once it is a number that says « people look here »:
+                below the console's threshold, « 3 vues » would say the opposite. */}
+            {showViews && (
+              <span className="mazed-tabular inline-flex items-center gap-1" title={t("viewsTitle")}>
+                <Eye className="size-3.5" aria-hidden />
+                {t("viewsPublic", { count: views })}
               </span>
             )}
             {/* Printed where a buyer will find it when they call: "je vous

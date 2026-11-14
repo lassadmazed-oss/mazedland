@@ -155,6 +155,9 @@ export const SETTINGS = {
   // many times a photo grows. Uploads are 1600 px long, so past 3 it blurs.
   gallery_zoom: { group: "publication", type: "bool", default: true, client: true },
   gallery_zoom_max: { group: "publication", type: "int", default: 3, min: 2, max: 4, choices: [2, 3, 4], client: true },
+  // An annonce's views (distinct visitors, the seller left out) on its page, from this many on;
+  // below, « 3 vues » would tell a buyer the site is empty. 0: never; 1: always.
+  listing_views_public_min: { group: "publication", type: "int", default: 50, min: 0, max: 1000, choices: [0, 1, 20, 50, 100, 200] },
   catalogue_page_size: { group: "publication", type: "int", default: 24, min: 12, max: 60 },
   // How many annonces side by side on a phone's catalogue: one, with big
   // photos (Idealista, Rightmove), or two, denser (Tayara). Tablets and up
