@@ -37,8 +37,14 @@ export const ASK_FR =
 
 // An agency is not an owner: nothing is published for it, it is invited to open an agence of its own.
 // The offer's numbers are not written here: the page the link opens shows them, with the places left.
+// The Arabic one is the owner's wording too (2026-11-14), with the agency's name and the link as holes;
+// « Mazed Immo Pro » names the site in Latin letters.
 export const ASK_AGENCY_AR =
-  "سلام {name}، شفنا إعلاناتكم في فيسبوك. مازد إيمو (Mazed Immo) موقع إعلانات عقارية في تونس، وعندنا عرض للوكالات اللي تبدا معانا: تشوفو العرض والبلايص المتبقية هنا: {link}. تنجمو تنشرو إعلاناتكم عندنا وتستوردوها من Excel، وأحسن إعلاناتكم نبرزوها في صفحتنا في فيسبوك. تحبو نبعثولكم التفاصيل؟";
+  "عسلامة {name}، معاكم فريق مازد إيمو 🏡\n\n" +
+  "شفنا إعلانات وكالتكم على فيسبوك وحبّينا نعرّفوكم بـ Mazed Immo Pro، عرضنا للوكالات العقارية اللي تحب توسّع انتشار عروضها.\n\n" +
+  "تنجموا تنشروا عقاراتكم على المنصّة وتستوردوا إعلاناتكم من ملف Excel دفعة وحدة. ونختاروا زادة من بين أحسن عروضكم باش نبرزوها على صفحة مازد إيمو في فيسبوك.\n\n" +
+  "تنجموا تشوفوا عرض الانطلاق والبلايص المتبقّية هنا 👇\n{link}\n\n" +
+  "تحبّوا نبعثولكم تفاصيل العرض ونوريولكم كيفاش تستوردوا إعلاناتكم؟";
 
 export const ASK_AGENCY_FR =
   "Bonjour {name}, nous avons vu vos annonces sur Facebook. Mazed Immo est un site d'annonces immobilières en Tunisie, et nous avons une offre pour les agences qui démarrent avec nous : vous la découvrez, avec les places restantes, ici : {link}. Vous publiez vos annonces chez nous, vous les importez depuis Excel, et vos meilleures annonces sont relayées sur notre page Facebook. Souhaitez-vous que nous vous envoyions les détails ?";
