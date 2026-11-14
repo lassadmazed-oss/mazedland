@@ -24,6 +24,13 @@ const FOREIGN: readonly RegExp[] = [
   // Android that also raised #418 and from Facebook's iOS browser. A server render
   // that really failed is logged on the server (instrumentation.ts), not here.
   /Minified React error #419\b/,
+  // A browser extension talking to its own page script: the page asked it something
+  // (« chrome: call method ») and it never answered, or it promised an answer and the
+  // channel closed first. Both come from the visitor's extensions, never from our code
+  // (the phrases are nowhere in this repo), carry no stack, and showed up on /fr/admin
+  // and a Facebook-shared annonce from one Edge with extensions, then on the home page.
+  /Window message ["'][^"']*["'] timed out/i,
+  /A listener indicated an asynchronous response by returning true, but the message channel closed/i,
 ];
 
 /** True when the message is browser or app noise that the error log should not keep. */

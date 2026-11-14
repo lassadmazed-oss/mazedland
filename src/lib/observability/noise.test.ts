@@ -27,6 +27,18 @@ describe("isForeignNoise", () => {
     expect(isForeignNoise("Uncaught Error: Minified React error #4190")).toBe(false);
   });
 
+  it("drops an extension's messages to its own page script that were never answered", () => {
+    expect(isForeignNoise('Error: Window message "chrome: call method" timed out.')).toBe(true);
+    expect(isForeignNoise('Uncaught (in promise) Error: Window message "other call" timed out')).toBe(true);
+    expect(isForeignNoise("Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received")).toBe(true);
+  });
+
+  it("keeps a timeout that is the site's own", () => {
+    expect(isForeignNoise("Error: Request to /api/listings timed out.")).toBe(false);
+    expect(isForeignNoise("TimeoutError: signal timed out")).toBe(false);
+    expect(isForeignNoise("Error: Window message handler failed")).toBe(false);
+  });
+
   it("keeps the site's own errors", () => {
     expect(isForeignNoise("Uncaught Error: Minified React error #418; visit https://react.dev/errors/418")).toBe(false);
     expect(isForeignNoise("TypeError: Cannot read properties of null (reading 'name')")).toBe(false);
