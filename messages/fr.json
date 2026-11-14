@@ -166,6 +166,9 @@
       "expiresToday": "Expire aujourd'hui",
       "daysLeft": "{days, plural, one {Encore # jour en ligne} other {Encore # jours en ligne}}",
       "renewableOn": "· renouvelable le {date}",
+      "views": "{count, plural, one {# vue} other {# vues}}",
+      "reveals": "numéro affiché {count} fois",
+      "statsTitle": "Visiteurs différents, vous n'êtes pas compté ; et combien de fois votre numéro a été affiché",
       "columns": {
         "listing": "Annonce",
         "status": "Statut",
@@ -1049,6 +1052,8 @@
     "categoryFallback": "Annonce",
     "publishedOn": "publiée le {date}",
     "referenceTitle": "Référence de l'annonce",
+    "viewsPublic": "{count, plural, one {# vue} other {# vues}}",
+    "viewsTitle": "Visiteurs différents depuis la publication",
     "specsTitle": "Caractéristiques",
     "descriptionTitle": "Description",
     "backToCatalogue": "← Toutes les annonces",
@@ -5594,6 +5599,10 @@
     "gallery_zoom_max": {
       "label": "Zoom jusqu'à",
       "hint": "Combien de fois une photo peut grandir. Les photos sont envoyées en 1600 px : au-delà de 3 fois, elles deviennent floues."
+    },
+    "listing_views_public_min": {
+      "label": "Nombre de vues sur l'annonce à partir de",
+      "hint": "Les visiteurs voient le nombre de vues sur la page de l'annonce à partir de ce seuil (visiteurs différents, le vendeur n'est pas compté). En dessous, rien ne s'affiche. Le vendeur voit toujours les siennes dans « Mes annonces ». 1 : toujours."
     },
     "catalogue_page_size": {
       "label": "Annonces par page de recherche",
