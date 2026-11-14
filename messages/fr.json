@@ -1636,6 +1636,10 @@
     "admin_prospect_followup": {
       "title": "Prospection : à traiter aujourd'hui",
       "body": "{followUps} à relancer · {yes} « oui » à finaliser · {noSms} SMS à renvoyer"
+    },
+    "admin_prospect_report": {
+      "title": "Prospection : le bilan du jour",
+      "body": "{day} — premiers messages · oui · en ligne : {lines}"
     }
   },
   "publish": {
@@ -6345,6 +6349,14 @@
       "label": "Rappel du matin pour l'équipe de Prospection",
       "hint": "Chaque matin, une notification pour chaque membre qui a des propriétaires à relancer, des « oui » sans photos depuis un jour ou un SMS non parti."
     },
+    "prospect_report": {
+      "label": "Bilan du soir pour le propriétaire",
+      "hint": "Chaque soir, une notification pour chaque administrateur qui a toute la console : ce que chaque membre de l'équipe a fait dans la journée (premiers messages, « oui », annonces en ligne), avec le détail du jour."
+    },
+    "prospect_report_hour": {
+      "label": "Bilan du soir à partir de",
+      "hint": "L'heure (Tunis) à partir de laquelle la notification part, une fois par jour."
+    },
     "prospect_keep_days": {
       "label": "Durée de conservation du texte des posts",
       "hint": "Une fois la fiche terminée (refusée, ou en ligne), le texte du post et le nom de la personne sont effacés après ce délai : ce sont les mots d'un tiers. La réponse du propriétaire (la preuve de son accord) reste, et la liste « ne pas contacter » garde ses numéros."
@@ -8414,6 +8426,20 @@
       "noAnswer": "Sans réponse",
       "ofContacted": "{n} % des contactés",
       "ofYes": "{n} % des oui"
+    },
+    "report": {
+      "link": "Bilan du jour",
+      "title": "Bilan de l'équipe",
+      "description": "Ce que chaque membre de l'équipe a fait, jour par jour. Un membre qui n'a rien fait apparaît quand même.",
+      "back": "Prospection",
+      "days": "Les 14 derniers jours",
+      "dayActions": "{n} action(s)",
+      "total": "Total du jour",
+      "idle": "Aucune action ce jour-là.",
+      "detail": "Détail ({n})",
+      "noTeam": "Aucun membre n'a l'accès Prospection. Ajoutez-en dans Équipe, avec le rôle « Prospection ».",
+      "notice": "Le bilan part aussi chaque soir dans votre cloche. L'heure et l'interrupteur sont dans Réglages.",
+      "settingsLink": "Réglages"
     },
     "extensionLink": "Bouton Chrome",
     "extension": {

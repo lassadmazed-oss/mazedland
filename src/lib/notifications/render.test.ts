@@ -167,4 +167,20 @@ describe("renderNotification", () => {
     const expired = { kind: "offer_expired", title: "x", body: "x", payload: { vars: { title: "S+3 Sfax", amount: 215000, variant: "countered" } } };
     expect(renderNotification(expired, tr("fr"), "fr").body).toMatch(/votre prix de 215\s000 TND pour « S\+3 Sfax »/);
   });
+
+  it("words the evening report of Prospection around the members' lines, in both languages", () => {
+    const report = {
+      kind: "admin_prospect_report",
+      title: "x",
+      body: "x",
+      payload: { vars: { day: "14/11", lines: "Smartimmo 12 · 3 · 1 | Sami 0 · 0 · 0" } },
+    };
+    const f = renderNotification(report, tr("fr"), "fr");
+    expect(f.title).toBe("Prospection : le bilan du jour");
+    expect(f.body).toBe("14/11 — premiers messages · oui · en ligne : Smartimmo 12 · 3 · 1 | Sami 0 · 0 · 0");
+    const a = renderNotification(report, tr("ar"), "ar");
+    expect(a.title).toBe("الاستقطاب: حصيلة النهار");
+    expect(a.body).toContain("Smartimmo 12 · 3 · 1 | Sami 0 · 0 · 0");
+    expect(a.body).not.toContain("{lines}");
+  });
 });
