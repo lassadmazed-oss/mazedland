@@ -4,6 +4,7 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { clientIp } from "@/lib/clientIp";
 import { sendSms, isSmsConfigured, needsUnicode } from "@/lib/winsms";
+import { smsIsDown } from "@/lib/sms/gate";
 import { apiTranslator } from "@/lib/i18n/server";
 import { PHONE_PROOF_COOKIE, hashCode } from "@/lib/otp";
 import { log } from "@/lib/log";
@@ -51,6 +52,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const admin = getServiceSupabase();
   if (!admin) return NextResponse.json({ error: "not_configured" }, { status: 503 });
+
+  // WinSMS is known to be failing (sms_health, 0224): say so now, before a code is stored and the
+  // person's cooldown spent on a message that would never arrive. The forms show « SMS could not be sent ».
+  if (await smsIsDown()) return NextResponse.json({ error: "sms_unavailable" }, { status: 503 });
 
   // Per-IP throttle (cross-instance, DB-backed). The per-NUMBER cooldown below
   // does not stop an attacker iterating MANY numbers from one IP to burn SMS
