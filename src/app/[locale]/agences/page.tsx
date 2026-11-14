@@ -11,9 +11,11 @@ import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
 
 // The same list for every visitor, so it comes from the CDN and is rebuilt at
-// most a minute after an agence opens, changes or publishes (the home page's
-// recipe). Nothing on it is the reader's own.
-export const revalidate = 60;
+// most five minutes after an agence publishes (its count of annonces), and at
+// once when one opens, closes, is deleted or saves its page (revalidatePublic).
+// Nothing on it is the reader's own. It was a minute; the page does not always
+// come out the same, byte for byte, and each version is stored (ISR writes).
+export const revalidate = 300;
 // A build that fails, naming the API, the day something here reads the
 // request (headers(), cookies(), searchParams) and silently turns the page
 // back into a render on every visit (src/app/[locale]/(home)/page.tsx).

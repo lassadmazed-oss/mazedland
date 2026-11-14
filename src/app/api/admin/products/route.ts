@@ -7,6 +7,7 @@ import { fail } from "@/lib/http/errors";
 import { jsonObject } from "@/lib/http/body";
 import { isUuid } from "@/lib/uuid";
 import { apiTranslator } from "@/lib/i18n/server";
+import { revalidatePublic } from "@/lib/revalidatePublic";
 import { PRODUCT_KINDS, PRODUCT_SELECT, unsellable, type ProductKind } from "@/lib/products";
 
 /**
@@ -198,6 +199,8 @@ export async function POST(req: NextRequest) {
 
   logAction(req, user, "admin.product.create", { id: data.id, kind, slug });
   await audit(admin, user.id, { action: "product.create", targetType: "product", targetId: data.id, after: { kind, slug } });
+  // The Pro page shows the plans on sale: from the CDN, rebuilt now.
+  revalidatePublic("/pro");
   return NextResponse.json({ ok: true, id: data.id });
 }
 
@@ -266,6 +269,7 @@ export async function PATCH(req: NextRequest) {
   const before = Object.fromEntries(Object.keys(patch).map((k) => [k, was[k]]));
   logAction(req, user, "admin.product.update", { id, fields: Object.keys(patch) });
   await audit(admin, user.id, { action: "product.update", targetType: "product", targetId: id, before, after: patch });
+  revalidatePublic("/pro");
   return NextResponse.json({ ok: true });
 }
 
@@ -288,5 +292,6 @@ export async function DELETE(req: NextRequest) {
 
   logAction(req, user, "admin.product.deactivate", { id });
   await audit(admin, user.id, { action: "product.deactivate", targetType: "product", targetId: id, after: { is_active: false } });
+  revalidatePublic("/pro");
   return NextResponse.json({ ok: true, deactivated: true });
 }

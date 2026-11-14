@@ -11,10 +11,13 @@ import { ProCta, ProNotMember, ProViewerProvider } from "@/components/agency/Pro
 import { BadgeCheck, Check, LayoutGrid, Store, Users, Sparkles } from "lucide-react";
 
 // The same page for every visitor, so it comes from the CDN and is rebuilt at
-// most a minute after a plan, a price or a setting changes. Who is reading it
+// most ten minutes after a plan, a price or a setting changes (and at once when
+// the console saves one, or opens an agence: it moves the places left). It comes
+// out different at every rebuild, so a minute was a new page stored a minute
+// (ISR writes, 2026-11-14). Who is reading it
 // (a guest, someone signed in, a member of an agence) is found out in the
 // browser: the way in and the founding offer follow (ProViewer).
-export const revalidate = 60;
+export const revalidate = 600;
 // A build that fails, naming the API, the day something here reads the
 // request (headers(), cookies(), searchParams) and silently turns the page
 // back into a render on every visit (src/app/[locale]/(home)/page.tsx).

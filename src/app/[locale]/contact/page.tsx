@@ -17,9 +17,10 @@ export async function generateMetadata({
   return { title: t("metaTitle"), alternates: pageAlternates(locale, "/contact") };
 }
 
-// Prerendered and served from the edge CDN; the layout's `revalidate` rebuilds
-// it within a minute of a change in /admin/settings → Contact.
+// Prerendered and served from the edge CDN, rebuilt within a minute of a change
+// in /admin/settings → Contact (and at once: saving settings revalidates the site).
 export const dynamic = "force-static";
+export const revalidate = 60;
 
 /** tel: wants digits and a leading +, not the spaces that make it readable. */
 const telHref = (v: string) => `tel:${v.replace(/[^\d+]/g, "")}`;

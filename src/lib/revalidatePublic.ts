@@ -13,3 +13,13 @@ export function revalidatePublic(...paths: string[]): void {
     for (const path of paths) revalidatePath(`/${locale}${path}`);
   }
 }
+
+/**
+ * Every public page, from the next visit on: after the console saves settings
+ * (a switch, a number, a text the pages show). The slow pages rebuild every
+ * ten minutes or hour; this is what keeps « the setting I just changed » from
+ * waiting for that.
+ */
+export function revalidateSite(): void {
+  for (const locale of routing.locales) revalidatePath(`/${locale}`, "layout");
+}
