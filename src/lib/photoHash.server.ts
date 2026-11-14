@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
+import { SAFE_DECODE, isPhoto } from "@/lib/imageSafety";
 import { HASH_COLUMNS, HASH_ROWS, SIMILAR_MAX_BITS, dhashFromGrey, isHash } from "./photoHash";
 import { photoSizePath } from "./photoSizes";
 
@@ -16,7 +17,8 @@ const hLog = log.scope("photo-hash");
 
 /** The hash of an image's bytes: upright, grey, 9 × 8. Throws when the bytes are not an image. */
 export async function dhashOfImage(bytes: Buffer): Promise<string> {
-  const grey = await sharp(bytes, { failOn: "none" })
+  if (!isPhoto(bytes)) throw new Error("not_a_photo");
+  const grey = await sharp(bytes, SAFE_DECODE)
     .rotate()
     .greyscale()
     .resize(HASH_COLUMNS, HASH_ROWS, { fit: "fill" })

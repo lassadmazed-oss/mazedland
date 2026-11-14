@@ -2,6 +2,7 @@ import sharp from "sharp";
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { callJson } from "@/lib/ai/server";
 import { log } from "@/lib/log";
+import { SAFE_DECODE, isPhoto } from "@/lib/imageSafety";
 import { dhashOfImage, readPhoto, similarPhotos, storeHash } from "@/lib/photoHash.server";
 import { ensurePhotoSizes } from "@/lib/photoSizes.server";
 import {
@@ -34,7 +35,8 @@ export type PhotoCheckResult = {
 
 /** A photo at a width the model can read cheaply, always as WebP and upright. */
 async function forTheModel(bytes: Buffer): Promise<string> {
-  const out = await sharp(bytes, { failOn: "none" }).rotate().resize({ width: 640, withoutEnlargement: true }).webp({ quality: 72 }).toBuffer();
+  if (!isPhoto(bytes)) throw new Error("not_a_photo");
+  const out = await sharp(bytes, SAFE_DECODE).rotate().resize({ width: 640, withoutEnlargement: true }).webp({ quality: 72 }).toBuffer();
   return out.toString("base64");
 }
 

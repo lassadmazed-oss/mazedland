@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { SAFE_DECODE, isPhoto } from "@/lib/imageSafety";
 import { isSocialChannel } from "@/lib/social/channels";
 import { instagramCrop } from "@/lib/social/policy";
 
@@ -61,7 +62,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ requ
 
   try {
     // Upright first, so the crop is computed on the photo as it is seen.
-    const upright = await sharp(Buffer.from(await source.arrayBuffer()), { failOn: "none" })
+    const bytes = Buffer.from(await source.arrayBuffer());
+    // Only a photo reaches the decoder (src/lib/imageSafety.ts).
+    if (!isPhoto(bytes)) return NextResponse.json({ error: "decode_failed" }, { status: 422 });
+    const upright = await sharp(bytes, SAFE_DECODE)
       .rotate()
       .toBuffer({ resolveWithObject: true });
     let img = sharp(upright.data);
