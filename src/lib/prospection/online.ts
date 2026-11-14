@@ -4,7 +4,8 @@ import { log } from "@/lib/log";
 import { getSettings } from "@/lib/settings/server";
 import { siteUrl } from "@/lib/siteUrl";
 import { sendSms } from "@/lib/winsms";
-import { fillTemplate, type Channel, type EventKind, type LeadStatus } from "./model";
+import type { AdminScopes } from "@/lib/admin/sections";
+import { fillTemplate, mayWorkLead, type Channel, type EventKind, type LeadStatus } from "./model";
 
 /**
  * What happens to a lead once its annonce is online, kept apart from the rest
@@ -50,6 +51,16 @@ export const LEAD_COLUMNS =
 export async function loadLead(admin: Admin, id: string): Promise<LeadRow | null> {
   const { data } = await admin.from("prospect_leads").select(LEAD_COLUMNS).eq("id", id).maybeSingle();
   return (data as LeadRow | null) ?? null;
+}
+
+/**
+ * The lead a console member may work on: null when it does not exist AND when
+ * it belongs to a colleague — the same answer, so a member cannot tell which
+ * ids exist. Every screen and route of a lead opens it through here.
+ */
+export async function loadOwnLead(admin: Admin, id: string, who: { scopes: AdminScopes; userId: string }): Promise<LeadRow | null> {
+  const lead = await loadLead(admin, id);
+  return lead && mayWorkLead(who.scopes, who.userId, lead) ? lead : null;
 }
 
 export async function addEvent(

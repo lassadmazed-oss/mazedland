@@ -5,7 +5,7 @@ import { featureOff } from "@/lib/settings/gate";
 import { fail } from "@/lib/http/errors";
 import { jsonObject } from "@/lib/http/body";
 import { logAction } from "@/lib/activity";
-import { publishLead } from "@/lib/prospection/server";
+import { loadOwnLead, publishLead } from "@/lib/prospection/server";
 
 /**
  * POST /api/admin/prospection/leads/:id/publish  { photosChecked: true }
@@ -24,6 +24,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const admin = getServiceSupabase();
   if (!admin) return fail("server_misconfigured", 500);
   const { id } = await params;
+  // A member publishes their own leads only.
+  if (!(await loadOwnLead(admin, id, { scopes: gate.scopes, userId: gate.user.id }))) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const body = await jsonObject(req);
   const out = await publishLead(admin, {

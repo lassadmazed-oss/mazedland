@@ -6,7 +6,7 @@ import { fail } from "@/lib/http/errors";
 import { jsonObject } from "@/lib/http/body";
 import { logAction } from "@/lib/activity";
 import { isChannel } from "@/lib/prospection/model";
-import { confirmLead } from "@/lib/prospection/server";
+import { confirmLead, loadOwnLead } from "@/lib/prospection/server";
 
 /**
  * POST /api/admin/prospection/leads/:id/confirm  { reply, channel }
@@ -24,6 +24,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const admin = getServiceSupabase();
   if (!admin) return fail("server_misconfigured", 500);
   const { id } = await params;
+  // A member confirms their own leads only.
+  if (!(await loadOwnLead(admin, id, { scopes: gate.scopes, userId: gate.user.id }))) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const body = await jsonObject(req);
   const reply = typeof body.reply === "string" ? body.reply : "";

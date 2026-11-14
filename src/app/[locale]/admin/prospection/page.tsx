@@ -32,7 +32,9 @@ export default async function ProspectionBoard({
 }) {
   const { user, scopes } = await requireAdmin("prospection");
   const { mine, range: rangeParam, kind: kindParam } = await searchParams;
-  const onlyMine = mine === "1";
+  // The owner (whole console) sees the team's work and may narrow it to theirs; a member sees only their own, always.
+  const everyone = scopes === null;
+  const onlyMine = !everyone || mine === "1";
   // Private owners and agencies are not worked the same way: the board can show one or the other.
   const kind = kindParam === "agency" || kindParam === "owner" ? kindParam : "all";
   const range = asRange(rangeParam);
@@ -53,14 +55,14 @@ export default async function ProspectionBoard({
     return q.order("created_at", { ascending: status === "to_contact" || status === "contacted" }).limit(limit);
   };
   let dueQuery = admin.from("prospect_leads").select("id", { count: "exact", head: true }).in("status", ["to_contact", "contacted"]).lte("follow_up_at", new Date(now).toISOString());
-  if (onlyMine || scopes !== null) dueQuery = dueQuery.eq("assigned_to", user.id);
+  if (onlyMine) dueQuery = dueQuery.eq("assigned_to", user.id);
   const [cols, declined, doneToday, myContacts, figures, due] = await Promise.all([
     Promise.all(COLUMNS.map((s) => fetchColumn(s, PER_COLUMN))),
     fetchColumn("declined", 20),
     admin.from("prospect_events").select("kind").in("kind", ["confirmed", "published"]).gte("created_at", dayStart).eq("actor_id", user.id),
     contactsToday(admin, user.id),
     // The team's figures are the owner's: a member reads their own.
-    teamFigures(admin, rangeStart(range), scopes === null ? undefined : user.id),
+    teamFigures(admin, rangeStart(range), everyone ? undefined : user.id),
     dueQuery,
   ]);
 
@@ -152,7 +154,8 @@ export default async function ProspectionBoard({
 
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
         {[
-          { group: "who", items: [{ key: "all", mine: false }, { key: "mine", mine: true }] },
+          // « Toutes / Les miennes » is the owner's: a member has only their own.
+          ...(everyone ? [{ group: "who", items: [{ key: "all", mine: false }, { key: "mine", mine: true }] }] : []),
           { group: "kind", items: [{ key: "all" }, { key: "owner" }, { key: "agency" }] },
         ].map((g) => (
           <div key={g.group} className="flex flex-wrap gap-1.5">
@@ -160,7 +163,7 @@ export default async function ProspectionBoard({
               const nextMine = g.group === "who" ? (f as { mine: boolean }).mine : onlyMine;
               const nextKind = g.group === "kind" ? f.key : kind;
               const active = g.group === "who" ? nextMine === onlyMine : f.key === kind;
-              const q = [nextMine ? "mine=1" : "", nextKind !== "all" ? `kind=${nextKind}` : ""].filter(Boolean).join("&");
+              const q = [everyone && nextMine ? "mine=1" : "",nextKind !== "all" ? `kind=${nextKind}` : ""].filter(Boolean).join("&");
               return (
                 <Link
                   key={`${g.group}-${f.key}`}
@@ -203,12 +206,12 @@ export default async function ProspectionBoard({
 
       <section className="mt-8">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-[12px] font-extrabold uppercase tracking-[0.1em] text-muted">{scopes === null ? t("team.title") : t("team.mine")}</h2>
+          <h2 className="text-[12px] font-extrabold uppercase tracking-[0.1em] text-muted">{everyone ? t("team.title") : t("team.mine")}</h2>
           <div className="flex gap-1.5">
             {RANGES.map((r: Range) => (
               <Link
                 key={r}
-                href={`/admin/prospection?range=${r}${onlyMine ? "&mine=1" : ""}${kind !== "all" ? `&kind=${kind}` : ""}` as "/admin/prospection"}
+                href={`/admin/prospection?range=${r}${everyone && onlyMine ? "&mine=1" : ""}${kind !== "all" ? `&kind=${kind}` : ""}` as "/admin/prospection"}
                 className={`inline-flex h-7 items-center rounded-full border px-3 text-[11.5px] font-bold transition-colors ${
                   r === range ? "border-[var(--gold)] bg-[var(--gold)] text-[var(--background)]" : "border-border bg-surface text-muted hover:border-gold-soft"
                 }`}
@@ -236,7 +239,7 @@ export default async function ProspectionBoard({
           ))}
         </div>
 
-        {scopes === null ? (
+        {everyone ? (
           <>
             {figures.length === 0 ? (
               <p className="mt-3 rounded-xl border border-dashed border-border px-3 py-6 text-center text-[12px] text-muted">{t("team.empty")}</p>

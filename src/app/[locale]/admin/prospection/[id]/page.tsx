@@ -10,7 +10,7 @@ import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ChevronLeft } from "lucide-react";
 import { contactsLeft, propertyLine, readDraft } from "@/lib/prospection/model";
-import { askMessage, contactsToday, leadWarnings, loadLead, syncLeadWithListing } from "@/lib/prospection/server";
+import { askMessage, contactsToday, leadWarnings, loadOwnLead, syncLeadWithListing } from "@/lib/prospection/server";
 import { LeadWorkspace, type WorkspaceEvent } from "../LeadWorkspace";
 
 export const dynamic = "force-dynamic";
@@ -21,15 +21,17 @@ export async function generateMetadata() {
 }
 
 export default async function LeadPage({ params }: { params: Promise<{ id: string }> }) {
-  const { user } = await requireAdmin("prospection");
+  const { user, scopes } = await requireAdmin("prospection");
   const { id } = await params;
   const t = await getTranslations("adminProspection");
   const locale = (await getLocale()) as "fr" | "ar";
   const admin = getServiceSupabase();
   if (!admin) return null;
 
-  const found = await loadLead(admin, id);
+  // A member opens their own leads only: a colleague's lead is « not found », like an id that does not exist.
+  const found = await loadOwnLead(admin, id, { scopes, userId: user.id });
   if (!found) notFound();
+  const everyone = scopes === null;
   // An annonce an admin approved after the rules held it is online: the lead follows.
   const lead = await syncLeadWithListing(admin, found);
 
@@ -42,7 +44,8 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     lead.listing_id ? admin.from("listings").select("id, status").eq("id", lead.listing_id).maybeSingle() : Promise.resolve({ data: null }),
     lead.listing_id ? admin.from("listing_photos").select("storage_path, sort_order").eq("listing_id", lead.listing_id).order("sort_order") : Promise.resolve({ data: [] }),
     leadWarnings(admin, { phone: lead.phone, sourceUrl: lead.source_url, excludeId: id }),
-    admin.from("profiles").select("id, full_name").eq("role", "admin").is("banned_at", null).limit(100),
+    // Who a lead can be given to: the owner's choice, so a member is not shown the team.
+    everyone ? admin.from("profiles").select("id, full_name").eq("role", "admin").is("banned_at", null).limit(100) : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
     admin.from("categories").select("slug, label_fr, label_ar, kind, parent_id").eq("is_active", true),
     contactsToday(admin, user.id),
     askMessage(lead, origin),
@@ -99,7 +102,8 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         events={events}
         warnings={warnings}
         ask={ask}
-        members={[...names.entries()].map(([mid, name]) => ({ id: mid, name }))}
+        canAssign={everyone}
+        members={everyone ? [...names.entries()].map(([mid, name]) => ({ id: mid, name })) : []}
         categories={(catRows ?? [])
           .filter((c) => c.parent_id != null)
           .map((c) => ({ slug: c.slug as string, label: categoryLabel(c as { label_fr: string; label_ar: string | null }, locale) }))
