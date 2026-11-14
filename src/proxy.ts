@@ -6,6 +6,7 @@ import { log } from "./lib/log";
 import { isSupabaseAuthCookie } from "./lib/supabase/session-cookie";
 import { logActivity } from "./lib/activity";
 import { trustedIp } from "./lib/clientIp";
+import { isBlockedCrawler } from "./lib/crawlers";
 import { publicPathOfTwin, queryViewPath } from "./lib/queryViews";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -53,6 +54,16 @@ const PAGEVIEW_ANON_SAMPLE = clamp01(process.env.ACTIVITY_PAGEVIEW_ANON_SAMPLE, 
 export async function proxy(req: NextRequest) {
   const t0 = performance.now();
   const { pathname, search } = req.nextUrl;
+
+  // A crawler that costs a render per visit and sends nobody (src/lib/crawlers.ts):
+  // refused first, before any routing, session or log. /robots.txt and the sitemap
+  // are outside this proxy's matcher, so it can still read what it is asked not to fetch.
+  if (isBlockedCrawler(req.headers.get("user-agent"))) {
+    return new NextResponse("Crawling is not allowed here: see /robots.txt", {
+      status: 403,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" },
+    });
+  }
 
   // Legacy /en/* → /fr/* (preserve querystring + hash).
   for (const legacy of LEGACY_LOCALES) {
