@@ -339,6 +339,17 @@ export const SETTINGS = {
   // Adding to an agence's team says whether a phone number has an account (the members route).
   limit_member_adds_per_hour: { group: "limits", type: "int", default: 20, min: 1, max: 200, unit: "per_hour" },
   sms_daily_cap: { group: "limits", type: "int", default: 6, min: 0, max: 50, unit: "per_day" },
+  // The verification codes (/api/auth/phone/send): every one costs an SMS. The
+  // ceiling for the whole site in a day — a script rotating numbers and addresses
+  // stops here — and the countries a code may be sent to (the forms' dial codes).
+  otp_daily_cap: { group: "limits", type: "int", default: 1000, min: 10, max: 100000, unit: "per_day" },
+  otp_dial_codes: {
+    group: "limits",
+    type: "list",
+    default: ["+216", "+33", "+39", "+49", "+32", "+41", "+34", "+31", "+44", "+1", "+971", "+966", "+974", "+965", "+973", "+968", "+961", "+962", "+20", "+212", "+213", "+90"],
+    maxItems: 40,
+    maxLen: 5,
+  },
   // One alert per error per this many hours (0185 reads it with the same default).
   error_alert_hours: { group: "limits", type: "int", default: 6, min: 1, max: 24, unit: "hours", choices: [1, 6, 24] },
 

@@ -3,15 +3,19 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { clientIp } from "@/lib/clientIp";
 import { PHONE_PROOF_COOKIE, PHONE_PROOF_TTL_MS, hashCode, signPhoneProof } from "@/lib/otp";
-
-const MAX_ATTEMPTS = 5;
+import { OTP_MAX_ATTEMPTS } from "@/lib/otpPolicy";
 
 /**
  * POST /api/auth/phone/verify — check a phone OTP.
  *
  * Body: { phone: "+216…", code: "123456" }
- * 200 { ok:true } on success (code is single-use — the row is deleted).
+ * 200 { ok:true } on success (code is single-use — its hash is emptied).
  * 400 on wrong/expired/missing code; 429 after too many attempts.
+ *
+ * The guess is judged by ONE locked function (otp_check, 0227): the row is held
+ * while its attempts are read and counted, so « 5 wrong guesses per code » is 5
+ * even when fifty requests arrive together. It used to read `attempts`, compare,
+ * then write attempts + 1 — and parallel guesses all read 0.
  *
  * Constant set of error codes so it doesn't leak whether the number exists.
  */
@@ -44,40 +48,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   }
 
-  const { data: row } = await admin
-    .from("phone_otps")
-    .select("code_hash, expires_at, attempts")
-    .eq("phone", phone)
-    .maybeSingle();
-
-  if (!row) {
-    return NextResponse.json({ error: "no_code" }, { status: 400 });
+  const { data: verdict, error } = await admin.rpc("otp_check", {
+    p_phone: phone,
+    p_hash: hashCode(phone, code),
+    p_max_attempts: OTP_MAX_ATTEMPTS,
+  });
+  if (error || typeof verdict !== "string") {
+    return NextResponse.json({ error: "verify_failed" }, { status: 500 });
   }
-  if (new Date(row.expires_at as string).getTime() < Date.now()) {
-    await admin.from("phone_otps").delete().eq("phone", phone);
-    return NextResponse.json({ error: "expired" }, { status: 400 });
-  }
-  if ((row.attempts as number) >= MAX_ATTEMPTS) {
-    return NextResponse.json({ error: "too_many_attempts" }, { status: 429 });
-  }
+  if (verdict === "no_code") return NextResponse.json({ error: "no_code" }, { status: 400 });
+  if (verdict === "expired") return NextResponse.json({ error: "expired" }, { status: 400 });
+  if (verdict === "too_many") return NextResponse.json({ error: "too_many_attempts" }, { status: 429 });
+  if (verdict === "wrong") return NextResponse.json({ error: "wrong_code" }, { status: 400 });
 
-  if (hashCode(phone, code) !== row.code_hash) {
-    await admin
-      .from("phone_otps")
-      .update({ attempts: (row.attempts as number) + 1 })
-      .eq("phone", phone);
-    return NextResponse.json({ error: "wrong_code" }, { status: 400 });
-  }
-
-  // Correct — stamp a short-lived verification proof that the signup route
-  // checks (audit #2: signup must fail closed when SMS is on), and clear the
-  // code so it can't be re-verified. The signup route deletes the row once it
-  // consumes the proof; a fresh /phone/send upserts a new code + nulls this.
-  await admin
-    .from("phone_otps")
-    .update({ verified_at: new Date().toISOString(), code_hash: "", attempts: 0 })
-    .eq("phone", phone);
-
+  // Correct — otp_check stamped verified_at (the proof the signup route checks:
+  // signup must fail closed when SMS is on) and emptied the hash so the code
+  // can't be re-verified. The signup route deletes the row once it consumes the
+  // proof; a fresh /phone/send writes a new code and nulls the stamp.
+  //
   // The row says this number was verified; the cookie says THIS browser did it.
   // Signup and password reset require both — see signPhoneProof.
   const res = NextResponse.json({ ok: true });

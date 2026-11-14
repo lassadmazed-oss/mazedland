@@ -20,16 +20,29 @@ export function gaIdOrNull(raw: string | null | undefined): string | null {
   return GA_ID_PATTERN.test(id) ? id : null;
 }
 
-/** The console (`/fr/admin/…`), which is never measured. */
-export function isConsolePath(pathname: string): boolean {
+function segments(pathname: string): string[] {
   let p = pathname;
   try {
     p = decodeURIComponent(pathname);
   } catch {
     /* a malformed escape: judged as written */
   }
-  const parts = p.toLowerCase().split("/").filter(Boolean);
-  return parts[0] === "admin" || parts[1] === "admin";
+  return p.toLowerCase().split("/").filter(Boolean);
+}
+
+/**
+ * An owner's private link (`/fr/gerer/<token>`): the token in its address is a
+ * credential, so no tool outside the site is told this address.
+ */
+export function isPrivateLinkPath(pathname: string): boolean {
+  const parts = segments(pathname);
+  return parts[0] === "gerer" || parts[1] === "gerer";
+}
+
+/** The console (`/fr/admin/…`), which is never measured — nor a private link. */
+export function isConsolePath(pathname: string): boolean {
+  const parts = segments(pathname);
+  return parts[0] === "admin" || parts[1] === "admin" || isPrivateLinkPath(pathname);
 }
 
 /**
@@ -66,7 +79,7 @@ gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personali
 gtag('js',new Date());
 (function(){
 var off='ga-disable-'+${ID};
-function adm(path){var p=String(path).toLowerCase().split('/').filter(Boolean);return p[0]==='admin'||p[1]==='admin';}
+function adm(path){var p=String(path).toLowerCase().split('/').filter(Boolean);return p[0]==='admin'||p[1]==='admin'||p[0]==='gerer'||p[1]==='gerer';}
 function mask(v){return v.replace(/[^\s@]+@[^\s@]+/g,'[email]').replace(/\+?\d[\d\s.-]{6,}\d/g,function(m){return m.replace(/\D/g,'').length>=8?'[phone]':m;});}
 function clean(href){try{var u=new URL(href,location.href);if(u.origin!==location.origin)return '';if(adm(u.pathname))return u.origin+'/';var changed=false,out=[];u.searchParams.forEach(function(v,k){var m=mask(v);if(m!==v)changed=true;out.push(encodeURIComponent(k)+'='+encodeURIComponent(m));});return changed?u.origin+u.pathname+'?'+out.join('&'):'';}catch(e){return '';}}
 var here=location.pathname,leaving=false;

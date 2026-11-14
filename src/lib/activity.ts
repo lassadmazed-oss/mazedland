@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
+import { redactField, redactMetadata } from "@/lib/activityRedact";
+import { trustedIp } from "@/lib/clientIp";
 
 /**
  * Activity / audit logging. Writes to the `activity_log` table via the
@@ -45,13 +47,14 @@ export function logActivity(rec: ActivityRecord): void {
       user_id: rec.userId ?? null,
       user_email: rec.userEmail ?? null,
       action: rec.action ?? null,
-      path: rec.path ?? null,
+      // A private link (/gerer/<token>) is a credential: never stored whole (src/lib/activityRedact.ts).
+      path: redactField(rec.path),
       method: rec.method ?? null,
       status: rec.status ?? null,
       ip: rec.ip ?? null,
       user_agent: rec.userAgent ?? null,
-      referer: rec.referer ?? null,
-      metadata: rec.metadata ?? {},
+      referer: redactField(rec.referer),
+      metadata: redactMetadata(rec.metadata ?? {}),
     })
     .then(({ error }) => {
       if (error) aLog.warn(`insert failed: ${error.message}`);
@@ -89,7 +92,8 @@ export function logError(rec: {
 /** Pull the best-effort client metadata (IP, UA, referer) off a request. */
 export function reqMeta(req: NextRequest): Pick<ActivityRecord, "ip" | "userAgent" | "referer"> {
   return {
-    ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+    // The leftmost x-forwarded-for entry is the visitor's own to write; the log keeps the one the platform set.
+    ip: trustedIp(req),
     userAgent: req.headers.get("user-agent") ?? null,
     referer: req.headers.get("referer") ?? null,
   };
