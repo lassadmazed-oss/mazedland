@@ -147,6 +147,29 @@ export function listingPhotos(body: ListingBody, max = MAX_PHOTOS): PhotoRow[] |
 }
 
 /**
+ * A path the photo route mints for this account:
+ * `<user id>/annonce-<stamp>-<n>-<i>.<ext>` (src/app/api/annonces/photo-url).
+ * Nothing else is the account's: not another folder, not a URL, not a `..`.
+ */
+export function ownPhotoPath(ownerId: string, path: string): boolean {
+  if (!/^[0-9a-f-]{36}$/i.test(ownerId)) return false;
+  const prefix = `${ownerId}/`;
+  return path.startsWith(prefix) && /^annonce-\d+-\d+-\d+\.[a-z0-9]{1,5}$/.test(path.slice(prefix.length));
+}
+
+/**
+ * The paths, among those a body sends, that this account may not attach: not in
+ * its own folder, and not already on this annonce. Whatever the server then does
+ * to a path — keep it, size it, delete it with the annonce — it does to a file
+ * of this account (security audit, 2026-11-14: a draft naming another seller's
+ * photo, then deleted, deleted that photo).
+ */
+export function foreignPhotoPaths(photos: readonly PhotoRow[], ownerId: string, attached: readonly string[] = []): string[] {
+  const already = new Set(attached);
+  return photos.map((p) => p.storage_path).filter((p) => !already.has(p) && !ownPhotoPath(ownerId, p));
+}
+
+/**
  * The figures a property can have. A value outside them was a slip — « 13 »
  * typed for the year it was built, a surface with three zeros too many — and
  * is dropped rather than shown on the annonce and fed to the filters. Other

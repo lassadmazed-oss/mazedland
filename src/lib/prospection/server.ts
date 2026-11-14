@@ -162,6 +162,8 @@ async function ensureSeller(
     email: phoneEmail(input.phone),
     password: randomBytes(24).toString("base64url"),
     email_confirm: true,
+    // The number the owner confirmed: app_metadata is the server's (0226), user_metadata is the visitor's.
+    app_metadata: { phone: input.phone },
     user_metadata: { full_name: input.name, phone: input.phone, language: input.language },
   });
   if (error || !made.user) {

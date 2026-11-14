@@ -145,6 +145,8 @@ export async function POST(req: NextRequest) {
     email,
     password,
     email_confirm: true,
+    // The number the code proved: app_metadata is the server's (0226), user_metadata is the visitor's.
+    app_metadata: { phone },
     user_metadata: {
       full_name: fullName || null,
       phone,
