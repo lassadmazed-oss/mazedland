@@ -283,9 +283,12 @@ describe("the first message", () => {
 
   it("asks the owner, does not make him sign a statement, and names the site in Latin letters too", () => {
     const out = fillTemplate(ASK_AR, vars);
-    expect(out).toContain("للبيع (دار 180 م² · صفاقس)");
+    expect(out).toContain("عسلامة سامي، معاك فريق مازد إيمو");
+    expect(out).toContain("إعلانك للبيع (دار 180 م² · صفاقس)");
     expect(out).toContain("Mazed Immo");
-    expect(out).toContain("المالك متاعو ولا الوكيل");
+    // The sentence the owner answers with: who they are, the terms, the photos.
+    expect(out).toContain("«نعم، أنا [المالك / الوكيل]، موافق على شروط النشر ونسمحلكم تستعملوا تصاور البوست");
+    expect(out).toContain("يكفي تقولنا «لا»");
     expect(out).not.toContain("نتكفّلو بكل شي");
     expect(out).not.toContain("المعلومات صحيحة");
     expect(out).toContain(vars.terms);
@@ -303,6 +306,13 @@ describe("the first message", () => {
     expect(fillTemplate(ASK_FR, { ...vars, deal: "" })).toContain("votre annonce (");
   });
 
+  it("keeps the Arabic message's paragraphs, and reads well without a name", () => {
+    const out = fillTemplate(ASK_AR, { ...vars, name: "" });
+    expect(out.split("\n\n")).toHaveLength(6);
+    expect(out.startsWith("عسلامة، معاك")).toBe(true);
+    expect(out.endsWith("يعيشك، وبالتوفيق!")).toBe(true);
+  });
+
   describe("to an agency", () => {
     const link = "https://www.mazed.immo/ar/pro";
 
@@ -313,8 +323,8 @@ describe("the first message", () => {
       expect(ar).toContain("Mazed Immo");
       expect(ar).not.toMatch(/\{\w+\}/);
       // nothing of the owner's message: no annonce of theirs, no terms to accept
-      expect(ar).not.toContain("ننشرو إعلانك");
-      expect(ar).not.toContain("وتقبل الشروط");
+      expect(ar).not.toContain("ننشروه");
+      expect(ar).not.toContain("شروط النشر");
       expect(ASK_AGENCY_AR).not.toBe(ASK_AR);
     });
 
