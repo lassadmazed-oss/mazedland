@@ -34,7 +34,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { data: current } = await admin.from("projects").select("governorate").eq("id", id).single();
     fields = { ...sent, governorate: current?.governorate };
   }
-  const parsed = parseProjectInput(fields, { partial: true });
+  const { data: cover } = await admin.from("projects").select("cover_path").eq("id", id).single();
+  const parsed = parseProjectInput(fields, { partial: true, userId: user.id, currentCover: (cover?.cover_path as string | null) ?? null });
   if (!parsed.ok) {
     return NextResponse.json({ error: "invalid", field: parsed.field, detail: t(`field.${parsed.field}`) }, { status: 400 });
   }

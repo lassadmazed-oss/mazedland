@@ -8,7 +8,7 @@ import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
 import { listingFields, listingPhotos, titleTooShort, type ListingBody } from "@/lib/listings/input";
 import { dropEdit, editWaiting, isEditable, proposeEdit } from "@/lib/listings/edit";
-import { missingObjects } from "@/lib/listings/storage";
+import { missingObjects, refusedPhotoPaths } from "@/lib/listings/storage";
 import { ensurePhotoSizes } from "@/lib/photoSizes.server";
 import { suspendedResponse } from "@/lib/moderation/ban";
 import { featureOff } from "@/lib/settings/gate";
@@ -78,6 +78,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const body = (await jsonObject(req)) as ListingBody;
   const fields = listingFields(body);
   const photos = listingPhotos(body, settings.listing_max_photos);
+  // Only this seller's files (src/lib/listings/input.ts).
+  if (photos && (await refusedPhotoPaths(admin, { photos, ownerId: user.id, listingId: id })).length > 0) {
+    return NextResponse.json({ error: "photo_path_invalid" }, { status: 400 });
+  }
 
   // What a live annonce cannot lose: a title, a place, a price (or « sur
   // demande »), a way to call, a photo.

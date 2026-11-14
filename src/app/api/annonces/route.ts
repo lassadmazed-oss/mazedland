@@ -7,6 +7,7 @@ import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
 import { listingFields, listingPhotos, text, titleTooShort, type ListingBody } from "@/lib/listings/input";
+import { refusedPhotoPaths } from "@/lib/listings/storage";
 import { suspendedResponse } from "@/lib/moderation/ban";
 import { can, roleIn } from "@/lib/pro/shops";
 import { getSettings } from "@/lib/settings/server";
@@ -96,6 +97,15 @@ export async function POST(req: NextRequest) {
   // demande » stays the seller's own choice. The submit asks for one or the other.
 
   const fields = listingFields(body);
+
+  // The photos it names must be this seller's (src/lib/listings/input.ts): a
+  // path from another folder would be kept, sized and — when the draft is
+  // deleted — removed from the bucket along with its real owner's annonce.
+  const photos = listingPhotos(body, (await getSettings()).listing_max_photos);
+  if (photos) {
+    const refused = await refusedPhotoPaths(admin, { photos, ownerId: user.id, listingId: id || null });
+    if (refused.length > 0) return NextResponse.json({ error: "photo_path_invalid" }, { status: 400 });
+  }
 
   // The pin (0212), sent with the draft: { lat, lng, exact }, or null for none.
   // One that does not read is dropped rather than failing the autosave; an
@@ -196,7 +206,6 @@ export async function POST(req: NextRequest) {
 
   // ── Photos: the wizard uploads to storage first, then sends the paths ─────
   // At most what an admin allows per annonce.
-  const photos = listingPhotos(body, (await getSettings()).listing_max_photos);
   if (photos) {
     // Replace wholesale: the client sends the gallery as it should end up, so
     // reordering and removal need no separate endpoints.

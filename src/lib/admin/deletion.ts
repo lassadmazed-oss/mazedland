@@ -15,6 +15,7 @@
  */
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { photoSizePaths } from "@/lib/photoSizes";
+import { unreferencedPhotoPaths } from "@/lib/listings/storage";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -70,9 +71,11 @@ export async function deleteListings(admin: Admin, ids: readonly string[]): Prom
     if (error) return { listings, photos: 0, error };
     listings += data?.length ?? 0;
   }
-  const photos = await removeFiles(admin, "properties", paths);
+  // Asked once the rows are gone, so a path another annonce still names stays.
+  const unused = await unreferencedPhotoPaths(admin, paths);
+  const photos = await removeFiles(admin, "properties", unused);
   // Their sizes made in advance (src/lib/photoSizes.ts) go too; they are not counted as photos.
-  await removeFiles(admin, "properties", paths.flatMap(photoSizePaths));
+  await removeFiles(admin, "properties", unused.flatMap(photoSizePaths));
   return { listings, photos };
 }
 
