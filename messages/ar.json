@@ -1640,6 +1640,14 @@
     "admin_prospect_report": {
       "title": "الاستقطاب: حصيلة النهار",
       "body": "{day} — الرسائل الأولى · نعم · المنشورة: {lines}"
+    },
+    "admin_sms_down": {
+      "title": "الـSMS موقوفة عند WinSMS",
+      "body": "من {at} (بتوقيت تونس) الـSMS ما عادش تمشي (WinSMS يقول: « {reason} »). تتحبس وتتعاود تتبعث كي يرجع المزوّد يجاوب."
+    },
+    "admin_sms_up": {
+      "title": "الـSMS رجعت تخدم",
+      "body": "WinSMS رجع يجاوب. تعاودت {count} SMS."
     }
   },
   "publish": {

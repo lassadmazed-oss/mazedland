@@ -168,6 +168,20 @@ describe("renderNotification", () => {
     expect(renderNotification(expired, tr("fr"), "fr").body).toMatch(/votre prix de 215\s000 TND pour « S\+3 Sfax »/);
   });
 
+  it("tells the admins in both languages when WinSMS stops delivering and when it is back", () => {
+    const down = { kind: "admin_sms_down", title: "x", body: "x", payload: { vars: { reason: "Connection refused", at: "12:51" } } };
+    expect(renderNotification(down, tr("fr"), "fr").body).toBe(
+      "Depuis 12:51 (heure de Tunis), les SMS ne partent plus (WinSMS : « Connection refused »). Ils sont mis en attente et renvoyés dès que le fournisseur répond.",
+    );
+    const ad = renderNotification(down, tr("ar"), "ar");
+    expect(ad.body).toContain("12:51");
+    expect(ad.body).toContain("Connection refused");
+    expect(ad.body).not.toContain("{");
+    const up = { kind: "admin_sms_up", title: "x", body: "x", payload: { vars: { count: 3 } } };
+    expect(renderNotification(up, tr("fr"), "fr").body).toBe("WinSMS répond de nouveau. 3 SMS renvoyé(s).");
+    expect(renderNotification(up, tr("ar"), "ar").body).toContain("3");
+  });
+
   it("words the evening report of Prospection around the members' lines, in both languages", () => {
     const report = {
       kind: "admin_prospect_report",

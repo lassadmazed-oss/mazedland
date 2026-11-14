@@ -33,4 +33,5 @@ export const EMAIL_KINDS = new Set<string>([
   "admin_receipt_pending",  // 0032 · a seller sent a receipt
   "admin_email_deadletter", // notify-email exhausted MAX_ATTEMPTS
   "admin_sms_deadletter",   // notify-sms did the same
+  "admin_sms_down",         // 0224 · WinSMS stopped delivering: the one alert that cannot travel by SMS
 ]);

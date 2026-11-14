@@ -1640,6 +1640,14 @@
     "admin_prospect_report": {
       "title": "Prospection : le bilan du jour",
       "body": "{day} — premiers messages · oui · en ligne : {lines}"
+    },
+    "admin_sms_down": {
+      "title": "SMS en panne chez WinSMS",
+      "body": "Depuis {at} (heure de Tunis), les SMS ne partent plus (WinSMS : « {reason} »). Ils sont mis en attente et renvoyés dès que le fournisseur répond."
+    },
+    "admin_sms_up": {
+      "title": "SMS rétablis",
+      "body": "WinSMS répond de nouveau. {count} SMS renvoyé(s)."
     }
   },
   "publish": {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { secretMatches } from "@/lib/cron/auth";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { sendSms, isSmsConfigured, toSmsText } from "@/lib/winsms";
+import { smsIsDown } from "@/lib/sms/gate";
 import { log } from "@/lib/log";
 import { fail } from "@/lib/http/errors";
 import { SMS_KINDS, CAPPED_KINDS, forSms, smsWanted } from "@/lib/sms-kinds";
@@ -79,6 +80,12 @@ async function run(req: NextRequest) {
   if (!isSmsConfigured()) {
     await stampHeartbeat();
     return NextResponse.json({ ok: true, skipped: "sms_not_configured" });
+  }
+  // WinSMS is known to be failing (sms_health, 0224): claim nothing. A claim spends one of a row's three
+  // attempts, so a long outage would dead-letter every waiting SMS; they wait, and go when it answers.
+  if (await smsIsDown()) {
+    await stampHeartbeat();
+    return NextResponse.json({ ok: true, skipped: "provider_down" });
   }
   const dailyCap = (await getSettings()).sms_daily_cap;
 
