@@ -4,7 +4,7 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { featureOff } from "@/lib/settings/gate";
 import { fail } from "@/lib/http/errors";
 import { logAction } from "@/lib/activity";
-import { loadLead } from "@/lib/prospection/server";
+import { loadOwnLead } from "@/lib/prospection/server";
 import { checkLeadPhotos } from "@/lib/prospection/photoCheck.server";
 
 /**
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!admin) return fail("server_misconfigured", 500);
   const { id } = await params;
 
-  const lead = await loadLead(admin, id);
+  const lead = await loadOwnLead(admin, id, { scopes: gate.scopes, userId: gate.user.id });
   if (!lead) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (lead.status !== "confirmed" || !lead.listing_id) return NextResponse.json({ error: "wrong_step" }, { status: 409 });
 

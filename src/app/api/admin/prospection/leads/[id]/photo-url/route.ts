@@ -5,7 +5,7 @@ import { featureOff } from "@/lib/settings/gate";
 import { getSettings } from "@/lib/settings/server";
 import { fail } from "@/lib/http/errors";
 import { jsonObject } from "@/lib/http/body";
-import { loadLead, mintPhotoUrls } from "@/lib/prospection/server";
+import { loadOwnLead, mintPhotoUrls } from "@/lib/prospection/server";
 
 /**
  * POST /api/admin/prospection/leads/:id/photo-url  { exts: string[] }
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!admin) return fail("server_misconfigured", 500);
   const { id } = await params;
 
-  const lead = await loadLead(admin, id);
+  const lead = await loadOwnLead(admin, id, { scopes: gate.scopes, userId: gate.user.id });
   if (!lead) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (lead.status !== "confirmed" || !lead.seller_id || !lead.listing_id) {
     return NextResponse.json({ error: "wrong_step" }, { status: 409 });

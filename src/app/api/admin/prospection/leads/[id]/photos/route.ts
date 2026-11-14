@@ -7,7 +7,7 @@ import { getSettings } from "@/lib/settings/server";
 import { fail } from "@/lib/http/errors";
 import { jsonObject } from "@/lib/http/body";
 import { ensurePhotoSizes } from "@/lib/photoSizes.server";
-import { loadLead, savePhotos } from "@/lib/prospection/server";
+import { loadOwnLead, savePhotos } from "@/lib/prospection/server";
 
 /**
  * PUT /api/admin/prospection/leads/:id/photos  { paths: string[] }
@@ -25,7 +25,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!admin) return fail("server_misconfigured", 500);
   const { id } = await params;
 
-  const lead = await loadLead(admin, id);
+  const lead = await loadOwnLead(admin, id, { scopes: gate.scopes, userId: gate.user.id });
   if (!lead) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (lead.status !== "confirmed") return NextResponse.json({ error: "wrong_step" }, { status: 409 });
 

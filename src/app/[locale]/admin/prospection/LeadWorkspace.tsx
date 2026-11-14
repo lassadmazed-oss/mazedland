@@ -70,6 +70,8 @@ export function LeadWorkspace(props: {
   warnings: Warnings;
   ask: string;
   members: { id: string; name: string }[];
+  /** Only the whole-console admin gives a lead to someone: a member works their own. */
+  canAssign: boolean;
   categories: { slug: string; label: string }[];
   governorates: { value: string; label: string }[];
   minPhotos: number;
@@ -382,7 +384,7 @@ export function LeadWorkspace(props: {
         <div role="tabpanel" className={panel(1)}>
           {warnings.doNotContact ? <p role="alert" className="rounded-xl bg-[var(--tone-bad-bg)] px-3 py-2.5 text-[13px] font-bold text-[var(--tone-bad)]">{t("work.warn.dnc")}</p> : null}
           {warnings.member ? <p className="rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2.5 text-[13px] text-[var(--tone-warn)]">{t("work.warn.member", { name: warnings.member.name ?? "—" })}</p> : null}
-          {warnings.others.length > 0 ? <p className="rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2.5 text-[13px] text-[var(--tone-warn)]">{t("work.warn.others", { n: warnings.others.length })}</p> : null}
+          {warnings.others > 0 ? <p className="rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2.5 text-[13px] text-[var(--tone-warn)]">{t("work.warn.others", { n: warnings.others })}</p> : null}
           {draft.questions.length > 0 && editable && !agency ? (
             <div className="rounded-2xl bg-surface-2 px-4 py-3 text-[13px]">
               <div className="font-bold">{t("work.questions")}</div>
@@ -422,12 +424,14 @@ export function LeadWorkspace(props: {
             </fieldset>
             <p className="mt-2 text-[12.5px] text-muted">{t(broker ? "work.kind.agencyHint" : "work.kind.ownerHint")}</p>
             {!broker && looksLikeAgency(lead.sourceText) ? <p className="mt-2 rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2 text-[12.5px] text-[var(--tone-warn)]">{t("work.kind.guess")}</p> : null}
-            <label className={`${label} mt-3`}>{t("work.assignedTo")}
-              <select value={lead.assignedTo ?? ""} onChange={(e) => void assign(e.target.value)} className={field}>
-                <option value="">{t("unassigned")}</option>
-                {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-            </label>
+            {props.canAssign ? (
+              <label className={`${label} mt-3`}>{t("work.assignedTo")}
+                <select value={lead.assignedTo ?? ""} onChange={(e) => void assign(e.target.value)} className={field}>
+                  <option value="">{t("unassigned")}</option>
+                  {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </label>
+            ) : null}
           </section>
 
           {!agency ? (

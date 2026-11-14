@@ -23,7 +23,7 @@ import {
 import { addEvent, loadLead, syncLeadWithListing, tokenHash, type LeadRow } from "./online";
 
 // What the screens and routes import from here; the lead's life once online lives in ./online.
-export { addEvent, loadLead, LEAD_COLUMNS, mintManageToken, sendOwnerSms, syncLeadWithListing, type LeadRow } from "./online";
+export { addEvent, loadLead, loadOwnLead, LEAD_COLUMNS, mintManageToken, sendOwnerSms, syncLeadWithListing, type LeadRow } from "./online";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -60,8 +60,11 @@ export type Warnings = {
   doNotContact: boolean;
   /** The number already has an account on Mazed Immo: the owner is a member. */
   member: { id: string; name: string | null } | null;
-  /** Other leads on the same number or the same post. */
-  others: { id: string; status: string }[];
+  /**
+   * How many other leads hold the same number or the same post: only a count,
+   * because a member must not read what a colleague did with them.
+   */
+  others: number;
 };
 
 export async function leadWarnings(
@@ -77,14 +80,11 @@ export async function leadWarnings(
     input.sourceUrl ? admin.from("prospect_leads").select("id, status").eq("source_url", input.sourceUrl).limit(6) : Promise.resolve({ data: [] }),
   ]);
   const seen = new Set<string>();
-  const others: { id: string; status: string }[] = [];
-  for (const r of [...(byPhone.data ?? []), ...(byUrl.data ?? [])] as { id: string; status: string }[]) {
-    if (r.id === input.excludeId || seen.has(r.id)) continue;
-    seen.add(r.id);
-    others.push(r);
+  for (const r of [...(byPhone.data ?? []), ...(byUrl.data ?? [])] as { id: string }[]) {
+    if (r.id !== input.excludeId) seen.add(r.id);
   }
   const m = member.data as { id: string; full_name: string | null } | null;
-  return { doNotContact: dnc, member: m ? { id: m.id, name: m.full_name } : null, others };
+  return { doNotContact: dnc, member: m ? { id: m.id, name: m.full_name } : null, others: seen.size };
 }
 
 // ── Reading the post ────────────────────────────────────────────────────────

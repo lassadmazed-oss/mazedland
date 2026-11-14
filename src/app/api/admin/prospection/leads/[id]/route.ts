@@ -11,7 +11,7 @@ import {
   contactsLeft, isChannel, normalizePhone, readDraft, statusAfter, type EventKind,
 } from "@/lib/prospection/model";
 import {
-  addDoNotContact, addEvent, contactsToday, isDoNotContact, loadLead, syncDraftToListing,
+  addDoNotContact, addEvent, contactsToday, isDoNotContact, loadOwnLead, syncDraftToListing,
 } from "@/lib/prospection/server";
 
 /**
@@ -34,7 +34,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const admin = getServiceSupabase();
   if (!admin) return fail("server_misconfigured", 500);
   const { id } = await params;
-  const lead = await loadLead(admin, id);
+  // A member opens their own leads only; a colleague's lead answers « not found ».
+  const lead = await loadOwnLead(admin, id, { scopes: gate.scopes, userId: gate.user.id });
   if (!lead) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const body = await jsonObject(req);
@@ -117,6 +118,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (patch.is_broker !== lead.is_broker) await addEvent(admin, id, actor, "broker", { note: patch.is_broker ? "broker" : "owner" });
     }
     if ("assigned_to" in body) {
+      // Giving a lead to someone is the owner's: a member's lead would otherwise leave their hands for a colleague's.
+      if (gate.scopes !== null) return NextResponse.json({ error: "forbidden" }, { status: 403 });
       const to = typeof body.assigned_to === "string" ? body.assigned_to : null;
       if (to) {
         const { data: member } = await admin.from("profiles").select("id, role").eq("id", to).maybeSingle();

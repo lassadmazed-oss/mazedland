@@ -4,7 +4,7 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { featureOff } from "@/lib/settings/gate";
 import { fail } from "@/lib/http/errors";
 import { logAction } from "@/lib/activity";
-import { loadLead, sendOwnerSms, syncLeadWithListing } from "@/lib/prospection/server";
+import { loadOwnLead, sendOwnerSms, syncLeadWithListing } from "@/lib/prospection/server";
 
 /**
  * POST /api/admin/prospection/leads/:id/sms
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!admin) return fail("server_misconfigured", 500);
   const { id } = await params;
 
-  const found = await loadLead(admin, id);
+  const found = await loadOwnLead(admin, id, { scopes: gate.scopes, userId: gate.user.id });
   if (!found) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const lead = await syncLeadWithListing(admin, found);
   if (lead.status !== "online") return NextResponse.json({ error: "wrong_step" }, { status: 409 });

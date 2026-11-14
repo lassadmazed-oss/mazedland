@@ -17,9 +17,20 @@
  * Nothing is published before the yes, and nothing here invents a fact: the
  * draft only holds what the post said.
  */
+import type { AdminScopes } from "@/lib/admin/sections";
 import type { ListingDraft } from "@/lib/ai/listing";
 import type { ListingBody } from "@/lib/listings/input";
 import { latinDigits } from "@/lib/moderation/rules";
+
+/**
+ * Whose leads a console member may open. The whole-console admin (the owner)
+ * sees the whole team's work; a member given « Prospection » sees only what is
+ * assigned to them — never what a colleague pasted, wrote or confirmed. A lead
+ * nobody holds is the owner's to give out.
+ */
+export function mayWorkLead(scopes: AdminScopes, userId: string, lead: { assigned_to: string | null }): boolean {
+  return scopes === null || lead.assigned_to === userId;
+}
 
 export const LEAD_STATUSES = ["to_contact", "contacted", "confirmed", "online", "declined"] as const;
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
