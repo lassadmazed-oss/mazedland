@@ -17,10 +17,20 @@
  * the photos of their post. It is what the team pastes back as proof, so it
  * must say all of that in words the owner reads. The brand is written in Latin
  * letters too: « مازد » dictated by voice came out as « مزاد » (an auction).
+ *
+ * The Arabic one is the owner's own wording (2026-11-14): it hands the owner
+ * the sentence to answer with. Where the example named one land (« سي عماد »,
+ * « الأرض الفلاحية المشجّرة في بولذياب », « البيعة »), the holes and words that
+ * fit every annonce stand instead: a poster may be a woman, a page, a rental.
  */
 
 export const ASK_AR =
-  "سلام {name}، كان تحب ننشرو إعلانك {deal} ({property}) في مازد إيمو (Mazed Immo) ببلاش؟ كان موافق ردّ بـ«نعم» وقلّنا إنت المالك متاعو ولا الوكيل، وتقبل الشروط ({terms})، وتسمحلنا نستعملو صور بوستك. وكان ما تحبش ردّ بـ«لا» وما نعاودوش.";
+  "عسلامة {name}، معاك فريق مازد إيمو (Mazed Immo) 🏡\n\n" +
+  "شفنا إعلانك {deal} ({property})، وحبّينا نقترحوا عليك ننشروه زادة على منصّتنا العقارية ببلاش، باش يوصل لناس أكثر تلوّج على عقار كيفو.\n\n" +
+  "إذا تحبّ، بعد ما تطّلع على شروط النشر ({terms})، يكفي تجاوبنا هكّا:\n\n" +
+  "«نعم، أنا [المالك / الوكيل]، موافق على شروط النشر ونسمحلكم تستعملوا تصاور البوست في الإعلان على مازد إيمو.»\n\n" +
+  "وإذا ما يناسبكش، يكفي تقولنا «لا» وما نعاودوش نتصلوا بيك على الإعلان هذا.\n\n" +
+  "يعيشك {name}، وبالتوفيق!";
 
 export const ASK_FR =
   "Bonjour {name}, souhaitez-vous que nous publiions votre annonce {deal} ({property}) gratuitement sur Mazed Immo ? Si oui, répondez « oui » en nous disant si vous êtes le propriétaire ou son mandataire, acceptez les conditions d'utilisation ({terms}) et autorisez-nous à utiliser les photos de votre publication. Sinon, répondez « non » et nous ne vous écrirons plus.";
