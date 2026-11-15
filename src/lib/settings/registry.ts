@@ -234,6 +234,15 @@ export const SETTINGS = {
   // the end, which makes the account (POST /api/requests/guest). Off, or
   // without SMS: login first, as before.
   requests_guest_form: { group: "buyers", type: "bool", default: true },
+  // « Ce que les gens cherchent » (/demandes, the owner, 2026-11-15): the open
+  // demandes as totals for everyone — where, what kind — so agencies not on Mazed
+  // see what the market asks for, plus the home card's count and the Pro page's.
+  // Under `requests_board_min` open demandes it keeps quiet. A card per demande
+  // only for those saved from `requests_board_cards_since` on (the form promised
+  // « Pro agencies only » before): empty = totals only (src/lib/requests/board.ts).
+  requests_board: { group: "buyers", type: "bool", default: true },
+  requests_board_min: { group: "buyers", type: "int", default: 3, min: 1, max: 50, choices: [1, 3, 5, 10] },
+  requests_board_cards_since: { group: "buyers", type: "text", default: "", max: 40, ltr: true },
   // The strip's size, and the smallest plan that earns a place in it: the plan's
   // annonces (10 Starter and up, 40 Pro and up, 120 Business only).
   agency_strip_max: { group: "buyers", type: "int", default: 6, min: 2, max: 12, choices: [4, 6, 8, 12] },

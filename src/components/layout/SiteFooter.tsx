@@ -70,6 +70,8 @@ export async function SiteFooter() {
         { href: "/annonces?deal=rent", label: t("footer.rent") },
         { href: "/agences", label: t("footer.agencies") },
         ...(settings.public_stats_enabled ? [{ href: "/marche", label: t("footer.market") }] : []),
+        // « Ce que les gens cherchent » (/demandes), while the console keeps it on.
+        ...(settings.feature_requests && settings.requests_board ? [{ href: "/demandes", label: t("footer.demandes") }] : []),
         { href: "/annonces/nouvelle", label: t("footer.publish") },
       ],
     },

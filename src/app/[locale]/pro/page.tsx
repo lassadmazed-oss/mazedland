@@ -8,7 +8,10 @@ import { getSettings } from "@/lib/settings/server";
 import { loadFoundingSeats } from "@/lib/pro/founding";
 import { FoundingCounter } from "@/components/agency/FoundingCounter";
 import { ProCta, ProNotMember, ProViewerProvider } from "@/components/agency/ProViewer";
-import { BadgeCheck, Check, LayoutGrid, Store, Users, Sparkles } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, Check, LayoutGrid, Store, Users, Sparkles } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { boardShown } from "@/lib/requests/board";
+import { loadOpenDemandes } from "@/lib/requests/boardServer";
 
 // The same page for every visitor, so it comes from the CDN and is rebuilt at
 // most ten minutes after a plan, a price or a setting changes (and at once when
@@ -53,6 +56,7 @@ export default async function ProLandingPage({ params }: { params: Promise<{ loc
   setRequestLocale(locale);
   const t = await getTranslations("pro.landing");
   const tShops = await getTranslations("shops");
+  const tBoard = await getTranslations("demandesBoard");
   const admin = getServiceSupabase();
 
   const [{ data: planRows }, settings] = await Promise.all([
@@ -71,6 +75,11 @@ export default async function ProLandingPage({ params }: { params: Promise<{ loc
   // New shops switched off in the console: no « Ouvrir ma boutique ». The plans
   // stay on show, and whoever runs a shop still gets to its dashboard (ProCta).
   const signupOpen = settings.feature_pro_signup;
+  // What buyers ask for right now (« Ce que les gens cherchent »): the reason an
+  // agency not on Mazed yet has to come (the owner, 2026-11-15).
+  const boardOn = settings.feature_requests && settings.requests_board;
+  const openDemandes = boardOn ? (await loadOpenDemandes()).length : 0;
+  const demandeCount = boardOn && boardShown(openDemandes, settings.requests_board_min) ? openDemandes : null;
 
   // « Les demandes » is only a benefit while demandes are on in the console.
   const benefits = ([
@@ -142,6 +151,23 @@ export default async function ProLandingPage({ params }: { params: Promise<{ loc
           </div>
         </div>
       </section>
+
+      {/* ── What buyers ask for now: the open demandes, counted, and the page that shows them. */}
+      {demandeCount !== null && (
+        <Link
+          href={"/demandes" as never}
+          className="group mt-4 flex items-center gap-3.5 rounded-2xl bg-surface p-4 ring-1 ring-border transition hover:ring-foreground/40 lg:p-5"
+        >
+          <span className="inline-grid size-10 shrink-0 place-items-center rounded-full bg-foreground text-[var(--background)]">
+            <Sparkles className="size-[18px]" strokeWidth={2.2} aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[14.5px] font-extrabold leading-snug text-foreground">{tBoard("agencyTitle")}</span>
+            <span className="mt-0.5 block text-[12.5px] leading-relaxed text-muted">{tBoard("proLine", { count: demandeCount })}</span>
+          </span>
+          <ArrowUpRight className="size-4 shrink-0 text-subtle transition group-hover:text-foreground rtl:-scale-x-100" strokeWidth={2.2} aria-hidden />
+        </Link>
+      )}
 
       {/* ── What it gives ── */}
       <section className="mazed-section grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
