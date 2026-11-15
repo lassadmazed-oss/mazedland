@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { isForeignNoise } from "./noise";
+import { isForeignNoise, isForeignSource } from "./noise";
+
+describe("isForeignSource", () => {
+  it("drops the script a Facebook or Instagram in-app browser injects into the page", () => {
+    expect(isForeignSource("iabjs://browser_declutter:37:40")).toBe(true);
+    expect(isForeignSource("IABJS://anything")).toBe(true);
+  });
+
+  it("keeps our own scripts, and anything that is not a source", () => {
+    expect(isForeignSource("https://www.mazed.immo/_next/static/immutable/chunks/0abc.js:1:2")).toBe(false);
+    expect(isForeignSource("digest:123")).toBe(false);
+    expect(isForeignSource(undefined)).toBe(false);
+    expect(isForeignSource("")).toBe(false);
+  });
+});
 
 describe("isForeignNoise", () => {
   it("drops the in-app browser bridge error seen on Facebook visits", () => {

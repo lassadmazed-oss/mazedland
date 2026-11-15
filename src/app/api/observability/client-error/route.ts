@@ -3,7 +3,7 @@ import { jsonObject } from "@/lib/http/body";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { log } from "@/lib/log";
 import { logError } from "@/lib/activity";
-import { isForeignNoise } from "@/lib/observability/noise";
+import { isForeignNoise, isForeignSource } from "@/lib/observability/noise";
 
 const cliErr = log.scope("cer");
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const clip = (v: unknown, n: number) =>
       typeof v === "string" ? v.slice(0, n) : undefined;
     // The visitor's app or extension, not the site: no log line, no alert in the bell.
-    if (isForeignNoise(body.message)) return new NextResponse(null, { status: 204 });
+    if (isForeignNoise(body.message) || isForeignSource(body.source)) return new NextResponse(null, { status: 204 });
     cliErr.error(`${clip(body.kind, 24) ?? "error"}: ${clip(body.message, 300) ?? "(no message)"}`, {
       at: clip(body.url, 200),
       source: clip(body.source, 200),
@@ -71,6 +71,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       metadata: {
         message: clip(body.message, 300),
         source: clip(body.source, 200),
+        // Where it happened. The line stream keeps this for an hour or so; the
+        // log is what the console shows, and a bare « Invalid Date » names no code.
+        stack: stack?.slice(0, 1200),
         ua: req.headers.get("user-agent")?.slice(0, 160) ?? undefined,
       },
     });
