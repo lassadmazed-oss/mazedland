@@ -8,7 +8,8 @@ import { checkSocialAccount } from "@/lib/social/engine";
 
 /**
  * POST /api/admin/social/accounts/:id/test — does the stored token still
- * work? Read-only calls to Meta (the page's name, Instagram's 24 h quota);
+ * work? Read-only calls to Meta (the page's name, Instagram's 24 h quota) or
+ * TikTok (who the account posts as, after refreshing its token if due);
  * nothing is posted.
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -22,8 +23,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   logAction(req, gate.user, "social.account_test", { id, ok: r.ok });
   if (!r.ok) {
     const t = await apiTranslator(req, "adminSocial.errors");
-    const key = r.error === "expired" ? "testExpired" : r.error === "no_key" ? "testNoKey" : "testFailed";
+    const key =
+      r.error === "expired" ? "testExpired"
+        : r.error === "no_key" ? "testNoKey"
+          : r.error === "not_configured" ? "testNotConfigured"
+            : "testFailed";
     return NextResponse.json({ error: "conflict", detail: t(key) }, { status: 409 });
   }
-  return NextResponse.json({ ok: true, name: r.name, quota: r.quota, instagram: r.instagram ?? null });
+  return NextResponse.json({ ok: true, name: r.name, quota: r.quota, instagram: r.instagram ?? null, tiktok: r.tiktok ?? null });
 }

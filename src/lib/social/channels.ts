@@ -10,8 +10,12 @@
  *   facebook_groups  Tunisian property groups — Meta closed the groups API in
  *                    2024, so the text is prepared here and a person on the
  *                    team shares it by hand, group by group.
- *   tiktok           Later (phase 3): an app that has not passed TikTok's audit
- *                    can only post privately, which is no promotion at all.
+ *   tiktok           Mazed Immo's TikTok account (@mazed613) — a photo post
+ *                    through the Content Posting API (tiktok.ts), or a draft
+ *                    sent to the TikTok app for a person to finish. Until
+ *                    TikTok has audited the app, a direct post can only be
+ *                    private. Mazed's own lane picks it (the auto-queue, an
+ *                    admin); sellers are not offered it.
  *
  * The values are stored in the database (0170, 0214) and must not be translated.
  */
@@ -22,7 +26,7 @@ export type SocialChannel = (typeof SOCIAL_CHANNELS)[number];
 export const OFFERED_CHANNELS: readonly SocialChannel[] = ["facebook_page", "instagram", "facebook_groups"];
 
 /** What an admin can choose when Mazed puts an annonce forward itself. */
-export const FEATURED_CHANNELS: readonly SocialChannel[] = ["facebook_mazed", "facebook_page", "instagram", "facebook_groups"];
+export const FEATURED_CHANNELS: readonly SocialChannel[] = ["facebook_mazed", "facebook_page", "instagram", "tiktok", "facebook_groups"];
 
 /**
  * Whether Mazed put the annonce forward itself rather than the seller asking
@@ -35,14 +39,21 @@ export function isFeaturedRequest(r: { initiated_by: string | null; consent_vers
 }
 
 /** Posted by the engine when an account is connected; by hand otherwise. */
-export const API_CHANNELS: readonly SocialChannel[] = ["facebook_page", "facebook_mazed", "instagram"];
+export const API_CHANNELS: readonly SocialChannel[] = ["facebook_page", "facebook_mazed", "instagram", "tiktok"];
+
+/** A post there is its photos: none, nothing to post (Instagram, TikTok's Photo Mode). */
+export const PHOTO_CHANNELS: readonly SocialChannel[] = ["instagram", "tiktok"];
+
+export function needsPhoto(channel: SocialChannel): boolean {
+  return (PHOTO_CHANNELS as readonly string[]).includes(channel);
+}
 
 /** The two Facebook pages: posted, edited and taken down the same way. */
 export function isPageChannel(channel: SocialChannel): channel is "facebook_page" | "facebook_mazed" {
   return channel === "facebook_page" || channel === "facebook_mazed";
 }
 
-export function isApiChannel(channel: SocialChannel): channel is "facebook_page" | "facebook_mazed" | "instagram" {
+export function isApiChannel(channel: SocialChannel): channel is "facebook_page" | "facebook_mazed" | "instagram" | "tiktok" {
   return (API_CHANNELS as readonly string[]).includes(channel);
 }
 

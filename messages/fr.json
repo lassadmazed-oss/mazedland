@@ -4252,7 +4252,9 @@
       "groups_manual": "groupe : à partager à la main",
       "not_supported": "l'API ne le permet pas",
       "limit_reached": "limite de publications atteinte",
-      "media_rejected": "photo refusée par le réseau"
+      "media_rejected": "photo refusée par le réseau",
+      "tiktok_draft": "brouillon envoyé dans l'appli TikTok : publiez-le depuis l'appli, puis collez son lien",
+      "tiktok_unaudited": "TikTok n'a pas encore validé l'application : passez en brouillon dans les réglages, puis « Réessayer »"
     },
     "runAfter": "à partir du {date}",
     "attempts": "essai {n}/{max}",
@@ -4364,7 +4366,8 @@
       "exists": "Ce groupe est déjà dans la liste.",
       "testExpired": "Meta refuse le jeton : reconnectez la page.",
       "testNoKey": "SOCIAL_TOKEN_KEY a changé ou manque : reconnectez la page.",
-      "testFailed": "Meta ne répond pas comme prévu. Réessayez dans un moment."
+      "testFailed": "Meta ne répond pas comme prévu. Réessayez dans un moment.",
+      "testNotConfigured": "TIKTOK_CLIENT_KEY ou TIKTOK_CLIENT_SECRET manque dans Vercel."
     },
     "test": "Tester la connexion",
     "testOk": "Connexion OK : {name}.",
@@ -4376,7 +4379,32 @@
     "featuredAuto": "proposée par le site · CGU acceptées le {date}",
     "waitingTitle": "En attente des CGU : {count, plural, one {# annonce} other {# annonces}} de {sellers, plural, one {# vendeur} other {# vendeurs}}",
     "waitingHint": "Ces annonces ne sont pas proposées parce que leur vendeur n'a pas encore accepté les CGU du 5 novembre (la bannière s'affiche à sa prochaine visite). Dès qu'il les accepte, ses annonces arrivent ici toutes seules.",
-    "waitingCount": "{count, plural, one {# annonce} other {# annonces}}"
+    "waitingCount": "{count, plural, one {# annonce} other {# annonces}}",
+    "approveOn": "Publier sur :",
+    "tiktokTitle": "TikTok",
+    "tiktokBody": "Connectez le compte TikTok {username} : les photos de l'annonce y partent en publication (Photo Mode), avec un texte fait des champs de l'annonce. Les jetons sont chiffrés avant d'être enregistrés et renouvelés tout seuls.",
+    "tiktokAnyAccount": "de Mazed Immo",
+    "tiktokConnect": "Connecter TikTok",
+    "tiktokConnectedOk": "Compte TikTok connecté.",
+    "tiktokSettings": "Réglages TikTok",
+    "tiktokModeDraft": "Mode : brouillon dans l'appli TikTok — vous terminez chaque publication dans l'appli.",
+    "tiktokModePrivate": "Mode : publication directe, visible du seul compte (avant la validation de l'application par TikTok).",
+    "tiktokModePublic": "Mode : publication directe, en public.",
+    "tiktokSetupTitle": "Pour connecter TikTok :",
+    "tiktokVerifyTitle": "À vérifier dans l'application TikTok :",
+    "tiktokSetup1": "Sur developers.tiktok.com, avec le compte qui possède @mazed613 : créer l'application, ajouter Login Kit et Content Posting API (Direct Post activé).",
+    "tiktokSetup2": "Dans Login Kit, ajouter cette adresse de redirection :",
+    "tiktokSetup3": "Vérifier le domaine mazed.immo (DNS) ou ce préfixe d'adresse, d'où TikTok télécharge les photos :",
+    "tiktokSetup5": "Envoyer l'application en revue chez TikTok. Avant sa validation, les publications directes restent privées.",
+    "tiktokError": {
+      "denied": "La connexion a été refusée sur TikTok.",
+      "state": "La connexion a expiré. Recommencez.",
+      "not_configured": "L'application TikTok n'est pas configurée.",
+      "other_account": "Ce n'est pas le compte TikTok attendu (voir le détail). Déconnectez-vous de TikTok dans ce navigateur et recommencez avec le bon compte.",
+      "failed": "La connexion à TikTok a échoué. Réessayez."
+    },
+    "testOkTiktokPublic": "Connexion OK : {name}. TikTok permet la publication en public.",
+    "testOkTiktokPrivate": "Connexion OK : {name}. TikTok ne permet pour l'instant que « moi uniquement »."
   },
   "pro": {
     "kinds": {
@@ -6401,6 +6429,42 @@
     "requests_guest_form": {
       "label": "Demande sans compte",
       "hint": "Le visiteur remplit sa demande, puis confirme son numéro par SMS : le compte se crée à ce moment. Éteint : connexion d'abord."
+    },
+    "social_auto_queue_tiktok": {
+      "label": "Proposer sur TikTok",
+      "hint": "Le compte TikTok @mazed613, dans la même demande que la page « Mazed » : vous validez les deux ensemble, ou vous décochez TikTok pour une annonce. Il faut au moins une photo. Tant que TikTok n'est pas connecté, la publication attend dans « File »."
+    },
+    "social_tiktok_draft": {
+      "label": "TikTok : envoyer en brouillon",
+      "hint": "Allumé : chaque publication arrive en brouillon dans l'appli TikTok (boîte de réception) ; vous ajoutez la musique, publiez, puis collez le lien dans « File ». Éteint : publiée directement. Tant que TikTok n'a pas validé l'application, la publication directe n'est possible que sur un compte privé."
+    },
+    "social_tiktok_public": {
+      "label": "TikTok : publier en public",
+      "hint": "Pour la publication directe. Éteint : visible du seul compte (« moi uniquement »), la seule possibilité avant la validation de l'application par TikTok. Allumez-le une fois l'application validée."
+    },
+    "social_tiktok_daily_limit": {
+      "label": "Publications TikTok par jour",
+      "hint": "Sur 24 heures, brouillons compris. TikTok en accepte environ 15 par jour et garde au plus 5 brouillons en attente."
+    },
+    "social_tiktok_auto_music": {
+      "label": "TikTok : musique automatique",
+      "hint": "TikTok ajoute une musique aux photos (publication directe)."
+    },
+    "social_tiktok_comments": {
+      "label": "TikTok : commentaires permis",
+      "hint": "Publication directe. Si le compte a coupé les commentaires dans TikTok, ils restent coupés."
+    },
+    "social_tiktok_username": {
+      "label": "Compte TikTok à connecter",
+      "hint": "Le seul compte que « Connecter TikTok » accepte, sans @ (mazed613). Vide : n'importe quel compte."
+    },
+    "social_tiktok_verify_file": {
+      "label": "TikTok : nom du fichier de vérification",
+      "hint": "TikTok ne prend les photos que d'une adresse vérifiée. Pour le préfixe https://www.mazed.immo/api/social/image/, il donne un fichier : collez ici son nom (il finit par .txt). Inutile si le domaine mazed.immo est vérifié par DNS."
+    },
+    "social_tiktok_verify_text": {
+      "label": "TikTok : contenu du fichier de vérification",
+      "hint": "Le texte que contient ce fichier, tel quel."
     }
   },
   "ads": {
@@ -8075,7 +8139,8 @@
       "facebook_mazed": "Page Mazed",
       "facebook_page": "Page Mazed Immo",
       "instagram": "Instagram",
-      "facebook_groups": "Groupes (à la main)"
+      "facebook_groups": "Groupes (à la main)",
+      "tiktok": "TikTok"
     },
     "notConnected": "Pas encore connectée : {pages}. La publication attendra dans la file : à faire à la main, ou elle part une fois la page connectée.",
     "groupsHint": "Les groupes Facebook se partagent à la main, depuis la file de la console.",

@@ -259,18 +259,26 @@ function block(l: SocialListing, lang: Lang, today: string, plain: boolean): str
   ];
 }
 
+/**
+ * Instagram and TikTok: a caption that cannot carry a link (the short one
+ * goes in the bio), found by its hashtags — so it gets more of them.
+ */
+function captionOnly(channel: SocialChannel): boolean {
+  return channel === "instagram" || channel === "tiktok";
+}
+
 function hashtags(l: SocialListing, channel: SocialChannel, langs: Lang[]): string[] {
   if (channel === "facebook_groups") return [];
   const tags = new Set<string>(["#MazedImmo"]);
   for (const lang of langs) {
     tags.add(hashtag(governorateLabel(l.governorate, lang)));
     tags.add(hashtag(W[lang].dealTag[l.dealType]));
-    if (channel === "instagram") {
+    if (captionOnly(channel)) {
       tags.add(hashtag(noun(l, lang)));
       tags.add(hashtag(W[lang].country));
     }
   }
-  if (channel === "instagram") tags.add(langs.includes("ar") ? "#تونس" : "#Tunisie");
+  if (captionOnly(channel)) tags.add(langs.includes("ar") ? "#تونس" : "#Tunisie");
   return [...tags].filter(Boolean).slice(0, 12);
 }
 
@@ -307,7 +315,7 @@ export function generatePost(input: {
   });
   lines.push("");
 
-  if (channel === "instagram") {
+  if (captionOnly(channel)) {
     // A line in both languages starts in French, so it runs left to right
     // and the link stays in one piece.
     const label = both ? `${W.fr.details} · ${W.ar.details}` : W[langs[0]].details;
@@ -323,6 +331,40 @@ export function generatePost(input: {
   if (tags.length) lines.push("", tags.join(" "));
 
   return { body: lines.join("\n").slice(0, 2200), linkUrl, hashtags: tags };
+}
+
+/** TikTok counts a photo post's title in UTF-16 units, as JavaScript does. */
+export const TIKTOK_TITLE_MAX = 90;
+export const TIKTOK_DESCRIPTION_MAX = 4000;
+
+/** At most `max` UTF-16 units, never cutting a character (an emoji) in two. */
+function clip(s: string, max: number): string {
+  if (s.length <= max) return s;
+  let out = "";
+  for (const ch of s) {
+    if (out.length + ch.length > max - 1) break;
+    out += ch;
+  }
+  return `${out.trimEnd()}…`;
+}
+
+/**
+ * A TikTok photo post has a title (90) and a description (4 000). The post's
+ * first line — the headline — is the title, and the rest the description,
+ * so the headline is not said twice. A first line too long for a title is
+ * cut there and kept whole in the description. Works on the text as the
+ * admin left it after review, so an edit reaches both.
+ */
+export function tiktokCaption(body: string): { title: string; description: string } {
+  const lines = body.split("\n");
+  const first = lines.findIndex((l) => l.trim() !== "");
+  if (first < 0) return { title: "", description: "" };
+  const head = lines[first].trim();
+  const rest = lines.slice(first + 1).join("\n").replace(/^\s*\n/, "").trim();
+  if (head.length <= TIKTOK_TITLE_MAX) {
+    return { title: head, description: clip(rest, TIKTOK_DESCRIPTION_MAX) };
+  }
+  return { title: clip(head, TIKTOK_TITLE_MAX), description: clip(body.trim(), TIKTOK_DESCRIPTION_MAX) };
 }
 
 /** The line added on top of a post once the annonce is sold or let. */

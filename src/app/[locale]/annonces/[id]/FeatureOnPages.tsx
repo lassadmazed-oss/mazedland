@@ -6,7 +6,7 @@ import { Check, Loader2, Megaphone } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { chipClass } from "@/lib/chips";
-import { FEATURED_CHANNELS, SOCIAL_LANGUAGES, type SocialChannel, type SocialLanguage } from "@/lib/social/channels";
+import { FEATURED_CHANNELS, SOCIAL_LANGUAGES, needsPhoto, type SocialChannel, type SocialLanguage } from "@/lib/social/channels";
 
 /** Mazed's promotion already open on this annonce (an admin's or the site's). */
 export type OpenFeature = { ref: string; status: string };
@@ -21,8 +21,8 @@ export type SellerPromotion = { ref: string; status: string; channels: SocialCha
  *
  * The seller's CGU stand for their consent; until they have accepted the
  * version that allows it, the card says so instead of offering the form.
- * Chips, not typing: the pages (« Mazed », Mazed Immo, Instagram, the groups
- * by hand) and the language. A seller who promoted the annonce themselves
+ * Chips, not typing: the pages (« Mazed », Mazed Immo, Instagram, TikTok, the
+ * groups by hand) and the language. A seller who promoted the annonce themselves
  * keeps their pages; the card offers the others (« Mazed », typically).
  */
 export function FeatureOnPages({
@@ -47,7 +47,7 @@ export function FeatureOnPages({
   const covered =FEATURED_CHANNELS.filter((c) => sellerPromotion?.channels.includes(c));
   const choices = FEATURED_CHANNELS.filter((c) => !covered.includes(c));
   const [channels, setChannels] = useState<SocialChannel[]>(() =>
-    choices.filter((c) => c !== "facebook_groups" && (c !== "instagram" || hasPhotos)),
+    choices.filter((c) => c !== "facebook_groups" && (!needsPhoto(c) || hasPhotos)),
   );
   const [language, setLanguage] = useState<SocialLanguage>("both");
   const [busy, setBusy] = useState(false);
@@ -147,7 +147,7 @@ export function FeatureOnPages({
       <div role="group" aria-label={t("pagesLabel")} className="mt-1.5 flex flex-wrap gap-2">
         {choices.map((c) => {
           const on = channels.includes(c);
-          const disabled = c === "instagram" && !hasPhotos;
+          const disabled = needsPhoto(c) && !hasPhotos;
           return (
             <button
               key={c}

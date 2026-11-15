@@ -11,14 +11,16 @@
  * so an annonce whose seller has not accepted them yet is left alone and is
  * picked up on a later run, once they have. An annonce its seller promoted
  * themselves (Mazed Immo's page, Instagram) is proposed beside that ask, for
- * the pages it does not cover — « Mazed » first of all (0215).
+ * the pages it does not cover — « Mazed » first of all (0215). TikTok
+ * (@mazed613) rides in the same ask beside « Mazed » (2026-11-15), so the
+ * owner approves both at once, or unticks TikTok for that annonce.
  *
  * Run by the Social Publisher's worker every five minutes (api/cron/social-publish).
  */
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { loadSettings } from "@/lib/settings/server";
 import { currentConsents, type ConsentRow } from "@/lib/consents/model";
-import { FEATURED_CHANNELS, isFeaturedRequest, type LaneAsk, type SocialChannel } from "./channels";
+import { FEATURED_CHANNELS, isFeaturedRequest, needsPhoto, type LaneAsk, type SocialChannel } from "./channels";
 import { createFeaturedRequest, termsCoverFeaturing } from "./server";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
@@ -36,10 +38,15 @@ export type AutoQueueSettings = {
   minPhotos: number;
 };
 
-/** The channels the three switches name, in the console's usual order. */
-export function autoQueueChannels(on: { mazed: boolean; page: boolean; instagram: boolean }): SocialChannel[] {
-  const wanted: Record<string, boolean> = { facebook_mazed: on.mazed, facebook_page: on.page, instagram: on.instagram };
+/** The channels the switches name, in the console's usual order. */
+export function autoQueueChannels(on: { mazed: boolean; page: boolean; instagram: boolean; tiktok?: boolean }): SocialChannel[] {
+  const wanted: Record<string, boolean> = { facebook_mazed: on.mazed, facebook_page: on.page, instagram: on.instagram, tiktok: !!on.tiktok };
   return FEATURED_CHANNELS.filter((c) => wanted[c]);
+}
+
+/** A channel that is only photos (Instagram, TikTok) is not proposed for an annonce without one. */
+export function withPhotosOnly(channels: readonly SocialChannel[], photos: number): SocialChannel[] {
+  return photos > 0 ? [...channels] : channels.filter((c) => !needsPhoto(c));
 }
 
 /**
@@ -86,7 +93,12 @@ export async function autoQueueSettings(admin: Admin): Promise<AutoQueueSettings
   const s = await loadSettings(admin);
   return {
     enabled: s.social_enabled && s.social_auto_queue,
-    channels: autoQueueChannels({ mazed: s.social_auto_queue_mazed, page: s.social_auto_queue_page, instagram: s.social_auto_queue_instagram }),
+    channels: autoQueueChannels({
+      mazed: s.social_auto_queue_mazed,
+      page: s.social_auto_queue_page,
+      instagram: s.social_auto_queue_instagram,
+      tiktok: s.social_auto_queue_tiktok,
+    }),
     days: s.social_auto_queue_days,
     waitingMax: s.social_auto_queue_waiting_max,
     minPhotos: s.social_auto_queue_min_photos,
@@ -153,7 +165,7 @@ async function recentAnnonces(
       id: r.id,
       seller_id: r.seller_id,
       photos: r.photos?.length ?? 0,
-      channels: channelsToPropose(wanted, asks.get(r.id) ?? []),
+      channels: withPhotosOnly(channelsToPropose(wanted, asks.get(r.id) ?? []), r.photos?.length ?? 0),
     })),
   };
 }
