@@ -12,7 +12,8 @@
     "rights": "© {year} {name}. Tous droits réservés.",
     "country": "Tunisie",
     "guides": "Guides pratiques",
-    "market": "Le marché en chiffres"
+    "market": "Le marché en chiffres",
+    "demandes": "Ce que les gens cherchent"
   },
   "brand": {
     "name": "Mazed Immo",
@@ -779,7 +780,11 @@
     },
     "marketTitle": "Le marché en chiffres",
     "marketBody": "Prix médians demandés, offre par gouvernorat, demande des acheteurs : les chiffres du site, mis à jour automatiquement.",
-    "demandeLine": "Vous ne trouvez pas ? Dites-nous ce que vous cherchez"
+    "demandeLine": "Vous ne trouvez pas ? Dites-nous ce que vous cherchez",
+    "demandeCardBody": "On vous prévient dès qu'un bien qui correspond est publié, et les agences vous proposent les leurs.",
+    "demandeCardCta": "Écrire ma demande",
+    "demandeCardCount": "{count, plural, one {# personne cherche en ce moment} other {# personnes cherchent en ce moment}}",
+    "demandeCardSee": "Voir ce que les gens cherchent"
   },
   "homeMap": {
     "eyebrow": "Carte",
@@ -1151,6 +1156,33 @@
     "demandeTitle": "Pas tout à fait ce que vous cherchez ?",
     "demandeBody": "Enregistrez une demande comme celle-ci : on vous prévient dès qu'un bien proche est publié.",
     "teamConfirmed": "Confirmée par l'équipe Mazed"
+  },
+  "demandesBoard": {
+    "metaTitle": "Ce que les gens cherchent — demandes immobilières en Tunisie",
+    "metaDescription": "Les demandes ouvertes sur Mazed Immo : quels biens, où, à acheter ou à louer. Vous avez ce bien ? Proposez-le.",
+    "eyebrow": "Demandes",
+    "title": "Ce que les gens cherchent",
+    "lead": "{count, plural, one {# demande ouverte} other {# demandes ouvertes}} : des acheteurs et des locataires ont dit ce qu'ils cherchent. Dès qu'un bien qui correspond est publié, ils sont prévenus.",
+    "quiet": "Les demandes s'affichent ici dès qu'il y en a assez. Dites-nous déjà ce que vous cherchez :",
+    "ctaBuyer": "Dites-nous ce que vous cherchez",
+    "ctaAgency": "Vous avez ces biens ? Proposez-les",
+    "whereTitle": "Où",
+    "whatTitle": "Quels biens",
+    "count": "{count, plural, one {# demande} other {# demandes}}",
+    "sale": "à acheter",
+    "rent": "à louer",
+    "split": "{sale, plural, one {# à acheter} other {# à acheter}} · {rent, plural, one {# à louer} other {# à louer}}",
+    "cardsTitle": "Les dernières demandes",
+    "cardsHint": "Sans nom ni numéro : seulement ce que la personne cherche.",
+    "cardsLater": "Le détail de chaque demande est réservé aux agences Mazed Pro.",
+    "agencyTitle": "Agences : voici ce que vos clients demandent",
+    "agencyBody": "Avec Mazed Pro, vous voyez chaque demande en détail et vous proposez vos annonces : la personne est prévenue, et vous contacte si le bien lui plaît.",
+    "agencyCta": "Découvrir Mazed Pro",
+    "howTitle": "Comment ça marche",
+    "step1": "Vous dites ce que vous cherchez : le bien, le lieu, le budget. Une minute.",
+    "step2": "Dès qu'un bien qui correspond est publié, vous êtes prévenu.",
+    "step3": "Les agences Mazed Pro vous proposent les leurs, et votre numéro reste caché.",
+    "proLine": "{count, plural, one {# personne cherche un bien en ce moment} other {# personnes cherchent un bien en ce moment}} : voyez quoi et où."
   },
   "listingMap": {
     "title": "Position sur la carte",
@@ -2231,7 +2263,7 @@
         },
         "sharing": {
           "title": "4. Partage",
-          "body": "Vos données ne sont pas vendues. Elles peuvent être partagées avec des prestataires strictement nécessaires (hébergement, envoi de SMS et d'e-mails) et avec les autorités lorsque la loi l'exige. Lorsqu'une demande est active et que ses alertes sont activées, ses critères (type de bien, lieu, budget, surface…) sont visibles par les agences Pro, afin qu'elles puissent proposer un bien par l'intermédiaire de Mazed Immo ; le nom et le numéro de la personne ne leur sont jamais communiqués."
+          "body": "Vos données ne sont pas vendues. Elles peuvent être partagées avec des prestataires strictement nécessaires (hébergement, envoi de SMS et d'e-mails) et avec les autorités lorsque la loi l'exige. Lorsqu'une demande est active et que ses alertes sont activées, ses critères (type de bien, lieu, budget, surface…) sont visibles par les agences Pro, afin qu'elles puissent proposer un bien par l'intermédiaire de Mazed Immo ; le nom et le numéro de la personne ne leur sont jamais communiqués. Les demandes enregistrées depuis le 15 novembre 2026 peuvent aussi apparaître sur la page publique « Ce que les gens cherchent », réduites à ces critères, sans nom, numéro ni note ; pour les autres, seuls des totaux (combien de demandes, où, quel type de bien) y sont publiés."
         },
         "retention": {
           "title": "5. Conservation et sécurité",
@@ -3927,7 +3959,7 @@
     "resumed": "Alertes réactivées.",
     "renewed": "Demande prolongée de {days} jours.",
     "actionFailed": "Action impossible pour le moment.",
-    "alertsShops": "Avec les alertes, les agences Pro voient aussi vos critères — jamais votre nom, votre numéro ni vos autres souhaits — et peuvent vous proposer un bien : c'est Mazed Immo qui vous le transmet.",
+    "alertsShops": "Avec les alertes, vos critères (type de bien, lieu, budget, pièces) s'affichent sur la page « Ce que les gens cherchent » et les agences Pro peuvent vous proposer un bien — jamais votre nom, votre numéro ni vos autres souhaits : c'est Mazed Immo qui vous transmet leurs propositions.",
     "budgetOrder": "Le maximum doit être supérieur ou égal au minimum.",
     "anyDealHint": "Votre recherche montrait la vente et la location ; une demande est l'une ou l'autre : choisissez ci-dessus.",
     "summaryTitle": "Ce qui sera enregistré",
@@ -4042,7 +4074,7 @@
     "requestAlerts": "Les alertes de mes demandes",
     "privacyTitle": "Ce que le site montre de vous",
     "privacyPhone": "Votre numéro n'apparaît pas dans la page : un acheteur le voit seulement en appuyant sur « Voir le numéro », et chaque affichage est compté.",
-    "privacyRequests": "Vos demandes : les agences Pro voient vos critères (type de bien, lieu, budget…) pour vous proposer un bien, jamais votre nom ni votre numéro. Une demande en pause, expirée ou sans alertes n'est montrée à aucune agence.",
+    "privacyRequests": "Vos demandes : les agences Pro voient vos critères (type de bien, lieu, budget…) pour vous proposer un bien, et ces critères peuvent s'afficher, sans rien qui vous désigne, sur la page « Ce que les gens cherchent ». Jamais votre nom ni votre numéro. Une demande en pause, expirée ou sans alertes n'est montrée nulle part.",
     "privacyReports": "Un signalement ne dit pas au vendeur qui l'a fait.",
     "privacyPolicy": "Politique de confidentialité",
     "deleteTitle": "Supprimer mon compte",
@@ -6435,6 +6467,18 @@
       "label": "Demande sans compte",
       "hint": "Le visiteur remplit sa demande, puis confirme son numéro par SMS : le compte se crée à ce moment. Éteint : connexion d'abord."
     },
+    "requests_board": {
+      "label": "Page « Ce que les gens cherchent »",
+      "hint": "Les demandes ouvertes en chiffres pour tout le monde (où, quel bien), pour que les agences hors Mazed voient ce que le marché demande. Aussi le nombre sur l'accueil et sur la page Pro."
+    },
+    "requests_board_min": {
+      "label": "Demandes ouvertes avant d'en parler",
+      "hint": "En dessous, la page et le nombre ne s'affichent pas."
+    },
+    "requests_board_cards_since": {
+      "label": "Cartes publiques depuis",
+      "hint": "Date (AAAA-MM-JJ ou avec l'heure) : les demandes enregistrées depuis s'affichent en carte (bien, lieu, budget, pièces — jamais le nom, le numéro ni la note). Avant, le formulaire promettait « les agences Pro seulement ». Vide : les chiffres seulement."
+    },
     "social_auto_queue_tiktok": {
       "label": "Proposer sur TikTok",
       "hint": "Le compte TikTok @mazed613, dans la même demande que la page « Mazed » : vous validez les deux ensemble, ou vous décochez TikTok pour une annonce. Il faut au moins une photo. Tant que TikTok n'est pas connecté, la publication attend dans « File »."
@@ -7444,6 +7488,7 @@
           "map": "Carte · zone",
           "listing": "Page d'annonce",
           "home": "Accueil",
+          "board": "Page « Ce que les gens cherchent »",
           "other": "Autre (Mes demandes, lien direct)"
         }
       }
