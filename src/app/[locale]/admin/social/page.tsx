@@ -461,7 +461,7 @@ export default async function AdminSocialPage({
           </div>
         )}
 
-        {/* TikTok (@mazedimmo): its own app and its own sign-in, beside Facebook's. */}
+        {/* TikTok (@mazed613): its own app and its own sign-in, beside Facebook's. */}
         <section className="rounded-2xl bg-surface p-4 ring-1 ring-border">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>

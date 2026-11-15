@@ -4392,7 +4392,7 @@
     "tiktokModePublic": "الطريقة: نشر طول، للعموم.",
     "tiktokSetupTitle": "باش تربط تيك توك:",
     "tiktokVerifyTitle": "لازم يتحقق منو في تطبيق تيك توك:",
-    "tiktokSetup1": "في developers.tiktok.com، بالحساب اللي عندو @mazedimmo: اعمل التطبيق، زيد Login Kit و Content Posting API (و Direct Post مشعول).",
+    "tiktokSetup1": "في developers.tiktok.com، بالحساب اللي عندو @mazed613: اعمل التطبيق، زيد Login Kit و Content Posting API (و Direct Post مشعول).",
     "tiktokSetup2": "في Login Kit، زيد عنوان الرجوع هذا:",
     "tiktokSetup3": "تحقق من الدومين mazed.immo (DNS) ولا من بداية العنوان هذي، اللي تيك توك يهبّط منها التصاور:",
     "tiktokSetup5": "ابعث التطبيق للمراجعة عند تيك توك. قبل ما يتقبل، النشر الطول يقعد خاص (privé).",
@@ -6432,7 +6432,7 @@
     },
     "social_auto_queue_tiktok": {
       "label": "نقترحو على تيك توك",
-      "hint": "الحساب @mazedimmo في تيك توك، في نفس الطلب متاع صفحة «Mazed»: توافق على الزوز مع بعضهم، ولا تنحّي تيك توك لإعلان. لازمو على الأقل تصويرة. ما دام تيك توك موش مربوط، المنشور يستنّى في «File»."
+      "hint": "الحساب @mazed613 في تيك توك، في نفس الطلب متاع صفحة «Mazed»: توافق على الزوز مع بعضهم، ولا تنحّي تيك توك لإعلان. لازمو على الأقل تصويرة. ما دام تيك توك موش مربوط، المنشور يستنّى في «File»."
     },
     "social_tiktok_draft": {
       "label": "تيك توك: نبعثو برويون",
@@ -6456,7 +6456,7 @@
     },
     "social_tiktok_username": {
       "label": "حساب تيك توك اللي نربطوه",
-      "hint": "الحساب الوحيد اللي «اربط تيك توك» يقبلو، بلا @ (mazedimmo). فارغ: أي حساب."
+      "hint": "الحساب الوحيد اللي «اربط تيك توك» يقبلو، بلا @ (mazed613). فارغ: أي حساب."
     },
     "social_tiktok_verify_file": {
       "label": "تيك توك: اسم ملف التحقق",

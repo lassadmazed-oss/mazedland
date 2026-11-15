@@ -166,7 +166,7 @@ function scene(opts: { settings?: Record<string, unknown>; job?: Partial<JobRow>
         id: "acc-tt",
         platform: "tiktok",
         external_id: "open-1",
-        username: "mazedimmo",
+        username: "mazed613",
         name: "Mazed Immo",
         status: "connected",
         token_sealed: sealTiktokTokens(opts.tokens ?? tokens()),
@@ -202,7 +202,7 @@ function scene(opts: { settings?: Record<string, unknown>; job?: Partial<JobRow>
 }
 
 const creator = (privacy: string[] = ["SELF_ONLY"]) =>
-  ok({ creator_username: "mazedimmo", creator_nickname: "Mazed Immo", privacy_level_options: privacy, comment_disabled: false });
+  ok({ creator_username: "mazed613", creator_nickname: "Mazed Immo", privacy_level_options: privacy, comment_disabled: false });
 
 beforeEach(() => {
   vi.stubEnv("SOCIAL_TOKEN_KEY", KEY);
@@ -247,7 +247,7 @@ describe("a TikTok job", () => {
     expect(j.status).toBe("published");
     expect(j.container_id).toBe("p_pub_1");
     expect(j.external_post_id).toBe("7436512345678901234");
-    expect(j.external_url).toBe("https://www.tiktok.com/@mazedimmo/photo/7436512345678901234");
+    expect(j.external_url).toBe("https://www.tiktok.com/@mazed613/photo/7436512345678901234");
     expect(s.tables.social_publication_requests[0].status).toBe("published");
     // The seller hears it once, on the first channel online.
     expect(s.rpcs.map((r) => r.fn)).toContain("enqueue_notification");
@@ -450,7 +450,7 @@ describe("« Tester la connexion » on TikTok", () => {
     const t = fakeTiktok({ "/v2/post/publish/creator_info/query/": () => creator(["SELF_ONLY"]) });
     expect(await checkSocialAccount(s.admin, "acc-tt", { fetch: t.fetch })).toEqual({
       ok: true,
-      name: "@mazedimmo",
+      name: "@mazed613",
       quota: null,
       tiktok: { privacy: ["SELF_ONLY"] },
     });
@@ -483,7 +483,7 @@ describe("approving an ask on « Mazed » and TikTok", () => {
     });
   }
   const mazedPage = { id: "acc-fb", platform: "facebook_page", external_id: "1390476427730991", username: "mazedonline", status: "connected", token_expires_at: null, connected_at: "2026-11-05" };
-  const tiktokAccount = { id: "acc-tt", platform: "tiktok", external_id: "open-1", username: "mazedimmo", status: "connected", token_expires_at: new Date(NOW + 24 * HOUR).toISOString(), connected_at: "2026-11-15" };
+  const tiktokAccount = { id: "acc-tt", platform: "tiktok", external_id: "open-1", username: "mazed613", status: "connected", token_expires_at: new Date(NOW + 24 * HOUR).toISOString(), connected_at: "2026-11-15" };
 
   it("gives TikTok to the engine once the account is connected, and to a person before", async () => {
     const { approveSocialRequest } = await import("./server");

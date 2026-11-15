@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/admin/social/tiktok/connect — send an admin to TikTok to connect
- * Mazed Immo's account (@mazedimmo). A link the admin clicks, as Facebook's
+ * Mazed Immo's account (@mazed613). A link the admin clicks, as Facebook's
  * is; the one-time `state` in a cookie ties TikTok's answer to this click.
  */
 export async function GET(req: NextRequest) {

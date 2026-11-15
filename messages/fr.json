@@ -4392,7 +4392,7 @@
     "tiktokModePublic": "Mode : publication directe, en public.",
     "tiktokSetupTitle": "Pour connecter TikTok :",
     "tiktokVerifyTitle": "À vérifier dans l'application TikTok :",
-    "tiktokSetup1": "Sur developers.tiktok.com, avec le compte qui possède @mazedimmo : créer l'application, ajouter Login Kit et Content Posting API (Direct Post activé).",
+    "tiktokSetup1": "Sur developers.tiktok.com, avec le compte qui possède @mazed613 : créer l'application, ajouter Login Kit et Content Posting API (Direct Post activé).",
     "tiktokSetup2": "Dans Login Kit, ajouter cette adresse de redirection :",
     "tiktokSetup3": "Vérifier le domaine mazed.immo (DNS) ou ce préfixe d'adresse, d'où TikTok télécharge les photos :",
     "tiktokSetup5": "Envoyer l'application en revue chez TikTok. Avant sa validation, les publications directes restent privées.",
@@ -6432,7 +6432,7 @@
     },
     "social_auto_queue_tiktok": {
       "label": "Proposer sur TikTok",
-      "hint": "Le compte TikTok @mazedimmo, dans la même demande que la page « Mazed » : vous validez les deux ensemble, ou vous décochez TikTok pour une annonce. Il faut au moins une photo. Tant que TikTok n'est pas connecté, la publication attend dans « File »."
+      "hint": "Le compte TikTok @mazed613, dans la même demande que la page « Mazed » : vous validez les deux ensemble, ou vous décochez TikTok pour une annonce. Il faut au moins une photo. Tant que TikTok n'est pas connecté, la publication attend dans « File »."
     },
     "social_tiktok_draft": {
       "label": "TikTok : envoyer en brouillon",
@@ -6456,7 +6456,7 @@
     },
     "social_tiktok_username": {
       "label": "Compte TikTok à connecter",
-      "hint": "Le seul compte que « Connecter TikTok » accepte, sans @ (mazedimmo). Vide : n'importe quel compte."
+      "hint": "Le seul compte que « Connecter TikTok » accepte, sans @ (mazed613). Vide : n'importe quel compte."
     },
     "social_tiktok_verify_file": {
       "label": "TikTok : nom du fichier de vérification",

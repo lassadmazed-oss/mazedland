@@ -12,7 +12,7 @@
  * picked up on a later run, once they have. An annonce its seller promoted
  * themselves (Mazed Immo's page, Instagram) is proposed beside that ask, for
  * the pages it does not cover — « Mazed » first of all (0215). TikTok
- * (@mazedimmo) rides in the same ask beside « Mazed » (2026-11-15), so the
+ * (@mazed613) rides in the same ask beside « Mazed » (2026-11-15), so the
  * owner approves both at once, or unticks TikTok for that annonce.
  *
  * Run by the Social Publisher's worker every five minutes (api/cron/social-publish).

@@ -1,5 +1,5 @@
 /**
- * Connecting Mazed Immo's TikTok account (@mazedimmo) and keeping its token
+ * Connecting Mazed Immo's TikTok account (@mazed613) and keeping its token
  * alive — what the routes and the engine need, in one place.
  *
  * Needs, in the environment (never in the browser):

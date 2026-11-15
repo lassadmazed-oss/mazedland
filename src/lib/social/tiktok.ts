@@ -1,6 +1,6 @@
 /**
  * The few TikTok API calls the Social Publisher makes (developers.tiktok.com,
- * read 2026-11-15): Login Kit for Web to connect @mazedimmo, and the Content
+ * read 2026-11-15): Login Kit for Web to connect @mazed613, and the Content
  * Posting API to post an annonce's photos as a Photo Mode post.
  *
  *   connect    https://www.tiktok.com/v2/auth/authorize/   (code)

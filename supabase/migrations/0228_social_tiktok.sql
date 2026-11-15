@@ -2,7 +2,7 @@
 -- 0228 · Social Publisher: TikTok
 --
 -- The owner (2026-11-15): an annonce that goes on the « Mazed » Facebook page
--- goes on TikTok (@mazedimmo) too. The tables took the 'tiktok' channel and
+-- goes on TikTok (@mazed613) too. The tables took the 'tiktok' channel and
 -- platform from the start (0170, 0214); what the engine adds is two reasons a
 -- TikTok post is left to a person:
 --

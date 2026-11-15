@@ -19,7 +19,7 @@ const sLog = log.scope("social");
  * GET /api/admin/social/tiktok/callback?code=…&state=… — TikTok sends the
  * admin back here. The code becomes the account's tokens (sealed, never
  * shown); the account must be the one the social_tiktok_username setting
- * names (@mazedimmo), so a personal TikTok signed in by mistake is not taken.
+ * names (@mazed613), so a personal TikTok signed in by mistake is not taken.
  * Back to the console's accounts tab either way.
  */
 export async function GET(req: NextRequest) {

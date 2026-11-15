@@ -129,11 +129,11 @@ describe("Login Kit", () => {
     expect(tiktokConfig(ENV)).toEqual({ clientKey: "ck", clientSecret: "cs" });
   });
 
-  it("takes @mazedimmo only, whatever the case or the @", () => {
-    expect(isWantedTiktok("MazedImmo", "mazedimmo")).toBe(true);
-    expect(isWantedTiktok("@mazedimmo", "@mazedimmo")).toBe(true);
-    expect(isWantedTiktok("lassad.perso", "mazedimmo")).toBe(false);
-    expect(isWantedTiktok(null, "mazedimmo")).toBe(false);
+  it("takes @mazed613 only, whatever the case or the @", () => {
+    expect(isWantedTiktok("Mazed613", "mazed613")).toBe(true);
+    expect(isWantedTiktok("@mazed613", "@mazed613")).toBe(true);
+    expect(isWantedTiktok("lassad.perso", "mazed613")).toBe(false);
+    expect(isWantedTiktok(null, "mazed613")).toBe(false);
     expect(isWantedTiktok("anyone", "")).toBe(true);
   });
 });
@@ -142,10 +142,10 @@ describe("Content Posting API", () => {
   it("asks who it posts as, with the bearer token", async () => {
     const t = fakeTiktok({
       "POST /v2/post/publish/creator_info/query/": () =>
-        ok({ creator_username: "mazedimmo", creator_nickname: "Mazed Immo", privacy_level_options: ["SELF_ONLY"], comment_disabled: false }),
+        ok({ creator_username: "mazed613", creator_nickname: "Mazed Immo", privacy_level_options: ["SELF_ONLY"], comment_disabled: false }),
     });
     const info = await tiktokCreatorInfo(tiktokClient("act.1", { fetch: t.fetch }));
-    expect(info).toEqual({ username: "mazedimmo", nickname: "Mazed Immo", privacyOptions: ["SELF_ONLY"], commentDisabled: false });
+    expect(info).toEqual({ username: "mazed613", nickname: "Mazed Immo", privacyOptions: ["SELF_ONLY"], commentDisabled: false });
     expect(t.calls[0].headers.Authorization).toBe("Bearer act.1");
   });
 
@@ -220,8 +220,8 @@ describe("Content Posting API", () => {
   });
 
   it("links a public post, and has no link for a private one", () => {
-    expect(tiktokPostUrl("mazedimmo", "7436512345678901234")).toBe("https://www.tiktok.com/@mazedimmo/photo/7436512345678901234");
-    expect(tiktokPostUrl("mazedimmo", null)).toBeNull();
+    expect(tiktokPostUrl("mazed613", "7436512345678901234")).toBe("https://www.tiktok.com/@mazed613/photo/7436512345678901234");
+    expect(tiktokPostUrl("mazed613", null)).toBeNull();
     expect(tiktokPostUrl(null, "1")).toBeNull();
   });
 });

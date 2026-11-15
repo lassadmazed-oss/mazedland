@@ -281,7 +281,7 @@ export const SETTINGS = {
   // At most this many asks wait in « À valider » (the tab shows up to 40); no new one while it is full.
   social_auto_queue_waiting_max: { group: "social", type: "int", default: 40, min: 1, max: 40, choices: [10, 20, 40] },
   social_auto_queue_min_photos: { group: "social", type: "int", default: 1, min: 0, max: 10, choices: [0, 1, 2, 3] },
-  // TikTok (@mazedimmo) beside « Mazed » (the owner, 2026-11-15): proposed in the
+  // TikTok (@mazed613) beside « Mazed » (the owner, 2026-11-15): proposed in the
   // same ask, approved with it. Until the TikTok account is connected, an
   // approved TikTok post waits in « File » as a task, and leaves by itself after.
   social_auto_queue_tiktok: { group: "social", type: "bool", default: true },
@@ -299,7 +299,7 @@ export const SETTINGS = {
   social_tiktok_auto_music: { group: "social", type: "bool", default: true },
   social_tiktok_comments: { group: "social", type: "bool", default: true },
   // The only TikTok account « Connecter TikTok » accepts (no @); empty: whichever signs in.
-  social_tiktok_username: { group: "social", type: "text", default: "mazedimmo", max: 60, ltr: true },
+  social_tiktok_username: { group: "social", type: "text", default: "mazed613", max: 60, ltr: true },
   // TikTok pulls the photos only from a verified domain or URL prefix. For the
   // prefix https://www.mazed.immo/api/social/image/, the signature file TikTok
   // hands over: its name and its text, served at that prefix (api/social/image/[requestId]/route.ts).

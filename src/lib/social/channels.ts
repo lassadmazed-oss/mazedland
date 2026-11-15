@@ -10,7 +10,7 @@
  *   facebook_groups  Tunisian property groups — Meta closed the groups API in
  *                    2024, so the text is prepared here and a person on the
  *                    team shares it by hand, group by group.
- *   tiktok           Mazed Immo's TikTok account (@mazedimmo) — a photo post
+ *   tiktok           Mazed Immo's TikTok account (@mazed613) — a photo post
  *                    through the Content Posting API (tiktok.ts), or a draft
  *                    sent to the TikTok app for a person to finish. Until
  *                    TikTok has audited the app, a direct post can only be
