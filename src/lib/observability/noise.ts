@@ -31,6 +31,11 @@ const FOREIGN: readonly RegExp[] = [
   // and a Facebook-shared annonce from one Edge with extensions, then on the home page.
   /Window message ["'][^"']*["'] timed out/i,
   /A listener indicated an asynchronous response by returning true, but the message channel closed/i,
+  // The iOS twin of the Android bridge above: Facebook's in-app browser on iPhone runs
+  // its own script in the page and calls its app through `window.webkit.messageHandlers`,
+  // which is gone or not there yet (2026-11-15, an annonce opened from a « Mazed » post,
+  // FBIOS on iOS 18.7). The site never touches `window.webkit`.
+  /evaluating 'window\.webkit\.messageHandlers/i,
 ];
 
 /**

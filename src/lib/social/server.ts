@@ -11,6 +11,7 @@ import { loadSettings } from "@/lib/settings/server";
 import { PRODUCTION_ORIGIN, siteUrl } from "@/lib/siteUrl";
 import { coverPhoto } from "@/lib/listingCover";
 import { asDealType, type DealType } from "@/lib/listings/deal";
+import { isoDayIn } from "@/lib/listings/choices";
 import {
   FEATURED_CHANNELS, MAX_PHOTOS, OFFERED_CHANNELS, OPEN_REQUEST_STATUSES, isApiChannel, isPageChannel, laneRoom, requestStatusFrom,
   type JobAction, type JobStatus, type LaneAsk, type RequestStatus, type SocialChannel, type SocialLanguage,
@@ -75,7 +76,8 @@ export function dueNow(): string {
 
 /** Today in Tunis, as YYYY-MM-DD. */
 export function tunisToday(now: Date = new Date()): string {
-  return now.toLocaleDateString("en-CA", { timeZone: "Africa/Tunis" });
+  // From the parts (isoDayIn), never from en-CA text: see the visit request crash of 2026-11-14.
+  return isoDayIn(now, "Africa/Tunis");
 }
 
 const LISTING_SELECT = `id, seller_id, status, title, deal_type, price, price_on_request, governorate, delegation,

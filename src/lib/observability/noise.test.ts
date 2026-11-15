@@ -47,6 +47,13 @@ describe("isForeignNoise", () => {
     expect(isForeignNoise("Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received")).toBe(true);
   });
 
+  it("drops the iPhone bridge of Facebook's in-app browser", () => {
+    expect(isForeignNoise("TypeError: undefined is not an object (evaluating 'window.webkit.messageHandlers')")).toBe(true);
+    expect(isForeignNoise("TypeError: undefined is not an object (evaluating 'window.webkit.messageHandlers.fbIAB')")).toBe(true);
+    // An error of ours that merely mentions webkit is still ours.
+    expect(isForeignNoise("TypeError: webkitRequestFullscreen is not a function")).toBe(false);
+  });
+
   it("keeps a timeout that is the site's own", () => {
     expect(isForeignNoise("Error: Request to /api/listings timed out.")).toBe(false);
     expect(isForeignNoise("TimeoutError: signal timed out")).toBe(false);
