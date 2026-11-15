@@ -613,7 +613,12 @@ export default async function AnnoncePage({
         open: mazed ? { ref: mazed.ref, status: mazed.status } : null,
         sellerPromotion: sellers ? { ref: sellers.ref, status: sellers.status, channels: sellers.channels } : null,
         sellerTerms: isOwner || termsCoverFeaturing(currentConsents(history).terms),
-        connected: { facebook_mazed: !!accounts.facebook_mazed, facebook_page: !!accounts.facebook_page, instagram: !!accounts.instagram },
+        connected: {
+          facebook_mazed: !!accounts.facebook_mazed,
+          facebook_page: !!accounts.facebook_page,
+          instagram: !!accounts.instagram,
+          tiktok: !!accounts.tiktok,
+        },
       };
     }
   }

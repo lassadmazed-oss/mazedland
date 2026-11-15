@@ -281,6 +281,30 @@ export const SETTINGS = {
   // At most this many asks wait in « À valider » (the tab shows up to 40); no new one while it is full.
   social_auto_queue_waiting_max: { group: "social", type: "int", default: 40, min: 1, max: 40, choices: [10, 20, 40] },
   social_auto_queue_min_photos: { group: "social", type: "int", default: 1, min: 0, max: 10, choices: [0, 1, 2, 3] },
+  // TikTok (@mazedimmo) beside « Mazed » (the owner, 2026-11-15): proposed in the
+  // same ask, approved with it. Until the TikTok account is connected, an
+  // approved TikTok post waits in « File » as a task, and leaves by itself after.
+  social_auto_queue_tiktok: { group: "social", type: "bool", default: true },
+
+  // ── TikTok (src/lib/social/tiktok.ts). An app TikTok has not audited may
+  //    only post « only me », to an account set to private; a draft goes to
+  //    the TikTok app's inbox, where a person adds the music and posts it.
+  // On: each post is sent as a draft to the TikTok app (finished there by hand).
+  // Off: posted directly, public or private as the next switch says.
+  social_tiktok_draft: { group: "social", type: "bool", default: true },
+  // Direct posts: public (once TikTok has approved the app) or « only me ».
+  social_tiktok_public: { group: "social", type: "bool", default: false },
+  // TikTok's own ceiling is about 15 posts a day, and 5 drafts waiting in the app.
+  social_tiktok_daily_limit: { group: "social", type: "int", default: 5, min: 1, max: 15, unit: "per_day", choices: [3, 5, 10, 15] },
+  social_tiktok_auto_music: { group: "social", type: "bool", default: true },
+  social_tiktok_comments: { group: "social", type: "bool", default: true },
+  // The only TikTok account « Connecter TikTok » accepts (no @); empty: whichever signs in.
+  social_tiktok_username: { group: "social", type: "text", default: "mazedimmo", max: 60, ltr: true },
+  // TikTok pulls the photos only from a verified domain or URL prefix. For the
+  // prefix https://www.mazed.immo/api/social/image/, the signature file TikTok
+  // hands over: its name and its text, served at that prefix (api/social/image/[requestId]/route.ts).
+  social_tiktok_verify_file: { group: "social", type: "text", default: "", max: 120, ltr: true, pattern: /^[A-Za-z0-9_-]{1,100}\.txt$/ },
+  social_tiktok_verify_text: { group: "social", type: "text", default: "", max: 500, ltr: true },
 
   // ── Prospection (0218): the team that brings private owners to the site.
   //    Off: the screen and its API refuse; the leads and the annonces made stay.

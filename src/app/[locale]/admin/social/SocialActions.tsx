@@ -16,15 +16,43 @@ import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
  * console and the page re-reads the database after each one.
  */
 
-/** Approve now or at a set time, or refuse with a reason the seller will read. */
-export function ReviewActions({ requestId }: { requestId: string }) {
+/**
+ * Approve now or at a set time, or refuse with a reason the seller will read.
+ * An ask on several pages (« Mazed » and TikTok, the auto-queue's) shows one
+ * chip per page, all ticked: the owner unticks the ones this annonce should
+ * not go to, and only the ticked ones are posted.
+ */
+export function ReviewActions({ requestId, channels = [] }: { requestId: string; channels?: string[] }) {
   const t = useTranslations("adminSocial");
   const { run, pending } = useAdminAction();
   const [when, setWhen] = useState("");
   const [rejecting, setRejecting] = useState(false);
+  const [kept, setKept] = useState<string[]>(channels);
+  const choosing = channels.length > 1;
+  const toggle = (c: string) => setKept((ks) => (ks.includes(c) ? ks.filter((k) => k !== c) : [...ks, c]));
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {choosing && (
+        <div role="group" aria-label={t("approveOn")} className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
+          <span className="text-[11.5px] text-muted">{t("approveOn")}</span>
+          {channels.map((c) => {
+            const on = kept.includes(c);
+            return (
+              <button
+                key={c}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggle(c)}
+                className={`inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[12px] font-semibold ring-1 ${on ? "bg-[var(--gold)] text-[var(--background)] ring-[var(--gold)]" : "text-muted ring-border"}`}
+              >
+                {on && <Check className="size-3.5" />}
+                {t(`channels.${c}`)}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <label className="flex items-center gap-1.5 text-[11.5px] text-muted">
         {t("scheduleAt")}
         <input
@@ -37,11 +65,16 @@ export function ReviewActions({ requestId }: { requestId: string }) {
       <AdminButton
         variant="primary"
         pending={pending}
+        disabled={choosing && kept.length === 0}
         onClick={() =>
           run({
             url: `/api/admin/social/requests/${requestId}`,
             method: "POST",
-            body: { action: "approve", scheduledFor: when ? new Date(when).toISOString() : null },
+            body: {
+              action: "approve",
+              scheduledFor: when ? new Date(when).toISOString() : null,
+              ...(choosing ? { channels: channels.filter((c) => kept.includes(c)) } : {}),
+            },
             success: t(when ? "approvedLater" : "approved"),
           })
         }
@@ -118,12 +151,15 @@ export function JobActions({
   copyText,
   groupUrl,
   link = null,
+  canRetry = false,
 }: {
   jobId: string;
   canRun: boolean;
   manual: boolean;
   copyText: string | null;
   groupUrl: string | null;
+  /** A task for a person the engine can take back once its cause is fixed (TikTok switched to drafts…). */
+  canRetry?: boolean;
   /** The annonce's Mazed Immo link, for a post made by hand (Instagram's bio or sticker, the page's text). */
   link?: string | null;
 }) {
@@ -178,7 +214,7 @@ export function JobActions({
             <ExternalLink className="size-3.5" /> {t("openListing")}
           </a>
         )}
-        {!manual && !canRun && (
+        {((!manual && !canRun) || canRetry) && (
           <AdminButton icon={<RotateCcw className="size-3.5" />} pending={pending} onClick={() => call("retry", {}, t("requeued"))}>
             {t("retry")}
           </AdminButton>
@@ -235,7 +271,12 @@ export function AccountTest({ accountId }: { accountId: string }) {
               name?: string;
               quota?: { used: number; total: number } | null;
               instagram?: { username: string | null; added: boolean } | null;
+              tiktok?: { privacy: string[] } | null;
             };
+            if (d.tiktok) {
+              toast(t(d.tiktok.privacy.includes("PUBLIC_TO_EVERYONE") ? "testOkTiktokPublic" : "testOkTiktokPrivate", { name: d.name ?? "" }), "success");
+              return;
+            }
             if (d.instagram?.added) {
               // The page's Instagram account was just adopted: the list of
               // accounts and the queue are stale, so the page reloads.
