@@ -257,8 +257,10 @@ export const SETTINGS = {
   contact_whatsapp: { group: "contact", type: "text", default: "+216 58 415 510", max: 30, ltr: true, client: true },
   contact_email: { group: "contact", type: "text", default: "contact@mazed.immo", max: 120, ltr: true },
   contact_phone: { group: "contact", type: "text", default: "", max: 30, ltr: true },
-  contact_tiktok: { group: "contact", type: "text", default: "mazedimmo", max: 60, ltr: true },
-  contact_facebook: { group: "contact", type: "text", default: "100057517755322", max: 120, ltr: true },
+  // The owner's accounts as given on 2026-11-15: TikTok @mazed613 and the big « Mazed »
+  // page facebook.com/mazedonline (the old default was the profile id of « Mazed tayara »).
+  contact_tiktok: { group: "contact", type: "text", default: "mazed613", max: 60, ltr: true },
+  contact_facebook: { group: "contact", type: "text", default: "mazedonline", max: 120, ltr: true },
   // Mazed Immo's Instagram (@mazed_immo, given by the owner on 2026-11-03): a handle or the pasted link.
   contact_instagram: { group: "contact", type: "text", default: "mazed_immo", max: 120, ltr: true },
 
