@@ -25,6 +25,22 @@ export const RTL_TEXT_URL = `/maplibre/mapbox-gl-rtl-text-${RTL_TEXT_VERSION}.mj
 
 let loading: Promise<typeof MapLibre> | null = null;
 
+/**
+ * A map, or null when this browser cannot draw one. MapLibre 6 needs WebGL2
+ * and throws GPUInitializationError in the constructor without it: old phones,
+ * some in-app browsers, and the headless scanners Facebook sends on a link the
+ * moment a post goes out (7 of them on « Carte » on 2026-11-15 at 18:00). The
+ * throw used to escape as an unhandled rejection, left an empty grey box, and
+ * rang the error bell; each map now shows another way instead.
+ */
+export function newMap(m: typeof MapLibre, options: MapLibre.MapOptions): MapLibre.Map | null {
+  try {
+    return new m.Map(options);
+  } catch {
+    return null;
+  }
+}
+
 /** MapLibre, set up once per page: its worker, and the Arabic plugin loaded when a name needs it. */
 export function loadMapLibre(): Promise<typeof MapLibre> {
   loading ??= import("maplibre-gl").then((m) => {

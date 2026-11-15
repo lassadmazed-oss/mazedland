@@ -6,7 +6,8 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { MAPLIBRE_VERSION, MAP_WORKER_URL, RTL_TEXT_URL, RTL_TEXT_VERSION } from "./maplibre";
+import type * as MapLibre from "maplibre-gl";
+import { MAPLIBRE_VERSION, MAP_WORKER_URL, RTL_TEXT_URL, RTL_TEXT_VERSION, newMap } from "./maplibre";
 
 const root = process.cwd();
 const pkg = (name: string) => JSON.parse(fs.readFileSync(path.join(root, "node_modules", name, "package.json"), "utf8")) as { version: string };
@@ -20,5 +21,27 @@ describe("public/maplibre", () => {
   it("serves the installed Arabic text plugin", () => {
     expect(pkg("@mapbox/mapbox-gl-rtl-text").version).toBe(RTL_TEXT_VERSION);
     expect(same(path.join(root, "public", RTL_TEXT_URL), path.join(root, "node_modules/@mapbox/mapbox-gl-rtl-text/dist/mapbox-gl-rtl-text.js"))).toBe(true);
+  });
+});
+
+describe("newMap", () => {
+  const lib = (Map: unknown) => ({ Map }) as unknown as typeof MapLibre;
+  const options = {} as MapLibre.MapOptions;
+
+  it("gives no map, instead of throwing, where the browser has no WebGL2", () => {
+    // What MapLibre 6 throws in its constructor (Facebook's link scanners, 2026-11-15).
+    class NoGpu {
+      constructor() {
+        throw new Error("GPUInitializationError: WebGL2 is required to display this map.");
+      }
+    }
+    expect(newMap(lib(NoGpu), options)).toBeNull();
+  });
+
+  it("gives the map where it can be drawn", () => {
+    class Drawn {
+      readonly drawn = true;
+    }
+    expect(newMap(lib(Drawn), options)).toBeInstanceOf(Drawn);
   });
 });

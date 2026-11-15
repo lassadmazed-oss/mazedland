@@ -11,7 +11,7 @@ import { GOVERNORATE_CENTER, TUNISIA_VIEW, inTunisia, isShortMapsLink, parseLoca
 import { cn } from "@/lib/utils";
 import { governorateLabel } from "@/lib/tunisia";
 import { outsideGovernorate } from "@/lib/geo/places";
-import { MAP_STYLE, loadMapLibre } from "./maplibre";
+import { MAP_STYLE, loadMapLibre, newMap } from "./maplibre";
 
 export type PinValue = LatLng & { exact: boolean };
 
@@ -62,6 +62,8 @@ export function LocationPicker({
   const marker = useRef<MapLibre.Marker | null>(null);
   const lib = useRef<typeof MapLibre | null>(null);
   const [ready, setReady] = useState(false);
+  // No WebGL2 here: « Ma position » and a pasted link still place the pin.
+  const [failed, setFailed] = useState(false);
 
   function edit() {
     setDraft(value);
@@ -80,17 +82,23 @@ export function LocationPicker({
       if (gone || !box.current) return;
       lib.current = m;
       const at = start ?? GOVERNORATE_CENTER[governorate] ?? TUNISIA_VIEW.center;
-      const created = new m.Map({
+      const created = newMap(m, {
         container: box.current,
         style: MAP_STYLE,
         center: [at.lng, at.lat],
         zoom: start ? 16 : GOVERNORATE_CENTER[governorate] ? 12 : TUNISIA_VIEW.zoom,
         attributionControl: { compact: true },
       });
+      if (!created) {
+        setFailed(true);
+        return;
+      }
       created.addControl(new m.NavigationControl({ showCompass: false }), "top-right");
       created.on("click", (e) => setDraft({ lat: e.lngLat.lat, lng: e.lngLat.lng }));
       map.current = created;
       setReady(true);
+    }).catch(() => {
+      if (!gone) setFailed(true);
     });
     return () => {
       gone = true;
@@ -254,10 +262,16 @@ export function LocationPicker({
       </p>
       <p className="mt-1 text-[12px] text-muted">{t("tapHint")}</p>
 
-      <div className="relative mt-2.5 h-[300px] overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border sm:h-[360px]">
-        <div ref={box} className="h-full w-full" role="application" aria-label={t("mapLabel")} />
-        {!ready && <Loader2 className="absolute start-1/2 top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 animate-spin text-muted" />}
-      </div>
+      {failed ? (
+        <p role="status" className="mt-2.5 rounded-xl bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-muted ring-1 ring-border">
+          {t("pickerUnavailable")}
+        </p>
+      ) : (
+        <div className="relative mt-2.5 h-[300px] overflow-hidden rounded-xl bg-surface-2 ring-1 ring-border sm:h-[360px]">
+          <div ref={box} className="h-full w-full" role="application" aria-label={t("mapLabel")} />
+          {!ready && <Loader2 className="absolute start-1/2 top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 animate-spin text-muted" />}
+        </div>
+      )}
 
       <div className="mt-2.5 flex flex-wrap items-center gap-2">
         <button type="button" onClick={myPosition} disabled={locating} className={quiet}>

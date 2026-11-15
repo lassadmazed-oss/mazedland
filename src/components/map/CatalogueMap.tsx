@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Bell, ImageOff, LocateFixed, MapPin, PenLine, X } from "lucide-react";
+import { Bell, ImageOff, List, LocateFixed, MapPin, MapPinOff, PenLine, X } from "lucide-react";
 import type * as MapLibre from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -10,7 +10,7 @@ import { TUNISIA_VIEW, distanceM, type LatLng } from "@/lib/geo/location";
 import { compactPrice, inBounds, type MapPoint } from "@/lib/geo/mapPoints";
 import { inZone, parseZone, simplifyPath, zoneBounds, zoneParam, type Zone } from "@/lib/geo/zone";
 import { formatNumber, formatTND, cn } from "@/lib/utils";
-import { MAP_STYLE, loadMapLibre } from "./maplibre";
+import { MAP_STYLE, loadMapLibre, newMap } from "./maplibre";
 
 /**
  * « Carte » in the catalogue (?vue=carte, 0212): the annonces of the search
@@ -91,6 +91,9 @@ export function CatalogueMap({
   const [drawError, setDrawError] = useState(false);
   const [me, setMe] = useState<LatLng | null>(null);
   const [geoError, setGeoError] = useState(false);
+  // This browser cannot draw the map (no WebGL2): the list stays, with a way back to it.
+  const [failed, setFailed] = useState(false);
+  const [listHref, setListHref] = useState<string | null>(null);
 
   // The search's points, inside the zone when one is drawn.
   const shown = useMemo(() => (zone ? points.filter((p) => inZone(p, zone)) : points), [points, zone]);
@@ -116,15 +119,25 @@ export function CatalogueMap({
     if (!box.current) return;
     let gone = false;
     let created: MapLibre.Map | null = null;
+    const fail = () => {
+      if (gone) return;
+      // The same search as a list: this address without « vue=carte » (a plain
+      // <a>, since the router would reuse this static page for a query-only link).
+      const u = new URL(window.location.href);
+      u.searchParams.delete("vue");
+      setListHref(u.pathname + u.search);
+      setFailed(true);
+    };
     void loadMapLibre().then((m) => {
       if (gone || !box.current) return;
-      created = new m.Map({
+      created = newMap(m, {
         container: box.current,
         style: MAP_STYLE,
         center: [(start?.center ?? TUNISIA_VIEW.center).lng, (start?.center ?? TUNISIA_VIEW.center).lat],
         zoom: start?.zoom ?? TUNISIA_VIEW.zoom,
         attributionControl: { compact: true },
       });
+      if (!created) return fail();
       const mp = created;
       map.current = mp;
       mp.addControl(new m.NavigationControl({ showCompass: false }), "top-right");
@@ -229,7 +242,7 @@ export function CatalogueMap({
         const b = mp.getBounds();
         setFrame({ south: b.getSouth(), west: b.getWest(), north: b.getNorth(), east: b.getEast() });
       });
-    });
+    }).catch(fail);
     return () => {
       gone = true;
       created?.remove();
@@ -394,9 +407,27 @@ export function CatalogueMap({
 
   return (
     <div className="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-4">
-      <div className="relative h-[58vh] min-h-[340px] overflow-hidden rounded-[var(--radius-2xl)] bg-surface-2 ring-1 ring-border lg:h-[calc(100dvh-220px)] lg:min-h-[480px]">
-        <div ref={box} className="h-full w-full" role="region" aria-label={t("mapLabel")} />
-        {!ready && <MapPin aria-hidden className="absolute start-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 text-subtle" />}
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-[var(--radius-2xl)] bg-surface-2 ring-1 ring-border",
+          failed ? "lg:min-h-[480px]" : "h-[58vh] min-h-[340px] lg:h-[calc(100dvh-220px)] lg:min-h-[480px]",
+        )}
+      >
+        <div ref={box} className={failed ? "hidden" : "h-full w-full"} role="region" aria-label={t("mapLabel")} />
+        {failed ? (
+          <div role="status" className="flex h-full flex-col items-center justify-center gap-2 px-5 py-8 text-center">
+            <MapPinOff aria-hidden className="size-7 text-subtle" />
+            <p className="text-[14px] font-bold text-foreground">{t("unavailable")}</p>
+            <p className="text-[12.5px] text-muted">{t("unavailableHint")}</p>
+            {listHref && (
+              <a href={listHref} className="mazed-btn-quiet tap-target mt-1 inline-flex h-10 items-center gap-2 rounded-full px-4 text-[13px]">
+                <List className="size-4" /> {t("seeList")}
+              </a>
+            )}
+          </div>
+        ) : (
+          !ready && <MapPin aria-hidden className="absolute start-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 text-subtle" />
+        )}
         {/* On the left whatever the language: MapLibre's own buttons are on the right. */}
         {ready && (
           <div className="absolute left-2 top-2 z-10 flex max-w-[calc(100%-64px)] flex-wrap gap-2">
