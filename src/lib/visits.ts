@@ -5,6 +5,7 @@
  * Pure — the slots, the moves allowed from each status, the client stages —
  * so the rules are tested once and the routes only apply them.
  */
+import { isoDayIn } from "@/lib/listings/choices";
 
 export const VISIT_PARTS = ["morning", "afternoon", "evening"] as const;
 export type VisitPart = (typeof VISIT_PARTS)[number];
@@ -43,7 +44,7 @@ export function personName(input: unknown): string | null {
 
 /** Today in Tunisia, as YYYY-MM-DD — the day a slot is compared with. */
 export function tunisDay(now: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Tunis" }).format(now);
+  return isoDayIn(now, "Africa/Tunis");
 }
 
 function addDays(day: string, n: number): string {

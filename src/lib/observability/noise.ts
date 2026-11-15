@@ -33,6 +33,16 @@ const FOREIGN: readonly RegExp[] = [
   /A listener indicated an asynchronous response by returning true, but the message channel closed/i,
 ];
 
+/**
+ * Where the error was raised, when that is not our page: the script an in-app
+ * browser (Facebook, Instagram, Messenger on iOS) injects into every page it
+ * opens is reported as `iabjs://…` (« browser_declutter »: « Unexpected end of
+ * input » on visits from a Facebook post). Our own scripts are https://www.mazed.immo/….
+ */
+export function isForeignSource(source: unknown): boolean {
+  return typeof source === "string" && /^iabjs:\/\//i.test(source);
+}
+
 /** True when the message is browser or app noise that the error log should not keep. */
 export function isForeignNoise(message: unknown): boolean {
   if (typeof message !== "string") return false;

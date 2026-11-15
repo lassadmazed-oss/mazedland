@@ -1,6 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { addDays, dayLabel, dayMonthLabel, firstsOfMonth, nextDays } from "./dayChips";
 
+describe("addDays on something that is not a day", () => {
+  it("hands it back instead of throwing (toISOString on an Invalid Date is a RangeError)", () => {
+    expect(addDays("11/15/2026", 1)).toBe("11/15/2026");
+    expect(addDays("", 1)).toBe("");
+  });
+});
+
 const TODAY = "2026-10-26"; // a Monday
 const WORDS = { today: "Aujourd'hui", tomorrow: "Demain" };
 

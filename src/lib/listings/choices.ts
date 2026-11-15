@@ -125,8 +125,13 @@ export function presetOf<T extends number>(value: string, presets: readonly T[])
  * render — a server in UTC is still on yesterday until 1 a.m. in Tunis.
  */
 export function isoDayIn(date: Date, timeZone: string): string {
-  // en-CA writes dates as YYYY-MM-DD.
-  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  // Built from the parts, not from a locale that « writes dates as YYYY-MM-DD »
+  // (en-CA): that order is the engine's data, not the language's promise, and a
+  // phone whose engine wrote it another way made `new Date(day + "T12:00:00Z")`
+  // an Invalid Date, which threw in toISOString() and took the annonce page down.
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${part("year").padStart(4, "0")}-${part("month").padStart(2, "0")}-${part("day").padStart(2, "0")}`;
 }
 
 /** The same day `months` later; the 31st of a shorter month lands on its last day. */
