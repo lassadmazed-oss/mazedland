@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { facebookHref, instagramHandle, instagramHref, mazedLinks, tiktokHandle, tiktokHref, whatsappHref } from "./contact";
+import { SETTINGS } from "@/lib/settings/registry";
 
 describe("contact links", () => {
   it("opens a WhatsApp chat from any written number", () => {
@@ -36,5 +37,11 @@ describe("contact links", () => {
       { key: "email", href: "mailto:contact@mazed.immo" },
     ]);
     expect(mazedLinks({ contact_facebook: "", contact_instagram: " ", contact_tiktok: "", contact_email: "" })).toEqual([]);
+  });
+
+  it("ships the owner's accounts (2026-11-15) as the footer and contact links", () => {
+    expect(tiktokHref(SETTINGS.contact_tiktok.default)).toBe("https://www.tiktok.com/@mazed613");
+    expect(facebookHref(SETTINGS.contact_facebook.default)).toBe("https://www.facebook.com/mazedonline");
+    expect(instagramHref(SETTINGS.contact_instagram.default)).toBe("https://www.instagram.com/mazed_immo/");
   });
 });
