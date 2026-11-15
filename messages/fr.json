@@ -989,6 +989,9 @@
   },
   "catalogueMap": {
     "mapLabel": "Carte des annonces",
+    "unavailable": "Ce navigateur ne peut pas afficher la carte.",
+    "unavailableHint": "Les annonces de la recherche restent dans la liste.",
+    "seeList": "Voir la liste",
     "inView": "{count, plural, =0 {Aucune annonce dans cette zone} one {# annonce dans cette zone} other {# annonces dans cette zone}}",
     "unplaced": "{count, plural, one {# sans position, visible dans la liste} other {# sans position, visibles dans la liste}}",
     "zoneHint": "Bulle en pointillés : annonce sans position exacte, placée dans sa délégation, ou dans son gouvernorat quand la délégation manque.",
@@ -1160,6 +1163,8 @@
     "savedApprox": "Position approximative : les visiteurs voient un cercle d'environ {radius} m.",
     "tapHint": "Touchez la carte à l'endroit du bien, ou faites glisser l'épingle.",
     "mapLabel": "Carte",
+    "unavailable": "Ce navigateur ne peut pas afficher la carte.",
+    "pickerUnavailable": "Ce navigateur ne peut pas afficher la carte : placez le bien avec « Ma position » ou en collant un lien Google Maps ci-dessous.",
     "myPosition": "Ma position",
     "locating": "Localisation…",
     "geoDenied": "Le téléphone a refusé la position. Placez l'épingle à la main.",
