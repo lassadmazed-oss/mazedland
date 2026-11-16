@@ -73,8 +73,14 @@ export async function ownedPlan(admin: Admin, userId: string, excludeId: string 
  * What the account may still put online, as « Mes annonces » and the
  * publish form show it: its plan if it owns one, else its free places.
  */
-export async function accountAllowance(admin: Admin, userId: string, freeLimit: number): Promise<Allowance> {
-  const owned = await ownedPlan(admin, userId);
+export async function accountAllowance(
+  admin: Admin,
+  userId: string,
+  freeLimit: number,
+  /** An annonce not to count: the one the question is about, whose own place is the one being asked for. */
+  excludeId: string = NO_ID,
+): Promise<Allowance> {
+  const owned = await ownedPlan(admin, userId, excludeId);
   if (owned) {
     return {
       kind: "plan",
@@ -86,7 +92,7 @@ export async function accountAllowance(admin: Admin, userId: string, freeLimit: 
       shopName: owned.shopName,
     };
   }
-  const used = await accountUsage(admin, userId);
+  const used = await accountUsage(admin, userId, excludeId);
   return { kind: "free", used, limit: freeLimit, left: placesLeft(used, freeLimit) };
 }
 
@@ -161,6 +167,38 @@ export async function coverPlace(
   });
   if (credited?.ok === true) return { via: "credit", left: credited.remaining as number };
   return null;
+}
+
+/**
+ * The place taken with no count at all: no free places, no plan, no credit —
+ * the status flips under the same lock and the same refusals (an annonce that
+ * is not the seller's or not in a starting status, one an admin took down).
+ *
+ * For ONE caller: the whole-console admin publishing a private owner's annonce
+ * from « Prospection » (the owner of the site is not held to the limit he sets
+ * for sellers). Every other route goes through takePlace above; do not use
+ * this one for a seller's own submit.
+ */
+export async function takePlaceBeyondLimit(
+  admin: Admin,
+  { userId, listingId }: { userId: string; listingId: string },
+  claim: Claim,
+): Promise<{ ok: true } | { ok: false; reason: "not_submittable" | "taken_down" }> {
+  const { data, error } = await admin.rpc("claim_listing_place", {
+    p_listing: listingId,
+    p_seller: userId,
+    p_from: [...claim.from],
+    p_to: claim.to,
+    p_limit: null,
+    p_shop: null,
+    p_shop_owner: null,
+    p_shop_limit: null,
+  });
+  if (error) throw error;
+  const r = data as "ok" | "not_submittable" | "taken_down" | "full";
+  if (r === "ok") return { ok: true };
+  // « full » cannot be answered with no limit given; read it as not submittable.
+  return { ok: false, reason: r === "taken_down" ? "taken_down" : "not_submittable" };
 }
 
 export type Claim = { from: readonly string[]; to: "pending_review" | "published" };

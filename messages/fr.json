@@ -8434,7 +8434,9 @@
       "warn": {
         "dnc": "Ce numéro est sur la liste « ne pas contacter ». N'écrivez pas.",
         "member": "Ce numéro a déjà un compte sur Mazed Immo ({name}) : le propriétaire est déjà membre.",
-        "others": "{n} autre(s) fiche(s) pour le même numéro ou le même post."
+        "others": "{n} autre(s) fiche(s) pour le même numéro ou le même post.",
+        "full": "Ce propriétaire a atteint sa limite : {used} annonces en ligne sur {limit}. Vous ne pouvez pas en publier une de plus, seul l'administrateur principal le peut. Vous pouvez terminer la fiche, elle attendra.",
+        "fullBoss": "Ce propriétaire a atteint sa limite ({used} sur {limit}). Vous pouvez publier sans limite ; la publication est inscrite au journal."
       },
       "event": {
         "created": "Fiche créée",
@@ -8470,7 +8472,7 @@
         "attribute_required": "Il manque une réponse obligatoire de la catégorie (surface, pièces…).",
         "not_submittable": "L'annonce n'est plus à publier.",
         "taken_down": "Un administrateur a retiré cette annonce.",
-        "free_limit_reached": "Ce propriétaire a déjà le maximum d'annonces gratuites en ligne.",
+        "free_limit_reached": "Ce propriétaire a atteint sa limite : une annonce de plus ne peut pas être publiée. Seul l'administrateur principal le peut.",
         "seller_suspended": "Le compte de ce propriétaire est suspendu.",
         "account_failed": "Le compte n'a pas pu être créé. Réessayez.",
         "listing_failed": "Le brouillon n'a pas pu être créé. Réessayez.",

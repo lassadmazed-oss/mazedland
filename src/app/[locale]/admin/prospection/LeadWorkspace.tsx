@@ -72,6 +72,8 @@ export function LeadWorkspace(props: {
   members: { id: string; name: string }[];
   /** Only the whole-console admin gives a lead to someone: a member works their own. */
   canAssign: boolean;
+  /** The whole-console admin publishes past the owner's places; a member of the team does not (publishLead). */
+  unlimited: boolean;
   categories: { slug: string; label: string }[];
   governorates: { value: string; label: string }[];
   minPhotos: number;
@@ -305,6 +307,17 @@ export function LeadWorkspace(props: {
   const smsUrl = lead.phone ? `sms:${lead.phone}?body=${encodeURIComponent(ask)}` : null;
   const telUrl = lead.phone ? `tel:${lead.phone}` : null;
 
+  // The owner's account already holds every place it may: the team is told from the first screen, not at « Publier ».
+  // A member cannot put one more online; the whole-console admin can (publishLead), and is told so.
+  const placesNote =
+    warnings.full && lead.status !== "online" && lead.status !== "declined" && !agency ? (
+      props.unlimited ? (
+        <p className="rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2.5 text-[13px] text-[var(--tone-warn)]">{t("work.warn.fullBoss", { used: warnings.full.used, limit: warnings.full.limit })}</p>
+      ) : (
+        <p role="alert" className="rounded-xl bg-[var(--tone-bad-bg)] px-3 py-2.5 text-[13px] font-bold text-[var(--tone-bad)]">{t("work.warn.full", { used: warnings.full.used, limit: warnings.full.limit })}</p>
+      )
+    ) : null;
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(ask);
@@ -385,6 +398,7 @@ export function LeadWorkspace(props: {
           {warnings.doNotContact ? <p role="alert" className="rounded-xl bg-[var(--tone-bad-bg)] px-3 py-2.5 text-[13px] font-bold text-[var(--tone-bad)]">{t("work.warn.dnc")}</p> : null}
           {warnings.member ? <p className="rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2.5 text-[13px] text-[var(--tone-warn)]">{t("work.warn.member", { name: warnings.member.name ?? "—" })}</p> : null}
           {warnings.others > 0 ? <p className="rounded-xl bg-[var(--tone-warn-bg)] px-3 py-2.5 text-[13px] text-[var(--tone-warn)]">{t("work.warn.others", { n: warnings.others })}</p> : null}
+          {placesNote}
           {draft.questions.length > 0 && editable && !agency ? (
             <div className="rounded-2xl bg-surface-2 px-4 py-3 text-[13px]">
               <div className="font-bold">{t("work.questions")}</div>
@@ -615,6 +629,7 @@ export function LeadWorkspace(props: {
             <section className={card}>
               <h2 className="mb-1 text-[14px] font-extrabold">{t("work.photosTitle")}</h2>
               <p className="text-[12.5px] text-muted">{t("work.photosHint", { min: minPhotos })}</p>
+              {placesNote ? <div className="mt-3">{placesNote}</div> : null}
               {lead.confirmationText ? (
                 <blockquote className="mt-3 rounded-xl bg-surface-2 px-3 py-2.5 text-[13px] text-muted">
                   <div className="mb-1 text-[11px] font-bold uppercase tracking-[0.1em]">{t("work.proof", { by: lead.confirmedBy ?? "—" })}</div>
