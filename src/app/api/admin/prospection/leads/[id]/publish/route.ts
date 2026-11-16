@@ -11,7 +11,8 @@ import { loadOwnLead, publishLead } from "@/lib/prospection/server";
  * POST /api/admin/prospection/leads/:id/publish  { photosChecked: true }
  *
  * « Publier »: the annonce of a lead that said yes goes through a free place
- * and the moderation rules (src/lib/prospection/server.ts publishLead). It
+ * (a member of the team is held to the owner's places; the whole-console admin
+ * is not) and the moderation rules (src/lib/prospection/server.ts publishLead). It
  * needs the site's minimum of photos, and the member's word that they looked
  * at each one — no phone number written on it, no other agency's mark. When
  * it is online the owner gets the SMS with their private link.
@@ -33,6 +34,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     actorId: gate.user.id,
     photosChecked: body.photosChecked === true,
     origin: req.nextUrl.origin,
+    // The whole-console admin is not held to the owner's places; a member of the team is.
+    unlimited: gate.scopes === null,
   });
   if (!out.ok) {
     const status = out.error === "not_found" ? 404 : out.error === "failed" ? 500 : out.error === "free_limit_reached" ? 402 : 409;

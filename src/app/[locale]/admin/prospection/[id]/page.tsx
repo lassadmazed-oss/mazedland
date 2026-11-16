@@ -43,7 +43,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     admin.from("prospect_events").select("id, kind, channel, note, actor_id, created_at").eq("lead_id", id).order("created_at", { ascending: false }).limit(100),
     lead.listing_id ? admin.from("listings").select("id, status").eq("id", lead.listing_id).maybeSingle() : Promise.resolve({ data: null }),
     lead.listing_id ? admin.from("listing_photos").select("storage_path, sort_order").eq("listing_id", lead.listing_id).order("sort_order") : Promise.resolve({ data: [] }),
-    leadWarnings(admin, { phone: lead.phone, sourceUrl: lead.source_url, excludeId: id }),
+    leadWarnings(admin, { phone: lead.phone, sourceUrl: lead.source_url, excludeId: id, listingId: lead.listing_id }),
     // Who a lead can be given to: the owner's choice, so a member is not shown the team.
     everyone ? admin.from("profiles").select("id, full_name").eq("role", "admin").is("banned_at", null).limit(100) : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
     admin.from("categories").select("slug, label_fr, label_ar, kind, parent_id").eq("is_active", true),
@@ -103,6 +103,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         warnings={warnings}
         ask={ask}
         canAssign={everyone}
+        unlimited={everyone}
         members={everyone ? [...names.entries()].map(([mid, name]) => ({ id: mid, name })) : []}
         categories={(catRows ?? [])
           .filter((c) => c.parent_id != null)

@@ -14,7 +14,7 @@ import { missingPhotos } from "@/lib/listings/storage";
 import { log } from "@/lib/log";
 import { moderationSettings, publishOrQueue } from "@/lib/moderation/server";
 import { redactContacts } from "@/lib/moderation/rules";
-import { takePlace } from "@/lib/places/server";
+import { accountAllowance, takePlace, takePlaceBeyondLimit } from "@/lib/places/server";
 import { getSettings } from "@/lib/settings/server";
 import {
   confirmBlockers, countFigures, dealWord, draftToListingBody, FIGURE_KINDS, fillTemplate, photoPathOf, propertyLine, publishBlockers, readDraft, startOfTunisiaDay, statusAfter,
@@ -65,11 +65,18 @@ export type Warnings = {
    * because a member must not read what a colleague did with them.
    */
   others: number;
+  /**
+   * The owner's account already holds every place it may (the free ones, or its
+   * agence's plan): nothing more can be put online for them, except by the
+   * whole-console admin. Null when the number has no account or has room left.
+   */
+  full: { used: number; limit: number } | null;
 };
 
 export async function leadWarnings(
   admin: Admin,
-  input: { phone: string | null; sourceUrl: string | null; excludeId?: string },
+  /** `excludeId`: another lead to leave out of the count; `listingId`: this lead's own annonce, whose place is the one in question. */
+  input: { phone: string | null; sourceUrl: string | null; excludeId?: string; listingId?: string | null },
 ): Promise<Warnings> {
   const [dnc, member, byPhone, byUrl] = await Promise.all([
     isDoNotContact(admin, input.phone),
@@ -84,7 +91,12 @@ export async function leadWarnings(
     if (r.id !== input.excludeId) seen.add(r.id);
   }
   const m = member.data as { id: string; full_name: string | null } | null;
-  return { doNotContact: dnc, member: m ? { id: m.id, name: m.full_name } : null, others: seen.size };
+  let full: Warnings["full"] = null;
+  if (m) {
+    const room = await accountAllowance(admin, m.id, (await getSettings()).free_listing_limit, input.listingId ?? undefined);
+    if (room.left <= 0) full = { used: room.used, limit: room.limit };
+  }
+  return { doNotContact: dnc, member: m ? { id: m.id, name: m.full_name } : null, others: seen.size, full };
 }
 
 // ── Reading the post ────────────────────────────────────────────────────────
@@ -331,7 +343,12 @@ export type PublishResult =
  */
 export async function publishLead(
   admin: Admin,
-  input: { leadId: string; actorId: string; photosChecked: boolean; origin: string },
+  /**
+   * `unlimited`: the caller is the whole-console admin, who is not held to the
+   * owner's places (the free ones, or the plan): the annonce goes through the
+   * moderation rules and nothing else. A member of the team is held to them.
+   */
+  input: { leadId: string; actorId: string; photosChecked: boolean; origin: string; unlimited?: boolean },
 ): Promise<PublishResult> {
   const lead = await loadLead(admin, input.leadId);
   if (!lead) return { ok: false, error: "not_found" };
@@ -381,16 +398,24 @@ export async function publishLead(
 
   const from = ["draft", "rejected", "pending_payment"];
   if (!from.includes(listing.status as string)) return { ok: false, error: "not_submittable" };
-  const taken = await takePlace(
-    admin,
-    { userId: lead.seller_id, listingId: lead.listing_id, shopId: (listing.shop_id as string | null) ?? null, fromStatus: String(listing.status) },
-    settings.freeLimit,
-    { from, to: "pending_review" },
-  );
-  if (!taken.ok) {
-    if (taken.reason === "taken_down") return { ok: false, error: "taken_down" };
-    if (taken.reason === "not_submittable") return { ok: false, error: "not_submittable" };
-    return { ok: false, error: "free_limit_reached" };
+  // Whether this publication goes past the owner's places, for the audit line.
+  let beyond = false;
+  if (input.unlimited) {
+    beyond = (await accountAllowance(admin, lead.seller_id, settings.freeLimit, lead.listing_id)).left <= 0;
+    const taken = await takePlaceBeyondLimit(admin, { userId: lead.seller_id, listingId: lead.listing_id }, { from, to: "pending_review" });
+    if (!taken.ok) return { ok: false, error: taken.reason };
+  } else {
+    const taken = await takePlace(
+      admin,
+      { userId: lead.seller_id, listingId: lead.listing_id, shopId: (listing.shop_id as string | null) ?? null, fromStatus: String(listing.status) },
+      settings.freeLimit,
+      { from, to: "pending_review" },
+    );
+    if (!taken.ok) {
+      if (taken.reason === "taken_down") return { ok: false, error: "taken_down" };
+      if (taken.reason === "not_submittable") return { ok: false, error: "not_submittable" };
+      return { ok: false, error: "free_limit_reached" };
+    }
   }
 
   const outcome = await publishOrQueue(admin, lead.listing_id, settings, {}, { vouched: true });
@@ -399,7 +424,7 @@ export async function publishLead(
     return { ok: false, error: "failed" };
   }
 
-  await audit(admin, input.actorId, { action: "prospect.publish", targetType: "listing", targetId: lead.listing_id, note: `lead ${lead.id} · ${outcome.status}` });
+  await audit(admin, input.actorId, { action: "prospect.publish", targetType: "listing", targetId: lead.listing_id, note: `lead ${lead.id} · ${outcome.status}${beyond ? " · beyond the owner's limit" : ""}` });
 
   // Online: publishListing already marked the lead online and sent the SMS (src/lib/prospection/online.ts).
   // Held for an admin by the rules (or by « moderation_auto_publish » being off): the lead stays at « a dit oui »
