@@ -32,6 +32,10 @@ type Lead = {
   followUpAt: string | null;
   outcome: string | null;
   confirmationText: string | null;
+  /** How the yes came (call, whatsapp…): a yes given by phone is followed by the written confirmation. */
+  confirmationChannel: string | null;
+  /** The written confirmation of a phone yes has been sent (an event on the lead). */
+  confirmationSent: boolean;
   confirmedAt: string | null;
   confirmedBy: string | null;
   listingId: string | null;
@@ -69,6 +73,8 @@ export function LeadWorkspace(props: {
   events: WorkspaceEvent[];
   warnings: Warnings;
   ask: string;
+  /** The message that writes down a yes given by phone (sent after the call, by WhatsApp or SMS). */
+  confirmMsg: string;
   members: { id: string; name: string }[];
   /** Only the whole-console admin gives a lead to someone: a member works their own. */
   canAssign: boolean;
@@ -104,11 +110,12 @@ export function LeadWorkspace(props: {
   const [description, setDescription] = useState(draft.description ?? "");
 
   // ── the conversation ──
-  const [channel, setChannel] = useState<Channel>("whatsapp");
+  // The team calls first (a WhatsApp is read hours later): « call » is what a lead starts with.
+  const [channel, setChannel] = useState<Channel>("call");
   const [note, setNote] = useState("");
   const [followUp, setFollowUp] = useState(tomorrow());
   const [reply, setReply] = useState("");
-  const [replyChannel, setReplyChannel] = useState<Channel | "">("whatsapp");
+  const [replyChannel, setReplyChannel] = useState<Channel | "">("call");
   const [armed, setArmed] = useState<string | null>(null);
 
   // ── photos ──
@@ -318,9 +325,22 @@ export function LeadWorkspace(props: {
       )
     ) : null;
 
-  const copy = async () => {
+  const confDigits = lead.phone ? lead.phone.replace(/\D/g, "") : "";
+  const confWaUrl = confDigits ? `https://wa.me/${confDigits}?text=${encodeURIComponent(props.confirmMsg)}` : null;
+  const confSmsUrl = lead.phone ? `sms:${lead.phone}?body=${encodeURIComponent(props.confirmMsg)}` : null;
+  const showConfirmMsg = lead.status === "confirmed" && lead.confirmationChannel === "call" && !agency;
+
+  const confirmationSent = (via: "whatsapp" | "sms") =>
+    run(`conf-${via}`, async () => {
+      const r = await call(base, "PATCH", { action: "confirmation_sent", channel: via });
+      if (!r.ok) return { tone: "bad", text: errorText(r.json.error) };
+      router.refresh();
+      return { tone: "ok", text: t("work.confirmSentSaved") };
+    });
+
+  const copy = async (text: string = ask) => {
     try {
-      await navigator.clipboard.writeText(ask);
+      await navigator.clipboard.writeText(text);
       setNotice({ tone: "ok", text: t("work.copied") });
     } catch {
       setNotice({ tone: "bad", text: t("work.errors.failed") });
@@ -520,16 +540,20 @@ export function LeadWorkspace(props: {
               {lead.phone ? <Ltr className="text-[15px] font-bold">{lead.phone}</Ltr> : null}
             </div>
             <p className="mt-1 text-[12.5px] text-muted">{t(agency ? "work.contactHintAgency" : "work.contactHint")}</p>
+            {!agency && telUrl ? (
+              <a href={telUrl} className={`${tilePrimary} mt-3 w-full`}><Phone className="size-4" /> {t("work.callFirst")}</a>
+            ) : null}
+            {!agency ? <p className="mt-4 text-[12.5px] font-bold text-muted">{t("work.noAnswerMsg")}</p> : null}
             <textarea readOnly value={ask} rows={7} className={`${field} mt-3`} />
             <div className="mt-3 grid grid-cols-2 gap-2">
               {waUrl ? (
-                <a href={waUrl} target="_blank" rel="noopener noreferrer" className={`${tilePrimary} col-span-2`}>
+                <a href={waUrl} target="_blank" rel="noopener noreferrer" className={`${agency ? tilePrimary : tile} col-span-2`}>
                   <MessageCircle className="size-4" /> {t("work.openWhatsapp")}
                 </a>
               ) : null}
               {smsUrl ? <a href={smsUrl} className={tile}>{t("work.openSms")}</a> : null}
-              {telUrl ? <a href={telUrl} className={tile}><Phone className="size-4" /> {t("work.call")}</a> : null}
-              <button type="button" onClick={() => void copy()} className={`${tile} ${waUrl ? "col-span-2" : ""}`}><Copy className="size-4" /> {t("work.copy")}</button>
+              {agency && telUrl ? <a href={telUrl} className={tile}><Phone className="size-4" /> {t("work.call")}</a> : null}
+              <button type="button" onClick={() => void copy()} className={`${tile} ${agency && waUrl ? "col-span-2" : ""}`}><Copy className="size-4" /> {t("work.copy")}</button>
             </div>
             {!lead.phone ? <p className="mt-2 text-[12.5px] font-bold text-[var(--tone-bad)]">{t("work.noPhone")}</p> : null}
 
@@ -622,6 +646,32 @@ export function LeadWorkspace(props: {
               <h2 className="mb-1 text-[14px] font-extrabold">{t("work.photosTitle")}</h2>
               <p className="text-[13px] text-muted">{t("work.lockedPublish")}</p>
               {lead.status !== "declined" ? <div className="mt-3"><AdminButton variant="primary" size="md" className={big} onClick={() => go(3)}>{t("work.goYes")}</AdminButton></div> : null}
+            </section>
+          ) : null}
+
+          {showConfirmMsg ? (
+            <section className={card}>
+              <h2 className="mb-1 text-[14px] font-extrabold">{t("work.confirmMsgTitle")}</h2>
+              <p className="text-[12.5px] text-muted">{t("work.confirmMsgHint")}</p>
+              {lead.confirmationSent ? <p className="mt-2 rounded-xl bg-[var(--tone-ok-bg)] px-3 py-2 text-[13px] font-bold text-[var(--tone-ok)]">{t("work.confirmSentDone")}</p> : null}
+              <textarea readOnly value={props.confirmMsg} rows={9} className={`${field} mt-3`} />
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {confWaUrl ? (
+                  <a href={confWaUrl} target="_blank" rel="noopener noreferrer" className={`${tilePrimary} col-span-2`}>
+                    <MessageCircle className="size-4" /> {t("work.openWhatsapp")}
+                  </a>
+                ) : null}
+                {confSmsUrl ? <a href={confSmsUrl} className={tile}>{t("work.openSms")}</a> : null}
+                <button type="button" onClick={() => void copy(props.confirmMsg)} className={tile}><Copy className="size-4" /> {t("work.copy")}</button>
+              </div>
+              <p className="mt-2 text-[12.5px] text-muted">{t("work.noWhatsappHint")}</p>
+              <div className="mt-3 border-t border-border pt-3">
+                <div className="text-[12.5px] font-bold text-muted">{t("work.confirmSentLabel")}</div>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <AdminButton size="md" className="!h-11 !text-[13.5px]" pending={busy === "conf-whatsapp"} onClick={() => void confirmationSent("whatsapp")}>{t("work.channel.whatsapp")}</AdminButton>
+                  <AdminButton size="md" className="!h-11 !text-[13.5px]" pending={busy === "conf-sms"} onClick={() => void confirmationSent("sms")}>{t("work.channel.sms")}</AdminButton>
+                </div>
+              </div>
             </section>
           ) : null}
 

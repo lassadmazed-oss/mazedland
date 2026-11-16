@@ -35,6 +35,19 @@ export const ASK_AR =
 export const ASK_FR =
   "Bonjour {name}, souhaitez-vous que nous publiions votre annonce {deal} ({property}) gratuitement sur Mazed Immo ? Si oui, répondez « oui » en nous disant si vous êtes le propriétaire ou son mandataire, acceptez les conditions d'utilisation ({terms}) et autorisez-nous à utiliser les photos de votre publication. Sinon, répondez « non » et nous ne vous écrirons plus.";
 
+// After a yes given BY PHONE (2026-11-16): the owner is called first, because a WhatsApp is read hours later.
+// What is sent afterwards is not a question any more: it writes down what was agreed, with the terms, so the
+// owner has it in writing and can still say no. Same holes as the first message.
+export const CONFIRM_AR =
+  "عسلامة {name}، معاك فريق مازد إيمو (Mazed Immo) 🏡\n\n" +
+  "كيما اتفقنا في التليفون، باش ننشروا إعلانك {deal} ({property}) على مازد إيمو ببلاش، مع تصاور البوست متاعك.\n\n" +
+  "باش يكون عندك الاتفاق مكتوب: بالنشر، إنت تؤكّد إنك المالك ولا الوكيل وتقبل شروط الاستعمال ({terms}).\n\n" +
+  "كان فما معلومة غالطة، ولا ما عادش تحب ننشروه، جاوبنا «لا» وما ننشروش شي.\n\n" +
+  "نبعثولك رابط إعلانك كيف يتنشر. يعيشك {name}!";
+
+export const CONFIRM_FR =
+  "Bonjour {name}, comme convenu au téléphone, nous publions votre annonce {deal} ({property}) gratuitement sur Mazed Immo, avec les photos de votre publication. Pour garder l'accord par écrit : en nous laissant publier, vous confirmez être le propriétaire ou son mandataire et vous acceptez les conditions d'utilisation ({terms}). Si une information est fausse, ou si vous ne souhaitez plus la publication, répondez « non » et nous ne publierons rien. Nous vous envoyons le lien de votre annonce dès qu'elle est en ligne.";
+
 // An agency is not an owner: nothing is published for it, it is invited to open an agence of its own.
 // The offer's numbers are not written here: the page the link opens shows them, with the places left.
 // The Arabic one is the owner's wording too (2026-11-14), with the agency's name and the link as holes;

@@ -13,7 +13,7 @@
  */
 import type { SettingDef, ValueOf } from "./define";
 import { GA_ID_PATTERN } from "@/lib/analytics/ga";
-import { ASK_AGENCY_AR, ASK_AGENCY_FR, ASK_AR, ASK_FR, SMS_AR, SMS_FR } from "@/lib/prospection/templates";
+import { ASK_AGENCY_AR, ASK_AGENCY_FR, ASK_AR, ASK_FR, CONFIRM_AR, CONFIRM_FR, SMS_AR, SMS_FR } from "@/lib/prospection/templates";
 
 export const SETTINGS = {
   // ── Features: each one switched off disappears from the site and its API
@@ -335,6 +335,10 @@ export const SETTINGS = {
   // How many owners one member may write to in a day: the number the team
   // writes from is a private one, and a platform that sees a burst may block it.
   prospect_daily_cap: { group: "limits", type: "int", default: 30, min: 1, max: 500, unit: "per_day", choices: [10, 20, 30, 50, 100], href: "/admin/prospection" },
+  // The team of Mazed Immo publishes past an owner's free places (2026-11-16): its members are staff with an admin
+  // account, not sellers. Off: only the whole-console admin does, a member is held to the owner's places (402).
+  // The moderation is unchanged either way: an annonce still waits for an admin when auto-publication is off.
+  prospect_team_unlimited: { group: "limits", type: "bool", default: true, href: "/admin/prospection" },
   // « Confirmé par l'équipe Mazed » on an annonce the team confirmed with its owner.
   prospect_show_badge: { group: "publication", type: "bool", default: true, client: true, href: "/admin/prospection" },
   // The number an owner can call about their annonce (the SMS carries it); the WhatsApp contact when empty.
@@ -344,6 +348,8 @@ export const SETTINGS = {
   prospect_ask_fr: { group: "publication", type: "text", default: ASK_FR, max: 800, multiline: true, href: "/admin/prospection" },
   prospect_ask_agency_ar: { group: "publication", type: "text", default: ASK_AGENCY_AR, max: 900, multiline: true, href: "/admin/prospection" },
   prospect_ask_agency_fr: { group: "publication", type: "text", default: ASK_AGENCY_FR, max: 900, multiline: true, href: "/admin/prospection" },
+  prospect_confirm_ar: { group: "publication", type: "text", default: CONFIRM_AR, max: 900, multiline: true, href: "/admin/prospection" },
+  prospect_confirm_fr: { group: "publication", type: "text", default: CONFIRM_FR, max: 900, multiline: true, href: "/admin/prospection" },
   prospect_sms_ar: { group: "publication", type: "text", default: SMS_AR, max: 400, multiline: true, href: "/admin/prospection" },
   prospect_sms_fr: { group: "publication", type: "text", default: SMS_FR, max: 400, multiline: true, href: "/admin/prospection" },
   ai_daily_budget_usd: { group: "social", type: "number", default: 2, min: 0, max: 100, step: 0.5 },

@@ -49,6 +49,18 @@ export const EVENT_KINDS = [
 ] as const;
 export type EventKind = (typeof EVENT_KINDS)[number];
 
+/**
+ * The note of the event that says the written confirmation of a phone yes was
+ * sent. It is a « note » event (no new kind, no migration) with the channel it
+ * went by; the screens show it under its own name through `shownKind`.
+ */
+export const CONFIRMATION_SENT = "confirmation_sent";
+
+/** The label key of an event: a « note » carrying CONFIRMATION_SENT reads as its own kind. */
+export function shownKind(kind: string, note: string | null | undefined): string {
+  return kind === "note" && note === CONFIRMATION_SENT ? CONFIRMATION_SENT : kind;
+}
+
 export function isStatus(v: unknown): v is LeadStatus {
   return typeof v === "string" && (LEAD_STATUSES as readonly string[]).includes(v);
 }

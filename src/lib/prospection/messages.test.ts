@@ -76,7 +76,7 @@ describe("Prospection messages", () => {
   it("escapes the {holes} of a message in the settings hints, so the console can print them", () => {
     for (const msgs of [fr, ar]) {
       const reg = (msgs as unknown as { settingsRegistry: Record<string, { hint: string }> }).settingsRegistry;
-      for (const key of ["prospect_ask_ar", "prospect_ask_fr", "prospect_ask_agency_ar", "prospect_ask_agency_fr", "prospect_sms_ar", "prospect_sms_fr"]) {
+      for (const key of ["prospect_ask_ar", "prospect_ask_fr", "prospect_ask_agency_ar", "prospect_ask_agency_fr", "prospect_confirm_ar", "prospect_confirm_fr", "prospect_sms_ar", "prospect_sms_fr"]) {
         // An unquoted {name} would be read as an argument nobody passes.
         expect(reg[key].hint.replace(/'\{\w+\}'/g, "")).not.toMatch(/\{\w+\}/);
       }

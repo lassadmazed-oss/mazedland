@@ -31,13 +31,18 @@ const pLog = log.scope("prospection");
 
 // ── What was done ───────────────────────────────────────────────────────────
 
-/** The contacts a member made today (the daily cap counts these). */
+/**
+ * The messages a member sent today (the daily cap counts these). A phone call
+ * is not one: the cap protects the number the team writes from, and a call
+ * cannot get a number blocked (2026-11-16: the team calls first).
+ */
 export async function contactsToday(admin: Admin, actorId: string): Promise<number> {
   const { count } = await admin
     .from("prospect_events")
     .select("id", { count: "exact", head: true })
     .eq("actor_id", actorId)
     .eq("kind", "contacted")
+    .or("channel.is.null,channel.neq.call")
     .gte("created_at", startOfTunisiaDay());
   return count ?? 0;
 }
@@ -485,6 +490,22 @@ export async function askMessage(lead: LeadRow, origin: string): Promise<string>
     name: lead.poster_name,
     property: propertyLine(readDraft(lead.draft)),
     deal: dealWord(readDraft(lead.draft).deal, lead.language),
+    terms: `${origin}/${lead.language}/terms`,
+  });
+}
+
+/**
+ * The message sent AFTER the owner said yes by phone: it writes the agreement
+ * down (the publication, who they are to the property, the terms) so the owner
+ * has it in writing and can still say no.
+ */
+export async function confirmMessage(lead: LeadRow, origin: string): Promise<string> {
+  const s = await getSettings();
+  const draft = readDraft(lead.draft);
+  return fillTemplate(lead.language === "fr" ? s.prospect_confirm_fr : s.prospect_confirm_ar, {
+    name: lead.poster_name,
+    property: propertyLine(draft),
+    deal: dealWord(draft.deal, lead.language),
     terms: `${origin}/${lead.language}/terms`,
   });
 }

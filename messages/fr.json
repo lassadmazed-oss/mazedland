@@ -6411,6 +6411,10 @@
       "label": "Premiers messages par membre et par jour",
       "hint": "Le numéro depuis lequel l'équipe écrit est un numéro privé : une plateforme qui voit une rafale de messages à des inconnus peut le bloquer. Au-delà, le membre attend le lendemain."
     },
+    "prospect_team_unlimited": {
+      "label": "L'équipe publie au-delà de la limite du propriétaire",
+      "hint": "Les comptes de l'équipe (admins de Prospection) peuvent publier pour un propriétaire plus que ses deux annonces gratuites : c'est l'équipe de Mazed Immo, pas un vendeur. La modération ne change pas : l'annonce attend un admin tant que la publication automatique est coupée. Coupé : le membre s'arrête à la limite du propriétaire, seul l'admin principal la dépasse."
+    },
     "prospect_show_badge": {
       "label": "« Confirmée par l'équipe Mazed » sur l'annonce",
       "hint": "Une pastille sur les annonces que l'équipe a confirmées avec leur propriétaire."
@@ -6426,6 +6430,14 @@
     "prospect_ask_fr": {
       "label": "Premier message au propriétaire (français)",
       "hint": "Il demande l'accord. Trous : '{name}' '{property}' '{deal}' '{terms}'. Il dit tout ce que le « oui » couvre : la publication, qui répond (propriétaire ou mandataire, dit dans sa réponse), les conditions, les photos du post."
+    },
+    "prospect_confirm_ar": {
+      "label": "Message de confirmation après un « oui » au téléphone (arabe)",
+      "hint": "Envoyé après le « oui » du propriétaire au téléphone, pour que l'accord soit écrit chez lui, avec les conditions. Trous : '{name}' '{property}' '{deal}' '{terms}'."
+    },
+    "prospect_confirm_fr": {
+      "label": "Message de confirmation après un « oui » au téléphone (français)",
+      "hint": "Envoyé après le « oui » du propriétaire au téléphone, pour que l'accord soit écrit chez lui, avec les conditions. Trous : '{name}' '{property}' '{deal}' '{terms}'."
     },
     "prospect_sms_ar": {
       "label": "SMS une fois l'annonce en ligne (arabe)",
@@ -8354,13 +8366,15 @@
       "description": "Description",
       "save": "Enregistrer",
       "sourceText": "Le texte du post",
-      "contactTitle": "Écrire au propriétaire",
-      "contactHint": "Envoyez ce message tel quel : il dit tout ce que son « oui » couvre. Une personne l'envoie, pas un robot.",
+      "contactTitle": "Appeler le propriétaire",
+      "contactHint": "Appelez-le d'abord : bien plus rapide qu'un WhatsApp lu des heures plus tard. S'il dit oui, notez-le à l'étape suivante, puis envoyez-lui le message de confirmation. S'il ne répond pas, envoyez-lui le message ci-dessous tel quel.",
+      "callFirst": "L'appeler maintenant",
+      "noAnswerMsg": "S'il ne répond pas, envoyez-lui ce message (par SMS s'il n'a pas WhatsApp) :",
       "openWhatsapp": "Ouvrir WhatsApp",
       "openSms": "Ouvrir les SMS",
       "copy": "Copier le message",
       "noPhone": "Il manque le téléphone : demandez-le par Messenger, puis saisissez-le plus haut.",
-      "markContacted": "J'ai écrit",
+      "markContacted": "Je l'ai appelé ou écrit",
       "contactsLeft": "Encore {n} messages aujourd'hui",
       "channel": {
         "label": "Par",
@@ -8383,7 +8397,7 @@
       "sureDnc": "Ce numéro ne sera plus jamais contacté. Appuyez encore pour confirmer.",
       "sureAgain": "Confirmer",
       "yesTitle": "Il a dit oui",
-      "yesHint": "Collez sa réponse mot pour mot : c'est la preuve de son accord. Vérifiez qu'il dit s'il est le propriétaire ou le mandataire. Le site crée son compte à son numéro et met l'annonce dedans, sans la publier.",
+      "yesHint": "S'il a répondu par écrit, collez sa réponse mot pour mot. S'il a dit oui par téléphone, écrivez avec ses mots ce qu'il a dit (qu'il est le propriétaire ou le mandataire, qu'il est d'accord pour la publication) et choisissez « Appel » : vous lui enverrez ensuite un message de confirmation écrit. Le site crée son compte à son numéro et met l'annonce dedans, sans la publier.",
       "reply": "Sa réponse",
       "yesButton": "Il a dit oui",
       "missing": "Il manque :",
@@ -8399,6 +8413,12 @@
         "no_channel": "le canal de sa réponse",
         "is_agency": "c'est une agence : rien n'est publié pour elle"
       },
+      "confirmMsgTitle": "Message de confirmation",
+      "confirmMsgHint": "Il a dit oui par téléphone : envoyez-lui ce message pour que l'accord soit écrit chez lui (avec les conditions). Vous pouvez l'envoyer et ajouter les photos en attendant sa réponse.",
+      "confirmSentDone": "Le message de confirmation a été envoyé.",
+      "confirmSentLabel": "Je l'ai envoyé par :",
+      "confirmSentSaved": "Envoi du message de confirmation enregistré.",
+      "noWhatsappHint": "Si le numéro n'est pas sur WhatsApp (le bouton s'ouvre sans le dire), envoyez-le par SMS.",
       "photosTitle": "Photos et publication",
       "photosHint": "Au moins {min} photos, de préférence celles que le propriétaire envoie lui-même par WhatsApp. Celles de son post seulement si son « oui » les couvre et qu'elles sont propres.",
       "proof": "Son accord, noté par {by}",
@@ -8440,7 +8460,8 @@
       },
       "event": {
         "created": "Fiche créée",
-        "contacted": "Message envoyé",
+        "contacted": "Contacté",
+        "confirmation_sent": "Confirmation envoyée",
         "no_answer": "Pas de réponse",
         "thinking": "Il réfléchit",
         "refused": "A refusé",
@@ -8519,14 +8540,14 @@
       "stepsLabel": "Étapes",
       "steps": {
         "draft": "L'annonce",
-        "write": "Lui écrire",
+        "write": "L'appeler",
         "yes": "Il a dit oui",
         "publish": "Photos et mise en ligne",
         "agency": "L'agence"
       },
       "stepHint": {
         "draft": "Vérifiez l'annonce : la catégorie, le gouvernorat, le prix et le titre.",
-        "write": "Envoyez-lui le message, puis notez sa réponse.",
+        "write": "Appelez-le ; s'il ne répond pas, envoyez-lui le message. Puis notez sa réponse.",
         "yes": "Quand il dit oui, collez sa réponse ici.",
         "publish": "Ajoutez les photos, vérifiez-les, puis publiez.",
         "agency": "Vérifiez qui c'est : une agence, pas un propriétaire.",
@@ -8541,7 +8562,7 @@
       "lockedPublish": "Il faut d'abord le « oui » du propriétaire.",
       "goYes": "Aller à « Il a dit oui »",
       "doneYes": "Son accord est noté.",
-      "nextYes": "Il a répondu oui",
+      "nextYes": "Il a dit oui",
       "historyCount": "Historique ({n})",
       "kind": {
         "label": "Qui a publié ce post ?",

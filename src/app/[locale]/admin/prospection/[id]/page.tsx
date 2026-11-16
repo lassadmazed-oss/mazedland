@@ -9,8 +9,8 @@ import { categoryLabel } from "@/lib/i18n";
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ChevronLeft } from "lucide-react";
-import { contactsLeft, propertyLine, readDraft } from "@/lib/prospection/model";
-import { askMessage, contactsToday, leadWarnings, loadOwnLead, syncLeadWithListing } from "@/lib/prospection/server";
+import { CONFIRMATION_SENT, contactsLeft, propertyLine, readDraft, shownKind } from "@/lib/prospection/model";
+import { askMessage, confirmMessage, contactsToday, leadWarnings, loadOwnLead, syncLeadWithListing } from "@/lib/prospection/server";
 import { LeadWorkspace, type WorkspaceEvent } from "../LeadWorkspace";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host") ?? "www.mazed.immo"}`;
   const settings = await getSettings();
 
-  const [{ data: eventRows }, { data: listing }, { data: photoRows }, warnings, { data: members }, { data: catRows }, made, ask] = await Promise.all([
+  const [{ data: eventRows }, { data: listing }, { data: photoRows }, warnings, { data: members }, { data: catRows }, made, ask, confirmMsg] = await Promise.all([
     admin.from("prospect_events").select("id, kind, channel, note, actor_id, created_at").eq("lead_id", id).order("created_at", { ascending: false }).limit(100),
     lead.listing_id ? admin.from("listings").select("id, status").eq("id", lead.listing_id).maybeSingle() : Promise.resolve({ data: null }),
     lead.listing_id ? admin.from("listing_photos").select("storage_path, sort_order").eq("listing_id", lead.listing_id).order("sort_order") : Promise.resolve({ data: [] }),
@@ -49,6 +49,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
     admin.from("categories").select("slug, label_fr, label_ar, kind, parent_id").eq("is_active", true),
     contactsToday(admin, user.id),
     askMessage(lead, origin),
+    confirmMessage(lead, origin),
   ]);
 
   const names = new Map<string, string>();
@@ -61,9 +62,9 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
 
   const events: WorkspaceEvent[] = (eventRows ?? []).map((e) => ({
     id: e.id as string,
-    kind: e.kind as string,
+    kind: shownKind(e.kind as string, (e.note as string | null) ?? null),
     channel: (e.channel as string | null) ?? null,
-    note: (e.note as string | null) ?? null,
+    note: (e.note as string | null) === CONFIRMATION_SENT ? null : (e.note as string | null) ?? null,
     by: e.actor_id ? names.get(e.actor_id as string) ?? "—" : null,
     at: e.created_at as string,
   }));
@@ -89,6 +90,8 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           followUpAt: lead.follow_up_at,
           outcome: lead.outcome,
           confirmationText: lead.confirmation_text,
+          confirmationChannel: lead.confirmation_channel,
+          confirmationSent: (eventRows ?? []).some((e) => e.kind === "note" && e.note === CONFIRMATION_SENT),
           confirmedAt: lead.confirmed_at,
           confirmedBy: lead.confirmed_by ? names.get(lead.confirmed_by) ?? null : null,
           listingId: lead.listing_id,
@@ -102,8 +105,9 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         events={events}
         warnings={warnings}
         ask={ask}
+        confirmMsg={confirmMsg}
         canAssign={everyone}
-        unlimited={everyone}
+        unlimited={everyone || settings.prospect_team_unlimited}
         members={everyone ? [...names.entries()].map(([mid, name]) => ({ id: mid, name })) : []}
         categories={(catRows ?? [])
           .filter((c) => c.parent_id != null)
