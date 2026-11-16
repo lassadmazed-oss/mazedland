@@ -8,7 +8,7 @@ import { jsonObject } from "@/lib/http/body";
 import { logAction } from "@/lib/activity";
 import { TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
 import {
-  contactsLeft, isChannel, normalizePhone, readDraft, statusAfter, type EventKind,
+  CONFIRMATION_SENT, contactsLeft, isChannel, normalizePhone, readDraft, statusAfter, type EventKind,
 } from "@/lib/prospection/model";
 import {
   addDoNotContact, addEvent, contactsToday, isDoNotContact, loadOwnLead, syncDraftToListing,
@@ -21,6 +21,7 @@ import {
  *   { action: "contacted", channel }                 — wrote to the owner (counts against the daily cap)
  *   { action: "result", kind, note?, follow_up_at? } — no_answer | thinking | interested (an agency) | refused | wrong_number
  *   { action: "note", note }
+ *   { action: "confirmation_sent", channel }         — the written confirmation of a phone yes was sent (whatsapp | sms | other)
  *   { action: "reopen" }                             — a declined lead back to « à contacter »
  *
  * A refusal or a wrong number puts the number on the « ne pas contacter » list.
@@ -52,12 +53,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!isChannel(body.channel)) return NextResponse.json({ error: "bad_channel" }, { status: 400 });
     if (!lead.phone) return NextResponse.json({ error: "no_phone" }, { status: 409 });
     if (await isDoNotContact(admin, lead.phone)) return NextResponse.json({ error: "do_not_contact" }, { status: 409 });
+    // A call is not counted: the cap is for the messages sent from the team's number.
+    const isCall = body.channel === "call";
     const cap = (await getSettings()).prospect_daily_cap;
     const done = await contactsToday(admin, actor);
-    if (contactsLeft(cap, done) === 0) return NextResponse.json({ error: "daily_cap", cap }, { status: 429 });
+    if (!isCall && contactsLeft(cap, done) === 0) return NextResponse.json({ error: "daily_cap", cap }, { status: 429 });
     await addEvent(admin, id, actor, "contacted", { channel: body.channel });
     await admin.from("prospect_leads").update({ status: statusAfter(lead.status, "contacted"), assigned_to: lead.assigned_to ?? actor }).eq("id", id);
-    return NextResponse.json({ ok: true, left: contactsLeft(cap, done + 1) });
+    return NextResponse.json({ ok: true, left: contactsLeft(cap, isCall ? done : done + 1) });
+  }
+
+  // The message that writes down a yes given by phone was sent (WhatsApp, or SMS when the owner has no WhatsApp).
+  if (action === "confirmation_sent") {
+    if (lead.status !== "confirmed") return NextResponse.json({ error: "wrong_step" }, { status: 409 });
+    if (body.channel !== "whatsapp" && body.channel !== "sms" && body.channel !== "other") return NextResponse.json({ error: "bad_channel" }, { status: 400 });
+    await addEvent(admin, id, actor, "note", { channel: body.channel, note: CONFIRMATION_SENT });
+    return NextResponse.json({ ok: true });
   }
 
   if (action === "result") {

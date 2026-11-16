@@ -103,9 +103,14 @@ describe("takePlaceBeyondLimit", () => {
 describe("who is held to the limit", () => {
   const read = (rel: string) => fs.readFileSync(path.join(process.cwd(), rel), "utf8");
 
-  it("the publish route lifts it for the whole-console admin only", () => {
+  it("the publish route lifts it for the whole-console admin, and for the team while « prospect_team_unlimited » is on", () => {
     const src = read("src/app/api/admin/prospection/leads/[id]/publish/route.ts");
-    expect(src).toMatch(/unlimited:\s*gate\.scopes === null/);
+    expect(src).toMatch(/unlimited:\s*gate\.scopes === null \|\| \(await getSettings\(\)\)\.prospect_team_unlimited/);
+  });
+
+  it("the lead page tells the team the same thing the route does", () => {
+    const src = read("src/app/[locale]/admin/prospection/[id]/page.tsx");
+    expect(src).toMatch(/unlimited=\{everyone \|\| settings\.prospect_team_unlimited\}/);
   });
 
   it("only the Prospection publication may claim a place with no count", () => {

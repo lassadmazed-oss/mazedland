@@ -3,7 +3,7 @@ import { canOpen, scopesFromRow } from "@/lib/admin/sections";
 import { log } from "@/lib/log";
 import { getSettings } from "@/lib/settings/server";
 import {
-  countFigures, dayBounds, dayLabel, propertyLine, readDraft, reportText, startOfTunisiaDay, tunisiaDay, tunisiaHour,
+  countFigures, dayBounds, dayLabel, propertyLine, readDraft, reportText, shownKind, startOfTunisiaDay, tunisiaDay, tunisiaHour,
   type ReportRow,
 } from "./model";
 
@@ -93,7 +93,7 @@ export async function dayReport(admin: Admin, day: string, until?: Date): Promis
   return {
     day,
     rows,
-    events: events.map((e) => ({ id: e.id, leadId: e.lead_id, kind: e.kind, channel: e.channel, note: e.note, actorId: e.actor_id, at: e.created_at, title: titles.get(e.lead_id) ?? "—" })),
+    events: events.map((e) => ({ id: e.id, leadId: e.lead_id, kind: shownKind(e.kind, e.note), channel: e.channel, note: e.note, actorId: e.actor_id, at: e.created_at, title: titles.get(e.lead_id) ?? "—" })),
   };
 }
 
