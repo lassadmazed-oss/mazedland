@@ -3653,6 +3653,8 @@
     "admin_shop_reinstate": "Agence rouverte",
     "admin_shop_verify": "Agence vérifiée",
     "admin_shop_unverify": "Vérification retirée",
+    "admin_shop_licence_verify": "Licence d'agence contrôlée",
+    "admin_shop_licence_unverify": "Contrôle de la licence retiré",
     "legal_docs_update": "Documents légaux modifiés",
     "settings_update": "Réglages modifiés",
     "listing_edit": "Annonce modifiée",
@@ -4482,6 +4484,7 @@
     "documents": {
       "rne": "Extrait RNE",
       "patente": "Patente",
+      "licence": "Agrément du ministère du Commerce",
       "identity": "Pièce d'identité du gérant",
       "other": "Autre document"
     },
@@ -4551,6 +4554,8 @@
       "hoursPlaceholder": "Lun–Sam, 9h–18h",
       "legalName": "Raison sociale",
       "legalId": "Matricule fiscal / RNE",
+      "licenceNumber": "Numéro de l'agrément du ministère du Commerce",
+      "licenceHint": "Une agence immobilière a besoin de l'agrément du ministère du Commerce. Écrivez son numéro et envoyez la photo de l'agrément dans l'onglet « Documents » : l'équipe Mazed Immo le contrôle et votre page affiche « Agence agréée ».",
       "slug": "Adresse de la page",
       "slugHint": "Lettres minuscules, chiffres et tirets. Changer l'adresse casse les liens déjà partagés.",
       "legalHint": "La raison sociale et le matricule ne sont pas publiés : ils servent à vérifier l'agence.",
@@ -5056,6 +5061,9 @@
       "alreadyMember": "Cette personne fait déjà partie de l'agence.",
       "slug": "Adresse invalide : 3 à 60 lettres minuscules, chiffres ou tirets.",
       "slugTaken": "Cette adresse est déjà prise.",
+      "licence": "Indiquez le numéro de l'agrément du ministère du Commerce : une agence immobilière en a besoin.",
+      "licenceAgencyOnly": "L'agrément ne concerne que les agences immobilières.",
+      "licenceMissing": "Cette agence n'a pas indiqué de numéro d'agrément : il n'y a rien à contrôler.",
       "notApproved": "Une agence refusée ou suspendue ne peut pas souscrire d'abonnement.",
       "plan": "Abonnement inconnu.",
       "planRequired": "L'agence n'a pas encore réglé son abonnement : elle s'ouvre une fois le paiement validé.",
@@ -5144,6 +5152,8 @@
       "rent": "À louer"
     },
     "noListings": "Aucune annonce en ligne pour le moment.",
+    "licensed": "Agence agréée",
+    "licensedMeans": "« Agence agréée » : l'équipe Mazed Immo a contrôlé l'agrément du ministère du Commerce de cette agence (n° {number}).",
     "verifiedMeans": "« Vérifiée » : l'équipe Mazed Immo a contrôlé les documents de l'entreprise (RNE ou patente).",
     "notVerifiedMeans": "Les documents de cette agence n'ont pas encore été contrôlés par Mazed Immo.",
     "projects": {
@@ -5204,6 +5214,16 @@
     "verifiedDone": "Agence vérifiée.",
     "unverify": "Retirer la vérification",
     "unverified": "Vérification retirée.",
+    "licenceTitle": "Agrément du ministère du Commerce",
+    "licenceNumber": "Numéro : {number}",
+    "licenceNone": "Aucun numéro d'agrément indiqué.",
+    "licenceCheckedOn": "Contrôlé le {date}",
+    "licenceNotChecked": "Pas encore contrôlé",
+    "licenceVerify": "J'ai contrôlé l'agrément",
+    "licenceVerifiedDone": "Agrément contrôlé : la page affiche « Agence agréée ».",
+    "licenceUnverify": "Retirer le contrôle de l'agrément",
+    "licenceUnverified": "Contrôle de l'agrément retiré.",
+    "licenceDocHint": "Comparez le numéro au document envoyé (type « Agrément ») avant de contrôler.",
     "rejectTitle": "Refuser cette agence ?",
     "suspendTitle": "Suspendre cette agence ?",
     "reasonBody": "Le motif est envoyé au propriétaire de l'agence.",
@@ -6038,6 +6058,10 @@
     "feature_pro_signup_plan": {
       "label": "Agence et abonnement en une demande",
       "hint": "Ouvrir une agence demande aussi son abonnement et le reçu du paiement, envoyés ensemble ; la console accepte et ouvre en une fois, ou refuse en disant ce que devient le paiement. Coupé : l'agence d'abord, l'abonnement ensuite."
+    },
+    "shop_licence_required": {
+      "label": "Numéro d'agrément obligatoire pour une agence",
+      "hint": "Une agence immobilière a besoin de l'agrément du ministère du Commerce. Activé : une agence ne peut pas envoyer sa demande sans le numéro. Coupé : le numéro est demandé mais peut rester vide. Dans tous les cas, « Agence agréée » ne s'affiche qu'une fois le numéro contrôlé par la console."
     },
     "pro_signup_pay_later": {
       "label": "« Envoyer sans payer » (offre de lancement)",

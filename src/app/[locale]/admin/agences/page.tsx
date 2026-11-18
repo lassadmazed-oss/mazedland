@@ -245,6 +245,17 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
           {row(t("place"), `${shop.city ? `${shop.city}, ` : ""}${governorateLabel(shop.governorate, locale)}`)}
           {row(t("contacts"), [shop.phone, shop.email, shop.website].filter(Boolean).join(" · ") || "—")}
           {row(t("legal"), [shop.legal_name, shop.legal_id].filter(Boolean).join(" · ") || "—")}
+          {shop.kind === "agency" && row(
+            t("licenceTitle"),
+            shop.licence_number ? (
+              <>
+                <Ltr>{shop.licence_number}</Ltr>
+                <span className="ms-2 text-muted">{shop.licence_checked_at ? t("licenceCheckedOn", { date: formatDate(shop.licence_checked_at, locale, "medium") }) : t("licenceNotChecked")}</span>
+              </>
+            ) : (
+              t("licenceNone")
+            ),
+          )}
           {row(t("plan"), plan ? t("planValue", { name: plan.name, used: live, quota: plan.quota, date: formatDate(plan.endsAt, locale, "medium") }) : t("noPlan"))}
           {pay && row(
             t("subscription"),
@@ -284,6 +295,7 @@ export default async function AdminShopsPage({ searchParams }: { searchParams: P
             shopId={shop.id}
             status={shop.status}
             verified={!!shop.verified_at}
+            licence={shop.kind === "agency" ? { number: shop.licence_number, checked: !!shop.licence_checked_at } : null}
             plans={offerPlans}
             offerMonths={settings.founding_offer_months}
             seats={{ left: seats.left, total: seats.total }}

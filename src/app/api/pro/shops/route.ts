@@ -73,6 +73,10 @@ export async function POST(req: NextRequest) {
   const body = await jsonObject(req);
   const parsed = parseShopInput(body, user.id);
   if (!parsed.ok) return NextResponse.json({ error: "invalid", detail: t(`errors.${parsed.error}`) }, { status: 400 });
+  // Réglages may ask an agency for the number of its licence (the ministry's agrément) before it can ask for its page.
+  if (settings.shop_licence_required && parsed.value.kind === "agency" && !parsed.value.licence_number) {
+    return NextResponse.json({ error: "invalid", detail: t("errors.licence") }, { status: 400 });
+  }
 
   // The plan and its receipt, checked before anything is written: a request
   // refused here leaves no agence behind.

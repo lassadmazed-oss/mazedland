@@ -36,6 +36,7 @@ type Shop = {
   id: string; slug: string; name: string; kind: string; description: string | null; logo_path: string | null; cover_path: string | null;
   governorate: string; city: string | null; phone: string | null; email: string | null; website: string | null; hours: string | null;
   verified_at: string | null; created_at?: string | null;
+  licence_number: string | null; licence_checked_at: string | null;
 };
 
 async function loadShop(slug: string): Promise<Shop | null> {
@@ -43,7 +44,7 @@ async function loadShop(slug: string): Promise<Shop | null> {
   if (!admin || !/^[a-z0-9-]{3,60}$/.test(slug)) return null;
   const { data } = await admin
     .from("shops")
-    .select("id, slug, name, kind, description, logo_path, cover_path, governorate, city, phone, email, website, hours, verified_at, created_at")
+    .select("id, slug, name, kind, description, logo_path, cover_path, governorate, city, phone, email, website, hours, verified_at, created_at, licence_number, licence_checked_at")
     .eq("slug", slug)
     .eq("status", "approved")
     .maybeSingle();
@@ -245,6 +246,11 @@ export async function ShopView({ slug, locale, view }: { slug: string; locale: s
                     <BadgeCheck className="size-3.5" strokeWidth={2.4} aria-hidden /> {t("verified")}
                   </span>
                 )}
+                {shop.licence_checked_at && shop.licence_number && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold text-[var(--background)]">
+                    <BadgeCheck className="size-3.5" strokeWidth={2.4} aria-hidden /> {t("licensed")}
+                  </span>
+                )}
               </h1>
               <p className="mt-1 text-[13.5px] text-muted">
                 {tKinds(shop.kind)} · {place}
@@ -404,6 +410,9 @@ export async function ShopView({ slug, locale, view }: { slug: string; locale: s
               {shop.hours && <li className="flex items-center gap-2.5 text-foreground"><Clock className="size-4 shrink-0 text-muted" aria-hidden /> <span dir="auto">{shop.hours}</span></li>}
             </ul>
             <p className="px-1 text-[11.5px] leading-snug text-muted">{shop.verified_at ? t("verifiedMeans") : t("notVerifiedMeans")}</p>
+            {shop.licence_checked_at && shop.licence_number ? (
+              <p className="px-1 text-[11.5px] leading-snug text-muted">{t("licensedMeans", { number: shop.licence_number })}</p>
+            ) : null}
           </aside>
         </div>
       </div>

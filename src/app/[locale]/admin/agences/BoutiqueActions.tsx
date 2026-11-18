@@ -27,11 +27,13 @@ import { REFUSAL_OUTCOMES, type RefusalOutcome } from "@/lib/pro/agenceRequest";
  * agence is gone.
  */
 export function BoutiqueActions({
-  shopId, status, verified, plans, offerMonths, seats, request, listings = 0,
+  shopId, status, verified, licence = null, plans, offerMonths, seats, request, listings = 0,
 }: {
   shopId: string;
   status: string;
   verified: boolean;
+  /** An agency's licence: the number it gave and whether it has been checked (null for any other kind). */
+  licence?: { number: string | null; checked: boolean } | null;
   plans: { id: string; label: string }[];
   offerMonths: number;
   /** The founding places the console has not yet given a free period to. */
@@ -104,6 +106,16 @@ export function BoutiqueActions({
       >
         {t(verified ? "unverify" : "verify")}
       </AdminButton>
+      {licence && (licence.number || licence.checked) ? (
+        <AdminButton
+          pending={pending}
+          icon={<BadgeCheck className="size-3.5" />}
+          onClick={() => act(licence.checked ? "licence_unverify" : "licence_verify", t(licence.checked ? "licenceUnverified" : "licenceVerifiedDone"))}
+          title={licence.checked ? undefined : t("licenceDocHint")}
+        >
+          {t(licence.checked ? "licenceUnverify" : "licenceVerify")}
+        </AdminButton>
+      ) : null}
       {(status === "pending" || status === "approved") && plans.length > 0 && (
         <AdminButton pending={pending} icon={<Gift className="size-3.5" />} onClick={() => setOffering(true)}>
           {t("offerPlan")}

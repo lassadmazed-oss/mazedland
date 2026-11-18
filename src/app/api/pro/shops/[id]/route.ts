@@ -41,11 +41,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!update.logo_path) delete update.logo_path;
   if (!update.cover_path) delete update.cover_path;
 
-  const { data: stored } = await admin.from("shops").select("slug, name, legal_name, legal_id, verified_at, status, rejection_reason").eq("id", id).maybeSingle();
+  const { data: stored } = await admin.from("shops").select("slug, name, legal_name, legal_id, licence_number, licence_checked_at, verified_at, status, rejection_reason").eq("id", id).maybeSingle();
   const changed = stored?.verified_at ? IDENTITY.filter((k) => (stored[k] ?? null) !== (parsed.value[k] ?? null)) : [];
   if (changed.length > 0) {
     update.verified_at = null;
     update.verified_by = null;
+  }
+  // « Agence agréée » vouches for ONE licence number: another number (or none) is a licence nobody has looked at.
+  if (stored?.licence_checked_at && (stored.licence_number ?? null) !== (parsed.value.licence_number ?? null)) {
+    update.licence_checked_at = null;
+    update.licence_checked_by = null;
   }
   // The console asked for a correction (« à corriger », the agence request):
   // saving is the answer, and the request goes back to the admins.
