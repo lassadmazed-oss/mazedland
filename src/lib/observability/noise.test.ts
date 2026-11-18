@@ -1,5 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { isForeignNoise, isForeignSource } from "./noise";
+import { isForeignNoise, isForeignSource, isStaleChunkInOptionalPart } from "./noise";
+
+describe("isStaleChunkInOptionalPart", () => {
+  const turbopack = "[bell] Failed to load chunk /_next/static/immutable/chunks/378lmdg6lzxra.js from module 788952";
+
+  it("drops the script an optional part lost to a deploy that went up while the page was open", () => {
+    expect(isStaleChunkInOptionalPart("optional-boundary", turbopack)).toBe(true);
+    expect(isStaleChunkInOptionalPart("optional-boundary", "[popups] Failed to load chunk /_next/static/immutable/chunks/17urnqmh903qw.js from module 281573")).toBe(true);
+    expect(isStaleChunkInOptionalPart("optional-boundary", "[bell] Loading chunk 123 failed.")).toBe(true);
+    expect(isStaleChunkInOptionalPart("optional-boundary", "[bell] ChunkLoadError: whatever")).toBe(true);
+  });
+
+  it("keeps the same message when it comes from anywhere a visitor may have seen something break", () => {
+    for (const kind of ["react-boundary", "unhandledrejection", "window.onerror", undefined]) {
+      expect(isStaleChunkInOptionalPart(kind, turbopack)).toBe(false);
+    }
+  });
+
+  it("keeps any other failure of an optional part, and anything that is not a message", () => {
+    expect(isStaleChunkInOptionalPart("optional-boundary", "[bell] TypeError: Cannot read properties of undefined (reading 'x')")).toBe(false);
+    expect(isStaleChunkInOptionalPart("optional-boundary", "[popups] Failed to load chunk from somewhere else")).toBe(false);
+    expect(isStaleChunkInOptionalPart("optional-boundary", undefined)).toBe(false);
+    expect(isStaleChunkInOptionalPart("optional-boundary", 42)).toBe(false);
+  });
+
+  it("is what the client-error sink applies", async () => {
+    const fs = await import("node:fs");
+    const src = fs.readFileSync("src/app/api/observability/client-error/route.ts", "utf8");
+    expect(src).toMatch(/isStaleChunkInOptionalPart\(body\.kind, body\.message\)/);
+  });
+});
 
 describe("isForeignSource", () => {
   it("drops the script a Facebook or Instagram in-app browser injects into the page", () => {

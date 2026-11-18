@@ -48,6 +48,23 @@ export function isForeignSource(source: unknown): boolean {
   return typeof source === "string" && /^iabjs:\/\//i.test(source);
 }
 
+/**
+ * A page that was open while a new version went up asks for a script of the old
+ * version, which is no longer there: « Failed to load chunk /_next/static/… »
+ * (Turbopack) or « Loading chunk 123 failed » (webpack). It happens to a few
+ * visitors after every deploy and fixes itself on the next load.
+ *
+ * Only when it comes from an <Optional> part of the page (the bell, the popups:
+ * kind « optional-boundary »): that part is simply left out and the page works,
+ * so nobody saw anything break. The same message from anywhere else (the page's own
+ * error screen, an unhandled rejection) is kept: there a visitor may have seen a
+ * broken page, and a real CDN failure would show up there too.
+ */
+export function isStaleChunkInOptionalPart(kind: unknown, message: unknown): boolean {
+  if (kind !== "optional-boundary" || typeof message !== "string") return false;
+  return /Failed to load chunk \/_next\/static\/|Loading chunk [\w-]+ failed|ChunkLoadError/i.test(message);
+}
+
 /** True when the message is browser or app noise that the error log should not keep. */
 export function isForeignNoise(message: unknown): boolean {
   if (typeof message !== "string") return false;
