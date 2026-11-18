@@ -8479,6 +8479,7 @@
         "columnsHint": "Les colonnes sont reconnues par leur nom en arabe, français ou anglais : nom, numéro, gouvernorat, délégation, adresse, site, facebook, e-mail, agréée. Le nom est obligatoire, et il faut un numéro, un site ou une page.",
         "chooseFile": "Choisir un fichier",
         "orPaste": "ou collez le tableau ici :",
+        "template": "Télécharger un modèle",
         "source": "Source",
         "sourceNote": "Note sur la source (facultatif)",
         "assignTo": "Responsable",

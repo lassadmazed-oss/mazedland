@@ -271,3 +271,26 @@ describe("the notes of a refusal", () => {
     expect(splitDeclineNote(null)).toEqual({ reason: null, text: null });
   });
 });
+
+describe("the CSV model the team fills (public/downloads/agences-modele.csv)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require("node:fs") as typeof import("node:fs");
+  const model = fs.readFileSync("public/downloads/agences-modele.csv", "utf8");
+
+  it("has a column for every thing the import reads, each one recognised", () => {
+    const r = readAgencyCsv(`${model}وكالة النجاح;98 765 432;صفاقس;الشرقية;شارع 1;www.najah.tn;https://www.facebook.com/najah;najah@example.tn;نعم`);
+    expect(r.problems).toEqual([]);
+    expect(r.columns.sort()).toEqual(["address", "city", "email", "facebook", "governorate", "licensed", "name", "phone", "website"]);
+    expect(r.rows[0]).toMatchObject({ name: "وكالة النجاح", phone: "+21698765432", governorate: "Sfax", website: "https://www.najah.tn", facebook_url: "https://www.facebook.com/najah", email: "najah@example.tn", licensed: true });
+  });
+
+  it("holds the header only: nothing is invented for a person to import by mistake", () => {
+    expect(readAgencyCsv(model).rows).toEqual([]);
+    expect(model.replace(/^\uFEFF/, "").trim().split(/\r?\n/)).toHaveLength(1);
+  });
+
+  it("reads the Arabic names with the article that people write (الموقع, البريد)", () => {
+    const r = readAgencyCsv("الاسم,الهاتف,الموقع,البريد\nA,98765432,a.tn,a@a.tn");
+    expect(r.rows[0]).toMatchObject({ website: "https://a.tn", email: "a@a.tn" });
+  });
+});

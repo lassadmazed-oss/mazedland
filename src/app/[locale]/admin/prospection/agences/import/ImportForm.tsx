@@ -82,6 +82,8 @@ export function ImportForm({ members }: { members: { id: string; name: string }[
           <input ref={fileRef} type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" className="hidden" onChange={(e) => void onFile(e.target.files?.[0])} />
           <AdminButton size="md" className="!h-11" onClick={() => fileRef.current?.click()}>{t("agencies.import.chooseFile")}</AdminButton>
           <span className="text-[12px] text-muted">{t("agencies.import.orPaste")}</span>
+          {/* The model the team (and the professional body) can fill: its columns are the ones read above. */}
+          <a href="/downloads/agences-modele.csv" download className="text-[12.5px] font-bold underline">{t("agencies.import.template")}</a>
         </div>
         <textarea
           value={csv}

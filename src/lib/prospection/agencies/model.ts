@@ -161,17 +161,17 @@ export function parseCsv(text: string): string[][] {
 
 const HEADERS: Record<string, string[]> = {
   name: ["name", "nom", "agence", "agency", "raisonsociale", "denomination", "اسم", "الاسم", "الوكالة", "اسمالوكالة"],
-  phone: ["phone", "telephone", "tel", "mobile", "gsm", "numero", "contact", "هاتف", "الهاتف", "رقمالهاتف", "نمرة", "تيليفون"],
+  phone: ["phone", "telephone", "tel", "mobile", "gsm", "numero", "contact", "هاتف", "الهاتف", "رقمالهاتف", "رقم", "الرقم", "نمرة", "النمرة", "تيليفون", "التيليفون"],
   phone2: ["phone2", "telephone2", "tel2", "mobile2", "autretelephone", "هاتف2"],
   governorate: ["governorate", "gouvernorat", "gov", "region", "ولاية", "الولاية"],
   city: ["city", "ville", "delegation", "commune", "معتمدية", "المعتمدية", "مدينة"],
   address: ["address", "adresse", "عنوان", "العنوان"],
-  website: ["website", "site", "siteweb", "url", "web", "موقع"],
+  website: ["website", "site", "siteweb", "url", "web", "موقع", "الموقع", "موقعالويب"],
   facebook: ["facebook", "fb", "pagefacebook", "فيسبوك"],
-  email: ["email", "mail", "courriel", "بريد"],
+  email: ["email", "mail", "courriel", "بريد", "البريد", "البريدالالكتروني", "الايميل"],
   legalId: ["legalid", "rne", "identifiantunique", "matriculefiscale", "mf", "iduniq", "idunique"],
-  licensed: ["licensed", "agree", "agreee", "agrement", "licence", "مرخصة", "رخصة"],
-  note: ["note", "remark", "remarque", "commentaire", "ملاحظة"],
+  licensed: ["licensed", "agree", "agreee", "agrement", "licence", "مرخصة", "مرخص", "رخصة", "الرخصة"],
+  note: ["note", "remark", "remarque", "commentaire", "ملاحظة", "ملاحظات", "الملاحظات"],
 };
 
 export type ParsedAgency = {
