@@ -8,6 +8,7 @@ import { formatDate, formatNumber } from "@/lib/utils";
 import { ChevronLeft } from "lucide-react";
 import { asDay, dayBounds, dayLabel, FIGURE_KINDS, lastDays, tunisiaDay } from "@/lib/prospection/model";
 import { dayReport } from "@/lib/prospection/report";
+import { AgencyDay } from "./AgencyDay";
 
 export const dynamic = "force-dynamic";
 
@@ -148,6 +149,8 @@ export default async function TeamReportPage({ searchParams }: { searchParams: P
           </div>
         </>
       )}
+
+      <AgencyDay admin={admin} day={day} locale={locale as "fr" | "ar"} />
 
       <p className="mt-6 text-[12px] text-muted">
         {t("report.notice")} <Link href="/admin/settings" className="font-bold underline">{t("report.settingsLink")}</Link>
