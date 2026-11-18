@@ -11,6 +11,7 @@ import { publishedGuides } from "@/lib/guides/server";
 import { HomeMap } from "@/components/landing/HomeMap";
 import { isRtl } from "@/lib/i18n";
 import { getHomeFeed } from "@/lib/home/feed";
+import { describePending } from "@/lib/home/pending";
 import { homeRailOptions, planHomeRails, splitAtMiddle, type HomeRail } from "@/lib/home/rails";
 import { getSettings } from "@/lib/settings/server";
 import { boardShown } from "@/lib/requests/board";
@@ -77,13 +78,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  */
 const HOME_DATA_BUDGET_MS = process.env.NODE_ENV === "production" ? 8000 : 2500;
 
-function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+function withTimeout<T>(p: Promise<T>, ms: number, describe?: () => string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   return Promise.race([
     p,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error("home_data_timeout")), ms),
-    ),
-  ]);
+    new Promise<T>((_, reject) => {
+      // The message starts with the name it always had; what follows says where it stood (see lib/home/pending.ts).
+      timer = setTimeout(() => reject(new Error(`home_data_timeout${describe ? ` — ${describe()}` : ""}`)), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
 }
 
 /**
@@ -133,6 +136,8 @@ export default async function LandingPage({
   // Perf instrumentation — logs to the server terminal under scope `home`.
   const perf = log.scope("home");
   const endData = perf.time("data-phase total");
+  // Where the data phase stands, for the error log if it runs out of time.
+  const where = { stage: "settings" };
   try {
     await withTimeout((async () => {
     // Bucketed to the day so the cache key is stable within a day — the
@@ -153,9 +158,11 @@ export default async function LandingPage({
     // The layout has already read the settings for this render, so this is
     // React's cache, not another round trip.
     const railOptions = homeRailOptions(await getSettings());
+    where.stage = "feed";
     const endFeed = perf.time("getHomeFeed (hit≈0ms, miss=one round of parallel queries)");
     const feed = await getHomeFeed(weekStart, railOptions);
     endFeed();
+    where.stage = "plan";
 
     const rows = feed?.published.rows ?? [];
     // eslint-disable-next-line react-hooks/immutability -- synchronising with an external system, which is what an effect is for.
@@ -176,7 +183,7 @@ export default async function LandingPage({
       rails: rails.map((r) => `${r.key}:${r.rows.length}`).join(" "),
       explore: explore?.rows.length ?? 0,
     });
-    })(), HOME_DATA_BUDGET_MS);
+    })(), HOME_DATA_BUDGET_MS, () => `after ${HOME_DATA_BUDGET_MS} ms, at « ${where.stage} »; waiting on: ${describePending()}`);
   } catch (err) {
     perf.warn("data-phase aborted (timeout or error)", err);
     // In production this render is an ISR REGENERATION, and nobody is waiting
