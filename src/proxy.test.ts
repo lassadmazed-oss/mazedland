@@ -61,6 +61,10 @@ describe("the proxy matcher", () => {
       "/models/face-api/tiny_face_detector_model.bin",
       "/models/face-api/tiny_face_detector_model-weights_manifest.json",
       "/fonts/Inter.woff2",
+      // A file people download (the extension, the CSV model of the agencies import) is served as it is,
+      // not sent to /fr/downloads/… where it does not exist.
+      "/downloads/mazed-prospection-extension.zip",
+      "/downloads/agences-modele.csv",
     ]) expect(runs(p), p).toBe(false);
   });
 });
