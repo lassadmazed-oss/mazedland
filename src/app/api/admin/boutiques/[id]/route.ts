@@ -103,7 +103,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       before: { name: out.name, status: shop.status, listings: out.listings, photos: out.photos, documents: out.documents },
       note: reason,
     });
-    revalidatePublic("/agences", "/pro", `/agences/${shop.slug}`);
+    revalidatePublic("/agences", "/pro");
+    revalidatePublic(`/agences/${shop.slug}`);
     return NextResponse.json({ ok: true, deleted: { listings: out.listings, photos: out.photos, documents: out.documents } });
   }
 
@@ -312,7 +313,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   // The directory and the Pro page's places left come from the CDN.
-  revalidatePublic("/agences", "/pro", `/agences/${shop.slug}`);
+  revalidatePublic("/agences", "/pro");
+  revalidatePublic(`/agences/${shop.slug}`);
 
   // Refused for good: the plan's money goes back to the owner by hand, and
   // the payment says so — refunded, never invoiced (the invoice follows an
