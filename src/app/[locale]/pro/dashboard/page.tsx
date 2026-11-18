@@ -361,6 +361,7 @@ export default async function ProDashboardPage({ searchParams }: { searchParams:
               hours: shop.hours ?? "",
               legal_name: shop.legal_name ?? "",
               legal_id: shop.legal_id ?? "",
+              licence_number: shop.licence_number ?? "",
               logo_path: shop.logo_path,
               cover_path: shop.cover_path,
             }}

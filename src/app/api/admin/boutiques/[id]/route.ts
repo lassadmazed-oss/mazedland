@@ -70,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const action = typeof body.action === "string" ? body.action : "";
   const reason = typeof body.reason === "string" ? body.reason.trim().slice(0, 500) : "";
 
-  const { data: shop } = await admin.from("shops").select("id, owner_id, name, status, founding_plan").eq("id", id).maybeSingle();
+  const { data: shop } = await admin.from("shops").select("id, owner_id, slug, name, status, kind, founding_plan, licence_number").eq("id", id).maybeSingle();
   if (!shop) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const now = new Date().toISOString();
   const by = gate.user.id;
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       before: { name: out.name, status: shop.status, listings: out.listings, photos: out.photos, documents: out.documents },
       note: reason,
     });
-    revalidatePublic("/agences", "/pro");
+    revalidatePublic("/agences", "/pro", `/agences/${shop.slug}`);
     return NextResponse.json({ ok: true, deleted: { listings: out.listings, photos: out.photos, documents: out.documents } });
   }
 
@@ -283,6 +283,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     case "unverify":
       update = { verified_at: null, verified_by: null };
       break;
+    // The licence (agrément) of the Ministry of Commerce, checked against the one the agency showed: only then does the
+    // public page say « Agence agréée ». An agency, and a number to check — a check without one is refused here and by the table.
+    case "licence_verify":
+      if (shop.kind !== "agency") return NextResponse.json({ error: "licence_agency_only", detail: t("errors.licenceAgencyOnly") }, { status: 409 });
+      if (!shop.licence_number) return NextResponse.json({ error: "licence_missing", detail: t("errors.licenceMissing") }, { status: 409 });
+      update = { licence_checked_at: now, licence_checked_by: by };
+      break;
+    case "licence_unverify":
+      update = { licence_checked_at: null, licence_checked_by: null };
+      break;
     default:
       return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
@@ -302,7 +312,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   // The directory and the Pro page's places left come from the CDN.
-  revalidatePublic("/agences", "/pro");
+  revalidatePublic("/agences", "/pro", `/agences/${shop.slug}`);
 
   // Refused for good: the plan's money goes back to the owner by hand, and
   // the payment says so — refunded, never invoiced (the invoice follows an

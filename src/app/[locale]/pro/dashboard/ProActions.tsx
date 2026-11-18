@@ -167,7 +167,7 @@ export function ChoosePlan({ shopId, plan, label }: { shopId: string; plan: stri
   );
 }
 
-const KINDS = ["rne", "patente", "identity", "other"] as const;
+const KINDS = ["rne", "patente", "identity", "licence", "other"] as const;
 
 export function SendDocument({ shopId }: { shopId: string }) {
   const t = useTranslations("pro.dashboard");

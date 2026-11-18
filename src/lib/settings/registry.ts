@@ -193,6 +193,9 @@ export const SETTINGS = {
   // « Envoyer sans payer » under the agence request: the agence comes alone,
   // for the founding offer the console then gives (« Offrir une période »).
   pro_signup_pay_later: { group: "publication", type: "bool", default: true },
+  // An agency must give the number of its licence (the Ministry of Commerce's agrément) to ask for its page (0230).
+  // Off: the number is asked but may be left out; either way « Agence agréée » shows only once an admin has checked it.
+  shop_licence_required: { group: "publication", type: "bool", default: false, href: "/admin/agences" },
   // The guides (0208): how many cards a page of /guides holds, how many
   // « Guides liés » close a guide, how many « Guides utiles » stand beside an
   // annonce and under the catalogue (0 = no strip), and from how many

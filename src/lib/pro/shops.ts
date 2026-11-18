@@ -80,9 +80,18 @@ export type ShopInput = {
   hours: string | null;
   legal_name: string | null;
   legal_id: string | null;
+  /** The Ministry of Commerce's licence number, as an agency gives it (agencies only: null for any other kind). */
+  licence_number: string | null;
   logo_path: string | null;
   cover_path: string | null;
 };
+
+/** A licence number as written on the licence: letters, digits, and the signs that separate them. */
+export function licenceNumber(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const s = raw.trim().replace(/\s+/g, " ").slice(0, 40);
+  return /^[\p{L}\p{N}][\p{L}\p{N} ./\-_]*$/u.test(s) ? s : null;
+}
 
 const text = (v: unknown, max: number): string | null => {
   if (typeof v !== "string") return null;
@@ -131,6 +140,8 @@ export function parseShopInput(
       hours: text(raw.hours, 200),
       legal_name: text(raw.legal_name, 120),
       legal_id: text(raw.legal_id, 60),
+      // Only an agency is licensed by the ministry; the number of a promoter or a land developer would mean nothing.
+      licence_number: kind === "agency" ? licenceNumber(raw.licence_number) : null,
       logo_path: ownPath(raw.logo_path, userId),
       cover_path: ownPath(raw.cover_path, userId),
     },
@@ -156,6 +167,9 @@ export type ShopRow = {
   hours: string | null;
   legal_name: string | null;
   legal_id: string | null;
+  licence_number: string | null;
+  /** When an admin checked the number against the licence shown: the public « Agence agréée ». */
+  licence_checked_at: string | null;
   status: ShopStatus;
   rejection_reason: string | null;
   verified_at: string | null;
@@ -165,7 +179,7 @@ export type ShopRow = {
 };
 
 export const SHOP_COLUMNS =
-  "id, owner_id, slug, name, kind, description, logo_path, cover_path, governorate, city, phone, email, website, hours, legal_name, legal_id, status, rejection_reason, verified_at, created_at, founding_plan";
+  "id, owner_id, slug, name, kind, description, logo_path, cover_path, governorate, city, phone, email, website, hours, legal_name, legal_id, licence_number, licence_checked_at, status, rejection_reason, verified_at, created_at, founding_plan";
 
 /** The shops this person belongs to, with their role. */
 export async function membershipsOf(admin: Admin, userId: string): Promise<{ shop: ShopRow; role: ShopRole }[]> {
