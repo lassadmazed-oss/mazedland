@@ -2,6 +2,8 @@ import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { canOpen, scopesFromRow } from "@/lib/admin/sections";
 import { log } from "@/lib/log";
 import { getSettings } from "@/lib/settings/server";
+import { agencyReportText } from "./agencies/model";
+import { agencyDayReport } from "./agencies/server";
 import {
   countFigures, dayBounds, dayLabel, propertyLine, readDraft, reportText, shownKind, startOfTunisiaDay, tunisiaDay, tunisiaHour,
   type ReportRow,
@@ -98,6 +100,32 @@ export async function dayReport(admin: Admin, day: string, until?: Date): Promis
 }
 
 /**
+ * The agencies' part of the evening notice (0229): each member's day on the list
+ * (calls · reached · interested · joined or posted), the idle ones too. Empty
+ * while the list is empty, so a site that does not use it reads the notice it
+ * always did.
+ */
+async function agencyEveningText(admin: Admin, day: string, now: Date): Promise<string> {
+  const { count } = await admin.from("prospect_agencies").select("id", { count: "exact", head: true });
+  if ((count ?? 0) === 0) return "";
+  const [{ figures }, team] = await Promise.all([agencyDayReport(admin, day, now), teamNames(admin)]);
+  const by = new Map(figures.map((f) => [f.actorId, f]));
+  const ids = new Set<string>([...team.keys(), ...figures.map((f) => f.actorId)]);
+  const names = new Map(team);
+  const unknown = [...ids].filter((id) => !names.has(id));
+  if (unknown.length > 0) {
+    const { data } = await admin.from("profiles").select("id, full_name").in("id", unknown);
+    for (const p of data ?? []) names.set(p.id as string, (p.full_name as string | null)?.trim() || "—");
+  }
+  const rows = [...ids].map((id) => {
+    const f = by.get(id);
+    return { name: names.get(id) ?? "—", contacted: f?.contacted ?? 0, reached: f?.reached ?? 0, interested: f?.interested ?? 0, signedUp: f?.signedUp ?? 0, posted: f?.posted ?? 0 };
+  });
+  rows.sort((a, b) => b.contacted - a.contacted || a.name.localeCompare(b.name));
+  return agencyReportText(rows);
+}
+
+/**
  * The evening notice (0223): from the hour set in Réglages, one notice in the
  * bell of each admin who holds the whole console, with what every member of the
  * team did that day — and a link to the day's page. Never twice on the same day,
@@ -113,6 +141,10 @@ export async function runReport(admin: Admin, now: Date = new Date()): Promise<{
   const report = await dayReport(admin, day, now);
   if (report.rows.length === 0) return { notified: 0, skipped: "nobody" };
   const text = reportText(report.rows);
+  const agencies = await agencyEveningText(admin, day, now).catch((e) => {
+    pLog.error(`agencies part of the report failed: ${(e as Error).message}`);
+    return "";
+  });
 
   const { data: owners } = await admin.from("profiles").select("id, admin_scopes, banned_at").eq("role", "admin").limit(300);
   const since = startOfTunisiaDay(now);
@@ -130,9 +162,10 @@ export async function runReport(admin: Admin, now: Date = new Date()): Promise<{
       p_user_id: o.id,
       p_kind: REPORT_KIND,
       p_title: "Prospection : le bilan du jour",
-      p_body: `${dayLabel(day)} — premiers messages · oui · en ligne : ${text}`,
+      p_body: `${dayLabel(day)} — premiers messages · oui · en ligne : ${text}${agencies ? ` ‖ agences (appels · jointes · intéressées · inscrites ou publiées) : ${agencies}` : ""}`,
       p_link: `/admin/prospection/rapport?day=${day}`,
-      p_payload: { vars: { day: dayLabel(day), lines: text } },
+      // « withAgencies »: the same notice with the list's part (messages: admin_prospect_report.withAgencies).
+      p_payload: { vars: { day: dayLabel(day), lines: text, ...(agencies ? { agencies, variant: "withAgencies" } : {}) } },
     });
     if (error) pLog.error(`report for ${o.id} failed: ${error.message}`);
     else notified++;

@@ -23,6 +23,7 @@ function fakeAdmin(rows: Rows, already: string[] = []) {
     };
     q.then = (resolve: (v: unknown) => unknown) => {
       if (table === "notifications") count = userId && already.includes(userId) ? 1 : 0;
+      else if (table === "prospect_agencies") count = (rows[table] ?? []).length;
       return Promise.resolve({ data: data(), count, error: null }).then(resolve);
     };
     return q;
@@ -82,6 +83,23 @@ describe("runReport", () => {
     expect(call.args.p_body).toContain("Smartimmo 2 · 1 · 0");
     expect(call.args.p_body).toContain("Sami 0 · 0 · 0");
     expect(call.args.p_payload).toEqual({ vars: { day: "14/11", lines: "Smartimmo 2 · 1 · 0 | Sami 0 · 0 · 0" } });
+  });
+
+  it("adds the agencies' day when the list exists, the idle member too", async () => {
+    const agencyEvents = [
+      { id: "a1", agency_id: "g1", kind: "contacted", channel: "call", note: null, actor_id: "m1", created_at: "2026-11-14T10:00:00Z" },
+      { id: "a2", agency_id: "g1", kind: "interested", channel: null, note: null, actor_id: "m1", created_at: "2026-11-14T10:01:00Z" },
+    ];
+    const { admin, rpcs } = fakeAdmin({
+      profiles: [owner, member, idle], prospect_events: events, prospect_leads: [{ id: "l1", draft: null, poster_name: "Amin" }],
+      prospect_agencies: [{ id: "g1", name: "Agence X", assigned_to: "m1" }], prospect_agency_events: agencyEvents,
+    });
+    expect(await runReport(admin, EVENING)).toEqual({ notified: 1 });
+    expect(rpcs[0].args.p_body).toContain("Smartimmo 1 · 1 · 1 · 0");
+    expect(rpcs[0].args.p_body).toContain("Sami 0 · 0 · 0 · 0");
+    expect(rpcs[0].args.p_payload).toEqual({
+      vars: { day: "14/11", lines: "Smartimmo 2 · 1 · 0 | Sami 0 · 0 · 0", agencies: "Smartimmo 1 · 1 · 1 · 0 | Sami 0 · 0 · 0 · 0", variant: "withAgencies" },
+    });
   });
 
   it("goes to every admin who holds the whole console, never to a member, a moderator or a suspended one", async () => {

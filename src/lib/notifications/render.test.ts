@@ -197,4 +197,18 @@ describe("renderNotification", () => {
     expect(a.body).toContain("Smartimmo 12 · 3 · 1 | Sami 0 · 0 · 0");
     expect(a.body).not.toContain("{lines}");
   });
+
+  it("adds the agencies' part to the evening report when there is one", () => {
+    const report = {
+      kind: "admin_prospect_report",
+      title: "x",
+      body: "x",
+      payload: { vars: { variant: "withAgencies", day: "18/11", lines: "Amine 4 · 3 · 1", agencies: "Amine 12 · 4 · 2 · 1" } },
+    };
+    const f = renderNotification(report, tr("fr"), "fr");
+    expect(f.body).toBe("18/11 — premiers messages · oui · en ligne : Amine 4 · 3 · 1 ‖ Agences (appels · jointes · intéressées · inscrites ou publiées) : Amine 12 · 4 · 2 · 1");
+    const a = renderNotification(report, tr("ar"), "ar");
+    expect(a.body).toContain("Amine 12 · 4 · 2 · 1");
+    expect(a.body).not.toContain("{agencies}");
+  });
 });

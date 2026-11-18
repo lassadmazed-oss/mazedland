@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Ltr } from "@/components/ui/Ltr";
 import { formatDate, formatNumber } from "@/lib/utils";
 import { governorateLabel } from "@/lib/tunisia";
-import { ClipboardList, Plus, Puzzle } from "lucide-react";
+import { Building2, ClipboardList, Plus, Puzzle } from "lucide-react";
 import { RANGES, asRange, contactsLeft, percent, propertyLine, rangeStart, readDraft, startOfTunisiaDay, type LeadStatus, type Range } from "@/lib/prospection/model";
 import { contactsToday, teamFigures, LEAD_COLUMNS, type LeadRow } from "@/lib/prospection/server";
 
@@ -126,6 +126,9 @@ export default async function ProspectionBoard({
         description={t("description")}
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Link href={"/admin/prospection/agences" as "/admin/prospection"} className={adminBtn("default", "md")}>
+              <Building2 className="size-3.5" /> {t("agenciesLink")}
+            </Link>
             {everyone ? (
               <Link href="/admin/prospection/rapport" className={adminBtn("default", "md")}>
                 <ClipboardList className="size-3.5" /> {t("report.link")}
