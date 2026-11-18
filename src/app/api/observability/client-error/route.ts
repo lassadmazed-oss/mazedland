@@ -3,7 +3,7 @@ import { jsonObject } from "@/lib/http/body";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { log } from "@/lib/log";
 import { logError } from "@/lib/activity";
-import { isForeignNoise, isForeignSource } from "@/lib/observability/noise";
+import { isForeignNoise, isForeignSource, isStaleChunkInOptionalPart } from "@/lib/observability/noise";
 
 const cliErr = log.scope("cer");
 
@@ -57,6 +57,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       typeof v === "string" ? v.slice(0, n) : undefined;
     // The visitor's app or extension, not the site: no log line, no alert in the bell.
     if (isForeignNoise(body.message) || isForeignSource(body.source)) return new NextResponse(null, { status: 204 });
+    // An optional part of the page lost its script to a deploy that went up while the page was open: left out, nothing broke.
+    if (isStaleChunkInOptionalPart(body.kind, body.message)) return new NextResponse(null, { status: 204 });
     cliErr.error(`${clip(body.kind, 24) ?? "error"}: ${clip(body.message, 300) ?? "(no message)"}`, {
       at: clip(body.url, 200),
       source: clip(body.source, 200),
