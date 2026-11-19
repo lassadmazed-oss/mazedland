@@ -2,12 +2,12 @@
 
 import { useId, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Check, Loader2, Plus, X } from "lucide-react";
+import { CalendarDays, Check, Loader2, Plus, X } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { useApiError } from "@/lib/useApiError";
 import { useSetting } from "@/components/settings/SettingsProvider";
-import { tunisDay, VISIT_PARTS, type VisitPart, type VisitSide, type VisitSlot, type VisitStatus } from "@/lib/visits";
+import { PROPOSAL_NOTE_MAX, PROPOSAL_REASONS, tunisDay, VISIT_PARTS, type ProposalReason, type VisitPart, type VisitSide, type VisitSlot, type VisitStatus } from "@/lib/visits";
 import { dayLabel, nextDays } from "@/lib/dayChips";
 import { DECLINE_REASONS, PART_HOURS, SELLER_NOTE_MAX, SELLER_PHRASES, type DeclineReason } from "@/lib/visitChoices";
 import { hasPhrase, swapPhrase, togglePhrase } from "@/lib/phrases";
@@ -57,10 +57,14 @@ export function VisitActions({
   const [declining, setDeclining] = useState(false);
   const [reason, setReason] = useState<DeclineReason>("slots");
   const [declineNote, setDeclineNote] = useState(() => t("declineReasons.slots"));
-  const [proposal, setProposal] = useState<Proposal>({ day: null, part: null });
+  // Another moment, proposed by the seller (0231): the day and time of day, why (a choice), and the word with it.
+  const [proposing, setProposing] = useState(false);
+  const [pro, setPro] = useState<Proposal>({ day: null, part: null });
+  const [proReason, setProReason] = useState<ProposalReason | null>(null);
+  const [proNote, setProNote] = useState("");
   const [today] = useState(tunisDay);
 
-  async function act(action: "confirm" | "decline" | "done" | "cancel", success: string) {
+  async function act(action: "confirm" | "propose" | "accept" | "decline" | "done" | "cancel", success: string) {
     if (action === "cancel" && !window.confirm(t(side === "buyer" ? "cancelConfirm" : "cancelSellerConfirm"))) return;
     setBusy(action);
     try {
@@ -69,10 +73,11 @@ export function VisitActions({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           action,
-          slot: action === "confirm" ? slots[pick] : undefined,
-          // Each answer carries its own word; « Visite faite » and an
-          // annulation carry none, so the one already sent stays.
-          note: action === "confirm" ? note : action === "decline" ? declineNote : "",
+          slot: action === "confirm" ? slots[pick] : action === "propose" ? { day: pro.day, part: pro.part } : undefined,
+          reason: action === "propose" ? proReason : undefined,
+          // Each answer carries its own word; « Visite faite », an acceptance
+          // and an annulation carry none, so the one already sent stays.
+          note: action === "confirm" ? note : action === "decline" ? declineNote : action === "propose" ? proNote : "",
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -81,6 +86,8 @@ export function VisitActions({
         return;
       }
       toast(success, "success");
+      // The visit stays on the seller's side while it waits: the panel closes, the card shows the proposal.
+      if (action === "propose") setProposing(false);
       router.refresh();
     } catch {
       toast(t("failed"), "error");
@@ -96,6 +103,22 @@ export function VisitActions({
   const row = "mt-1.5 flex flex-wrap gap-2";
 
   if (side === "buyer") {
+    // The seller proposed another moment: take it in one tap, or say it does not suit.
+    if (status === "proposed") {
+      return (
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={!!busy} onClick={() => act("accept", t("acceptToast"))} className={`${btn} mazed-btn-luxe`}>
+              {spin("accept") ?? <Check className="size-3.5" />} {t("accept")}
+            </button>
+            <button type="button" disabled={!!busy} onClick={() => act("cancel", t("cancelled"))} className={`${btn} mazed-btn-quiet`}>
+              {spin("cancel") ?? <X className="size-3.5" />} {t("refuseProposal")}
+            </button>
+          </div>
+          <p className="text-[11.5px] text-muted">{t("otherTimes")}</p>
+        </div>
+      );
+    }
     if (status !== "requested" && status !== "confirmed") return null;
     return (
       <button type="button" disabled={!!busy} onClick={() => act("cancel", t("cancelled"))} className={`${btn} mazed-btn-quiet`}>
@@ -104,13 +127,8 @@ export function VisitActions({
     );
   }
 
-  if (status === "requested") {
+  if (status === "requested" || status === "proposed") {
     const hourPhrase = (h: number | null) => (h == null ? null : t("hourPhrase", { hour: h }));
-    const proposalPhrase = (p: Proposal) =>
-      p.day && p.part
-        ? t("proposePhrase", { day: formatDate(`${p.day}T12:00:00Z`, locale, "weekday"), part: tParts(p.part) })
-        : null;
-
     const choose = (i: number) => {
       // The hours offered follow the half-day; one named for another goes.
       if (hour != null && slots[i]?.part !== slots[pick]?.part) {
@@ -128,24 +146,82 @@ export function VisitActions({
 
     const chooseReason = (r: DeclineReason) => {
       if (r === reason) return;
-      // Another moment is only worth offering when the moments were the problem.
-      const dropped = r === "slots" ? null : proposalPhrase(proposal);
-      setDeclineNote((n) => swapPhrase(swapPhrase(n, dropped, null), t(`declineReasons.${reason}`), t(`declineReasons.${r}`), SELLER_NOTE_MAX));
-      if (r !== "slots") setProposal({ day: null, part: null });
+      setDeclineNote((n) => swapPhrase(n, t(`declineReasons.${reason}`), t(`declineReasons.${r}`), SELLER_NOTE_MAX));
       setReason(r);
     };
 
-    const propose = (patch: Partial<Proposal>) => {
-      const next = { ...proposal, ...patch };
+    // The phrase a proposal writes into the word: « I can receive you Friday, in the afternoon. »
+    const proPhrase = (p: Proposal) =>
+      p.day && p.part ? t("proposePhrase", { day: formatDate(`${p.day}T12:00:00Z`, locale, "weekday"), part: tParts(p.part) }) : null;
+    const choosePro = (patch: Partial<Proposal>) => {
+      const next = { ...pro, ...patch };
       // A day needs a time of day to be a moment: the buyer's own first one, until another is tapped.
       if (next.day && !next.part) next.part = slots[0]?.part ?? "morning";
       if (!next.day) next.part = patch.part ?? null;
-      setDeclineNote((n) => swapPhrase(n, proposalPhrase(proposal), proposalPhrase(next), SELLER_NOTE_MAX));
-      setProposal(next);
+      setProNote((n) => swapPhrase(n, proPhrase(pro), proPhrase(next), PROPOSAL_NOTE_MAX));
+      setPro(next);
+    };
+    const chooseProReason = (r: ProposalReason) => {
+      if (r === proReason) return;
+      setProNote((n) => swapPhrase(n, proReason ? t(`proposeReasons.${proReason}`) : null, t(`proposeReasons.${r}`), PROPOSAL_NOTE_MAX));
+      setProReason(r);
     };
 
-    if (declining) {
+    if (proposing) {
       const words = { today: tChips("today"), tomorrow: tChips("tomorrow") };
+      const ready = !!(pro.day && pro.part && proReason);
+      return (
+        <div className="space-y-2.5">
+          <div>
+            <p id={`${ids}-prop`} className={label}>{t("proposeTitle")}</p>
+            <div role="radiogroup" aria-labelledby={`${ids}-prop`} className={row}>
+              {nextDays(today, horizon).map((d) => (
+                <button key={d} type="button" role="radio" aria-checked={pro.day === d} onClick={() => choosePro({ day: pro.day === d ? null : d })} className={chipClass(pro.day === d)}>
+                  {dayLabel(d, today, locale, words)}
+                </button>
+              ))}
+            </div>
+            <div role="radiogroup" aria-labelledby={`${ids}-prop`} className={row}>
+              {VISIT_PARTS.map((p) => (
+                <button key={p} type="button" role="radio" aria-checked={pro.part === p} onClick={() => choosePro({ part: p })} className={chipClass(pro.part === p)}>
+                  {tChips(p)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p id={`${ids}-why2`} className={label}>{t("proposeWhy")}</p>
+            <div role="radiogroup" aria-labelledby={`${ids}-why2`} className={row}>
+              {PROPOSAL_REASONS.map((r) => (
+                <button key={r} type="button" role="radio" aria-checked={proReason === r} onClick={() => chooseProReason(r)} className={chipClass(proReason === r)}>
+                  {t(`proposeReasons.${r}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <textarea
+            value={proNote}
+            onChange={(e) => setProNote(e.target.value)}
+            maxLength={PROPOSAL_NOTE_MAX}
+            rows={2}
+            aria-label={t("proposeNote")}
+            className={area}
+            dir="auto"
+          />
+          {!ready ? <p className="text-[11.5px] text-muted">{t("proposeMissing")}</p> : null}
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={!!busy || !ready} onClick={() => act("propose", t("proposed"))} className={`${btn} mazed-btn-luxe`}>
+              {spin("propose") ?? <Check className="size-3.5" />} {t("proposeSend")}
+            </button>
+            <button type="button" disabled={!!busy} onClick={() => setProposing(false)} className={`${btn} mazed-btn-quiet`}>
+              {t("back")}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (declining) {
       return (
         <div className="space-y-2.5">
           <div>
@@ -159,37 +235,17 @@ export function VisitActions({
             </div>
           </div>
           {reason === "slots" && (
-            <div>
-              <p id={`${ids}-other`} className={label}>{t("proposeLabel")}</p>
-              <div role="radiogroup" aria-labelledby={`${ids}-other`} className={row}>
-                {nextDays(today, horizon).map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    role="radio"
-                    aria-checked={proposal.day === d}
-                    onClick={() => propose({ day: proposal.day === d ? null : d })}
-                    className={chipClass(proposal.day === d)}
-                  >
-                    {dayLabel(d, today, locale, words)}
-                  </button>
-                ))}
-              </div>
-              <div role="radiogroup" aria-labelledby={`${ids}-other`} className={row}>
-                {VISIT_PARTS.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    role="radio"
-                    aria-checked={proposal.part === p}
-                    onClick={() => propose({ part: p })}
-                    className={chipClass(proposal.part === p)}
-                  >
-                    {tChips(p)}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <button
+              type="button"
+              disabled={!!busy}
+              onClick={() => {
+                setDeclining(false);
+                setProposing(true);
+              }}
+              className={`${btn} mazed-btn-quiet`}
+            >
+              <CalendarDays className="size-3.5" /> {t("propose")}
+            </button>
           )}
           <textarea
             value={declineNote}
@@ -215,6 +271,7 @@ export function VisitActions({
     const hours = PART_HOURS[slots[pick]?.part ?? "morning"];
     return (
       <div className="space-y-2.5">
+        {status === "proposed" ? <p className="text-[12px] font-bold text-[var(--tone-warn)]">{t("proposalWaiting")}</p> : null}
         <div>
           <p id={`${ids}-slot`} className={label}>{t("pickSlot")}</p>
           <div role="radiogroup" aria-labelledby={`${ids}-slot`} className={row}>
@@ -268,6 +325,9 @@ export function VisitActions({
         <div className="flex flex-wrap gap-2">
           <button type="button" disabled={!!busy} onClick={() => act("confirm", t("confirmed"))} className={`${btn} mazed-btn-luxe`}>
             {spin("confirm") ?? <Check className="size-3.5" />} {t("confirm")}
+          </button>
+          <button type="button" disabled={!!busy} onClick={() => setProposing(true)} className={`${btn} mazed-btn-quiet`}>
+            <CalendarDays className="size-3.5" /> {t(status === "proposed" ? "reviseProposal" : "propose")}
           </button>
           <button type="button" disabled={!!busy} onClick={() => setDeclining(true)} className={`${btn} mazed-btn-quiet`}>
             <X className="size-3.5" /> {t("decline")}

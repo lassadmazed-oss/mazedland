@@ -39,7 +39,8 @@ export default async function MyVisitsPage({ searchParams }: { searchParams: Pro
           ? "received"
           : "sent";
   const list = tab === "received" ? received : sent;
-  const waiting = received.filter((v) => v.status === "requested").length;
+  // What waits on me: on the seller's side the requests not answered yet, on the buyer's the moments a seller proposed (0231).
+  const waiting = { received: received.filter((v) => v.status === "requested").length, sent: sent.filter((v) => v.status === "proposed").length };
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6 lg:py-10">
@@ -55,7 +56,7 @@ export default async function MyVisitsPage({ searchParams }: { searchParams: Pro
             className="gap-1.5"
           >
             {t(`tabs.${k}`)}
-            {k === "received" && waiting > 0 && <span className="mazed-tabular text-[11px] text-[var(--tone-warn)]">{waiting}</span>}
+            {waiting[k] > 0 && <span className="mazed-tabular text-[11px] text-[var(--tone-warn)]">{waiting[k]}</span>}
           </Link>
         ))}
       </nav>

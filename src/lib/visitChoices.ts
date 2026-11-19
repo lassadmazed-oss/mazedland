@@ -22,6 +22,9 @@ export const SELLER_PHRASES = ["call", "entrance"] as const;
 export const DECLINE_REASONS = ["slots", "unavailable"] as const;
 export type DeclineReason = (typeof DECLINE_REASONS)[number];
 
+/** The phrase each reason of a proposal writes into the word the buyer reads (`visits.actions.proposeReasons.<key>`). */
+export { PROPOSAL_REASONS, type ProposalReason } from "@/lib/visits";
+
 /** The hours a seller can name inside the half-day the buyer chose. */
 export const PART_HOURS: Record<VisitPart, readonly number[]> = {
   morning: [9, 10, 11],

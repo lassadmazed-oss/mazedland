@@ -325,10 +325,10 @@ export default async function AnnoncePage({
       admin.from("profiles").select("full_name, phone").eq("id", user.id).maybeSingle(),
       admin
         .from("visit_requests")
-        .select("status, confirmed_slot")
+        .select("status, confirmed_slot, proposed_slot")
         .eq("listing_id", l.id)
         .eq("buyer_id", user.id)
-        .in("status", ["requested", "confirmed"])
+        .in("status", ["requested", "proposed", "confirmed"])
         .maybeSingle(),
       admin
         .from("price_offers")
@@ -366,7 +366,8 @@ export default async function AnnoncePage({
     }
     visitDefaults = { name: (me?.full_name as string | null) ?? "", phone: (me?.phone as string | null) ?? "" };
     if (v) {
-      const slot = v.confirmed_slot as VisitSlot | null;
+      // The moment that matters now: the confirmed one, or the one the seller proposed.
+      const slot = (v.status === "proposed" ? v.proposed_slot : v.confirmed_slot) as VisitSlot | null;
       openVisit = {
         status: v.status as VisitStatus,
         when: slot
