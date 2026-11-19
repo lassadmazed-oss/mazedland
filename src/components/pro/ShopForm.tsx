@@ -28,6 +28,8 @@ export type ShopFormValues = {
   hours: string;
   legal_name: string;
   legal_id: string;
+  /** The ministry's licence number: asked of an agency only. */
+  licence_number: string;
   logo_path: string | null;
   cover_path: string | null;
 };
@@ -384,6 +386,14 @@ export function ShopFields({
           <label className={label} htmlFor="shop-email">{t("email")}</label>
           <input id="shop-email" type="email" className={field} value={v.email} onChange={(e) => set("email", e.target.value)} dir="ltr" inputMode="email" autoComplete="email" autoCapitalize="none" />
         </div>
+
+        {v.kind === "agency" ? (
+          <div className="sm:col-span-2">
+            <label className={label} htmlFor="shop-licence">{t("licenceNumber")}</label>
+            <input id="shop-licence" className={field} value={v.licence_number} onChange={(e) => set("licence_number", e.target.value)} dir="ltr" autoCapitalize="characters" maxLength={40} />
+            <p className="mt-1.5 text-[11.5px] leading-snug text-muted">{t("licenceHint")}</p>
+          </div>
+        ) : null}
 
         <div className="sm:col-span-2">
           <div className="mb-1 flex flex-wrap items-center justify-between gap-2">

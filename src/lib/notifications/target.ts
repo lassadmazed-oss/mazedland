@@ -69,6 +69,8 @@ export const NOTIFICATION_KINDS = [
   // buyer the seller's; an offer nobody answered expires (expire_price_offers)
   "offer_received", "offer_accepted", "offer_declined", "offer_countered",
   "offer_counter_accepted", "offer_counter_declined", "offer_withdrawn", "offer_expired",
+  // « Demander le prix » (0222): the seller hears the question, the buyer the price
+  "price_question", "price_answered",
   // A shop answers a demande (P3); the person stays anonymous to the shop
   "request_suggestion",
   // A paid placement ended (0156): written by expire_listing_promotions()
@@ -101,6 +103,7 @@ type FallbackRoute =
   | "/account/requests"
   | "/account/visites"
   | "/account/offres"
+  | "/account/prix"
   | "/admin/annonces"
   | "/admin/paiements"
   | "/admin/social"
@@ -225,6 +228,8 @@ export const KIND_FALLBACK: Record<NotificationKind, FallbackRoute> = {
   offer_counter_declined: "/account/offres",
   offer_withdrawn: "/account/offres",
   offer_expired: "/account/offres",
+  price_question: "/account/prix",
+  price_answered: "/account/prix",
   request_suggestion: "/account/requests",
   promo_expired: "/account/listings",
 };
@@ -314,6 +319,7 @@ const FALLBACK_SUPPORTS_FOCUS: Record<NotificationKind, boolean> = {
   visit_requested: false, visit_confirmed: false, visit_declined: false, visit_cancelled: false,
   offer_received: false, offer_accepted: false, offer_declined: false, offer_countered: false,
   offer_counter_accepted: false, offer_counter_declined: false, offer_withdrawn: false, offer_expired: false,
+  price_question: false, price_answered: false,
   request_suggestion: false,
   promo_expired: false,
 };

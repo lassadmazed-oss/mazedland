@@ -2,7 +2,8 @@ import type { SocialChannel } from "@/lib/social/channels";
 
 /**
  * A social post as it will read: the Facebook page's card, the Instagram
- * square with its caption, or the plain text prepared for the groups. Each
+ * square with its caption, TikTok's standing photo with its title, or the
+ * plain text prepared for the groups. Each
  * line takes its own direction, since a post in both languages mixes them.
  * Used by the seller's promotion page and the console's review.
  */
@@ -50,6 +51,30 @@ export function PostPreview({
           </div>
         )}
         <div className="p-3 pt-1">{text}</div>
+      </article>
+    );
+  }
+
+  if (channel === "tiktok") {
+    // A Photo Mode post: the photos stand up (3:4), swiped one after another;
+    // the first line of the text is its title, the rest its description.
+    const [title, ...rest] = body.split("\n");
+    return (
+      <article className="min-w-0 overflow-hidden rounded-2xl border border-border bg-surface">
+        {head}
+        <div className="relative mx-auto mt-3 aspect-[3/4] w-full max-w-[320px] bg-surface-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- a preview of a remote post, not a page image */}
+          {photos[0] && <img src={photos[0]} alt="" className="size-full object-cover" />}
+          {photos.length > 1 && (
+            <span className="absolute end-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-bold text-white">1/{photos.length}</span>
+          )}
+        </div>
+        <div className="p-3 pt-2">
+          <p className="text-[13px] font-extrabold text-foreground [overflow-wrap:anywhere]" dir="auto">{title}</p>
+          <div className="mt-1 space-y-0.5 text-[13px] leading-relaxed text-foreground [overflow-wrap:anywhere]">
+            {rest.map((line, i) => (line.trim() ? <p key={i} dir="auto">{line}</p> : <div key={i} className="h-2" />))}
+          </div>
+        </div>
       </article>
     );
   }

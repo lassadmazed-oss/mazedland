@@ -1,4 +1,6 @@
 import { log } from "@/lib/log";
+import { smsIsDown } from "@/lib/sms/gate";
+import { parseOutbox, type OutboxRow } from "@/lib/sms/outbox";
 
 /**
  * WinSMS.tn SMS client — the same Tunisian gateway used across the group's
@@ -171,16 +173,26 @@ export function toSmsText(opts: {
   return { text: out, unicode };
 }
 
-/** Send one SMS via WinSMS. Returns {ok:false} on any provider error. */
+/**
+ * Send one SMS via WinSMS. Returns {ok:false} on any provider error.
+ *
+ * « Successfully Send » only means the message was queued: WinSMS's own worker
+ * can still fail it (2026-11-14), which the site learns from the provider's
+ * outbox (src/lib/sms/health.ts). While that verdict says « down », nothing is
+ * sent — `provider_down`, nothing billed, nothing marked sent — except the
+ * health job's own probe (`skipGate`).
+ */
 export async function sendSms(params: {
   to: string;
   sms: string;
   from?: string;
   unicode?: boolean;
+  skipGate?: boolean;
 }): Promise<WinSMSSendResult> {
   const apiKey = process.env.WINSMS_API_KEY;
   const senderId = process.env.WINSMS_SENDER_ID || "MAZED";
   if (!apiKey) return { ok: false, error: "sms_not_configured" };
+  if (!params.skipGate && (await smsIsDown())) return { ok: false, error: "provider_down" };
 
   const search = new URLSearchParams({
     action: "send-sms",
@@ -219,6 +231,28 @@ export async function sendSms(params: {
   } catch (e) {
     sLog.warn(`send exception: ${String((e as Error)?.message ?? e)}`);
     return { ok: false, error: "exception" };
+  }
+}
+
+/**
+ * The account's whole outbox, oldest first, with each message's status — the only
+ * place WinSMS says whether a message really left (src/lib/sms/outbox.ts). It has
+ * no paging and no timestamps, and grows with every message: 830 items was ~300 KB
+ * and 5–8 s on 2026-11-14. Null when WinSMS cannot be read.
+ */
+export async function readOutbox(): Promise<OutboxRow[] | null> {
+  const apiKey = process.env.WINSMS_API_KEY;
+  if (!apiKey) return null;
+  try {
+    const res = await fetch(`${WINSMS_BASE}?action=get-inbox&api_key=${encodeURIComponent(apiKey)}&response=json`, {
+      method: "GET",
+      headers: WINSMS_HEADERS,
+      signal: AbortSignal.timeout(40_000),
+    });
+    if (!res.ok) return null;
+    return parseOutbox(JSON.parse(await res.text()));
+  } catch {
+    return null;
   }
 }
 

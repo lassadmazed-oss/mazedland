@@ -49,7 +49,8 @@ describe("describeListing — French", () => {
       ...flat,
       deal: "rent",
       categorySlug: "villas",
-      numbers: { area_sqm: 300, rooms: 5, bathrooms: 1, floor: 0 },
+      numbers: { area_sqm: 300, rooms: 5, bathrooms: 1, levels: 2 },
+      levelsStyle: "building",
       yes: [{ key: "pool", label: "Piscine" }],
       quartier: null,
       furnished: "furnished",
@@ -58,7 +59,7 @@ describe("describeListing — French", () => {
     expect(text).toBe(
       [
         "Villa à louer à Ariana Ville (Ariana).",
-        "Surface de 300 m², 5 pièces, 1 salle de bain, au rez-de-chaussée.",
+        "Surface de 300 m², 5 pièces, 1 salle de bain, sur 2 niveaux.",
         "Équipements : piscine.",
         "Location meublée, libre à partir du 1 décembre 2026.",
       ].join("\n"),
@@ -180,6 +181,44 @@ describe("describeListing — Arabic", () => {
   it("says the ground floor and hectares", () => {
     expect(describeListing({ ...ar, numbers: { floor: 0 } })).toContain("في الطابق الأرضي");
     expect(describeListing({ ...ar, categorySlug: "fermes", numbers: { area_sqm: 20_000 } })).toContain("المساحة 2 هكتار");
+  });
+});
+
+describe("describeListing — floors and levels", () => {
+  const sizes = (input: Partial<DescribeInput>) => describeListing({ ...flat, yes: [], ...input }).split("\n")[1];
+
+  it("says a duplex flat on the floors it takes", () => {
+    expect(sizes({ numbers: { area_sqm: 140, floor: 3, levels: 2 }, levelsStyle: "unit" })).toBe("Surface de 140 m², duplex aux 3e et 4e étages.");
+    expect(sizes({ numbers: { floor: 0, levels: 2 }, levelsStyle: "unit" })).toBe("Duplex au rez-de-chaussée et au 1er étage.");
+    expect(sizes({ numbers: { floor: 1, levels: 3 }, levelsStyle: "unit" })).toBe("Triplex du 1er au 3e étage.");
+    expect(sizes({ locale: "ar", numbers: { floor: 3, levels: 2 }, levelsStyle: "unit" })).toBe("دوبلكس في الطابق الثالث والرابع.");
+    expect(sizes({ locale: "ar", numbers: { floor: 0, levels: 3 }, levelsStyle: "unit" })).toBe("تريبلكس من الطابق الأرضي للطابق الثاني.");
+    // One level is the usual flat: its floor, as before.
+    expect(sizes({ numbers: { floor: 2, levels: 1 }, levelsStyle: "unit" })).toBe("Au 2e étage.");
+  });
+
+  it("says a whole villa's levels, never « au rez-de-chaussée »", () => {
+    const villa = { categorySlug: "villas", levelsStyle: "building" as const };
+    expect(sizes({ ...villa, locale: "ar", numbers: { area_sqm: 300, levels: 2 } })).toBe("المساحة 300 م²، على زوز طوابق.");
+    expect(sizes({ ...villa, numbers: { levels: 1 } })).toBe("De plain-pied.");
+    // An old « RDC » on a villa says nothing: it is not passed, and not said if it were.
+    expect(sizes({ ...villa, numbers: { area_sqm: 300, floor: 0 } })).toBe("Surface de 300 m².");
+  });
+
+  it("says one floor of a villa as what is offered", () => {
+    const text = describeListing({
+      ...flat,
+      deal: "rent",
+      categorySlug: "villas",
+      numbers: { rooms: 3, floor: 1, levels: 1 },
+      levelsStyle: "building",
+      floorOnly: true,
+      yes: [],
+      quartier: null,
+    });
+    expect(text.split("\n").slice(0, 2)).toEqual(["Étage de villa à louer à Ariana Ville (Ariana).", "3 pièces, au 1er étage."]);
+    const ar = describeListing({ ...flat, locale: "ar", categorySlug: "maisons", numbers: { floor: 0, levels: 1 }, levelsStyle: "building", floorOnly: true, yes: [], quartier: null });
+    expect(ar.split("\n").slice(0, 2)).toEqual(["طابق من دار للبيع في أريانة المدينة (أريانة).", "في الطابق الأرضي."]);
   });
 });
 

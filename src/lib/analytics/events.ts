@@ -38,6 +38,8 @@ export const EVENT_NAMES = [
   "visit_request",
   "offer_open",
   "offer_send",
+  "price_question_open",
+  "price_question",
   "favourite_add",
   "favourite_remove",
   "compare_add",

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
+import { SAFE_DECODE, isPhoto } from "@/lib/imageSafety";
 import { isSocialChannel } from "@/lib/social/channels";
 import { instagramCrop } from "@/lib/social/policy";
 
@@ -16,9 +17,14 @@ export const dynamic = "force-dynamic";
  * public URL; Facebook gets the same file. For Instagram the photo is also
  * brought inside the 4:5 – 1.91:1 frame it accepts (centred crop).
  *
- * Public, because Meta's servers fetch it without a session — but only for a
- * request an admin approved, so this is not an open image converter. The
- * request id is a uuid nobody can guess.
+ * TikTok pulls the same photos (?c=tiktok), sized to its 1080p ceiling. It
+ * only pulls from a domain or URL prefix verified in the TikTok app — this
+ * route's prefix, https://www.mazed.immo/api/social/image/ (the signature
+ * file is served one level up, ../route.ts).
+ *
+ * Public, because Meta's and TikTok's servers fetch it without a session —
+ * but only for a request an admin approved, so this is not an open image
+ * converter. The request id is a uuid nobody can guess.
  */
 const SERVABLE = ["scheduled", "published"];
 
@@ -61,14 +67,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ requ
 
   try {
     // Upright first, so the crop is computed on the photo as it is seen.
-    const upright = await sharp(Buffer.from(await source.arrayBuffer()), { failOn: "none" })
+    const bytes = Buffer.from(await source.arrayBuffer());
+    // Only a photo reaches the decoder (src/lib/imageSafety.ts).
+    if (!isPhoto(bytes)) return NextResponse.json({ error: "decode_failed" }, { status: 422 });
+    const upright = await sharp(bytes, SAFE_DECODE)
       .rotate()
       .toBuffer({ resolveWithObject: true });
     let img = sharp(upright.data);
     const crop = channel === "instagram" ? instagramCrop(upright.info.width, upright.info.height) : null;
     if (crop) img = img.extract(crop);
+    // TikTok takes photos up to 1080p: 1920 × 1080 lying down, 1080 × 1920 standing.
+    const box = channel === "tiktok"
+      ? upright.info.width >= upright.info.height ? { width: 1920, height: 1080 } : { width: 1080, height: 1920 }
+      : { width: 1440, height: 1440 };
     const out = await img
-      .resize({ width: 1440, height: 1440, fit: "inside", withoutEnlargement: true })
+      .resize({ ...box, fit: "inside", withoutEnlargement: true })
       .flatten({ background: "#ffffff" })
       .jpeg({ quality: 88, mozjpeg: true })
       .toBuffer();

@@ -6,6 +6,7 @@ import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
 import { withPhotoSizes } from "@/lib/photoSizes";
+import { unreferencedPhotoPaths } from "@/lib/listings/storage";
 
 /**
  * DELETE /api/annonces/:id — the seller deletes one of their drafts.
@@ -41,8 +42,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { data: gone, error } = await admin.from("listings").delete().eq("id", id).eq("status", "draft").select("id");
   if (error) return fail("listing_delete_failed", 500, error);
   if (!gone || gone.length === 0) return NextResponse.json({ error: "not_a_draft" }, { status: 409 });
-  // Orphaned bytes cost little; a failed cleanup does not undo the delete.
-  if (paths.length) await admin.storage.from("properties").remove(withPhotoSizes(paths)).then(() => {}, () => {});
+  // Orphaned bytes cost little; a failed cleanup does not undo the delete. Only
+  // this seller's own files that no other annonce uses go: a path is whatever
+  // a draft was saved with, and the file behind it may be someone else's.
+  const mine = await unreferencedPhotoPaths(admin, paths.filter((p) => p.startsWith(`${user.id}/`)));
+  if (mine.length) await admin.storage.from("properties").remove(withPhotoSizes(mine)).then(() => {}, () => {});
 
   logAction(req, user, "listing.draft_delete", { id, title: listing.title });
   return NextResponse.json({ ok: true });

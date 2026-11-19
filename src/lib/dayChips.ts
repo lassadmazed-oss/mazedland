@@ -12,6 +12,9 @@ import { intlTag } from "@/lib/utils";
 /** `day` moved by `n` days, at noon UTC so no time zone tips it over. */
 export function addDays(day: string, n: number): string {
   const d = new Date(`${day}T12:00:00Z`);
+  // Not a day: say so by returning it as it came (the API refuses it), rather
+  // than throw from a render (toISOString on an Invalid Date is a RangeError).
+  if (Number.isNaN(d.getTime())) return day;
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }

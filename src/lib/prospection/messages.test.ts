@@ -1,0 +1,105 @@
+import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
+import fr from "../../../messages/fr.json";
+import ar from "../../../messages/ar.json";
+
+/**
+ * The screens of Prospection say everything with `t("some.key")`, and a key
+ * that is missing prints as its own name in front of the team (found in the
+ * first run on the live database: « adminProspection.work.contactedDone »).
+ * Every literal key a screen asks for must exist in French and in Arabic.
+ * Keys built from a variable (`t(`col.${status}`)`) are checked by hand below.
+ */
+const ROOT = process.cwd();
+const SCREENS: [namespace: string, file: string][] = [
+  ["adminProspection", "src/app/[locale]/admin/prospection/page.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/NewLeadForm.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/LeadWorkspace.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/nouveau/page.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/[id]/page.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/extension/page.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/agences/page.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/agences/ShareForm.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/agences/[id]/page.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/agences/[id]/AgencyWorkspace.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/agences/import/page.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/agences/import/ImportForm.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/agences/nouvelle/page.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/agences/nouvelle/NewAgencyForm.tsx"],
+  ["adminProspection", "src/app/[locale]/admin/prospection/rapport/AgencyDay.tsx"],
+  ["manage", "src/app/[locale]/gerer/[token]/page.tsx"],
+  ["manage", "src/app/[locale]/gerer/[token]/ManageActions.tsx"],
+];
+
+const get = (o: unknown, p: string): unknown =>
+  p.split(".").reduce<unknown>((a, k) => (a && typeof a === "object" ? (a as Record<string, unknown>)[k] : undefined), o);
+
+describe("Prospection messages", () => {
+  it("has every literal key its screens ask for, in French and in Arabic", () => {
+    const missing: string[] = [];
+    for (const [ns, file] of SCREENS) {
+      const src = fs.readFileSync(path.join(ROOT, file), "utf8");
+      for (const m of src.matchAll(/\bt\(\s*"([A-Za-z0-9_.]+)"/g)) {
+        for (const [lang, msgs] of [["fr", fr], ["ar", ar]] as const) {
+          if (get(msgs, `${ns}.${m[1]}`) === undefined) missing.push(`${lang}: ${ns}.${m[1]}`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it("has every key built from a variable", () => {
+    const expected: [string, string[]][] = [
+      ["adminProspection.col", ["to_contact", "contacted", "confirmed", "online", "declined"]],
+      ["adminProspection.empty", ["to_contact", "contacted", "confirmed", "online"]],
+      ["adminProspection.range", ["1", "7", "30"]],
+      ["adminProspection.kindFilter", ["all", "owner", "agency"]],
+      ["adminProspection.tag", ["broker", "interested"]],
+      ["adminProspection.work.kind", ["label", "owner", "agency", "ownerHint", "agencyHint", "guess"]],
+      ["adminProspection.work.steps", ["draft", "write", "yes", "publish", "agency"]],
+      ["adminProspection.work.stepHint", ["draft", "write", "yes", "publish", "agency", "writeAgency"]],
+      ["adminProspection.work.check.kind", ["exterior", "living", "kitchen", "bedroom", "bathroom", "plot", "plan", "other"]],
+      ["adminProspection.work.check.flag", ["phone", "overlay", "people", "not_property", "low_quality", "duplicate"]],
+      ["adminProspection.extension.steps", ["download", "unzip", "developer", "load", "pin", "use"]],
+      ["adminProspection.extension.privacy", ["reads", "sends", "account", "review"]],
+      ["adminProspection.work.outcome", ["no_answer", "thinking", "interested", "refused", "wrong_number"]],
+      ["adminProspection.work.channel", ["whatsapp", "sms", "call", "messenger", "other"]],
+      ["adminProspection.work.event", ["created", "contacted", "no_answer", "thinking", "interested", "refused", "wrong_number", "confirmed", "published", "sms", "note", "assigned", "broker"]],
+      ["adminProspection.work.confirmBlockers", ["wrong_step", "is_agency", "no_phone", "do_not_contact", "no_category", "no_governorate", "no_title", "no_reply", "no_channel"]],
+      ["adminProspection.work.publishBlockers", ["wrong_step", "no_listing", "photos", "photos_not_checked", "no_price"]],
+      ["adminProspection.new.errors", ["too_short", "do_not_contact", "rate_limited", "failed"]],
+      ["adminProspection.agencies.stage", ["to_call", "contacted", "interested", "signed_up", "posted", "declined"]],
+      ["adminProspection.agencies.outcome", ["no_answer", "callback", "info_sent"]],
+      ["adminProspection.agencies.reason", ["price", "no_time", "other_platform", "not_interested", "closed_down", "wrong_number", "other"]],
+      ["adminProspection.agencies.result", ["interested", "no_answer", "callback", "info_sent", "declined", "declinedConfirm"]],
+      ["adminProspection.agencies.source", ["csv", "manual", "extension", "google", "chamber", "other"]],
+      ["adminProspection.agencies.event", ["created", "imported", "contacted", "no_answer", "callback", "info_sent", "interested", "declined", "assigned", "note", "reopened", "signed_up", "posted"]],
+      ["adminProspection.agencies.shopStatus", ["pending", "approved", "suspended", "rejected"]],
+      ["adminProspection.agencies.errors", ["failed", "no_reason", "no_follow_up", "not_found", "no_name", "bad_phone", "nothing_to_reach", "bad_governorate", "duplicate", "do_not_contact", "wrong_step", "bad_channel", "empty", "forbidden", "blocked", "bad_member", "nothing", "bad_kind", "bad_action"]],
+      ["adminProspection.agencies.import.errors", ["empty", "too_big", "no_name_column", "forbidden"]],
+      ["adminProspection.agencies.import.why", ["no_name", "bad_phone", "nothing_to_reach"]],
+      ["adminProspection.agencies.report", ["contacted", "reached", "interested", "declined", "noAnswer", "signedUp", "posted"]],
+      ["manage.status", ["published", "pending_review", "draft", "rejected", "sold", "rented", "archived", "expired", "pending_payment"]],
+    ];
+    const missing: string[] = [];
+    for (const [base, keys] of expected) {
+      for (const k of keys) {
+        for (const [lang, msgs] of [["fr", fr], ["ar", ar]] as const) {
+          if (get(msgs, `${base}.${k}`) === undefined) missing.push(`${lang}: ${base}.${k}`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it("escapes the {holes} of a message in the settings hints, so the console can print them", () => {
+    for (const msgs of [fr, ar]) {
+      const reg = (msgs as unknown as { settingsRegistry: Record<string, { hint: string }> }).settingsRegistry;
+      for (const key of ["prospect_ask_ar", "prospect_ask_fr", "prospect_ask_agency_ar", "prospect_ask_agency_fr", "prospect_confirm_ar", "prospect_confirm_fr", "prospect_sms_ar", "prospect_sms_fr"]) {
+        // An unquoted {name} would be read as an argument nobody passes.
+        expect(reg[key].hint.replace(/'\{\w+\}'/g, "")).not.toMatch(/\{\w+\}/);
+      }
+    }
+  });
+});

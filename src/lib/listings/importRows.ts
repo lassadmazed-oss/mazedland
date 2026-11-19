@@ -1,6 +1,7 @@
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
 import { asDealType, appliesTo, isoDay, type DealType } from "./deal";
 import { attributeOutOfBounds, num, phone, titleTooShort, type ListingBody } from "./input";
+import { LEVELS_KEY, levelsInWords } from "./levels";
 
 /**
  * « Importer plusieurs annonces » (the agencies' bulk import, 2026-10-31).
@@ -81,7 +82,7 @@ export function fold(s: string): string {
 
 export type ColumnKey =
   | "title" | "deal" | "type" | "price" | "negotiable" | "governorate" | "delegation" | "address" | "description"
-  | "area_sqm" | "rooms" | "bathrooms" | "floor" | "year_built"
+  | "area_sqm" | "rooms" | "bathrooms" | "floor" | "levels" | "year_built"
   | "phone" | "whatsapp" | "deposit" | "charges" | "furnished" | "available" | "min_lease"
   | "parking" | "elevator" | "air_conditioning" | "heating" | "garden" | "pool" | "buildable" | "titled" | "serviced";
 
@@ -100,6 +101,7 @@ const ALIASES: Record<ColumnKey, string[]> = {
   rooms: ["pieces", "nbpieces", "nombredepieces", "chambres", "nbchambres", "rooms", "s", "غرف"],
   bathrooms: ["sallesdebain", "sdb", "nbsdb", "salledebain", "bathrooms", "حمامات"],
   floor: ["etage", "floor", "الطابق"],
+  levels: ["niveaux", "niveau", "nbniveaux", "nombredeniveaux", "levels", "الطوابق", "عددالطوابق"],
   year_built: ["annee", "anneeconstruction", "anneedeconstruction", "yearbuilt", "سنةالبناء"],
   phone: ["telephone", "tel", "phone", "mobile", "gsm", "contact", "هاتف"],
   whatsapp: ["whatsapp", "wa"],
@@ -134,6 +136,7 @@ export const MODEL_HEADERS: Record<ColumnKey, string> = {
   rooms: "Pièces",
   bathrooms: "Salles de bain",
   floor: "Étage",
+  levels: "Niveaux",
   year_built: "Année",
   phone: "Téléphone",
   whatsapp: "WhatsApp",
@@ -202,6 +205,11 @@ export function parseDeal(raw: string): DealType | null {
   return null;
 }
 
+/** « Duplex » is 2, « Triplex » 3, « R+1 » 2, « 2 »: the number the form stores for the levels. */
+export function parseLevels(raw: string): number | null {
+  return levelsInWords(raw) ?? parseNumber(raw);
+}
+
 /** « S+2 » is 2, « 3 pièces » is 3: the number the form stores for the rooms. */
 export function parseRooms(raw: string): number | null {
   const sPlus = raw.match(/s\s*\+\s*(\d+)/i);
@@ -230,13 +238,15 @@ export function parseDate(raw: string): string | null {
 /** Words that name each leaf category; matched at the start of a word of the cell. */
 const TYPE_WORDS: { slug: string; words: string[] }[] = [
   { slug: "locaux-commerciaux", words: ["local", "locaux", "magasin", "boutique", "commerce", "محل"] },
-  { slug: "appartements", words: ["appart", "studio", "duplex", "triplex", "apt", "شقة", "شقه"] },
+  { slug: "appartements", words: ["appart", "studio", "apt", "شقة", "شقه"] },
   { slug: "villas", words: ["villa", "فيلا"] },
   { slug: "maisons", words: ["maison", "dar", "house", "دار", "منزل"] },
   { slug: "fermes", words: ["ferme", "agricole", "farm", "ضيعة", "مزرعة"] },
   { slug: "terrain", words: ["terrain", "lot", "lotissement", "land", "أرض"] },
   { slug: "bureaux", words: ["bureau", "plateau", "office", "مكتب"] },
   { slug: "depots", words: ["depot", "entrepot", "hangar", "مستودع", "مخزن"] },
+  // Last: « Villa duplex » is a villa on two levels; a « Duplex » alone is a flat.
+  { slug: "appartements", words: ["duplex", "triplex", "دوبلكس", "تريبلكس"] },
 ];
 
 export type LeafCategory = { id: string; slug: string; label_fr: string; label_ar: string | null; kind: string };
@@ -306,7 +316,17 @@ export type ImportContext = {
   locale: string;
   /** The duplicate keys of what the agence already has. */
   existing: ReadonlySet<string>;
+  /** Whether « Prix sur demande » is offered for a sale and for a rent (0222, the console); both when unsaid. */
+  onRequest?: { sale: boolean; rent: boolean };
 };
+
+/**
+ * A price cell that says « ask » rather than a figure: the words the site
+ * itself prints (« Sur demande », « عند الطلب ») and the ones agences write
+ * (« Prix à consulter », « السوم في الخاص »), the whole cell and nothing else.
+ */
+export const ON_REQUEST_CELL =
+  /^(?:prix\s+)?(?:sur\s+demande|à\s+consulter|a\s+consulter|nous\s+consulter|en\s+privé|en\s+prive)$|^(?:(?:السوم|السعر|الثمن)\s+)?(?:عند\s+الطلب|على\s+الطلب|في\s+الخاص|بالخاص)$/i;
 
 /** What makes two lines the same annonce: the title, the price, the surface, the governorate. */
 export function duplicateKey(title: string, price: number | null, area: number | null, governorate: string): string {
@@ -367,8 +387,11 @@ export function interpretLine(
   }
 
   const priceRaw = get("price");
-  const onRequest = /^(sur demande|nous consulter|على الطلب)$/i.test(priceRaw.trim());
+  const onRequest = ON_REQUEST_CELL.test(priceRaw.trim().replace(/\s+/g, " "));
   const price = onRequest ? null : priceRaw === "" ? null : parseNumber(priceRaw);
+  if (onRequest && ctx.onRequest && !(rent ? ctx.onRequest.rent : ctx.onRequest.sale)) {
+    errors.push({ code: "price_on_request_off", value: priceRaw });
+  }
   if (!onRequest) {
     if (priceRaw === "") errors.push({ code: "price_missing" });
     else if (price === null || num(price) === null || price <= 0) errors.push({ code: "price_invalid", value: priceRaw });
@@ -393,12 +416,18 @@ export function interpretLine(
         errors.push({ code: "answer_unclear", value: `${named(def)}: ${raw}` });
       } else if (yn !== null) attributes[def.field_key] = yn;
     } else {
-      const n = def.field_key === "rooms" ? parseRooms(raw) : parseNumber(raw);
+      const n =
+        def.field_key === "rooms" ? parseRooms(raw) : def.field_key === LEVELS_KEY ? parseLevels(raw) : parseNumber(raw);
       if (n === null || attributeOutOfBounds(def.field_key, n)) {
         unreadable.add(def.field_key);
         errors.push({ code: "answer_invalid", value: `${named(def)}: ${raw}` });
       } else attributes[def.field_key] = n;
     }
+  }
+  // « Villa duplex » in the Type cell says the levels when no column did.
+  if (defs.some((d) => d.field_key === LEVELS_KEY) && attributes[LEVELS_KEY] === undefined && !unreadable.has(LEVELS_KEY)) {
+    const fromType = levelsInWords(typeRaw);
+    if (fromType !== null) attributes[LEVELS_KEY] = fromType;
   }
   // What the category requires and the line did not say (one already refused above is not asked twice).
   for (const def of defs) {

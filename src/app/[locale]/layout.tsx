@@ -6,8 +6,7 @@ import { getMessages, getTranslations, setRequestLocale } from "next-intl/server
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { Suspense } from "react";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { VercelMeasure } from "@/components/analytics/VercelMeasure";
 import { routing } from "@/i18n/routing";
 import { isRtl } from "@/lib/i18n";
 import { jakarta, cairo } from "../fonts";
@@ -29,10 +28,15 @@ import { LocalizedValidation } from "@/components/ui/LocalizedValidation";
 import { clientSettings, getSettings } from "@/lib/settings/server";
 import { guidesListed } from "@/lib/guides/server";
 
-// The settings an admin changes reach every page (feature switches, limits).
-// Pages rendered ahead of time (terms, contact…) are rebuilt at most a minute
-// after a change; the others read them on each request.
-export const revalidate = 60;
+// The settings an admin changes reach every page (feature switches, limits):
+// saving them rebuilds the pages from the next visit on (revalidateSite,
+// src/lib/revalidatePublic.ts). The number below is only a CEILING. Next keeps
+// the LOWEST `revalidate` of a route's layouts and page, so a low one here
+// capped every page under it to a rebuild a minute, however slow its content;
+// and a page whose bytes come out different at each rebuild is stored again
+// each time (ISR writes, billed per 8 KB: the market figures, the Pro page and
+// the directory cost about $6 in eleven days, 2026-11-14). A page sets its own.
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -192,8 +196,7 @@ export default async function LocaleLayout({
             console errors on every page. */}
         {process.env.VERCEL ? (
           <>
-            <Analytics />
-            <SpeedInsights />
+            <VercelMeasure />
           </>
         ) : null}
         <Suspense fallback={null}>

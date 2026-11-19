@@ -20,6 +20,8 @@ export const ADMIN_SECTIONS = [
   "vendeurs",
   "agences",
   "social",
+  // The owners the team brings in (0218): given alone to the people who write to them.
+  "prospection",
   "paiements",
   "offres",
   "resultats",
@@ -56,6 +58,8 @@ export const ROLE_PRESETS = {
   moderation: ["annonces", "demandes", "vendeurs", "agences", "social"],
   finance: ["paiements", "offres", "resultats"],
   content: ["home", "publicites", "popups", "notifications", "legal-docs", "catalogue", "content", "social"],
+  // The team that writes to the owners: this screen and nothing else.
+  prospection: ["prospection"],
 } as const satisfies Record<string, readonly AdminSection[]>;
 export type RolePreset = keyof typeof ROLE_PRESETS;
 export const ROLE_PRESET_KEYS = Object.keys(ROLE_PRESETS) as RolePreset[];

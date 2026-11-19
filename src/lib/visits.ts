@@ -5,6 +5,7 @@
  * Pure — the slots, the moves allowed from each status, the client stages —
  * so the rules are tested once and the routes only apply them.
  */
+import { isoDayIn } from "@/lib/listings/choices";
 
 export const VISIT_PARTS = ["morning", "afternoon", "evening"] as const;
 export type VisitPart = (typeof VISIT_PARTS)[number];
@@ -43,7 +44,7 @@ export function personName(input: unknown): string | null {
 
 /** Today in Tunisia, as YYYY-MM-DD — the day a slot is compared with. */
 export function tunisDay(now: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Tunis" }).format(now);
+  return isoDayIn(now, "Africa/Tunis");
 }
 
 function addDays(day: string, n: number): string {
@@ -113,7 +114,7 @@ export function pickSlot(slots: VisitSlot[], raw: unknown): VisitSlot | null {
 // ── The client pipeline ─────────────────────────────────────────────────────
 export const LEAD_STAGES = ["new", "contacted", "visit", "negotiation", "won", "lost"] as const;
 export type LeadStage = (typeof LEAD_STAGES)[number];
-export const LEAD_SOURCES = ["visit", "manual", "suggestion", "offer"] as const;
+export const LEAD_SOURCES = ["visit", "manual", "suggestion", "offer", "price_question"] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 
 /** A visit request moves its client along; it never moves one back from a decided stage. */

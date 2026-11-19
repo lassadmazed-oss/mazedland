@@ -13,6 +13,7 @@
  */
 import type { SettingDef, ValueOf } from "./define";
 import { GA_ID_PATTERN } from "@/lib/analytics/ga";
+import { ASK_AGENCY_AR, ASK_AGENCY_FR, ASK_AR, ASK_FR, CONFIRM_AR, CONFIRM_FR, SMS_AR, SMS_FR } from "@/lib/prospection/templates";
 
 export const SETTINGS = {
   // ── Features: each one switched off disappears from the site and its API
@@ -22,6 +23,9 @@ export const SETTINGS = {
   // « Proposer un prix » (0211): a buyer's offer below the asking price, which
   // the seller accepts, refuses or answers once (src/lib/offers.ts).
   feature_offers: { group: "features", type: "bool", default: true, client: true },
+  // « Demander le prix » on an annonce « sur demande » (0222): the buyer asks,
+  // the seller hears it by SMS and answers with the price.
+  feature_price_questions: { group: "features", type: "bool", default: true, client: true },
   feature_compare: { group: "features", type: "bool", default: true, client: true },
   feature_requests: { group: "features", type: "bool", default: true, client: true, href: "/admin/demandes" },
   feature_pro_signup: { group: "features", type: "bool", default: true, client: true, href: "/admin/agences" },
@@ -115,7 +119,7 @@ export const SETTINGS = {
   // governorate with each one's count; shown from so many annonces online,
   // and a governorate gets its circle from so many of its own.
   home_map_enabled: { group: "home", type: "bool", default: true },
-  home_map_min_total: { group: "home", type: "int", default: 10, min: 0, max: 500, choices: [0, 10, 20, 50, 100] },
+  home_map_min_total: { group: "home", type: "int", default: 10, min: 0, max: 500, choices: [0, 10, 20, 50, 100, 200, 500] },
   home_map_min_count: { group: "home", type: "int", default: 1, min: 1, max: 20, choices: [1, 2, 3, 5] },
   home_rail_featured: { group: "home", type: "bool", default: true, href: "/admin/home" },
   home_rail_most_viewed: { group: "home", type: "bool", default: true },
@@ -146,10 +150,18 @@ export const SETTINGS = {
   // ── Publication.
   listing_default_days: { group: "publication", type: "int", default: 30, min: 1, max: 365, unit: "days" },
   listing_max_photos: { group: "publication", type: "int", default: 12, min: 1, max: 30, unit: "photos", client: true },
+  // « Prix sur demande » in the form, for a sale and for a rent (the owner,
+  // 2026-11-13: some sellers want to be asked). Off: the seller types a price;
+  // the annonces already « sur demande » stay as they are.
+  price_on_request_sale: { group: "publication", type: "bool", default: true, client: true },
+  price_on_request_rent: { group: "publication", type: "bool", default: true, client: true },
   // The full-screen gallery's zoom (the owner, 2026-11-05): on or off, and how
   // many times a photo grows. Uploads are 1600 px long, so past 3 it blurs.
   gallery_zoom: { group: "publication", type: "bool", default: true, client: true },
   gallery_zoom_max: { group: "publication", type: "int", default: 3, min: 2, max: 4, choices: [2, 3, 4], client: true },
+  // An annonce's views (distinct visitors, the seller left out) on its page, from this many on;
+  // below, « 3 vues » would tell a buyer the site is empty. 0: never; 1: always.
+  listing_views_public_min: { group: "publication", type: "int", default: 50, min: 0, max: 1000, choices: [0, 1, 20, 50, 100, 200] },
   catalogue_page_size: { group: "publication", type: "int", default: 24, min: 12, max: 60 },
   // How many annonces side by side on a phone's catalogue: one, with big
   // photos (Idealista, Rightmove), or two, denser (Tayara). Tablets and up
@@ -185,6 +197,9 @@ export const SETTINGS = {
   // « Envoyer sans payer » under the agence request: the agence comes alone,
   // for the founding offer the console then gives (« Offrir une période »).
   pro_signup_pay_later: { group: "publication", type: "bool", default: true },
+  // An agency must give the number of its licence (the Ministry of Commerce's agrément) to ask for its page (0230).
+  // Off: the number is asked but may be left out; either way « Agence agréée » shows only once an admin has checked it.
+  shop_licence_required: { group: "publication", type: "bool", default: false, href: "/admin/agences" },
   // The guides (0208): how many cards a page of /guides holds, how many
   // « Guides liés » close a guide, how many « Guides utiles » stand beside an
   // annonce and under the catalogue (0 = no strip), and from how many
@@ -222,6 +237,19 @@ export const SETTINGS = {
   requests_cta_listing: { group: "buyers", type: "bool", default: true },
   requests_cta_home: { group: "buyers", type: "bool", default: true },
   requests_listing_margin: { group: "buyers", type: "int", default: 10, min: 0, max: 50, unit: "percent", choices: [0, 10, 20, 30] },
+  // A visitor fills the demande signed out and confirms the number by SMS at
+  // the end, which makes the account (POST /api/requests/guest). Off, or
+  // without SMS: login first, as before.
+  requests_guest_form: { group: "buyers", type: "bool", default: true },
+  // « Ce que les gens cherchent » (/demandes, the owner, 2026-11-15): the open
+  // demandes as totals for everyone — where, what kind — so agencies not on Mazed
+  // see what the market asks for, plus the home card's count and the Pro page's.
+  // Under `requests_board_min` open demandes it keeps quiet. A card per demande
+  // only for those saved from `requests_board_cards_since` on (the form promised
+  // « Pro agencies only » before): empty = totals only (src/lib/requests/board.ts).
+  requests_board: { group: "buyers", type: "bool", default: true },
+  requests_board_min: { group: "buyers", type: "int", default: 3, min: 1, max: 50, choices: [1, 3, 5, 10] },
+  requests_board_cards_since: { group: "buyers", type: "text", default: "", max: 40, ltr: true },
   // The strip's size, and the smallest plan that earns a place in it: the plan's
   // annonces (10 Starter and up, 40 Pro and up, 120 Business only).
   agency_strip_max: { group: "buyers", type: "int", default: 6, min: 2, max: 12, choices: [4, 6, 8, 12] },
@@ -245,8 +273,10 @@ export const SETTINGS = {
   contact_whatsapp: { group: "contact", type: "text", default: "+216 58 415 510", max: 30, ltr: true, client: true },
   contact_email: { group: "contact", type: "text", default: "contact@mazed.immo", max: 120, ltr: true },
   contact_phone: { group: "contact", type: "text", default: "", max: 30, ltr: true },
-  contact_tiktok: { group: "contact", type: "text", default: "mazedimmo", max: 60, ltr: true },
-  contact_facebook: { group: "contact", type: "text", default: "100057517755322", max: 120, ltr: true },
+  // The owner's accounts as given on 2026-11-15: TikTok @mazed613 and the big « Mazed »
+  // page facebook.com/mazedonline (the old default was the profile id of « Mazed tayara »).
+  contact_tiktok: { group: "contact", type: "text", default: "mazed613", max: 60, ltr: true },
+  contact_facebook: { group: "contact", type: "text", default: "mazedonline", max: 120, ltr: true },
   // Mazed Immo's Instagram (@mazed_immo, given by the owner on 2026-11-03): a handle or the pasted link.
   contact_instagram: { group: "contact", type: "text", default: "mazed_immo", max: 120, ltr: true },
 
@@ -269,6 +299,66 @@ export const SETTINGS = {
   // At most this many asks wait in « À valider » (the tab shows up to 40); no new one while it is full.
   social_auto_queue_waiting_max: { group: "social", type: "int", default: 40, min: 1, max: 40, choices: [10, 20, 40] },
   social_auto_queue_min_photos: { group: "social", type: "int", default: 1, min: 0, max: 10, choices: [0, 1, 2, 3] },
+  // TikTok (@mazed613) beside « Mazed » (the owner, 2026-11-15): proposed in the
+  // same ask, approved with it. Until the TikTok account is connected, an
+  // approved TikTok post waits in « File » as a task, and leaves by itself after.
+  social_auto_queue_tiktok: { group: "social", type: "bool", default: true },
+
+  // ── TikTok (src/lib/social/tiktok.ts). An app TikTok has not audited may
+  //    only post « only me », to an account set to private; a draft goes to
+  //    the TikTok app's inbox, where a person adds the music and posts it.
+  // On: each post is sent as a draft to the TikTok app (finished there by hand).
+  // Off: posted directly, public or private as the next switch says.
+  social_tiktok_draft: { group: "social", type: "bool", default: true },
+  // Direct posts: public (once TikTok has approved the app) or « only me ».
+  social_tiktok_public: { group: "social", type: "bool", default: false },
+  // TikTok's own ceiling is about 15 posts a day, and 5 drafts waiting in the app.
+  social_tiktok_daily_limit: { group: "social", type: "int", default: 5, min: 1, max: 15, unit: "per_day", choices: [3, 5, 10, 15] },
+  social_tiktok_auto_music: { group: "social", type: "bool", default: true },
+  social_tiktok_comments: { group: "social", type: "bool", default: true },
+  // The only TikTok account « Connecter TikTok » accepts (no @); empty: whichever signs in.
+  social_tiktok_username: { group: "social", type: "text", default: "mazed613", max: 60, ltr: true },
+  // TikTok pulls the photos only from a verified domain or URL prefix. For the
+  // prefix https://www.mazed.immo/api/social/image/, the signature file TikTok
+  // hands over: its name and its text, served at that prefix (api/social/image/[requestId]/route.ts).
+  social_tiktok_verify_file: { group: "social", type: "text", default: "", max: 120, ltr: true, pattern: /^[A-Za-z0-9_-]{1,100}\.txt$/ },
+  social_tiktok_verify_text: { group: "social", type: "text", default: "", max: 500, ltr: true },
+
+  // ── Prospection (0218): the team that brings private owners to the site.
+  //    Off: the screen and its API refuse; the leads and the annonces made stay.
+  feature_prospection: { group: "features", type: "bool", default: true, href: "/admin/prospection" },
+  // « Vérifier les photos »: the model looks at each photo of an owner's annonce (a phone number, another agency's
+  // mark, a face, a screenshot, quality, which room) and the site tells whether the picture is already on another annonce (0220).
+  feature_prospect_photo_check: { group: "features", type: "bool", default: true, href: "/admin/prospection" },
+  // The daily notice in the bell of each member who has owners to write to again,
+  // « oui » waiting for photos, or an SMS that never left (0219).
+  prospect_reminders: { group: "features", type: "bool", default: true, href: "/admin/prospection" },
+  // The evening notice to the whole-console admins: what each member of the team did that day (0223),
+  // and the hour of the evening (Tunis time) from which it goes.
+  prospect_report: { group: "features", type: "bool", default: true, href: "/admin/prospection/rapport" },
+  prospect_report_hour: { group: "features", type: "int", default: 21, min: 18, max: 23, unit: "hour_of_day", choices: [18, 19, 20, 21, 22, 23], href: "/admin/prospection/rapport" },
+  // How long a finished lead keeps the post's text and the poster's name: they are a stranger's words.
+  prospect_keep_days: { group: "privacy", type: "int", default: 180, min: 30, max: 1825, unit: "days", choices: [90, 180, 365], href: "/admin/prospection" },
+  // How many owners one member may write to in a day: the number the team
+  // writes from is a private one, and a platform that sees a burst may block it.
+  prospect_daily_cap: { group: "limits", type: "int", default: 30, min: 1, max: 500, unit: "per_day", choices: [10, 20, 30, 50, 100], href: "/admin/prospection" },
+  // The team of Mazed Immo publishes past an owner's free places (2026-11-16): its members are staff with an admin
+  // account, not sellers. Off: only the whole-console admin does, a member is held to the owner's places (402).
+  // The moderation is unchanged either way: an annonce still waits for an admin when auto-publication is off.
+  prospect_team_unlimited: { group: "limits", type: "bool", default: true, href: "/admin/prospection" },
+  // « Confirmé par l'équipe Mazed » on an annonce the team confirmed with its owner.
+  prospect_show_badge: { group: "publication", type: "bool", default: true, client: true, href: "/admin/prospection" },
+  // The number an owner can call about their annonce (the SMS carries it); the WhatsApp contact when empty.
+  prospect_team_phone: { group: "contact", type: "text", default: "", max: 30, ltr: true, href: "/admin/prospection" },
+  // The messages (src/lib/prospection/templates.ts lists the {holes}).
+  prospect_ask_ar: { group: "publication", type: "text", default: ASK_AR, max: 800, multiline: true, href: "/admin/prospection" },
+  prospect_ask_fr: { group: "publication", type: "text", default: ASK_FR, max: 800, multiline: true, href: "/admin/prospection" },
+  prospect_ask_agency_ar: { group: "publication", type: "text", default: ASK_AGENCY_AR, max: 900, multiline: true, href: "/admin/prospection" },
+  prospect_ask_agency_fr: { group: "publication", type: "text", default: ASK_AGENCY_FR, max: 900, multiline: true, href: "/admin/prospection" },
+  prospect_confirm_ar: { group: "publication", type: "text", default: CONFIRM_AR, max: 900, multiline: true, href: "/admin/prospection" },
+  prospect_confirm_fr: { group: "publication", type: "text", default: CONFIRM_FR, max: 900, multiline: true, href: "/admin/prospection" },
+  prospect_sms_ar: { group: "publication", type: "text", default: SMS_AR, max: 400, multiline: true, href: "/admin/prospection" },
+  prospect_sms_fr: { group: "publication", type: "text", default: SMS_FR, max: 400, multiline: true, href: "/admin/prospection" },
   ai_daily_budget_usd: { group: "social", type: "number", default: 2, min: 0, max: 100, step: 0.5 },
   // One account's share of it: at about 4 cents a call, half a dollar is a dozen conversations.
   ai_user_daily_budget_usd: { group: "social", type: "number", default: 0.5, min: 0, max: 100, step: 0.1 },
@@ -290,6 +380,7 @@ export const SETTINGS = {
   // ── Abuse limits: how often one person may do a thing.
   limit_visits_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
   limit_offers_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
+  limit_price_questions_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
   limit_drafts_per_account: { group: "limits", type: "int", default: 30, min: 1, max: 500 },
   limit_reports_per_hour: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_hour" },
   limit_edits_per_hour: { group: "limits", type: "int", default: 20, min: 1, max: 200, unit: "per_hour" },
@@ -299,6 +390,17 @@ export const SETTINGS = {
   // Adding to an agence's team says whether a phone number has an account (the members route).
   limit_member_adds_per_hour: { group: "limits", type: "int", default: 20, min: 1, max: 200, unit: "per_hour" },
   sms_daily_cap: { group: "limits", type: "int", default: 6, min: 0, max: 50, unit: "per_day" },
+  // The verification codes (/api/auth/phone/send): every one costs an SMS. The
+  // ceiling for the whole site in a day — a script rotating numbers and addresses
+  // stops here — and the countries a code may be sent to (the forms' dial codes).
+  otp_daily_cap: { group: "limits", type: "int", default: 1000, min: 10, max: 100000, unit: "per_day" },
+  otp_dial_codes: {
+    group: "limits",
+    type: "list",
+    default: ["+216", "+33", "+39", "+49", "+32", "+41", "+34", "+31", "+44", "+1", "+971", "+966", "+974", "+965", "+973", "+968", "+961", "+962", "+20", "+212", "+213", "+90"],
+    maxItems: 40,
+    maxLen: 5,
+  },
   // One alert per error per this many hours (0185 reads it with the same default).
   error_alert_hours: { group: "limits", type: "int", default: 6, min: 1, max: 24, unit: "hours", choices: [1, 6, 24] },
 

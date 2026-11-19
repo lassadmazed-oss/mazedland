@@ -89,6 +89,12 @@ describe("the form, as the server reads it", () => {
     expect(f.attributes).toEqual({ area_sqm: 120, rooms: 3, floor: 0, elevator: true, view: "mer" });
     expect(listingFields({ attributes: { year_built: 2015 } }).attributes).toEqual({ year_built: 2015 });
   });
+  it("keeps a duplex and one floor of a house, and drops levels no building has", () => {
+    expect(listingFields({ attributes: { levels: "2", floor: 3 } }).attributes).toEqual({ levels: 2, floor: 3 });
+    expect(listingFields({ attributes: { floor_only: true, levels: 1, floor: 1 } }).attributes).toEqual({ floor_only: true, levels: 1, floor: 1 });
+    expect(listingFields({ attributes: { levels: 0 } }).attributes).toEqual({});
+    expect(listingFields({ attributes: { levels: 35 } }).attributes).toEqual({});
+  });
   it("drops a phone number that is not one, and a price on request has no price", () => {
     expect(listingFields({ contact_phone: "abc" }).contact_phone).toBeNull();
     expect(listingFields({ price: 5000, price_on_request: true }).price).toBeNull();

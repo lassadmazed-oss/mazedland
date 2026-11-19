@@ -5,6 +5,8 @@ import { routing } from "./i18n/routing";
 import { log } from "./lib/log";
 import { isSupabaseAuthCookie } from "./lib/supabase/session-cookie";
 import { logActivity } from "./lib/activity";
+import { trustedIp } from "./lib/clientIp";
+import { isBlockedCrawler } from "./lib/crawlers";
 import { publicPathOfTwin, queryViewPath } from "./lib/queryViews";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -52,6 +54,16 @@ const PAGEVIEW_ANON_SAMPLE = clamp01(process.env.ACTIVITY_PAGEVIEW_ANON_SAMPLE, 
 export async function proxy(req: NextRequest) {
   const t0 = performance.now();
   const { pathname, search } = req.nextUrl;
+
+  // A crawler that costs a render per visit and sends nobody (src/lib/crawlers.ts):
+  // refused first, before any routing, session or log. /robots.txt and the sitemap
+  // are outside this proxy's matcher, so it can still read what it is asked not to fetch.
+  if (isBlockedCrawler(req.headers.get("user-agent"))) {
+    return new NextResponse("Crawling is not allowed here: see /robots.txt", {
+      status: 403,
+      headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" },
+    });
+  }
 
   // Legacy /en/* → /fr/* (preserve querystring + hash).
   for (const legacy of LEGACY_LOCALES) {
@@ -194,9 +206,13 @@ export async function proxy(req: NextRequest) {
   // own redirect() ran after the response had started (a 200 with a meta
   // refresh), so they are gated here as well. On the decoded path: the raw
   // one let /fr/%61ccount through.
-  const accountMatch = decodedPath.match(
-    /^\/(fr|ar|en)\/(?:account(?:\/.*)?|watchlist|demandes\/nouvelle|annonces\/nouvelle(?:\/.*)?)\/?$/i,
-  );
+  // The demande form is open to visitors since 2026-11-13: they confirm their
+  // number at the end (/api/requests/guest), and the page itself sends to
+  // login when that cannot be (setting off, no SMS). Editing one (?id=) is
+  // still an account's.
+  const accountMatch =
+    decodedPath.match(/^\/(fr|ar|en)\/(?:account(?:\/.*)?|watchlist|annonces\/nouvelle(?:\/.*)?)\/?$/i) ??
+    (req.nextUrl.searchParams.has("id") ? decodedPath.match(/^\/(fr|ar|en)\/demandes\/nouvelle\/?$/i) : null);
   if (accountMatch && !authUserId) {
     const next = `${pathname}${search}`;
     const target = new URL(
@@ -243,7 +259,7 @@ export async function proxy(req: NextRequest) {
       userEmail: authUserEmail,
       path: pathname,
       method: req.method,
-      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      ip: trustedIp(req),
       userAgent: req.headers.get("user-agent") ?? null,
       referer: req.headers.get("referer") ?? null,
     });
@@ -261,5 +277,5 @@ export const config = {
   // late redirect inside it (the QA tour, 2026-10-30). Everything else routes
   // through the i18n + auth refresh pipeline. src/proxy.test.ts reads this
   // literal: a page must never match the extension list.
-  matcher: ["/((?!api|_next|_vercel|.*\\.(?:ico|png|jpe?g|gif|webp|avif|svg|css|js|mjs|map|json|txt|xml|webmanifest|woff2?|ttf|otf|bin|wasm|mp4|webm|pdf|zip)$).*)"],
+  matcher: ["/((?!api|_next|_vercel|.*\\.(?:ico|png|jpe?g|gif|webp|avif|svg|css|js|mjs|map|json|txt|xml|webmanifest|woff2?|ttf|otf|bin|wasm|mp4|webm|pdf|zip|csv)$).*)"],
 };

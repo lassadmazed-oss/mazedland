@@ -1,6 +1,7 @@
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { notifyMatchingRequests } from "@/lib/requests/server";
 import { loadSettings } from "@/lib/settings/server";
+import { onListingPublished } from "@/lib/prospection/online";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -43,6 +44,11 @@ export async function publicationDays(admin: Admin, feePaymentId: string | null)
  * write: two approvals a moment apart (a double click, two moderators) both
  * went through, and the seller was told twice. When nothing is in one of
  * those statuses any more, nothing is written and `wrongStatus` says so.
+ *
+ * An annonce the Mazed team confirmed with its owner (Prospection, 0218,
+ * `team_confirmed_at`) is told differently: the owner has no habit of this
+ * site, so instead of the usual notification they get one SMS with the link of
+ * their annonce and their private link (src/lib/prospection/online.ts).
  */
 export async function publishListing(
   admin: Admin,
@@ -87,7 +93,10 @@ export async function publishListing(
     .is("resolved_at", null)
     .then(() => {}, () => {});
 
-  await admin
+  const { data: teamRow } = await admin.from("listings").select("team_confirmed_at").eq("id", listing.id).maybeSingle();
+  const byTeam = Boolean(teamRow?.team_confirmed_at);
+
+  if (!byTeam) await admin
     .rpc("enqueue_notification", {
       p_user_id: listing.seller_id,
       p_kind: "listing_published",
@@ -100,6 +109,8 @@ export async function publishListing(
 
   // The people who asked for exactly this (0168). Never throws.
   await notifyMatchingRequests(admin, listing.id);
+
+  if (byTeam) await onListingPublished(admin, listing.id);
 
   return { ok: true, expiresAt: expires };
 }

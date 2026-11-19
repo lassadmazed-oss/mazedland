@@ -167,4 +167,48 @@ describe("renderNotification", () => {
     const expired = { kind: "offer_expired", title: "x", body: "x", payload: { vars: { title: "S+3 Sfax", amount: 215000, variant: "countered" } } };
     expect(renderNotification(expired, tr("fr"), "fr").body).toMatch(/votre prix de 215\s000 TND pour « S\+3 Sfax »/);
   });
+
+  it("tells the admins in both languages when WinSMS stops delivering and when it is back", () => {
+    const down = { kind: "admin_sms_down", title: "x", body: "x", payload: { vars: { reason: "Connection refused", at: "12:51" } } };
+    expect(renderNotification(down, tr("fr"), "fr").body).toBe(
+      "Depuis 12:51 (heure de Tunis), les SMS ne partent plus (WinSMS : « Connection refused »). Ils sont mis en attente et renvoyés dès que le fournisseur répond.",
+    );
+    const ad = renderNotification(down, tr("ar"), "ar");
+    expect(ad.body).toContain("12:51");
+    expect(ad.body).toContain("Connection refused");
+    expect(ad.body).not.toContain("{");
+    const up = { kind: "admin_sms_up", title: "x", body: "x", payload: { vars: { count: 3 } } };
+    expect(renderNotification(up, tr("fr"), "fr").body).toBe("WinSMS répond de nouveau. 3 SMS renvoyé(s).");
+    expect(renderNotification(up, tr("ar"), "ar").body).toContain("3");
+  });
+
+  it("words the evening report of Prospection around the members' lines, in both languages", () => {
+    const report = {
+      kind: "admin_prospect_report",
+      title: "x",
+      body: "x",
+      payload: { vars: { day: "14/11", lines: "Smartimmo 12 · 3 · 1 | Sami 0 · 0 · 0" } },
+    };
+    const f = renderNotification(report, tr("fr"), "fr");
+    expect(f.title).toBe("Prospection : le bilan du jour");
+    expect(f.body).toBe("14/11 — premiers messages · oui · en ligne : Smartimmo 12 · 3 · 1 | Sami 0 · 0 · 0");
+    const a = renderNotification(report, tr("ar"), "ar");
+    expect(a.title).toBe("الاستقطاب: حصيلة النهار");
+    expect(a.body).toContain("Smartimmo 12 · 3 · 1 | Sami 0 · 0 · 0");
+    expect(a.body).not.toContain("{lines}");
+  });
+
+  it("adds the agencies' part to the evening report when there is one", () => {
+    const report = {
+      kind: "admin_prospect_report",
+      title: "x",
+      body: "x",
+      payload: { vars: { variant: "withAgencies", day: "18/11", lines: "Amine 4 · 3 · 1", agencies: "Amine 12 · 4 · 2 · 1" } },
+    };
+    const f = renderNotification(report, tr("fr"), "fr");
+    expect(f.body).toBe("18/11 — premiers messages · oui · en ligne : Amine 4 · 3 · 1 ‖ Agences (appels · jointes · intéressées · inscrites ou publiées) : Amine 12 · 4 · 2 · 1");
+    const a = renderNotification(report, tr("ar"), "ar");
+    expect(a.body).toContain("Amine 12 · 4 · 2 · 1");
+    expect(a.body).not.toContain("{agencies}");
+  });
 });

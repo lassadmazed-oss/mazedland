@@ -9,6 +9,7 @@
  */
 import { TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
 import { canonicalDelegation } from "@/lib/delegations";
+import { ownPhotoPath } from "@/lib/listings/input";
 
 export const PROJECT_KINDS = ["residence", "villas", "lotissement", "commercial", "mixed"] as const;
 export type ProjectKind = (typeof PROJECT_KINDS)[number];
@@ -83,7 +84,7 @@ const text = (v: unknown, max: number): string | null => {
  */
 export function parseProjectInput(
   body: Record<string, unknown>,
-  { partial = false }: { partial?: boolean } = {},
+  { partial = false, userId = null, currentCover = null }: { partial?: boolean; userId?: string | null; currentCover?: string | null } = {},
 ): { ok: true; value: Partial<ProjectInput> } | { ok: false; field: keyof ProjectInput } {
   const v: Partial<ProjectInput> = {};
   const has = (k: string) => k in body;
@@ -119,7 +120,8 @@ export function parseProjectInput(
   }
   if (has("cover_path")) {
     const p = text(body.cover_path, 300);
-    if (p && p.includes("..")) return { ok: false, field: "cover_path" };
+    // A cover is a file this person uploaded (the photo route's names), or the one already there.
+    if (p && p !== currentCover && !(userId && ownPhotoPath(userId, p))) return { ok: false, field: "cover_path" };
     v.cover_path = p;
   }
   return { ok: true, value: v };

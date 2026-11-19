@@ -23,7 +23,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const t = await apiTranslator(req, "proApi.projects");
 
   const body = await jsonObject(req);
-  const parsed = parseProjectInput(body);
+  const parsed = parseProjectInput(body, { userId: user.id });
   if (!parsed.ok) {
     return NextResponse.json({ error: "invalid", field: parsed.field, detail: t(`field.${parsed.field}`) }, { status: 400 });
   }

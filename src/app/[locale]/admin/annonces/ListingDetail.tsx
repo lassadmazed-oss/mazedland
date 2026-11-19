@@ -341,7 +341,9 @@ export function ListingDetail({
               <Row label={t("attestation")}>
                 {l.attestation.version === "v1-admin"
                   ? t("attestationAdmin")
-                  : t("attestationSeller")}
+                  : l.attestation.version === "v1-team"
+                    ? t("attestationTeam")
+                    : t("attestationSeller")}
                 {l.attestation.at ? ` · ${dt(l.attestation.at, locale)}` : ""}
               </Row>
             )}

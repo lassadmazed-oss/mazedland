@@ -1,4 +1,5 @@
 import type { getServiceSupabase } from "@/lib/supabase/admin";
+import { foreignPhotoPaths, type PhotoRow } from "./input";
 
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
@@ -27,6 +28,43 @@ export async function objectExists(admin: Admin, bucket: string, path: string): 
 export async function missingObjects(admin: Admin, bucket: string, paths: readonly string[]): Promise<string[]> {
   const present = await Promise.all(paths.map((p) => objectExists(admin, bucket, p)));
   return paths.filter((_, i) => !present[i]);
+}
+
+/**
+ * The paths a seller sent that they may not attach (src/lib/listings/input.ts):
+ * theirs to name are those in their own folder, and those already on this
+ * annonce — an annonce from before the rule may carry another shape.
+ */
+export async function refusedPhotoPaths(
+  admin: Admin,
+  input: { photos: readonly PhotoRow[]; ownerId: string; listingId: string | null },
+): Promise<string[]> {
+  let attached: string[] = [];
+  if (input.listingId) {
+    const { data } = await admin
+      .from("listings")
+      .select("photos:listing_photos (storage_path)")
+      .eq("id", input.listingId)
+      .eq("seller_id", input.ownerId)
+      .maybeSingle();
+    attached = ((data?.photos ?? []) as { storage_path: string | null }[]).map((p) => p.storage_path ?? "").filter(Boolean);
+  }
+  return foreignPhotoPaths(input.photos, input.ownerId, attached);
+}
+
+/**
+ * The paths, among those given, that no annonce uses any more: the only ones a
+ * deletion may take out of the bucket. Asked after the annonce's own rows are
+ * gone, so what remains is another annonce's.
+ */
+export async function unreferencedPhotoPaths(admin: Admin, paths: readonly string[]): Promise<string[]> {
+  const wanted = [...new Set(paths.filter(Boolean))];
+  const used = new Set<string>();
+  for (let i = 0; i < wanted.length; i += 100) {
+    const { data } = await admin.from("listing_photos").select("storage_path").in("storage_path", wanted.slice(i, i + 100));
+    for (const r of (data ?? []) as { storage_path: string | null }[]) if (r.storage_path) used.add(r.storage_path);
+  }
+  return wanted.filter((p) => !used.has(p));
 }
 
 /** The photo paths of an annonce whose file is not in the `properties` bucket. */

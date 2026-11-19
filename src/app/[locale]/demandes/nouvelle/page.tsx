@@ -7,6 +7,7 @@ import { asDealType, type Furnished } from "@/lib/listings/deal";
 import { demandeVia, requestFormFromSearch, type RequestFormValue } from "@/lib/requests/prefill";
 import { parseZone } from "@/lib/geo/zone";
 import { getSettings } from "@/lib/settings/server";
+import { isSmsConfigured } from "@/lib/winsms";
 import { RequestForm } from "./RequestForm";
 
 import type { Metadata } from "next";
@@ -47,12 +48,17 @@ export default async function NewRequestPage({
     Object.entries(raw).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]),
   ) as Record<string, string | undefined>;
   const locale = await getLocale();
-  if (!(await getSettings()).feature_requests) redirect(`/${locale}/annonces`);
+  const settings = await getSettings();
+  if (!settings.feature_requests) redirect(`/${locale}/annonces`);
   const t = await getTranslations("requests");
 
   const supabase = await getServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  // Signed out: the form is open when the number can be confirmed at the end
+  // (`requests_guest_form`, and SMS to confirm it with) — the account is made
+  // then, by POST /api/requests/guest. Editing a demande is never a visitor's.
+  const guest = !user && settings.requests_guest_form && isSmsConfigured() && !sp.id;
+  if (!user && !guest) {
     const qs = new URLSearchParams(
       Object.entries(sp).filter((e): e is [string, string] => typeof e[1] === "string"),
     ).toString();
@@ -86,7 +92,7 @@ export default async function NewRequestPage({
   let initial: RequestFormValue;
   let fromSearch: { words: string | null; anyDeal: boolean } = { words: null, anyDeal: false };
 
-  const { data: existing } = sp.id
+  const { data: existing } = sp.id && user
     ? await admin
         .from("property_requests")
         .select(
@@ -96,7 +102,7 @@ export default async function NewRequestPage({
         .maybeSingle()
     : { data: null };
 
-  if (existing && existing.user_id === user!.id) {
+  if (existing && user && existing.user_id === user.id) {
     id = existing.id as string;
     initial = {
       deal_type: asDealType(existing.deal_type),
@@ -123,7 +129,9 @@ export default async function NewRequestPage({
     <main className="mx-auto max-w-2xl px-4 pb-40 pt-6 lg:pb-12 lg:pt-8">
       <h1 className="text-[24px] font-extrabold tracking-tight">{id ? t("editTitle") : t("newTitle")}</h1>
       <p className="mt-1 text-[13px] leading-relaxed text-muted">{t("newIntro")}</p>
+      {guest && <p className="mt-1 text-[13px] font-semibold leading-relaxed text-foreground">{t("guestIntro")}</p>}
       <RequestForm
+        guest={guest}
         id={id}
         initial={initial}
         categories={categories}

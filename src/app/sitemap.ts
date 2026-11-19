@@ -60,6 +60,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const marketRoutes: MetadataRoute.Sitemap = settings.public_stats_enabled
       ? localized(base, "/marche", { changeFrequency: "daily", priority: 0.5 })
       : [];
+    // « Ce que les gens cherchent » (/demandes), while the console keeps it on.
+    const boardRoutes: MetadataRoute.Sitemap = settings.feature_requests && settings.requests_board
+      ? localized(base, "/demandes", { changeFrequency: "daily", priority: 0.5 })
+      : [];
 
     // `auctions` joined to `properties`, filtered to `status = 'ready'`, until
     // migration 0153 dropped both. The catch below swallowed the resulting
@@ -156,7 +160,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
 
-    return [...staticRoutes, ...marketRoutes, ...landingRoutes, ...shopRoutes, ...projectRoutes, ...guideRoutes, ...listingRoutes];
+    return [...staticRoutes, ...marketRoutes, ...boardRoutes, ...landingRoutes, ...shopRoutes, ...projectRoutes, ...guideRoutes, ...listingRoutes];
   } catch {
     // Never let a DB hiccup 500 the sitemap — degrade to static routes.
     return staticRoutes;

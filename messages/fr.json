@@ -12,7 +12,8 @@
     "rights": "© {year} {name}. Tous droits réservés.",
     "country": "Tunisie",
     "guides": "Guides pratiques",
-    "market": "Le marché en chiffres"
+    "market": "Le marché en chiffres",
+    "demandes": "Ce que les gens cherchent"
   },
   "brand": {
     "name": "Mazed Immo",
@@ -115,7 +116,9 @@
       "visitsTitle": "Mes visites",
       "visitsBody": "Les visites demandées et reçues, et leurs réponses.",
       "offersTitle": "Mes offres",
-      "offersBody": "Les prix proposés sur vos annonces, et ceux que vous avez proposés."
+      "offersBody": "Les prix proposés sur vos annonces, et ceux que vous avez proposés.",
+      "priceQuestionsTitle": "Demandes de prix",
+      "priceQuestionsBody": "Les prix demandés sur vos annonces « sur demande », et ceux que vous avez demandés."
     }
   },
   "account": {
@@ -164,6 +167,9 @@
       "expiresToday": "Expire aujourd'hui",
       "daysLeft": "{days, plural, one {Encore # jour en ligne} other {Encore # jours en ligne}}",
       "renewableOn": "· renouvelable le {date}",
+      "views": "{count, plural, one {# vue} other {# vues}}",
+      "reveals": "numéro affiché {count} fois",
+      "statsTitle": "Visiteurs différents, vous n'êtes pas compté ; et combien de fois votre numéro a été affiché",
       "columns": {
         "listing": "Annonce",
         "status": "Statut",
@@ -774,7 +780,11 @@
     },
     "marketTitle": "Le marché en chiffres",
     "marketBody": "Prix médians demandés, offre par gouvernorat, demande des acheteurs : les chiffres du site, mis à jour automatiquement.",
-    "demandeLine": "Vous ne trouvez pas ? Dites-nous ce que vous cherchez"
+    "demandeLine": "Vous ne trouvez pas ? Dites-nous ce que vous cherchez",
+    "demandeCardBody": "On vous prévient dès qu'un bien qui correspond est publié, et les agences vous proposent les leurs.",
+    "demandeCardCta": "Écrire ma demande",
+    "demandeCardCount": "{count, plural, one {# personne cherche en ce moment} other {# personnes cherchent en ce moment}}",
+    "demandeCardSee": "Voir ce que les gens cherchent"
   },
   "homeMap": {
     "eyebrow": "Carte",
@@ -984,6 +994,9 @@
   },
   "catalogueMap": {
     "mapLabel": "Carte des annonces",
+    "unavailable": "Ce navigateur ne peut pas afficher la carte.",
+    "unavailableHint": "Les annonces de la recherche restent dans la liste.",
+    "seeList": "Voir la liste",
     "inView": "{count, plural, =0 {Aucune annonce dans cette zone} one {# annonce dans cette zone} other {# annonces dans cette zone}}",
     "unplaced": "{count, plural, one {# sans position, visible dans la liste} other {# sans position, visibles dans la liste}}",
     "zoneHint": "Bulle en pointillés : annonce sans position exacte, placée dans sa délégation, ou dans son gouvernorat quand la délégation manque.",
@@ -1047,6 +1060,8 @@
     "categoryFallback": "Annonce",
     "publishedOn": "publiée le {date}",
     "referenceTitle": "Référence de l'annonce",
+    "viewsPublic": "{count, plural, one {# vue} other {# vues}}",
+    "viewsTitle": "Visiteurs différents depuis la publication",
     "specsTitle": "Caractéristiques",
     "descriptionTitle": "Description",
     "backToCatalogue": "← Toutes les annonces",
@@ -1139,7 +1154,35 @@
       "disclaimer": "Estimation indicative, hors assurance et frais de dossier. Le taux réel dépend de votre banque et de votre profil."
     },
     "demandeTitle": "Pas tout à fait ce que vous cherchez ?",
-    "demandeBody": "Enregistrez une demande comme celle-ci : on vous prévient dès qu'un bien proche est publié."
+    "demandeBody": "Enregistrez une demande comme celle-ci : on vous prévient dès qu'un bien proche est publié.",
+    "teamConfirmed": "Confirmée par l'équipe Mazed"
+  },
+  "demandesBoard": {
+    "metaTitle": "Ce que les gens cherchent — demandes immobilières en Tunisie",
+    "metaDescription": "Les demandes ouvertes sur Mazed Immo : quels biens, où, à acheter ou à louer. Vous avez ce bien ? Proposez-le.",
+    "eyebrow": "Demandes",
+    "title": "Ce que les gens cherchent",
+    "lead": "{count, plural, one {# demande ouverte} other {# demandes ouvertes}} : des acheteurs et des locataires ont dit ce qu'ils cherchent. Dès qu'un bien qui correspond est publié, ils sont prévenus.",
+    "quiet": "Les demandes s'affichent ici dès qu'il y en a assez. Dites-nous déjà ce que vous cherchez :",
+    "ctaBuyer": "Dites-nous ce que vous cherchez",
+    "ctaAgency": "Vous avez ces biens ? Proposez-les",
+    "whereTitle": "Où",
+    "whatTitle": "Quels biens",
+    "count": "{count, plural, one {# demande} other {# demandes}}",
+    "sale": "à acheter",
+    "rent": "à louer",
+    "split": "{sale, plural, one {# à acheter} other {# à acheter}} · {rent, plural, one {# à louer} other {# à louer}}",
+    "cardsTitle": "Les dernières demandes",
+    "cardsHint": "Sans nom ni numéro : seulement ce que la personne cherche.",
+    "cardsLater": "Le détail de chaque demande est réservé aux agences Mazed Pro.",
+    "agencyTitle": "Agences : voici ce que vos clients demandent",
+    "agencyBody": "Avec Mazed Pro, vous voyez chaque demande en détail et vous proposez vos annonces : la personne est prévenue, et vous contacte si le bien lui plaît.",
+    "agencyCta": "Découvrir Mazed Pro",
+    "howTitle": "Comment ça marche",
+    "step1": "Vous dites ce que vous cherchez : le bien, le lieu, le budget. Une minute.",
+    "step2": "Dès qu'un bien qui correspond est publié, vous êtes prévenu.",
+    "step3": "Les agences Mazed Pro vous proposent les leurs, et votre numéro reste caché.",
+    "proLine": "{count, plural, one {# personne cherche un bien en ce moment} other {# personnes cherchent un bien en ce moment}} : voyez quoi et où."
   },
   "listingMap": {
     "title": "Position sur la carte",
@@ -1152,6 +1195,8 @@
     "savedApprox": "Position approximative : les visiteurs voient un cercle d'environ {radius} m.",
     "tapHint": "Touchez la carte à l'endroit du bien, ou faites glisser l'épingle.",
     "mapLabel": "Carte",
+    "unavailable": "Ce navigateur ne peut pas afficher la carte.",
+    "pickerUnavailable": "Ce navigateur ne peut pas afficher la carte : placez le bien avec « Ma position » ou en collant un lien Google Maps ci-dessous.",
     "myPosition": "Ma position",
     "locating": "Localisation…",
     "geoDenied": "Le téléphone a refusé la position. Placez l'épingle à la main.",
@@ -1228,6 +1273,7 @@
     "rooms": "Chambres (S+)",
     "bathrooms": "Salles de bain",
     "floor": "Étage",
+    "levels": "Niveaux",
     "year_built": "Année de construction",
     "buildable": "Constructible",
     "titled": "Titre foncier",
@@ -1559,6 +1605,20 @@
       "title": "Votre abonnement se termine bientôt",
       "body": "L'abonnement {plan} de « {shop} » se termine le {date}. Vous pouvez le renouveler dès maintenant."
     },
+    "price_question": {
+      "title": "Demande de prix",
+      "body": "{name} demande le prix de « {title} ». Répondez depuis Demandes de prix."
+    },
+    "price_answered": {
+      "sale": {
+        "title": "Prix : {amount} TND",
+        "body": "Le vendeur de « {title} » vous répond : {amount} TND."
+      },
+      "rent": {
+        "title": "Loyer : {amount} TND par mois",
+        "body": "Le propriétaire de « {title} » vous répond : {amount} TND par mois."
+      }
+    },
     "offer_received": {
       "title": "Nouvelle offre : {amount} TND",
       "body": "{name} propose {amount} TND pour « {title} » (prix affiché {asking} TND). Répondez depuis Mes offres."
@@ -1614,6 +1674,26 @@
         "title": "Votre prix a expiré",
         "body": "L'acheteur n'a pas répondu à temps à votre prix de {amount} TND pour « {title} »."
       }
+    },
+    "admin_prospect_followup": {
+      "title": "Prospection : à traiter aujourd'hui",
+      "body": "{followUps} à relancer · {yes} « oui » à finaliser · {noSms} SMS à renvoyer"
+    },
+    "admin_prospect_report": {
+      "title": "Prospection : le bilan du jour",
+      "body": "{day} — premiers messages · oui · en ligne : {lines}",
+      "withAgencies": {
+        "title": "Prospection : le bilan du jour",
+        "body": "{day} — premiers messages · oui · en ligne : {lines} ‖ Agences (appels · jointes · intéressées · inscrites ou publiées) : {agencies}"
+      }
+    },
+    "admin_sms_down": {
+      "title": "SMS en panne chez WinSMS",
+      "body": "Depuis {at} (heure de Tunis), les SMS ne partent plus (WinSMS : « {reason} »). Ils sont mis en attente et renvoyés dès que le fournisseur répond."
+    },
+    "admin_sms_up": {
+      "title": "SMS rétablis",
+      "body": "WinSMS répond de nouveau. {count} SMS renvoyé(s)."
     }
   },
   "publish": {
@@ -1647,6 +1727,17 @@
     "priceLabel": "Prix",
     "negotiable": "Négociable",
     "onRequest": "Prix sur demande",
+    "priceMode": {
+      "label": "Le prix",
+      "show": "J'écris le prix",
+      "showRent": "J'écris le loyer",
+      "onRequest": "Prix sur demande",
+      "onRequestNote": "Votre annonce n'apparaît pas quand un acheteur cherche par budget, et n'a pas « Négocier le prix ».",
+      "onRequestAsk": "L'acheteur vous le demande avec « Demander le prix », et vous recevez un SMS.",
+      "foundTitle": "Votre description dit « {quote} ». Mettre {price} dans la case du prix ?",
+      "foundUse": "Oui, le mettre",
+      "foundKeep": "Non, garder sur demande"
+    },
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Situation, exposition, état, charges, ce qu'il y a à refaire, papiers disponibles. Soyez honnête : c'est ce qui évite les visites pour rien.",
     "contactTitle": "Contact et publication",
@@ -1739,6 +1830,11 @@
     "dealRent": "À louer",
     "categoryTitleRent": "Que louez-vous ?",
     "titleForRent": "{category} à louer",
+    "titleFloorOf": "Étage de {noun}",
+    "levels": {
+      "unitQuestion": "{kind, select, flat {L'appartement est sur combien de niveaux ?} other {Sur combien de niveaux ?}}",
+      "whichFloor": "Quel étage ?"
+    },
     "rentTitle": "Titre et loyer",
     "rentHint": "Le titre est proposé d'après ce que vous avez saisi. Le loyer est le montant par mois ; le reste, remplissez ce que vous savez.",
     "rentLabel": "Loyer mensuel",
@@ -1813,6 +1909,7 @@
     "editWaitingTitle": "Correction enregistrée",
     "editWaitingBody": "Votre annonce attend encore la vérification, avec vos corrections. Vous serez prévenu dès qu'elle est en ligne.",
     "tipPriceTypo": "Un zéro de trop dans le prix ? Les annonces semblables sont plutôt autour de {fix}.",
+    "tipPriceInText": "« Prix sur demande », mais votre description donne {price} : mettez-le dans la case du prix, ou enlevez-le du texte.",
     "estimateLocal": "D'après {count, plural, one {# annonce semblable} other {# annonces semblables}} à {governorate} : entre {low} et {high} pour cette surface.",
     "estimateNational": "D'après {count, plural, one {# annonce semblable} other {# annonces semblables}} en Tunisie : entre {low} et {high} pour cette surface.",
     "priceNotGiven": "Prix non renseigné",
@@ -1938,8 +2035,7 @@
       "sale": "À vendre",
       "rent": "À louer",
       "area": "{n} m²",
-      "rooms": "S+{n}",
-      "floor": "Étage {n}"
+      "rooms": "S+{n}"
     }
   },
   "photoUploader": {
@@ -1973,7 +2069,8 @@
   "publishApi": {
     "incomplete": "Catégorie, titre et gouvernorat sont requis.",
     "categoryNotLeaf": "Choisissez une sous-catégorie.",
-    "priceRequired": "Indiquez un prix, ou cochez « prix sur demande ».",
+    "priceRequired": "Écrivez le prix, ou choisissez « Prix sur demande ».",
+    "priceOnRequestOff": "« Prix sur demande » n'est plus proposé pour ce type d'annonce : écrivez le prix.",
     "notEditable": "Cette annonce est déjà en cours de traitement.",
     "photoRateLimited": "Trop d'envois de photos. Réessayez dans une heure.",
     "notSubmittable": "Cette annonce est déjà « {status} ».",
@@ -2170,7 +2267,7 @@
         },
         "sharing": {
           "title": "4. Partage",
-          "body": "Vos données ne sont pas vendues. Elles peuvent être partagées avec des prestataires strictement nécessaires (hébergement, envoi de SMS et d'e-mails) et avec les autorités lorsque la loi l'exige. Lorsqu'une demande est active et que ses alertes sont activées, ses critères (type de bien, lieu, budget, surface…) sont visibles par les agences Pro, afin qu'elles puissent proposer un bien par l'intermédiaire de Mazed Immo ; le nom et le numéro de la personne ne leur sont jamais communiqués."
+          "body": "Vos données ne sont pas vendues. Elles peuvent être partagées avec des prestataires strictement nécessaires (hébergement, envoi de SMS et d'e-mails) et avec les autorités lorsque la loi l'exige. Lorsqu'une demande est active et que ses alertes sont activées, ses critères (type de bien, lieu, budget, surface…) sont visibles par les agences Pro, afin qu'elles puissent proposer un bien par l'intermédiaire de Mazed Immo ; le nom et le numéro de la personne ne leur sont jamais communiqués. Les demandes enregistrées depuis le 15 novembre 2026 peuvent aussi apparaître sur la page publique « Ce que les gens cherchent », réduites à ces critères, sans nom, numéro ni note ; pour les autres, seuls des totaux (combien de demandes, où, quel type de bien) y sont publiés."
         },
         "retention": {
           "title": "5. Conservation et sécurité",
@@ -3044,7 +3141,9 @@
       "analytics": "Statistiques",
       "analyticsHint": "Visiteurs, recherches, annonces, agences et revenus, en chiffres",
       "content": "Guides",
-      "contentHint": "Articles et informations pratiques publiés sur le site"
+      "contentHint": "Articles et informations pratiques publiés sur le site",
+      "prospection": "Prospection",
+      "prospectionHint": "Les propriétaires trouvés sur Facebook : leur écrire, obtenir leur accord, publier leur annonce"
     },
     "siteTabs": {
       "label": "Sections du site",
@@ -3318,7 +3417,8 @@
       "editApproved": "Modification publiée.",
       "editRejected": "Modification refusée.",
       "rejectEditTitle": "Refuser cette modification ?",
-      "rejectEditBody": "L'annonce revient en ligne telle qu'elle était avant la modification. Le vendeur reçoit le motif."
+      "rejectEditBody": "L'annonce revient en ligne telle qu'elle était avant la modification. Le vendeur reçoit le motif.",
+      "attestationTeam": "Confirmée par l'équipe avec le propriétaire (v1-team)"
     },
     "forRent": "À louer",
     "perMonth": "{amount} / mois",
@@ -3553,6 +3653,8 @@
     "admin_shop_reinstate": "Agence rouverte",
     "admin_shop_verify": "Agence vérifiée",
     "admin_shop_unverify": "Vérification retirée",
+    "admin_shop_licence_verify": "Licence d'agence contrôlée",
+    "admin_shop_licence_unverify": "Contrôle de la licence retiré",
     "legal_docs_update": "Documents légaux modifiés",
     "settings_update": "Réglages modifiés",
     "listing_edit": "Annonce modifiée",
@@ -3605,6 +3707,9 @@
     "visit_decline": "Visite refusée",
     "visit_done": "Visite faite",
     "visit_cancel": "Visite annulée",
+    "price_question_ask": "Prix demandé",
+    "price_question_answer": "Prix donné à l'acheteur",
+    "price_question_done": "Demande de prix traitée",
     "lead_create": "Client ajouté (agence)",
     "lead_update": "Client mis à jour (agence)",
     "lead_delete": "Client supprimé (agence)",
@@ -3659,7 +3764,17 @@
     "offer_counter": "Autre prix proposé",
     "offer_withdraw": "Offre retirée",
     "listing_location": "Position d'une annonce modifiée",
-    "admin_listing_location": "Position d'une annonce modifiée (console)"
+    "admin_listing_location": "Position d'une annonce modifiée (console)",
+    "prospect_create": "Annonce trouvée sur Facebook ajoutée à la Prospection",
+    "prospect_update": "Fiche de Prospection modifiée",
+    "prospect_confirm": "Propriétaire confirmé : compte et brouillon créés",
+    "prospect_publish": "Annonce du propriétaire mise en ligne par l'équipe",
+    "prospect_sms": "SMS envoyé au propriétaire",
+    "prospect_photo_check": "Photos d'un propriétaire vérifiées",
+    "prospect_agency_create": "Agence ajoutée à la liste",
+    "prospect_agency_import": "Liste d'agences importée",
+    "prospect_agency_share": "Agences réparties dans l'équipe",
+    "prospect_agency_result": "Résultat d'un appel à une agence enregistré"
   },
   "adminApi": {
     "bulk": {
@@ -3687,6 +3802,7 @@
       "badGovernorate": "Gouvernorat inconnu.",
       "badPhone": "Numéro de téléphone invalide.",
       "badPrice": "Prix invalide.",
+      "priceRequired": "Écrivez un prix, ou cochez « Prix sur demande » : une annonce envoyée garde l'un ou l'autre.",
       "titleTooShort": "Le titre doit faire au moins 3 caractères.",
       "photoMissing": "Une photo de l'annonce est introuvable dans le stockage : demandez au vendeur de la renvoyer.",
       "shopClosed": "L'agence de cette annonce est fermée : elle attend sa réouverture.",
@@ -3853,7 +3969,7 @@
     "resumed": "Alertes réactivées.",
     "renewed": "Demande prolongée de {days} jours.",
     "actionFailed": "Action impossible pour le moment.",
-    "alertsShops": "Avec les alertes, les agences Pro voient aussi vos critères — jamais votre nom, votre numéro ni vos autres souhaits — et peuvent vous proposer un bien : c'est Mazed Immo qui vous le transmet.",
+    "alertsShops": "Avec les alertes, vos critères (type de bien, lieu, budget, pièces) s'affichent sur la page « Ce que les gens cherchent » et les agences Pro peuvent vous proposer un bien — jamais votre nom, votre numéro ni vos autres souhaits : c'est Mazed Immo qui vous transmet leurs propositions.",
     "budgetOrder": "Le maximum doit être supérieur ou égal au minimum.",
     "anyDealHint": "Votre recherche montrait la vente et la location ; une demande est l'une ou l'autre : choisissez ci-dessus.",
     "summaryTitle": "Ce qui sera enregistré",
@@ -3885,7 +4001,23 @@
     "zoneHint": "L'alerte ne part que pour une annonce dans cette zone.",
     "zoneView": "Voir la zone",
     "zoneRemove": "Retirer la zone",
-    "zoneDrawn": "Zone sur la carte"
+    "zoneDrawn": "Zone sur la carte",
+    "guestIntro": "Pas besoin de compte pour commencer : votre numéro vous sera demandé à la fin, avec un code par SMS.",
+    "guest": {
+      "title": "Dernière étape : votre numéro",
+      "body": "On vous envoie un code par SMS. Il confirme votre numéro, crée votre compte si vous n'en avez pas, et enregistre la demande. Votre numéro n'est jamais montré aux agences.",
+      "send": "Recevoir le code",
+      "verify": "Valider et enregistrer la demande",
+      "submitHint": "Après ce bouton, dernière étape : votre numéro, avec un code par SMS.",
+      "savedTitle": "Demande enregistrée",
+      "takenTitle": "Ce numéro a déjà un compte",
+      "existingBody": "Ce numéro a déjà un compte : la demande y est enregistrée. Connectez-vous pour la suivre et voir les annonces qui correspondent.",
+      "newNoSessionBody": "Votre compte est créé avec ce numéro et la demande est enregistrée. Pour entrer, choisissez « Mot de passe oublié ? » : un code par SMS vous laisse choisir un mot de passe.",
+      "takenBody": "Connectez-vous avec ce numéro, puis enregistrez la demande : elle reprend la même recherche.",
+      "login": "Se connecter",
+      "welcomeTitle": "Votre compte est prêt",
+      "welcomeBody": "Il est lié à votre numéro, et votre demande est enregistrée. Pour entrer depuis un autre téléphone, choisissez « Mot de passe oublié ? » sur la page de connexion : un code par SMS vous laisse choisir un mot de passe."
+    }
   },
   "requestsApi": {
     "budgetRequired": "Indiquez un budget maximum.",
@@ -3952,7 +4084,7 @@
     "requestAlerts": "Les alertes de mes demandes",
     "privacyTitle": "Ce que le site montre de vous",
     "privacyPhone": "Votre numéro n'apparaît pas dans la page : un acheteur le voit seulement en appuyant sur « Voir le numéro », et chaque affichage est compté.",
-    "privacyRequests": "Vos demandes : les agences Pro voient vos critères (type de bien, lieu, budget…) pour vous proposer un bien, jamais votre nom ni votre numéro. Une demande en pause, expirée ou sans alertes n'est montrée à aucune agence.",
+    "privacyRequests": "Vos demandes : les agences Pro voient vos critères (type de bien, lieu, budget…) pour vous proposer un bien, et ces critères peuvent s'afficher, sans rien qui vous désigne, sur la page « Ce que les gens cherchent ». Jamais votre nom ni votre numéro. Une demande en pause, expirée ou sans alertes n'est montrée nulle part.",
     "privacyReports": "Un signalement ne dit pas au vendeur qui l'a fait.",
     "privacyPolicy": "Politique de confidentialité",
     "deleteTitle": "Supprimer mon compte",
@@ -4167,7 +4299,9 @@
       "groups_manual": "groupe : à partager à la main",
       "not_supported": "l'API ne le permet pas",
       "limit_reached": "limite de publications atteinte",
-      "media_rejected": "photo refusée par le réseau"
+      "media_rejected": "photo refusée par le réseau",
+      "tiktok_draft": "brouillon envoyé dans l'appli TikTok : publiez-le depuis l'appli, puis collez son lien",
+      "tiktok_unaudited": "TikTok n'a pas encore validé l'application : passez en brouillon dans les réglages, puis « Réessayer »"
     },
     "runAfter": "à partir du {date}",
     "attempts": "essai {n}/{max}",
@@ -4279,7 +4413,8 @@
       "exists": "Ce groupe est déjà dans la liste.",
       "testExpired": "Meta refuse le jeton : reconnectez la page.",
       "testNoKey": "SOCIAL_TOKEN_KEY a changé ou manque : reconnectez la page.",
-      "testFailed": "Meta ne répond pas comme prévu. Réessayez dans un moment."
+      "testFailed": "Meta ne répond pas comme prévu. Réessayez dans un moment.",
+      "testNotConfigured": "TIKTOK_CLIENT_KEY ou TIKTOK_CLIENT_SECRET manque dans Vercel."
     },
     "test": "Tester la connexion",
     "testOk": "Connexion OK : {name}.",
@@ -4291,7 +4426,32 @@
     "featuredAuto": "proposée par le site · CGU acceptées le {date}",
     "waitingTitle": "En attente des CGU : {count, plural, one {# annonce} other {# annonces}} de {sellers, plural, one {# vendeur} other {# vendeurs}}",
     "waitingHint": "Ces annonces ne sont pas proposées parce que leur vendeur n'a pas encore accepté les CGU du 5 novembre (la bannière s'affiche à sa prochaine visite). Dès qu'il les accepte, ses annonces arrivent ici toutes seules.",
-    "waitingCount": "{count, plural, one {# annonce} other {# annonces}}"
+    "waitingCount": "{count, plural, one {# annonce} other {# annonces}}",
+    "approveOn": "Publier sur :",
+    "tiktokTitle": "TikTok",
+    "tiktokBody": "Connectez le compte TikTok {username} : les photos de l'annonce y partent en publication (Photo Mode), avec un texte fait des champs de l'annonce. Les jetons sont chiffrés avant d'être enregistrés et renouvelés tout seuls.",
+    "tiktokAnyAccount": "de Mazed Immo",
+    "tiktokConnect": "Connecter TikTok",
+    "tiktokConnectedOk": "Compte TikTok connecté.",
+    "tiktokSettings": "Réglages TikTok",
+    "tiktokModeDraft": "Mode : brouillon dans l'appli TikTok — vous terminez chaque publication dans l'appli.",
+    "tiktokModePrivate": "Mode : publication directe, visible du seul compte (avant la validation de l'application par TikTok).",
+    "tiktokModePublic": "Mode : publication directe, en public.",
+    "tiktokSetupTitle": "Pour connecter TikTok :",
+    "tiktokVerifyTitle": "À vérifier dans l'application TikTok :",
+    "tiktokSetup1": "Sur developers.tiktok.com, avec le compte qui possède @mazed613 : créer l'application, ajouter Login Kit et Content Posting API (Direct Post activé).",
+    "tiktokSetup2": "Dans Login Kit, ajouter cette adresse de redirection :",
+    "tiktokSetup3": "Vérifier le domaine mazed.immo (DNS) ou ce préfixe d'adresse, d'où TikTok télécharge les photos :",
+    "tiktokSetup5": "Envoyer l'application en revue chez TikTok. Avant sa validation, les publications directes restent privées.",
+    "tiktokError": {
+      "denied": "La connexion a été refusée sur TikTok.",
+      "state": "La connexion a expiré. Recommencez.",
+      "not_configured": "L'application TikTok n'est pas configurée.",
+      "other_account": "Ce n'est pas le compte TikTok attendu (voir le détail). Déconnectez-vous de TikTok dans ce navigateur et recommencez avec le bon compte.",
+      "failed": "La connexion à TikTok a échoué. Réessayez."
+    },
+    "testOkTiktokPublic": "Connexion OK : {name}. TikTok permet la publication en public.",
+    "testOkTiktokPrivate": "Connexion OK : {name}. TikTok ne permet pour l'instant que « moi uniquement »."
   },
   "pro": {
     "kinds": {
@@ -4324,6 +4484,7 @@
     "documents": {
       "rne": "Extrait RNE",
       "patente": "Patente",
+      "licence": "Agrément du ministère du Commerce",
       "identity": "Pièce d'identité du gérant",
       "other": "Autre document"
     },
@@ -4393,6 +4554,8 @@
       "hoursPlaceholder": "Lun–Sam, 9h–18h",
       "legalName": "Raison sociale",
       "legalId": "Matricule fiscal / RNE",
+      "licenceNumber": "Numéro de l'agrément du ministère du Commerce",
+      "licenceHint": "Une agence immobilière a besoin de l'agrément du ministère du Commerce. Écrivez son numéro et envoyez la photo de l'agrément dans l'onglet « Documents » : l'équipe Mazed Immo le contrôle et votre page affiche « Agence agréée ».",
       "slug": "Adresse de la page",
       "slugHint": "Lettres minuscules, chiffres et tirets. Changer l'adresse casse les liens déjà partagés.",
       "legalHint": "La raison sociale et le matricule ne sont pas publiés : ils servent à vérifier l'agence.",
@@ -4576,7 +4739,8 @@
         "visit": "Visite",
         "manual": "Ajouté",
         "suggestion": "Demande",
-        "offer": "Offre"
+        "offer": "Offre",
+        "price_question": "Prix demandé"
       },
       "quickLabel": "Ajouter à la note",
       "quick": {
@@ -4864,6 +5028,7 @@
         "governorate_unknown": "Gouvernorat non reconnu : « {value} ».",
         "price_missing": "Prix manquant (ou écrivez « sur demande »).",
         "price_invalid": "Prix illisible : « {value} ».",
+        "price_on_request_off": "« {value} » : le prix sur demande n'est pas proposé pour ce type d'annonce. Écrivez le prix.",
         "answer_missing": "Information manquante : {value}.",
         "answer_invalid": "Valeur impossible — {value}.",
         "answer_unclear": "Réponse oui / non attendue — {value}.",
@@ -4896,6 +5061,9 @@
       "alreadyMember": "Cette personne fait déjà partie de l'agence.",
       "slug": "Adresse invalide : 3 à 60 lettres minuscules, chiffres ou tirets.",
       "slugTaken": "Cette adresse est déjà prise.",
+      "licence": "Indiquez le numéro de l'agrément du ministère du Commerce : une agence immobilière en a besoin.",
+      "licenceAgencyOnly": "L'agrément ne concerne que les agences immobilières.",
+      "licenceMissing": "Cette agence n'a pas indiqué de numéro d'agrément : il n'y a rien à contrôler.",
       "notApproved": "Une agence refusée ou suspendue ne peut pas souscrire d'abonnement.",
       "plan": "Abonnement inconnu.",
       "planRequired": "L'agence n'a pas encore réglé son abonnement : elle s'ouvre une fois le paiement validé.",
@@ -4984,6 +5152,8 @@
       "rent": "À louer"
     },
     "noListings": "Aucune annonce en ligne pour le moment.",
+    "licensed": "Agence agréée",
+    "licensedMeans": "« Agence agréée » : l'équipe Mazed Immo a contrôlé l'agrément du ministère du Commerce de cette agence (n° {number}).",
     "verifiedMeans": "« Vérifiée » : l'équipe Mazed Immo a contrôlé les documents de l'entreprise (RNE ou patente).",
     "notVerifiedMeans": "Les documents de cette agence n'ont pas encore été contrôlés par Mazed Immo.",
     "projects": {
@@ -5044,6 +5214,16 @@
     "verifiedDone": "Agence vérifiée.",
     "unverify": "Retirer la vérification",
     "unverified": "Vérification retirée.",
+    "licenceTitle": "Agrément du ministère du Commerce",
+    "licenceNumber": "Numéro : {number}",
+    "licenceNone": "Aucun numéro d'agrément indiqué.",
+    "licenceCheckedOn": "Contrôlé le {date}",
+    "licenceNotChecked": "Pas encore contrôlé",
+    "licenceVerify": "J'ai contrôlé l'agrément",
+    "licenceVerifiedDone": "Agrément contrôlé : la page affiche « Agence agréée ».",
+    "licenceUnverify": "Retirer le contrôle de l'agrément",
+    "licenceUnverified": "Contrôle de l'agrément retiré.",
+    "licenceDocHint": "Comparez le numéro au document envoyé (type « Agrément ») avant de contrôler.",
     "rejectTitle": "Refuser cette agence ?",
     "suspendTitle": "Suspendre cette agence ?",
     "reasonBody": "Le motif est envoyé au propriétaire de l'agence.",
@@ -5219,6 +5399,19 @@
     "alreadyOpen": "Vous avez déjà une demande en cours pour cette annonce.",
     "transition": "Cette visite a déjà changé d'état. Rechargez la page.",
     "slot": "Choisissez un des moments proposés."
+  },
+  "priceQuestionsApi": {
+    "tooMany": "Trop de demandes de prix aujourd'hui. Réessayez demain.",
+    "phone": "Numéro de téléphone invalide.",
+    "name": "Indiquez votre nom.",
+    "nameLetters": "Votre nom, en lettres seulement (2 à 60 caractères).",
+    "notOnline": "Cette annonce n'est plus en ligne.",
+    "hasPrice": "Le prix de cette annonce est affiché.",
+    "own": "C'est votre annonce.",
+    "alreadyOpen": "Vous avez déjà demandé le prix de cette annonce : le vendeur va vous répondre.",
+    "transition": "Cette demande a déjà reçu une réponse. Rechargez la page.",
+    "price": "Écrivez le prix en chiffres.",
+    "sellerOnly": "Seul le vendeur répond à cette demande."
   },
   "compare": {
     "title": "Comparer des annonces",
@@ -5484,6 +5677,14 @@
       "label": "Photos maximum par annonce",
       "hint": "Le formulaire n'en accepte pas plus."
     },
+    "price_on_request_sale": {
+      "label": "« Prix sur demande » pour une vente",
+      "hint": "Le vendeur peut choisir de ne pas afficher son prix : l'annonce dit « Prix sur demande » et l'acheteur le lui demande. Coupé : il doit écrire un prix ; les annonces déjà « sur demande » restent comme elles sont."
+    },
+    "price_on_request_rent": {
+      "label": "« Prix sur demande » pour une location",
+      "hint": "La même chose pour le loyer. Coupé : il doit écrire le loyer ; les annonces déjà « sur demande » restent comme elles sont."
+    },
     "gallery_zoom": {
       "label": "Zoom sur les photos",
       "hint": "Dans les photos en plein écran : deux doigts ou deux touches sur un téléphone, la molette ou un double-clic sur un ordinateur. Coupé : les photos s'ouvrent toujours en plein écran, sans zoom."
@@ -5491,6 +5692,10 @@
     "gallery_zoom_max": {
       "label": "Zoom jusqu'à",
       "hint": "Combien de fois une photo peut grandir. Les photos sont envoyées en 1600 px : au-delà de 3 fois, elles deviennent floues."
+    },
+    "listing_views_public_min": {
+      "label": "Nombre de vues sur l'annonce à partir de",
+      "hint": "Les visiteurs voient le nombre de vues sur la page de l'annonce à partir de ce seuil (visiteurs différents, le vendeur n'est pas compté). En dessous, rien ne s'affiche. Le vendeur voit toujours les siennes dans « Mes annonces ». 1 : toujours."
     },
     "catalogue_page_size": {
       "label": "Annonces par page de recherche",
@@ -5623,6 +5828,14 @@
     "limit_member_adds_per_hour": {
       "label": "Ajouts à l'équipe d'une agence par personne",
       "hint": "Chaque ajout dit si un numéro a un compte : la limite empêche d'en tester en série."
+    },
+    "otp_daily_cap": {
+      "label": "Codes de vérification par jour (tout le site)",
+      "hint": "Chaque code coûte un SMS. Au-delà, plus aucun code ne part jusqu'au lendemain et les admins sont prévenus : c'est le plafond de ce qu'un script peut dépenser."
+    },
+    "otp_dial_codes": {
+      "label": "Pays où un code peut être envoyé",
+      "hint": "Indicatifs (+216, +33…). Un numéro d'un autre pays ne reçoit pas de code. Mettez seulement +216 si une attaque vise l'étranger."
     },
     "sms_daily_cap": {
       "label": "SMS par personne",
@@ -5845,6 +6058,10 @@
     "feature_pro_signup_plan": {
       "label": "Agence et abonnement en une demande",
       "hint": "Ouvrir une agence demande aussi son abonnement et le reçu du paiement, envoyés ensemble ; la console accepte et ouvre en une fois, ou refuse en disant ce que devient le paiement. Coupé : l'agence d'abord, l'abonnement ensuite."
+    },
+    "shop_licence_required": {
+      "label": "Numéro d'agrément obligatoire pour une agence",
+      "hint": "Une agence immobilière a besoin de l'agrément du ministère du Commerce. Activé : une agence ne peut pas envoyer sa demande sans le numéro. Coupé : le numéro est demandé mais peut rester vide. Dans tous les cas, « Agence agréée » ne s'affiche qu'une fois le numéro contrôlé par la console."
     },
     "pro_signup_pay_later": {
       "label": "« Envoyer sans payer » (offre de lancement)",
@@ -6090,6 +6307,10 @@
       "label": "Négocier le prix",
       "hint": "Le bouton « Négocier le prix » sur les annonces à vendre. Coupé : plus de nouvelle offre ; celles en cours restent dans « Mes offres »."
     },
+    "feature_price_questions": {
+      "label": "Demander le prix",
+      "hint": "Le bouton « Demander le prix » sur les annonces « Prix sur demande » : l'acheteur demande, le vendeur reçoit un SMS et répond avec le prix. Coupé : plus de nouvelle demande ; celles en cours restent dans « Demandes de prix »."
+    },
     "offers_only_negotiable": {
       "label": "Offres sur les prix négociables seulement",
       "hint": "Le bouton n'apparaît que si le vendeur a coché « Prix négociable ». Coupé : sur toutes les annonces à vendre qui ont un prix."
@@ -6120,6 +6341,10 @@
     },
     "limit_offers_per_day": {
       "label": "Offres de prix par acheteur",
+      "hint": "Au-delà, il attend le lendemain."
+    },
+    "limit_price_questions_per_day": {
+      "label": "Demandes de prix par acheteur",
       "hint": "Au-delà, il attend le lendemain."
     },
     "feature_listing_map": {
@@ -6213,6 +6438,130 @@
     "requests_listing_margin": {
       "label": "Marge du budget depuis une annonce",
       "hint": "Le budget maximum proposé : le prix de l'annonce plus ce pourcentage."
+    },
+    "feature_prospection": {
+      "label": "Prospection",
+      "hint": "L'écran où l'équipe écrit aux propriétaires trouvés sur Facebook et publie leurs annonces avec leur accord. Éteint : l'écran et ses routes se ferment, les annonces déjà faites restent."
+    },
+    "prospect_daily_cap": {
+      "label": "Premiers messages par membre et par jour",
+      "hint": "Le numéro depuis lequel l'équipe écrit est un numéro privé : une plateforme qui voit une rafale de messages à des inconnus peut le bloquer. Au-delà, le membre attend le lendemain."
+    },
+    "prospect_team_unlimited": {
+      "label": "L'équipe publie au-delà de la limite du propriétaire",
+      "hint": "Les comptes de l'équipe (admins de Prospection) peuvent publier pour un propriétaire plus que ses deux annonces gratuites : c'est l'équipe de Mazed Immo, pas un vendeur. La modération ne change pas : l'annonce attend un admin tant que la publication automatique est coupée. Coupé : le membre s'arrête à la limite du propriétaire, seul l'admin principal la dépasse."
+    },
+    "prospect_show_badge": {
+      "label": "« Confirmée par l'équipe Mazed » sur l'annonce",
+      "hint": "Une pastille sur les annonces que l'équipe a confirmées avec leur propriétaire."
+    },
+    "prospect_team_phone": {
+      "label": "Numéro de l'équipe dans le SMS du propriétaire",
+      "hint": "Le numéro à appeler pour une question sur son annonce. Vide : le numéro WhatsApp du site."
+    },
+    "prospect_ask_ar": {
+      "label": "Premier message au propriétaire (arabe)",
+      "hint": "Il demande l'accord. Trous : '{name}' '{property}' '{deal}' '{terms}'. Il dit tout ce que le « oui » couvre : la publication, qui répond (propriétaire ou mandataire, dit dans sa réponse), les conditions, les photos du post."
+    },
+    "prospect_ask_fr": {
+      "label": "Premier message au propriétaire (français)",
+      "hint": "Il demande l'accord. Trous : '{name}' '{property}' '{deal}' '{terms}'. Il dit tout ce que le « oui » couvre : la publication, qui répond (propriétaire ou mandataire, dit dans sa réponse), les conditions, les photos du post."
+    },
+    "prospect_confirm_ar": {
+      "label": "Message de confirmation après un « oui » au téléphone (arabe)",
+      "hint": "Envoyé après le « oui » du propriétaire au téléphone, pour que l'accord soit écrit chez lui, avec les conditions. Trous : '{name}' '{property}' '{deal}' '{terms}'."
+    },
+    "prospect_confirm_fr": {
+      "label": "Message de confirmation après un « oui » au téléphone (français)",
+      "hint": "Envoyé après le « oui » du propriétaire au téléphone, pour que l'accord soit écrit chez lui, avec les conditions. Trous : '{name}' '{property}' '{deal}' '{terms}'."
+    },
+    "prospect_sms_ar": {
+      "label": "SMS une fois l'annonce en ligne (arabe)",
+      "hint": "Envoyé par le site. Trous : '{link}' '{manage}' '{phone}'. En lettres arabes, un SMS compte vite trois messages : restez court."
+    },
+    "prospect_sms_fr": {
+      "label": "SMS une fois l'annonce en ligne (français)",
+      "hint": "Envoyé par le site. Trous : '{link}' '{manage}' '{phone}'."
+    },
+    "prospect_reminders": {
+      "label": "Rappel du matin pour l'équipe de Prospection",
+      "hint": "Chaque matin, une notification pour chaque membre qui a des propriétaires à relancer, des « oui » sans photos depuis un jour ou un SMS non parti."
+    },
+    "prospect_report": {
+      "label": "Bilan du soir pour le propriétaire",
+      "hint": "Chaque soir, une notification pour chaque administrateur qui a toute la console : ce que chaque membre de l'équipe a fait dans la journée (premiers messages, « oui », annonces en ligne), avec le détail du jour."
+    },
+    "prospect_report_hour": {
+      "label": "Bilan du soir à partir de",
+      "hint": "L'heure (Tunis) à partir de laquelle la notification part, une fois par jour."
+    },
+    "prospect_keep_days": {
+      "label": "Durée de conservation du texte des posts",
+      "hint": "Une fois la fiche terminée (refusée, ou en ligne), le texte du post et le nom de la personne sont effacés après ce délai : ce sont les mots d'un tiers. La réponse du propriétaire (la preuve de son accord) reste, et la liste « ne pas contacter » garde ses numéros."
+    },
+    "feature_prospect_photo_check": {
+      "label": "Vérifier les photos (Prospection)",
+      "hint": "Un modèle regarde chaque photo de l'annonce d'un propriétaire (numéro de téléphone écrit dessus, marque d'une autre agence, visage, capture d'écran, qualité, pièce montrée) et le site dit si la photo est déjà sur une autre annonce. Il lit et suggère, il ne change rien. Chaque vérification coûte un appel au modèle."
+    },
+    "prospect_ask_agency_ar": {
+      "label": "Message à une agence (arabe)",
+      "hint": "Pour un post publié par une agence, pas par un propriétaire : elle est invitée à ouvrir son agence, rien n'est publié pour elle. Trous : '{name}' '{link}' (la page des agences)."
+    },
+    "prospect_ask_agency_fr": {
+      "label": "Message à une agence (français)",
+      "hint": "Pour un post publié par une agence, pas par un propriétaire : elle est invitée à ouvrir son agence, rien n'est publié pour elle. Trous : '{name}' '{link}' (la page des agences)."
+    },
+    "requests_guest_form": {
+      "label": "Demande sans compte",
+      "hint": "Le visiteur remplit sa demande, puis confirme son numéro par SMS : le compte se crée à ce moment. Éteint : connexion d'abord."
+    },
+    "requests_board": {
+      "label": "Page « Ce que les gens cherchent »",
+      "hint": "Les demandes ouvertes en chiffres pour tout le monde (où, quel bien), pour que les agences hors Mazed voient ce que le marché demande. Aussi le nombre sur l'accueil et sur la page Pro."
+    },
+    "requests_board_min": {
+      "label": "Demandes ouvertes avant d'en parler",
+      "hint": "En dessous, la page et le nombre ne s'affichent pas."
+    },
+    "requests_board_cards_since": {
+      "label": "Cartes publiques depuis",
+      "hint": "Date (AAAA-MM-JJ ou avec l'heure) : les demandes enregistrées depuis s'affichent en carte (bien, lieu, budget, pièces — jamais le nom, le numéro ni la note). Avant, le formulaire promettait « les agences Pro seulement ». Vide : les chiffres seulement."
+    },
+    "social_auto_queue_tiktok": {
+      "label": "Proposer sur TikTok",
+      "hint": "Le compte TikTok @mazed613, dans la même demande que la page « Mazed » : vous validez les deux ensemble, ou vous décochez TikTok pour une annonce. Il faut au moins une photo. Tant que TikTok n'est pas connecté, la publication attend dans « File »."
+    },
+    "social_tiktok_draft": {
+      "label": "TikTok : envoyer en brouillon",
+      "hint": "Allumé : chaque publication arrive en brouillon dans l'appli TikTok (boîte de réception) ; vous ajoutez la musique, publiez, puis collez le lien dans « File ». Éteint : publiée directement. Tant que TikTok n'a pas validé l'application, la publication directe n'est possible que sur un compte privé."
+    },
+    "social_tiktok_public": {
+      "label": "TikTok : publier en public",
+      "hint": "Pour la publication directe. Éteint : visible du seul compte (« moi uniquement »), la seule possibilité avant la validation de l'application par TikTok. Allumez-le une fois l'application validée."
+    },
+    "social_tiktok_daily_limit": {
+      "label": "Publications TikTok par jour",
+      "hint": "Sur 24 heures, brouillons compris. TikTok en accepte environ 15 par jour et garde au plus 5 brouillons en attente."
+    },
+    "social_tiktok_auto_music": {
+      "label": "TikTok : musique automatique",
+      "hint": "TikTok ajoute une musique aux photos (publication directe)."
+    },
+    "social_tiktok_comments": {
+      "label": "TikTok : commentaires permis",
+      "hint": "Publication directe. Si le compte a coupé les commentaires dans TikTok, ils restent coupés."
+    },
+    "social_tiktok_username": {
+      "label": "Compte TikTok à connecter",
+      "hint": "Le seul compte que « Connecter TikTok » accepte, sans @ (mazed613). Vide : n'importe quel compte."
+    },
+    "social_tiktok_verify_file": {
+      "label": "TikTok : nom du fichier de vérification",
+      "hint": "TikTok ne prend les photos que d'une adresse vérifiée. Pour le préfixe https://www.mazed.immo/api/social/image/, il donne un fichier : collez ici son nom (il finit par .txt). Inutile si le domaine mazed.immo est vérifié par DNS."
+    },
+    "social_tiktok_verify_text": {
+      "label": "TikTok : contenu du fichier de vérification",
+      "hint": "Le texte que contient ce fichier, tel quel."
     }
   },
   "ads": {
@@ -6425,6 +6774,10 @@
       "custom": {
         "label": "Sur mesure",
         "hint": "Cochez les sections une par une."
+      },
+      "prospection": {
+        "label": "Prospection",
+        "hint": "Seulement l'écran Prospection : écrire aux propriétaires et publier leurs annonces avec leur accord."
       }
     },
     "sections": {
@@ -6444,7 +6797,8 @@
       "catalogue": "Catalogue",
       "activity": "Journal d'activité",
       "analytics": "Statistiques",
-      "content": "Guides"
+      "content": "Guides",
+      "prospection": "Prospection"
     },
     "members": {
       "title": "Membres de la console",
@@ -7182,6 +7536,7 @@
           "map": "Carte · zone",
           "listing": "Page d'annonce",
           "home": "Accueil",
+          "board": "Page « Ce que les gens cherchent »",
           "other": "Autre (Mes demandes, lien direct)"
         }
       }
@@ -7683,6 +8038,65 @@
       "description": "Prix médians demandés, offre par gouvernorat et par type de bien, demande des acheteurs, calculés à partir des annonces publiées sur Mazed Immo."
     }
   },
+  "priceQuestions": {
+    "request": {
+      "cta": "Demander le prix",
+      "title": "Demander le prix",
+      "close": "Fermer",
+      "hint": "Le vendeur a choisi de donner son prix sur demande : il reçoit votre question par SMS et vous répond ici.",
+      "message": "Votre message",
+      "defaultMessage": "Bonjour, quel est le prix de l'annonce {ref} ?",
+      "name": "Votre nom",
+      "phone": "Votre numéro",
+      "shared": "Votre nom et votre numéro sont transmis au vendeur avec la question.",
+      "send": "Envoyer la question",
+      "sentToast": "Question envoyée au vendeur.",
+      "failed": "La question n'est pas partie. Réessayez.",
+      "sentTitle": "Prix demandé",
+      "sentBody": "Le vendeur répond ici et par SMS, ou il vous appelle.",
+      "follow": "Suivre mes demandes de prix",
+      "answeredTitle": "Le vendeur vous a répondu",
+      "perMonth": "par mois"
+    },
+    "page": {
+      "title": "Demandes de prix",
+      "subtitle": "Les prix demandés sur vos annonces « sur demande », et ceux que vous avez demandés.",
+      "tabs": {
+        "received": "Reçues",
+        "sent": "Envoyées"
+      },
+      "emptyReceived": "Personne n'a encore demandé le prix de vos annonces. Une annonce « Prix sur demande » affiche le bouton « Demander le prix ».",
+      "emptySent": "Vous n'avez demandé aucun prix. Sur une annonce « Prix sur demande », le bouton « Demander le prix » pose la question au vendeur.",
+      "unavailable": "Indisponible pour le moment."
+    },
+    "status": {
+      "open": "En attente",
+      "answered": "Répondu",
+      "done": "Traité"
+    },
+    "card": {
+      "listingGone": "Annonce supprimée",
+      "asked": "Demandé le {date}",
+      "whatsapp": "WhatsApp",
+      "answer": "Prix :",
+      "yourAnswer": "Votre réponse :",
+      "perMonth": "par mois",
+      "waitingSeller": "Le vendeur n'a pas encore répondu.",
+      "doneBuyer": "Le vendeur a traité votre demande : il vous a appelé ou va le faire."
+    },
+    "actions": {
+      "priceLabel": "Le prix à lui donner",
+      "rentLabel": "Le loyer à lui donner",
+      "perMonth": "par mois",
+      "hint": "Il le reçoit dans le site et par SMS. Vous l'avez appelé ? « Fait » ferme la demande.",
+      "send": "Envoyer le prix",
+      "done": "Fait, je l'ai appelé",
+      "priceMissing": "Écrivez le prix en chiffres.",
+      "answeredToast": "Prix envoyé à l'acheteur.",
+      "doneToast": "Demande fermée.",
+      "failed": "Ça n'a pas marché. Réessayez."
+    }
+  },
   "offers": {
     "request": {
       "cta": "Négocier le prix",
@@ -7823,7 +8237,8 @@
       "facebook_mazed": "Page Mazed",
       "facebook_page": "Page Mazed Immo",
       "instagram": "Instagram",
-      "facebook_groups": "Groupes (à la main)"
+      "facebook_groups": "Groupes (à la main)",
+      "tiktok": "TikTok"
     },
     "notConnected": "Pas encore connectée : {pages}. La publication attendra dans la file : à faire à la main, ou elle part une fois la page connectée.",
     "groupsHint": "Les groupes Facebook se partagent à la main, depuis la file de la console.",
@@ -7860,6 +8275,652 @@
       "rejected": "Refusée",
       "cancelled": "Annulée",
       "withdrawn": "Retirée"
+    }
+  },
+  "manage": {
+    "title": "Votre annonce",
+    "eyebrow": "Mazed Immo",
+    "status": {
+      "published": "Votre annonce est en ligne.",
+      "pending_review": "Votre annonce est en cours de vérification : elle sera en ligne très vite.",
+      "draft": "Votre annonce n'est pas encore en ligne.",
+      "rejected": "Votre annonce n'a pas été acceptée.",
+      "sold": "Votre annonce est marquée comme vendue.",
+      "rented": "Votre annonce est marquée comme louée.",
+      "archived": "Votre annonce est retirée.",
+      "expired": "Votre annonce est arrivée à son terme.",
+      "pending_payment": "Votre annonce n'est pas encore en ligne."
+    },
+    "seeListing": "Voir mon annonce",
+    "markSold": "Marquer comme vendue",
+    "markRented": "Marquer comme louée",
+    "withdraw": "Retirer l'annonce",
+    "withdrawSure": "Appuyez encore pour retirer l'annonce",
+    "done": "C'est fait. Merci de nous avoir prévenus.",
+    "failed": "Ça n'a pas marché. Réessayez dans un instant.",
+    "account": "Pour modifier votre annonce ou la remettre en ligne, connectez-vous avec votre numéro de téléphone : choisissez « Mot de passe oublié » et recevez un code par SMS.",
+    "invalidTitle": "Ce lien ne marche plus",
+    "invalidBody": "Il a été remplacé par un plus récent, ou il a expiré. Connectez-vous avec votre numéro de téléphone pour gérer vos annonces.",
+    "login": "Me connecter"
+  },
+  "adminProspection": {
+    "title": "Prospection",
+    "eyebrow": "Propriétaires",
+    "description": "Les propriétaires trouvés sur Facebook : on leur écrit, on obtient leur accord, puis on publie leur annonce. Rien ne passe en ligne avant leur « oui ».",
+    "newLead": "Nouvelle annonce trouvée",
+    "mine": "Les miennes",
+    "all": "Toutes",
+    "untitled": "Annonce sans titre",
+    "unassigned": "Sans responsable",
+    "declined": "Refusés ({n})",
+    "tag": {
+      "noPhone": "Numéro manquant",
+      "questions": "{n} question(s)",
+      "followUp": "À relancer",
+      "broker": "Agence",
+      "yes": "Oui reçu",
+      "noSms": "SMS non envoyé",
+      "interested": "Intéressée"
+    },
+    "kpi": {
+      "contacts": "Premiers messages aujourd'hui",
+      "capReached": "Plafond du jour atteint",
+      "left": "Encore {n} aujourd'hui",
+      "yes": "Oui aujourd'hui",
+      "online": "En ligne aujourd'hui",
+      "waiting": "À traiter",
+      "followUps": "À relancer",
+      "followUpsHint": "Dont la date est arrivée"
+    },
+    "col": {
+      "to_contact": "À contacter",
+      "contacted": "Contacté",
+      "confirmed": "A dit oui",
+      "online": "En ligne",
+      "declined": "Refusé"
+    },
+    "empty": {
+      "to_contact": "Rien à contacter. Collez un post pour commencer.",
+      "contacted": "Personne en attente de réponse.",
+      "confirmed": "Aucun « oui » à finaliser.",
+      "online": "Pas encore d'annonce en ligne."
+    },
+    "team": {
+      "title": "L'équipe, 7 derniers jours",
+      "empty": "Aucune activité pour l'instant.",
+      "member": "Membre",
+      "contacted": "Contactés",
+      "yes": "Oui",
+      "online": "En ligne",
+      "settings": "Les messages, le plafond du jour et la pastille se règlent dans les Réglages.",
+      "settingsLink": "Ouvrir les réglages",
+      "mine": "Mes chiffres"
+    },
+    "new": {
+      "title": "Nouvelle annonce trouvée",
+      "description": "Collez le texte d'un post Facebook. Le numéro est lu dans le texte, et l'assistant prépare le brouillon : seulement ce que le post dit.",
+      "text": "Le texte du post",
+      "textPlaceholder": "Collez ici le texte du post, tel quel…",
+      "textHint": "Copiez le texte seulement. Les photos viennent après, avec l'accord du propriétaire.",
+      "url": "Lien du post",
+      "name": "Nom de la personne",
+      "phone": "Téléphone",
+      "phoneHint": "Laissez le téléphone vide si le texte le contient : il est lu tout seul.",
+      "submit": "Lire le post et créer la fiche",
+      "reading": "Lecture du post…",
+      "errors": {
+        "too_short": "Collez le texte complet du post.",
+        "do_not_contact": "Ce numéro a refusé d'être contacté. On ne lui écrit plus.",
+        "rate_limited": "Trop de posts à la suite. Réessayez dans un moment.",
+        "failed": "Ça n'a pas marché. Réessayez."
+      },
+      "fromExtension": "Le post vient de l'extension. Relisez le texte, puis envoyez."
+    },
+    "agenciesLink": "Les agences",
+    "agencies": {
+      "title": "Les agences de Tunisie",
+      "description": "La liste des agences immobilières du pays : qui les appelle, où en est chacune, qui s'est inscrite et qui a publié.",
+      "back": "Retour à la prospection",
+      "importLink": "Importer une liste",
+      "newLink": "Ajouter une agence",
+      "noPhone": "Pas de numéro",
+      "unassigned": "Sans responsable",
+      "due": "À relancer",
+      "followUpOn": "Relance le {date}",
+      "empty": "Aucune agence ici.",
+      "count": "{n} agence(s)",
+      "pages": "Pages",
+      "prev": "Précédent",
+      "next": "Suivant",
+      "dueBanner": "{n} agence(s) à relancer.",
+      "showDue": "Les voir",
+      "teamTitle": "Ce que chacun tient",
+      "shared": "{n} agences réparties : {detail}",
+      "shareTitle": "{n} agences sans responsable : les répartir dans l'équipe",
+      "shareHint": "Les agences sont partagées à parts égales et par gouvernorat : chaque membre reçoit quelques gouvernorats, pas une poignée de chacun.",
+      "noMembers": "Aucun membre dans l'équipe de prospection : ajoutez-en depuis « Équipe ».",
+      "shareButton": "Répartir",
+      "kpi": {
+        "total": "Total",
+        "callsToday": "Mes appels aujourd'hui"
+      },
+      "stage": {
+        "to_call": "À appeler",
+        "contacted": "Contactée",
+        "interested": "Intéressée",
+        "signed_up": "Inscrite",
+        "posted": "A publié",
+        "declined": "A refusé"
+      },
+      "outcome": {
+        "no_answer": "Sans réponse",
+        "callback": "À rappeler",
+        "info_sent": "Infos envoyées"
+      },
+      "reason": {
+        "price": "Le prix",
+        "no_time": "Pas le temps",
+        "other_platform": "Déjà sur une autre plateforme",
+        "not_interested": "Pas intéressée",
+        "closed_down": "A fermé",
+        "wrong_number": "Mauvais numéro",
+        "other": "Autre raison"
+      },
+      "result": {
+        "interested": "Elle est intéressée",
+        "no_answer": "Pas de réponse",
+        "callback": "À rappeler",
+        "info_sent": "Infos envoyées",
+        "declined": "Elle refuse",
+        "declinedConfirm": "Confirmer le refus"
+      },
+      "source": {
+        "csv": "Fichier CSV",
+        "manual": "À la main",
+        "extension": "Extension Chrome",
+        "google": "Google Maps",
+        "chamber": "Chambre professionnelle",
+        "other": "Autre source"
+      },
+      "event": {
+        "created": "Ajoutée",
+        "imported": "Importée",
+        "contacted": "Contactée",
+        "no_answer": "Sans réponse",
+        "callback": "À rappeler",
+        "info_sent": "Infos envoyées",
+        "interested": "Intéressée",
+        "declined": "A refusé",
+        "assigned": "Responsable changé",
+        "note": "Note",
+        "reopened": "Rouverte",
+        "signed_up": "Inscrite sur le site",
+        "posted": "A publié sa première annonce"
+      },
+      "shopStatus": {
+        "pending": "En attente de validation",
+        "approved": "Ouverte",
+        "suspended": "Suspendue",
+        "rejected": "Refusée"
+      },
+      "filter": {
+        "stage": "Où elle en est",
+        "governorate": "Gouvernorat",
+        "search": "Rechercher",
+        "due": "Relances seulement",
+        "apply": "Appliquer",
+        "reset": "Réinitialiser",
+        "all": "Toutes"
+      },
+      "col": {
+        "agency": "Agence",
+        "phone": "Numéro",
+        "stage": "Où elle en est",
+        "member": "Responsable",
+        "last": "Dernier contact"
+      },
+      "errors": {
+        "failed": "Ça n'a pas marché. Réessayez.",
+        "no_reason": "Choisissez la raison du refus.",
+        "no_follow_up": "Choisissez la date de relance.",
+        "not_found": "Agence introuvable.",
+        "no_name": "Il manque le nom.",
+        "bad_phone": "Ce n'est pas un numéro tunisien.",
+        "nothing_to_reach": "Ajoutez un numéro, un site ou une page Facebook.",
+        "bad_governorate": "Gouvernorat inconnu.",
+        "duplicate": "Ce numéro est déjà dans la liste.",
+        "do_not_contact": "Ce numéro est sur la liste « ne pas contacter ».",
+        "wrong_step": "Cette agence n'est plus à cette étape. Rechargez la page.",
+        "bad_channel": "Choisissez comment.",
+        "empty": "Rien n'a été écrit.",
+        "forbidden": "Réservé au propriétaire.",
+        "blocked": "Il manque une information.",
+        "bad_member": "Ce membre n'existe pas.",
+        "nothing": "Rien à changer.",
+        "bad_kind": "Résultat inconnu.",
+        "bad_action": "Action inconnue."
+      },
+      "import": {
+        "pageTitle": "Importer des agences",
+        "title": "Importer une liste d'agences",
+        "description": "Un fichier CSV (ou un tableau copié) : on voit ce qui serait ajouté avant d'ajouter, et chaque numéro n'entre qu'une fois.",
+        "columnsHint": "Les colonnes sont reconnues par leur nom en arabe, français ou anglais : nom, numéro, gouvernorat, délégation, adresse, site, facebook, e-mail, agréée. Le nom est obligatoire, et il faut un numéro, un site ou une page.",
+        "chooseFile": "Choisir un fichier",
+        "orPaste": "ou collez le tableau ici :",
+        "template": "Télécharger un modèle",
+        "source": "Source",
+        "sourceNote": "Note sur la source (facultatif)",
+        "assignTo": "Responsable",
+        "shareLater": "On répartira ensuite",
+        "check": "Voir ce qui serait ajouté",
+        "add": "Ajouter {n} agence(s)",
+        "previewTitle": "Voilà ce que ferait l'import (rien n'est ajouté)",
+        "doneTitle": "{n} agence(s) ajoutée(s)",
+        "read": "Lues",
+        "toAdd": "À ajouter",
+        "added": "Ajoutées",
+        "duplicates": "Doublons",
+        "dnc": "« Ne pas contacter »",
+        "withoutNumber": "Sans numéro",
+        "unreadable": "Illisibles",
+        "problems": "{n} ligne(s) illisible(s)",
+        "line": "Ligne {n}",
+        "why": {
+          "no_name": "pas de nom",
+          "bad_phone": "numéro non tunisien",
+          "nothing_to_reach": "ni numéro, ni site, ni page"
+        },
+        "duplicatesList": "{n} doublon(s)",
+        "inFile": "deux fois dans le fichier",
+        "inList": "déjà dans la liste",
+        "dncList": "{n} sur la liste « ne pas contacter » (non ajoutées)",
+        "goList": "Aller à la liste",
+        "errors": {
+          "empty": "Le fichier est vide.",
+          "too_big": "Fichier trop gros : découpez-le.",
+          "no_name_column": "Colonne du nom introuvable : écrivez « nom » ou « الاسم » sur la première ligne.",
+          "forbidden": "Réservé au propriétaire."
+        }
+      },
+      "new": {
+        "pageTitle": "Nouvelle agence",
+        "title": "Ajouter une agence",
+        "description": "Une agence trouvée à la main : une page Facebook, une carte, un numéro entendu.",
+        "hint": "Un numéro, un site ou une page suffit. Le nom est obligatoire.",
+        "save": "Enregistrer l'agence",
+        "open": "Ouvrir la fiche"
+      },
+      "work": {
+        "pageTitle": "Fiche agence",
+        "back": "Retour aux agences",
+        "recorded": "Enregistré.",
+        "saved": "Enregistré.",
+        "copied": "Copié.",
+        "licensed": "Agréée",
+        "inChargeOf": "Responsable : {name}",
+        "posted": "« {name} » a ouvert son agence et publié {n} annonce(s)",
+        "signedUp": "« {name} » a ouvert son agence sur le site",
+        "shopStatus": "État de l'agence sur le site : {status}",
+        "callTitle": "L'appeler",
+        "contactCount": "{n} contact(s)",
+        "callNow": "L'appeler maintenant",
+        "facebook": "Page Facebook",
+        "website": "Site web",
+        "declinedHint": "Cette agence a refusé : on ne l'appelle plus tant qu'elle n'est pas rouverte.",
+        "reopen": "La rouvrir",
+        "reopened": "Rouverte.",
+        "resultTitle": "Qu'est-ce qui s'est passé ?",
+        "resultHint": "Un clic enregistre l'appel et son résultat. Choisissez la date de relance si elle n'a pas répondu ou s'il faut la rappeler.",
+        "channel": "Par",
+        "note": "Note (facultatif)",
+        "followUp": "On relance le",
+        "reason": "Pourquoi a-t-elle refusé ?",
+        "dnc": "Ne plus jamais l'appeler (son numéro va sur la liste « ne pas contacter »)",
+        "messageTitle": "Message d'offre",
+        "messageHint": "À envoyer après l'appel, ou si elle n'a pas répondu. Il dit ce que nous lui proposons.",
+        "assignTitle": "Responsable",
+        "assign": "Enregistrer",
+        "assigned": "Responsable changé.",
+        "detailsTitle": "Informations",
+        "name": "Nom",
+        "phone2": "Autre numéro",
+        "city": "Délégation / ville",
+        "address": "Adresse",
+        "email": "E-mail",
+        "legalId": "Identifiant unique (registre national)",
+        "licensedLabel": "Agréée ?",
+        "unknown": "Inconnu",
+        "yes": "Oui",
+        "no": "Non",
+        "source": "Source : {source} · {note}",
+        "save": "Enregistrer",
+        "historyCount": "Historique ({n})"
+      },
+      "report": {
+        "title": "Les agences",
+        "description": "Ce que chacun a fait sur la liste des agences aujourd'hui, et quelles agences se sont inscrites ou ont publié (le site les trouve tout seul).",
+        "contacted": "Appels",
+        "reached": "Jointes",
+        "interested": "Intéressées",
+        "declined": "Refus",
+        "noAnswer": "Sans réponse",
+        "signedUp": "Inscrites",
+        "posted": "Ont publié",
+        "idle": "N'a rien fait sur les agences aujourd'hui.",
+        "none": "Aucune activité sur les agences aujourd'hui.",
+        "funnel": "La liste aujourd'hui",
+        "reasons": "Pourquoi les agences ont refusé",
+        "openList": "Ouvrir la liste"
+      }
+    },
+    "work": {
+      "pageTitle": "Fiche propriétaire",
+      "back": "Retour à la liste",
+      "saved": "Enregistré.",
+      "recorded": "Noté.",
+      "copied": "Message copié.",
+      "openPost": "Ouvrir le post",
+      "assignedTo": "Responsable",
+      "questions": "Questions à poser au propriétaire",
+      "draft": "L'annonce, telle que le post la décrit",
+      "phone": "Téléphone",
+      "name": "Nom",
+      "deal": "Type",
+      "sale": "Vente",
+      "rent": "Location",
+      "category": "Catégorie",
+      "governorate": "Gouvernorat",
+      "delegation": "Délégation",
+      "price": "Prix (DT)",
+      "area": "Surface (m²)",
+      "rooms": "Pièces",
+      "bathrooms": "Salles de bain",
+      "titleField": "Titre",
+      "description": "Description",
+      "save": "Enregistrer",
+      "sourceText": "Le texte du post",
+      "contactTitle": "Appeler le propriétaire",
+      "contactHint": "Appelez-le d'abord : bien plus rapide qu'un WhatsApp lu des heures plus tard. S'il dit oui, notez-le à l'étape suivante, puis envoyez-lui le message de confirmation. S'il ne répond pas, envoyez-lui le message ci-dessous tel quel.",
+      "callFirst": "L'appeler maintenant",
+      "noAnswerMsg": "S'il ne répond pas, envoyez-lui ce message (par SMS s'il n'a pas WhatsApp) :",
+      "openWhatsapp": "Ouvrir WhatsApp",
+      "openSms": "Ouvrir les SMS",
+      "copy": "Copier le message",
+      "noPhone": "Il manque le téléphone : demandez-le par Messenger, puis saisissez-le plus haut.",
+      "markContacted": "Je l'ai appelé ou écrit",
+      "contactsLeft": "Encore {n} messages aujourd'hui",
+      "channel": {
+        "label": "Par",
+        "whatsapp": "WhatsApp",
+        "sms": "SMS",
+        "call": "Appel",
+        "messenger": "Messenger",
+        "other": "Autre"
+      },
+      "resultTitle": "Sa réponse",
+      "note": "Note (facultatif)",
+      "followUp": "À relancer le",
+      "outcome": {
+        "no_answer": "Pas de réponse",
+        "thinking": "Il réfléchit",
+        "refused": "Il refuse",
+        "wrong_number": "Mauvais numéro",
+        "interested": "Intéressée"
+      },
+      "sureDnc": "Ce numéro ne sera plus jamais contacté. Appuyez encore pour confirmer.",
+      "sureAgain": "Confirmer",
+      "yesTitle": "Il a dit oui",
+      "yesHint": "S'il a répondu par écrit, collez sa réponse mot pour mot. S'il a dit oui par téléphone, écrivez avec ses mots ce qu'il a dit (qu'il est le propriétaire ou le mandataire, qu'il est d'accord pour la publication) et choisissez « Appel » : vous lui enverrez ensuite un message de confirmation écrit. Le site crée son compte à son numéro et met l'annonce dedans, sans la publier.",
+      "reply": "Sa réponse",
+      "yesButton": "Il a dit oui",
+      "missing": "Il manque :",
+      "confirmedDone": "Compte et brouillon créés. Ajoutez maintenant les photos.",
+      "confirmBlockers": {
+        "wrong_step": "cette fiche n'est plus à cette étape",
+        "no_phone": "le téléphone",
+        "do_not_contact": "ce numéro est sur la liste « ne pas contacter »",
+        "no_category": "la catégorie",
+        "no_governorate": "le gouvernorat",
+        "no_title": "le titre",
+        "no_reply": "sa réponse",
+        "no_channel": "le canal de sa réponse",
+        "is_agency": "c'est une agence : rien n'est publié pour elle"
+      },
+      "confirmMsgTitle": "Message de confirmation",
+      "confirmMsgHint": "Il a dit oui par téléphone : envoyez-lui ce message pour que l'accord soit écrit chez lui (avec les conditions). Vous pouvez l'envoyer et ajouter les photos en attendant sa réponse.",
+      "confirmSentDone": "Le message de confirmation a été envoyé.",
+      "confirmSentLabel": "Je l'ai envoyé par :",
+      "confirmSentSaved": "Envoi du message de confirmation enregistré.",
+      "noWhatsappHint": "Si le numéro n'est pas sur WhatsApp (le bouton s'ouvre sans le dire), envoyez-le par SMS.",
+      "photosTitle": "Photos et publication",
+      "photosHint": "Au moins {min} photos, de préférence celles que le propriétaire envoie lui-même par WhatsApp. Celles de son post seulement si son « oui » les couvre et qu'elles sont propres.",
+      "proof": "Son accord, noté par {by}",
+      "waitingReview": "L'annonce attend la vérification d'un administrateur : elle sera en ligne dès qu'elle est approuvée.",
+      "photosCount": "{n} photo(s) sur {min} au minimum",
+      "checkNoPhone": "Aucune photo ne porte un numéro de téléphone",
+      "checkNoMark": "Aucune photo ne porte la marque d'une autre agence",
+      "uploading": "Les photos sont en cours d'envoi.",
+      "publish": "Publier l'annonce",
+      "publishBlockers": {
+        "wrong_step": "le propriétaire n'a pas dit oui",
+        "no_listing": "le brouillon n'existe pas",
+        "photos": "au moins {min} photos",
+        "photos_not_checked": "regarder les photos et cocher les deux cases",
+        "no_price": "le prix"
+      },
+      "publishedSms": "L'annonce est en ligne et le propriétaire a reçu son SMS.",
+      "publishedNoSms": "L'annonce est en ligne, mais le SMS n'est pas parti ({error}). Renvoyez-le depuis la fiche.",
+      "publishedPending": "L'annonce est envoyée à la vérification. Le SMS partira une fois qu'elle est en ligne.",
+      "onlineTitle": "En ligne",
+      "openListing": "Ouvrir l'annonce",
+      "smsSentAt": "SMS envoyé le {at}.",
+      "smsFailed": "SMS non parti : {error}",
+      "smsNotYet": "Le SMS n'est pas encore parti.",
+      "smsAgain": "Renvoyer le SMS",
+      "smsSend": "Envoyer le SMS",
+      "smsSent": "SMS envoyé.",
+      "declinedHint": "Cette fiche est fermée. Ce numéro ne sera plus contacté ; rouvrez-la seulement si elle a été fermée par erreur.",
+      "reopen": "Rouvrir",
+      "history": "Historique",
+      "addNote": "Ajouter une note",
+      "add": "Ajouter",
+      "warn": {
+        "dnc": "Ce numéro est sur la liste « ne pas contacter ». N'écrivez pas.",
+        "member": "Ce numéro a déjà un compte sur Mazed Immo ({name}) : le propriétaire est déjà membre.",
+        "others": "{n} autre(s) fiche(s) pour le même numéro ou le même post.",
+        "full": "Ce propriétaire a atteint sa limite : {used} annonces en ligne sur {limit}. Vous ne pouvez pas en publier une de plus, seul l'administrateur principal le peut. Vous pouvez terminer la fiche, elle attendra.",
+        "fullBoss": "Ce propriétaire a atteint sa limite ({used} sur {limit}). Vous pouvez publier sans limite ; la publication est inscrite au journal."
+      },
+      "event": {
+        "created": "Fiche créée",
+        "contacted": "Contacté",
+        "confirmation_sent": "Confirmation envoyée",
+        "no_answer": "Pas de réponse",
+        "thinking": "Il réfléchit",
+        "refused": "A refusé",
+        "wrong_number": "Mauvais numéro",
+        "confirmed": "A dit oui",
+        "published": "Publiée",
+        "sms": "SMS",
+        "note": "Note",
+        "assigned": "Responsable changé",
+        "broker": "Courtier",
+        "interested": "Intéressée"
+      },
+      "errors": {
+        "failed": "Ça n'a pas marché. Réessayez.",
+        "daily_cap": "Plafond du jour atteint : reprenez demain.",
+        "wrong_step": "Cette fiche n'est plus à cette étape. Rechargez la page.",
+        "bad_channel": "Choisissez comment vous lui avez écrit.",
+        "no_phone": "Il manque le téléphone.",
+        "do_not_contact": "Ce numéro est sur la liste « ne pas contacter ».",
+        "bad_phone": "Ce n'est pas un numéro tunisien.",
+        "phone_locked": "Le compte du propriétaire est déjà fait à ce numéro : il ne change plus.",
+        "bad_governorate": "Gouvernorat inconnu.",
+        "bad_category": "Catégorie inconnue.",
+        "bad_member": "Ce membre n'existe pas.",
+        "blocked": "Il manque des informations.",
+        "not_found": "Fiche introuvable.",
+        "listing_missing": "Le brouillon de l'annonce n'existe pas.",
+        "photo_missing": "Une photo n'est pas arrivée : renvoyez-la.",
+        "attribute_required": "Il manque une réponse obligatoire de la catégorie (surface, pièces…).",
+        "not_submittable": "L'annonce n'est plus à publier.",
+        "taken_down": "Un administrateur a retiré cette annonce.",
+        "free_limit_reached": "Ce propriétaire a atteint sa limite : une annonce de plus ne peut pas être publiée. Seul l'administrateur principal le peut.",
+        "seller_suspended": "Le compte de ce propriétaire est suspendu.",
+        "account_failed": "Le compte n'a pas pu être créé. Réessayez.",
+        "listing_failed": "Le brouillon n'a pas pu être créé. Réessayez.",
+        "rate_limited": "Trop de demandes à la suite. Réessayez dans un moment.",
+        "sms_not_configured": "Les SMS ne sont pas configurés.",
+        "no_listing": "Il n'y a pas encore d'annonce.",
+        "no_photos": "Ajoutez d'abord des photos.",
+        "unreadable": "Les photos n'ont pas pu être lues. Renvoyez-les.",
+        "kind_locked": "Le propriétaire a déjà dit oui : ce n'est plus une agence."
+      },
+      "contactedDone": "Noté. Il vous reste {n} messages aujourd'hui.",
+      "check": {
+        "button": "Vérifier les photos",
+        "running": "Les photos sont examinées…",
+        "needPhotos": "Ajoutez d'abord les photos.",
+        "summary": "{n} photo(s) à regarder avant de publier",
+        "clean": "Rien à signaler sur ces photos.",
+        "aiOff": "L'analyse des photos est indisponible pour le moment : seuls les doublons sont vérifiés.",
+        "applyOrder": "Mettre la meilleure photo en premier",
+        "photoN": "Photo {n}",
+        "quality": "qualité {n}/5",
+        "bestCover": "meilleure couverture",
+        "nothing": "Rien à signaler.",
+        "notRead": "Pas analysée.",
+        "kind": {
+          "exterior": "extérieur",
+          "living": "salon",
+          "kitchen": "cuisine",
+          "bedroom": "chambre",
+          "bathroom": "salle de bain",
+          "plot": "terrain",
+          "plan": "plan",
+          "other": "autre"
+        },
+        "flag": {
+          "phone": "Un numéro de téléphone est écrit sur la photo.",
+          "overlay": "Marque ou texte ajouté sur la photo : « {text} ».",
+          "people": "Un visage est visible.",
+          "not_property": "Ce n'est pas une photo du bien (capture d'écran, plan, montage…).",
+          "low_quality": "Photo floue, sombre ou de travers.",
+          "duplicate": "Déjà sur Mazed Immo, sur l'annonce :"
+        }
+      },
+      "stepsLabel": "Étapes",
+      "steps": {
+        "draft": "L'annonce",
+        "write": "L'appeler",
+        "yes": "Il a dit oui",
+        "publish": "Photos et mise en ligne",
+        "agency": "L'agence"
+      },
+      "stepHint": {
+        "draft": "Vérifiez l'annonce : la catégorie, le gouvernorat, le prix et le titre.",
+        "write": "Appelez-le ; s'il ne répond pas, envoyez-lui le message. Puis notez sa réponse.",
+        "yes": "Quand il dit oui, collez sa réponse ici.",
+        "publish": "Ajoutez les photos, vérifiez-les, puis publiez.",
+        "agency": "Vérifiez qui c'est : une agence, pas un propriétaire.",
+        "writeAgency": "Envoyez-lui le message des agences, puis notez sa réponse."
+      },
+      "next": "Suivant",
+      "prev": "Retour",
+      "saveNext": "Enregistrer et continuer",
+      "call": "Appeler",
+      "moreDetails": "Plus de détails (délégation, pièces, description)",
+      "whoTitle": "La personne",
+      "lockedPublish": "Il faut d'abord le « oui » du propriétaire.",
+      "goYes": "Aller à « Il a dit oui »",
+      "doneYes": "Son accord est noté.",
+      "nextYes": "Il a dit oui",
+      "historyCount": "Historique ({n})",
+      "kind": {
+        "label": "Qui a publié ce post ?",
+        "owner": "Un particulier (le propriétaire)",
+        "agency": "Une agence immobilière",
+        "ownerHint": "On lui propose de publier son annonce, avec son accord.",
+        "agencyHint": "On ne publie rien pour elle : on l'invite à ouvrir son agence sur le site, avec l'offre des agences.",
+        "guess": "Ce post ressemble à celui d'une agence (commission, bureau…). À vous de confirmer."
+      },
+      "contactTitleAgency": "Écrire à l'agence",
+      "contactHintAgency": "Envoyez ce message tel quel : il présente l'offre des agences. Rien n'est publié pour elle, c'est elle qui ouvre son agence."
+    },
+    "range": {
+      "1": "Aujourd'hui",
+      "7": "7 jours",
+      "30": "30 jours"
+    },
+    "stats": {
+      "created": "Posts ajoutés",
+      "contacted": "Premiers messages",
+      "yes": "Oui reçus",
+      "online": "Mises en ligne",
+      "refused": "Refus",
+      "noAnswer": "Sans réponse",
+      "ofContacted": "{n} % des contactés",
+      "ofYes": "{n} % des oui"
+    },
+    "report": {
+      "link": "Bilan du jour",
+      "title": "Bilan de l'équipe",
+      "description": "Ce que chaque membre de l'équipe a fait, jour par jour. Un membre qui n'a rien fait apparaît quand même.",
+      "back": "Prospection",
+      "days": "Les 14 derniers jours",
+      "dayActions": "{n} action(s)",
+      "total": "Total du jour",
+      "idle": "Aucune action ce jour-là.",
+      "detail": "Détail ({n})",
+      "noTeam": "Aucun membre n'a l'accès Prospection. Ajoutez-en dans Équipe, avec le rôle « Prospection ».",
+      "notice": "Le bilan part aussi chaque soir dans votre cloche. L'heure et l'interrupteur sont dans Réglages.",
+      "settingsLink": "Réglages"
+    },
+    "extensionLink": "Bouton Chrome",
+    "extension": {
+      "title": "Le bouton Chrome",
+      "description": "Une petite extension qui envoie le post Facebook que vous regardez vers « Nouvelle annonce trouvée », le texte déjà rempli. Elle ne lit la page que lorsque vous cliquez dessus.",
+      "download": "Télécharger l'extension",
+      "version": "Version {v}",
+      "steps": {
+        "download": {
+          "title": "Téléchargez le fichier",
+          "body": "Cliquez sur le bouton ci-dessus : vous recevez un fichier .zip."
+        },
+        "unzip": {
+          "title": "Décompressez-le",
+          "body": "Clic droit sur le fichier, « Extraire tout… », dans un dossier que vous gardez. Ne le supprimez pas : Chrome le relit à chaque démarrage."
+        },
+        "developer": {
+          "title": "Ouvrez la page des extensions",
+          "body": "Dans Chrome, ouvrez l'adresse ci-dessous et activez « Mode développeur » en haut de la page."
+        },
+        "load": {
+          "title": "Chargez le dossier",
+          "body": "Cliquez sur « Charger l'extension non empaquetée » et choisissez le dossier décompressé (celui qui contient manifest.json)."
+        },
+        "pin": {
+          "title": "Épinglez-la",
+          "body": "Cliquez sur l'icône puzzle de Chrome, puis sur l'épingle à côté de « Mazed Immo — Prospection » : le bouton reste visible."
+        },
+        "use": {
+          "title": "Utilisez-la sur Facebook",
+          "body": "Sur le post, sélectionnez son texte à la souris, cliquez sur le bouton, vérifiez, puis « Ouvrir Mazed ». Le formulaire s'ouvre rempli ; c'est vous qui l'envoyez."
+        }
+      },
+      "privacyTitle": "Ce que fait l'extension, et ce qu'elle ne fait pas",
+      "privacy": {
+        "reads": "Elle ne lit la page que lorsque vous cliquez sur son bouton, et seulement le post affiché.",
+        "sends": "Elle n'envoie rien toute seule : elle ouvre Mazed Immo avec le texte dans l'adresse, après le #, que le navigateur n'envoie jamais à un serveur.",
+        "account": "Elle n'accède ni à votre compte Facebook, ni à vos messages, ni à vos amis.",
+        "review": "Vous relisez le texte et l'envoyez vous-même : le numéro, le nom et le lien se corrigent avant."
+      }
+    },
+    "kindFilter": {
+      "all": "Tous",
+      "owner": "Particuliers",
+      "agency": "Agences"
     }
   }
 }

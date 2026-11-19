@@ -68,15 +68,6 @@ export async function POST(req: NextRequest) {
   if (blocked === true) {
     return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
   }
-  const { data: phoneBlocked } = await admin.rpc("check_rate_limit", {
-    p_key: `reset:${phone}`,
-    p_max: 10,
-    p_window_secs: 900,
-  });
-  if (phoneBlocked === true) {
-    return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
-  }
-
   // Require a fresh OTP proof stamped by /api/auth/phone/verify.
   // Two proofs, because the row alone is not one: it says this number was
   // verified recently, not that the caller is who verified it. A seller's
@@ -84,6 +75,18 @@ export async function POST(req: NextRequest) {
   // was an account takeover for the length of that window.
   if (!verifyPhoneProof(req.cookies.get(PHONE_PROOF_COOKIE)?.value, phone)) {
     return NextResponse.json({ ok: false, error: "phone_not_verified" }, { status: 403 });
+  }
+
+  // Per number, spent only by someone holding the proof above: a number's reset
+  // budget used to be emptied by anyone typing it, which shut the owner out of
+  // their own recovery.
+  const { data: phoneBlocked } = await admin.rpc("check_rate_limit", {
+    p_key: `reset:${phone}`,
+    p_max: 10,
+    p_window_secs: 900,
+  });
+  if (phoneBlocked === true) {
+    return NextResponse.json({ ok: false, error: "rate_limited" }, { status: 429 });
   }
 
   const { data: otp } = await admin

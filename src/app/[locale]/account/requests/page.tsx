@@ -12,7 +12,7 @@ import { formatDate, formatNumber, formatTND } from "@/lib/utils";
 import { catalogueQueryFor } from "@/lib/requests/model";
 import { toMatchable } from "@/lib/requests/server";
 import { getSettings } from "@/lib/settings/server";
-import { BellOff, KeyRound, Plus, Search } from "lucide-react";
+import { BellOff, CheckCircle2, KeyRound, Plus, Search } from "lucide-react";
 import { RequestActions } from "./RequestActions";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +50,14 @@ export async function generateMetadata() {
   return { title: t("listTitle") };
 }
 
-export default async function MyRequestsPage() {
+export default async function MyRequestsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  // ?bienvenue=1: the account was just made by a visitor's demande
+  // (/api/requests/guest), with no password typed — say how to come back.
+  const welcome = (await searchParams).bienvenue === "1";
   const locale = await getLocale();
   const t = await getTranslations("requests");
   const tc = await getTranslations("common");
@@ -94,6 +101,15 @@ export default async function MyRequestsPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6 lg:max-w-3xl lg:py-10">
+      {welcome && (
+        <section role="status" className="mazed-band-warm mb-5 flex items-start gap-3 rounded-2xl p-4 ring-1 ring-border">
+          <CheckCircle2 aria-hidden className="mt-0.5 size-5 shrink-0 text-[var(--tone-ok)]" />
+          <div>
+            <p className="text-[14px] font-extrabold text-foreground">{t("guest.welcomeTitle")}</p>
+            <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted">{t("guest.welcomeBody")}</p>
+          </div>
+        </section>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="mazed-h2 text-[26px] text-foreground lg:text-[32px]">{t("listTitle")}</h1>

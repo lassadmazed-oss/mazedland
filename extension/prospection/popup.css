@@ -1,0 +1,12 @@
+* { box-sizing: border-box; }
+body { width: 360px; margin: 0; padding: 14px; font: 13px/1.5 "Segoe UI", Tahoma, Arial, sans-serif; color: #111; background: #fff; }
+h1 { margin: 0 0 6px; font-size: 16px; font-weight: 800; }
+label { display: block; margin-top: 9px; font-weight: 700; font-size: 12px; color: #444; }
+textarea, input, select { display: block; width: 100%; margin-top: 3px; padding: 7px 9px; font: inherit; color: #111; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
+textarea { resize: vertical; }
+textarea:focus, input:focus, select:focus { outline: 2px solid #b8892b; outline-offset: 0; border-color: #b8892b; }
+.hint { margin: 0; padding: 6px 9px; border-radius: 8px; background: #f4f1e8; font-size: 12px; }
+.hint.warn { background: #fdecec; color: #8a1f1f; }
+button { display: block; width: 100%; margin-top: 12px; padding: 10px; font: inherit; font-weight: 800; color: #fff; background: #111; border: 0; border-radius: 999px; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+.small { margin: 8px 0 0; font-size: 11px; color: #666; }

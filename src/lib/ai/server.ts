@@ -97,6 +97,11 @@ export async function callJson(opts: {
   user: string;
   schema: Record<string, unknown>;
   maxTokens?: number;
+  /**
+   * Photos to look at, in order: each is shown to the model after a « Photo n: » label, before `user`.
+   * Pass them small (a 640 px WebP is about 400 tokens): the budget is charged by their number.
+   */
+  images?: { mediaType: "image/webp" | "image/jpeg" | "image/png"; data: string }[];
 }): Promise<{ ok: true; data: unknown } | { ok: false; reason: "unavailable" | "refused" | "failed" }> {
   if (!hasAiKey()) return { ok: false, reason: "unavailable" };
   const s = await aiSettings(opts.admin);
@@ -109,7 +114,8 @@ export async function callJson(opts: {
   // (the QA tour measured 6 s between the gate and the charge). The row takes
   // the real figures once the answer is in; refused, it is removed.
   const started = Date.now();
-  const estimate = estimateCostUsd(AI_MODEL, opts.system.length + opts.user.length);
+  // A small photo is some 400 tokens, which the estimate counts as 1 000 characters.
+  const estimate = estimateCostUsd(AI_MODEL, opts.system.length + opts.user.length + (opts.images?.length ?? 0) * 1_000);
   const { data: reserved } = await opts.admin
     .from("ai_calls")
     .insert({ user_id: opts.userId, feature: opts.feature, model: AI_MODEL, cost_usd: estimate, ok: false, error: "pending" })
@@ -157,7 +163,20 @@ export async function callJson(opts: {
       // Reading a sentence into fields: low effort holds the quality and the cost.
       output_config: { effort: "low", format: { type: "json_schema", schema: opts.schema } },
       system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
-      messages: [{ role: "user", content: opts.user }],
+      messages: [
+        {
+          role: "user",
+          content: opts.images?.length
+            ? [
+                ...opts.images.flatMap((im, i) => [
+                  { type: "text" as const, text: `Photo ${i}:` },
+                  { type: "image" as const, source: { type: "base64" as const, media_type: im.mediaType, data: im.data } },
+                ]),
+                { type: "text" as const, text: opts.user },
+              ]
+            : opts.user,
+        },
+      ],
     });
 
     if (res.stop_reason === "refusal" || res.stop_reason === "max_tokens") {

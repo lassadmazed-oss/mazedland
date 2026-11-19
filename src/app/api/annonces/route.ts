@@ -6,7 +6,8 @@ import { isSameOrigin } from "@/lib/sameOrigin";
 import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
-import { listingFields, listingPhotos, num, text, titleTooShort, type ListingBody } from "@/lib/listings/input";
+import { listingFields, listingPhotos, text, titleTooShort, type ListingBody } from "@/lib/listings/input";
+import { refusedPhotoPaths } from "@/lib/listings/storage";
 import { suspendedResponse } from "@/lib/moderation/ban";
 import { can, roleIn } from "@/lib/pro/shops";
 import { getSettings } from "@/lib/settings/server";
@@ -91,17 +92,20 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const priceOnRequest = body.price_on_request === true;
-  const price = num(body.price);
-  if (!priceOnRequest && price == null && !id) {
-    const t = await apiTranslator(req, "publishApi");
-    return NextResponse.json(
-      { error: "price_required", detail: t("priceRequired") },
-      { status: 400 },
-    );
-  }
+  // A new annonce is a draft, and a draft may not have its price yet (0222):
+  // the voice publisher saves one before the price is said, and « Prix sur
+  // demande » stays the seller's own choice. The submit asks for one or the other.
 
   const fields = listingFields(body);
+
+  // The photos it names must be this seller's (src/lib/listings/input.ts): a
+  // path from another folder would be kept, sized and — when the draft is
+  // deleted — removed from the bucket along with its real owner's annonce.
+  const photos = listingPhotos(body, (await getSettings()).listing_max_photos);
+  if (photos) {
+    const refused = await refusedPhotoPaths(admin, { photos, ownerId: user.id, listingId: id || null });
+    if (refused.length > 0) return NextResponse.json({ error: "photo_path_invalid" }, { status: 400 });
+  }
 
   // The pin (0212), sent with the draft: { lat, lng, exact }, or null for none.
   // One that does not read is dropped rather than failing the autosave; an
@@ -166,8 +170,10 @@ export async function POST(req: NextRequest) {
     }
     if (Object.keys(fields).length > 0) {
       // « Prix sur demande » off with no price: the database refuses the row
-      // (price_on_request or price is not null) — as a 500, until now.
-      if ("price" in fields && fields.price == null && fields.price_on_request !== true) {
+      // (price_on_request or price is not null) — as a 500, until now. A
+      // draft may wait without one (0222); a rejected annonce or one waiting
+      // for its payment has been sent already, and keeps its price.
+      if ("price" in fields && fields.price == null && fields.price_on_request !== true && owned.status !== "draft") {
         const t = await apiTranslator(req, "publishApi");
         return NextResponse.json({ error: "price_required", detail: t("priceRequired") }, { status: 400 });
       }
@@ -200,7 +206,6 @@ export async function POST(req: NextRequest) {
 
   // ── Photos: the wizard uploads to storage first, then sends the paths ─────
   // At most what an admin allows per annonce.
-  const photos = listingPhotos(body, (await getSettings()).listing_max_photos);
   if (photos) {
     // Replace wholesale: the client sends the gallery as it should end up, so
     // reordering and removal need no separate endpoints.

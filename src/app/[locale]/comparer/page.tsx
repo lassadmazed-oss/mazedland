@@ -9,6 +9,7 @@ import { governorateLabel } from "@/lib/tunisia";
 import { shownDelegation } from "@/lib/delegations";
 import { formatDate, formatNumber, formatTND } from "@/lib/utils";
 import { asDealType } from "@/lib/listings/deal";
+import { langOf, levelsFact } from "@/lib/listings/levels";
 import { bestOf, comparable, parseCompareIds, pricePerSqm } from "@/lib/compare";
 import { getSettings } from "@/lib/settings/server";
 import { Ltr } from "@/components/ui/Ltr";
@@ -97,11 +98,14 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
   // Every detail a seller filled, under the label the site uses for it.
   const categoryIds = [...new Set(rows.map((r) => one(r.category)?.id).filter(Boolean))] as string[];
   const { data: defRows } = admin && categoryIds.length
-    ? await admin.from("category_attributes").select("field_key, label, unit, options, sort_order").in("category_id", categoryIds).order("sort_order")
+    ? await admin.from("category_attributes").select("category_id, field_key, label, unit, options, sort_order").in("category_id", categoryIds).order("sort_order")
     : { data: [] };
   const defs = new Map<string, { label: string; unit: string | null; options: { value: string; label: string }[] | null }>();
-  for (const d of (defRows ?? []) as { field_key: string; label: string; unit: string | null; options: { value: string; label: string }[] | null }[]) {
+  // Each annonce's own questions: a flat's floor and a villa's levels read differently (src/lib/listings/levels.ts).
+  const keysOf = new Map<string, string[]>();
+  for (const d of (defRows ?? []) as { category_id: string; field_key: string; label: string; unit: string | null; options: { value: string; label: string }[] | null }[]) {
     if (!defs.has(d.field_key)) defs.set(d.field_key, d);
+    keysOf.set(d.category_id, [...(keysOf.get(d.category_id) ?? []), d.field_key]);
   }
   const SHOWN_ABOVE = new Set(["area_sqm", "rooms"]);
   const extraKeys = [...defs.keys()].filter((k) => !SHOWN_ABOVE.has(k) && rows.some((r) => {
@@ -109,6 +113,8 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
     return v != null && v !== "" && v !== false;
   }));
   const attrValue = (r: Row, key: string): string => {
+    const fact = levelsFact(key, r.attributes ?? {}, keysOf.get(one(r.category)?.id ?? "") ?? [], langOf(locale));
+    if (fact !== undefined) return fact ?? "—";
     const raw = (r.attributes ?? {})[key];
     if (raw == null || raw === "" || raw === false) return "—";
     if (raw === true) return tRoot("listing.yes");

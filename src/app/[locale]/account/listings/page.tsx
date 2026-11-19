@@ -11,7 +11,7 @@ import { isEditable } from "@/lib/listings/edit";
 import { categoryLabel } from "@/lib/i18n";
 import {
   Plus, Ticket, ImageOff, Clock, CreditCard, PencilLine,
-  ArrowRight, AlertTriangle, Inbox, Megaphone, Sparkles, MessageCircle, MapPin,
+  ArrowRight, AlertTriangle, Inbox, Megaphone, Sparkles, MessageCircle, MapPin, Eye, Phone,
 } from "lucide-react";
 import { RenewButton } from "./RenewButton";
 import { DeleteDraftButton } from "./DeleteDraftButton";
@@ -111,7 +111,8 @@ export default async function MyListingsPage({
       .select(
         `id, title, price, price_on_request, status, rejection_reason, published_at,
          deal_type, availability, pending_edit_at, review_flags, taken_down_at, taken_down_reason,
-         expires_at, created_at, category_id, lat, category:categories (label_fr, label_ar),
+         expires_at, created_at, category_id, lat, view_count, contact_reveal_count,
+         category:categories (label_fr, label_ar),
          photos:listing_photos (storage_path, sort_order, is_cover)`,
       )
       .eq("seller_id", user.id)
@@ -180,6 +181,9 @@ export default async function MyListingsPage({
     category_id: string;
     /** The public point (0212); null = not on the map yet. */
     lat: number | string | null;
+    /** Distinct visitors (the seller left out) and how often the number was shown (0152). */
+    view_count: number | null;
+    contact_reveal_count: number | null;
     photos: { storage_path: string; sort_order: number; is_cover?: boolean | null }[] | null;
   };
   const all = (listRes.data ?? []) as Row[];
@@ -274,6 +278,25 @@ export default async function MyListingsPage({
       tone: known.tone,
       hint: known.hint ? t(`statusHint.${l.status}`) : undefined,
     };
+  }
+
+  /**
+   * Who looked, and who took the number: the seller sees theirs on every annonce
+   * that has been online, whatever threshold the public page waits for
+   * (`listing_views_public_min`). A draft has neither.
+   */
+  function Stats({ l, className = "" }: { l: Row; className?: string }) {
+    if (!l.published_at) return null;
+    return (
+      <p className={cn("mazed-tabular flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-muted", className)} title={t("statsTitle")}>
+        <span className="inline-flex items-center gap-1">
+          <Eye className="size-3" aria-hidden /> {t("views", { count: l.view_count ?? 0 })}
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Phone className="size-3" aria-hidden /> {t("reveals", { count: l.contact_reveal_count ?? 0 })}
+        </span>
+      </p>
+    );
   }
 
   function Action({ l, block = false }: { l: Row; block?: boolean }) {
@@ -548,6 +571,7 @@ export default async function MyListingsPage({
                   <Link href={`/annonces/${l.id}` as never} className="mt-1.5 block truncate text-[13.5px] font-semibold text-foreground">
                     {titleOf(l)}
                   </Link>
+                  <Stats l={l} className="mt-1" />
                 </div>
               </div>
 
@@ -641,6 +665,7 @@ export default async function MyListingsPage({
                           {titleOf(l)}
                         </Link>
                         <div className="truncate text-[11.5px] text-muted">{categoryOf(l)}</div>
+                        <Stats l={l} className="mt-0.5" />
                       </div>
                     </div>
                   </td>

@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { MapPin, Navigation } from "lucide-react";
+import { MapPin, MapPinOff, Navigation } from "lucide-react";
 import type * as MapLibre from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { circleRing, directionsUrl, type LatLng } from "@/lib/geo/location";
-import { MAP_STYLE, loadMapLibre } from "./maplibre";
+import { MAP_STYLE, loadMapLibre, newMap } from "./maplibre";
 
 /**
  * « Où se trouve le bien » on the annonce page (0212). `point` is the public
@@ -24,6 +24,8 @@ export function ListingMap({ point, exact, radiusM }: { point: LatLng; exact: bo
   const box = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
   const [ready, setReady] = useState(false);
+  // No WebGL2 here: the note and the way there stay, the empty box goes.
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     const el = box.current;
@@ -44,7 +46,7 @@ export function ListingMap({ point, exact, radiusM }: { point: LatLng; exact: bo
     let gone = false;
     void loadMapLibre().then((m) => {
       if (gone || !box.current) return;
-      map = new m.Map({
+      map = newMap(m, {
         container: box.current,
         style: MAP_STYLE,
         center: [lng, lat],
@@ -52,6 +54,10 @@ export function ListingMap({ point, exact, radiusM }: { point: LatLng; exact: bo
         attributionControl: { compact: true },
         cooperativeGestures: true,
       });
+      if (!map) {
+        setFailed(true);
+        return;
+      }
       map.addControl(new m.NavigationControl({ showCompass: false }), "top-right");
       if (exact) {
         new m.Marker({ color: "#18181b" }).setLngLat([lng, lat]).addTo(map);
@@ -67,6 +73,8 @@ export function ListingMap({ point, exact, radiusM }: { point: LatLng; exact: bo
         });
       }
       map.once("load", () => setReady(true));
+    }).catch(() => {
+      if (!gone) setFailed(true);
     });
     return () => {
       gone = true;
@@ -76,10 +84,16 @@ export function ListingMap({ point, exact, radiusM }: { point: LatLng; exact: bo
 
   return (
     <div>
-      <div className="relative h-[260px] overflow-hidden rounded-[var(--radius-2xl)] bg-surface-2 ring-1 ring-border sm:h-[320px]">
-        <div ref={box} className="h-full w-full" role="region" aria-label={t("mapLabel")} />
-        {!ready && <MapPin aria-hidden className="absolute start-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 text-subtle" />}
-      </div>
+      {failed ? (
+        <p role="status" className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2.5 text-[12.5px] text-muted ring-1 ring-border">
+          <MapPinOff aria-hidden className="size-4 shrink-0" /> {t("unavailable")}
+        </p>
+      ) : (
+        <div className="relative h-[260px] overflow-hidden rounded-[var(--radius-2xl)] bg-surface-2 ring-1 ring-border sm:h-[320px]">
+          <div ref={box} className="h-full w-full" role="region" aria-label={t("mapLabel")} />
+          {!ready && <MapPin aria-hidden className="absolute start-1/2 top-1/2 size-6 -translate-x-1/2 -translate-y-1/2 text-subtle" />}
+        </div>
+      )}
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
         <p className="text-[12px] text-muted">{exact ? t("exactNote") : t("approxNote", { radius: radiusM })}</p>
         {exact && (

@@ -69,6 +69,15 @@ describe("understand — French", () => {
   });
 });
 
+describe("understand — duplex and triplex", () => {
+  it("keeps them as keywords, so a villa duplex is found as well as a flat", () => {
+    expect(understand("duplex sfax")).toEqual({ gov: "Sfax", rest: "duplex" });
+    expect(understand("villa duplex")).toMatchObject({ cat: "villas", rest: "duplex" });
+    expect(understand("دوبلكس في صفاقس")).toMatchObject({ gov: "Sfax", rest: "دوبلكس" });
+    expect(understand("appartement triplex")).toMatchObject({ cat: "appartements", rest: "triplex" });
+  });
+});
+
 describe("understand — Arabic and Derja", () => {
   it("reads « مليون » as a thousand dinars", () => {
     expect(understand("أرض صفاقس 300 مليون")).toMatchObject({ cat: "terrain", gov: "Sfax", max: 300_000 });

@@ -14,6 +14,7 @@ import { claimDecision, decidePayment, OPEN, releaseDecision, type PaymentRow } 
 import { refusalOutcome } from "@/lib/pro/agenceRequest";
 import { getSettings } from "@/lib/settings/server";
 import { formatDate } from "@/lib/utils";
+import { revalidatePublic } from "@/lib/revalidatePublic";
 
 /**
  * POST /api/admin/boutiques/:id — the console's decisions on a shop (0173).
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const action = typeof body.action === "string" ? body.action : "";
   const reason = typeof body.reason === "string" ? body.reason.trim().slice(0, 500) : "";
 
-  const { data: shop } = await admin.from("shops").select("id, owner_id, name, status, founding_plan").eq("id", id).maybeSingle();
+  const { data: shop } = await admin.from("shops").select("id, owner_id, slug, name, status, kind, founding_plan, licence_number").eq("id", id).maybeSingle();
   if (!shop) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const now = new Date().toISOString();
   const by = gate.user.id;
@@ -102,10 +103,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       before: { name: out.name, status: shop.status, listings: out.listings, photos: out.photos, documents: out.documents },
       note: reason,
     });
+    revalidatePublic("/agences", "/pro");
+    revalidatePublic(`/agences/${shop.slug}`);
     return NextResponse.json({ ok: true, deleted: { listings: out.listings, photos: out.photos, documents: out.documents } });
   }
 
   if (action === "offer_plan") {
+    // Free months of a paid plan are a money decision, like accepting or refusing a receipt.
+    if (!canOpen(gate.scopes, "paiements")) {
+      return NextResponse.json({ error: "forbidden_section", section: "paiements" }, { status: 403 });
+    }
     // A closed agence (refused, suspended) is not offered anything: it has to be reopened first.
     if (shop.status !== "pending" && shop.status !== "approved") {
       return NextResponse.json({ error: "wrong_status", detail: t("errors.offerClosed") }, { status: 409 });
@@ -130,6 +137,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       action: "shop.offer_plan", targetType: "shop", targetId: id,
       after: { name_fr: product.name_fr, quota, months, ends_at: period.endsAt.toISOString().slice(0, 10) },
     });
+    revalidatePublic("/pro");
     return NextResponse.json({ ok: true, plan: product.name_fr, months, until: period.endsAt.toISOString() });
   }
 
@@ -276,6 +284,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     case "unverify":
       update = { verified_at: null, verified_by: null };
       break;
+    // The licence (agrément) of the Ministry of Commerce, checked against the one the agency showed: only then does the
+    // public page say « Agence agréée ». An agency, and a number to check — a check without one is refused here and by the table.
+    case "licence_verify":
+      if (shop.kind !== "agency") return NextResponse.json({ error: "licence_agency_only", detail: t("errors.licenceAgencyOnly") }, { status: 409 });
+      if (!shop.licence_number) return NextResponse.json({ error: "licence_missing", detail: t("errors.licenceMissing") }, { status: 409 });
+      update = { licence_checked_at: now, licence_checked_by: by };
+      break;
+    case "licence_unverify":
+      update = { licence_checked_at: null, licence_checked_by: null };
+      break;
     default:
       return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
@@ -293,6 +311,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (refund) await releaseDecision(admin, refund.id, by);
     return NextResponse.json({ error: "wrong_status", detail: t("errors.wrongStatus") }, { status: 409 });
   }
+
+  // The directory and the Pro page's places left come from the CDN.
+  revalidatePublic("/agences", "/pro");
+  revalidatePublic(`/agences/${shop.slug}`);
 
   // Refused for good: the plan's money goes back to the owner by hand, and
   // the payment says so — refunded, never invoiced (the invoice follows an

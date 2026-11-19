@@ -13,6 +13,7 @@ import { attributeOutOfBounds } from "@/lib/listings/input";
 import { missingPhotos } from "@/lib/listings/storage";
 import { can, roleIn } from "@/lib/pro/shops";
 import { asDealType } from "@/lib/listings/deal";
+import { getSettings } from "@/lib/settings/server";
 
 /**
  * POST /api/annonces/[id]/submit — send a draft listing for publication.
@@ -64,7 +65,7 @@ export async function POST(
 
   const { data: listing } = await admin
     .from("listings")
-    .select("id, seller_id, category_id, status, title, contact_phone, seller_attestation_version, fee_payment_id, shop_id, attributes, deal_type")
+    .select("id, seller_id, category_id, status, title, contact_phone, seller_attestation_version, fee_payment_id, shop_id, attributes, deal_type, price, price_on_request")
     .eq("id", id)
     .maybeSingle();
   if (!listing) return NextResponse.json({ error: "listing_not_found" }, { status: 404 });
@@ -120,6 +121,21 @@ export async function POST(
       { error: "attestation_required", detail: t("attestationRequired") },
       { status: 400 },
     );
+  }
+  // A price, or « Prix sur demande » where the console offers it for this deal
+  // (0222). A draft may wait without either; it does not go out without one.
+  const onRequest = listing.price_on_request === true;
+  if (!onRequest && !(Number(listing.price) > 0)) {
+    const t = await apiTranslator(req, "publishApi");
+    return NextResponse.json({ error: "price_required", detail: t("priceRequired") }, { status: 400 });
+  }
+  if (onRequest) {
+    const offered = await getSettings();
+    const rentDeal = asDealType(listing.deal_type as string | null) === "rent";
+    if (!(rentDeal ? offered.price_on_request_rent : offered.price_on_request_sale)) {
+      const t = await apiTranslator(req, "publishApi");
+      return NextResponse.json({ error: "price_on_request_off", detail: t("priceOnRequestOff") }, { status: 400 });
+    }
   }
 
   const { count: photoCount } = await admin

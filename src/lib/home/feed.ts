@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { track } from "./pending";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
 import { DEFAULT_RAIL_OPTIONS, HOME_TYPE_RAILS, type HomeRailKey, type HomeRailOptions, type HomeTypeSlug } from "@/lib/home/rails";
@@ -129,7 +130,8 @@ export const getHomeFeed = unstable_cache(
     const endTotal = fperf.time(`MISS — ran ${queries} parallel queries`);
     const timed = <T,>(label: string, p: PromiseLike<T>): Promise<T> => {
       const end = fperf.time(label);
-      return Promise.resolve(p).then((r) => { end(); return r; });
+      // Listed as pending until it answers: a timeout of the page names what was still waiting (./pending.ts).
+      return track(label, p).then((r) => { end(); return r; });
     };
     // The published slice feeds the hero, « À la une », « Bonnes affaires » and
     // « À découvrir »: at least two rails' worth.

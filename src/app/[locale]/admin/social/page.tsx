@@ -14,6 +14,7 @@ import { ExternalLink } from "lucide-react";
 import { isApiChannel, type SocialChannel, type SocialLanguage } from "@/lib/social/channels";
 import { shortUrl, trackedUrl } from "@/lib/social/content";
 import { callbackUrl, missingMetaConfig } from "@/lib/social/connect";
+import { missingTiktokConfig, tiktokCallbackUrl } from "@/lib/social/tiktokConnect";
 import { isMazedPage, socialOrigin, socialSettings } from "@/lib/social/server";
 import { sellersWaitingForTerms } from "@/lib/social/autoqueue";
 import { AccountActions, AccountTest, GroupActions, GroupForm, JobActions, ReviewActions, VariantEditor } from "./SocialActions";
@@ -28,7 +29,7 @@ export const dynamic = "force-dynamic";
  *   File        what is not finished: queued, failed, and the tasks for a
  *               person (the groups, anything without a connected account)
  *   Publiés     where each annonce is online, and the visits and contacts it brought
- *   Comptes     the Facebook page and Instagram account the site posts to
+ *   Comptes     the Facebook pages, Instagram and TikTok accounts the site posts to
  *   Groupes     the Facebook groups directory
  */
 const TABS = ["valider", "file", "publies", "comptes", "groupes"] as const;
@@ -46,7 +47,9 @@ export async function generateMetadata() {
 export default async function AdminSocialPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; connected?: string; error?: string; d?: string }>;
+  searchParams: Promise<{
+    tab?: string; connected?: string; error?: string; d?: string; tiktok_connected?: string; tiktok_error?: string;
+  }>;
 }) {
   await requireAdmin("social");
   const sp = await searchParams;
@@ -92,7 +95,7 @@ export default async function AdminSocialPage({
         })}
       />
       <div className="mt-4 flex h-11 items-center border-b border-border">
-        <Toolbar tabs={tabs} tabParam="tab" defaultTab="valider" search={false} resetParams={["page", "connected", "error"]} />
+        <Toolbar tabs={tabs} tabParam="tab" defaultTab="valider" search={false} resetParams={["page", "connected", "error", "d", "tiktok_connected", "tiktok_error"]} />
       </div>
 
       {tab === "valider" && <ReviewTab />}
@@ -184,7 +187,7 @@ export default async function AdminSocialPage({
                         : t("consentOn", { date: date(r.consent_at) })}
                   </p>
                 </div>
-                <ReviewActions requestId={r.id} />
+                <ReviewActions requestId={r.id} channels={r.channels} />
               </div>
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 {variants.map((v) => (
@@ -192,7 +195,7 @@ export default async function AdminSocialPage({
                     <PostPreview
                       channel={v.channel}
                       body={v.body}
-                      photos={(v.photo_paths ?? []).slice(0, v.channel === "instagram" ? 10 : 4).map((p) => annoncePhotoUrl(p, 480, 60))}
+                      photos={(v.photo_paths ?? []).slice(0, v.channel === "instagram" || v.channel === "tiktok" ? 10 : 4).map((p) => annoncePhotoUrl(p, 480, 60))}
                       label={channelName(v.channel)}
                     />
                     <VariantEditor variantId={v.id} body={v.body} edited={!!v.edited_at} />
@@ -259,10 +262,10 @@ export default async function AdminSocialPage({
                 : v.link_url ? v.body.split(v.link_url).join(own) : v.body;
             }
           } else if (manual && j.action === "publish" && q && l) {
-            // Instagram cannot carry a link in a caption: the short one goes
-            // in the bio or a sticker. The page takes the full tracked address.
+            // Instagram and TikTok cannot carry a link in a caption: the short
+            // one goes in the bio or a sticker. The page takes the full tracked address.
             copyText = variantText.get(`${j.request_id}:${j.channel}`)?.body ?? null;
-            link = j.channel === "instagram"
+            link = j.channel === "instagram" || j.channel === "tiktok"
               ? `https://${shortUrl(origin, q.ref)}`
               : trackedUrl(origin, l.id, { ref: q.ref, channel: j.channel, language: q.language });
           }
@@ -298,6 +301,7 @@ export default async function AdminSocialPage({
                     copyText={copyText}
                     groupUrl={g?.url ?? null}
                     link={link}
+                    canRetry={manual && j.channel === "tiktok" && ["tiktok_unaudited", "media_rejected", "limit_reached"].includes(j.manual_reason ?? "")}
                   />
                 </div>
               </div>
@@ -396,6 +400,7 @@ export default async function AdminSocialPage({
       last_error: string | null; connected_at: string; parent_account_id: string | null;
     }[];
     const missing = missingMetaConfig();
+    const tiktokMissing = missingTiktokConfig();
     // The address to register is the one the admin is using (see callbackUrl).
     const h = await headers();
     const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
@@ -444,6 +449,62 @@ export default async function AdminSocialPage({
               </ol>
             </div>
           )}
+        </section>
+
+        {sp.tiktok_connected && <p className="rounded-xl mazed-tone-ok px-4 py-3 text-[12.5px] font-semibold">{t("tiktokConnectedOk")}</p>}
+        {sp.tiktok_error && (
+          <div className="rounded-xl mazed-tone-bad px-4 py-3 text-[12.5px]">
+            <p className="font-semibold">
+              {t(`tiktokError.${["denied", "state", "not_configured", "other_account"].includes(sp.tiktok_error) ? sp.tiktok_error : "failed"}`)}
+            </p>
+            {sp.d && <p dir="ltr" className="mt-1.5 break-words font-mono text-[11px] opacity-80">{t("connectDetail", { text: sp.d.slice(0, 500) })}</p>}
+          </div>
+        )}
+
+        {/* TikTok (@mazed613): its own app and its own sign-in, beside Facebook's. */}
+        <section className="rounded-2xl bg-surface p-4 ring-1 ring-border">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-[14px] font-bold text-foreground">{t("tiktokTitle")}</p>
+              <p className="mt-0.5 max-w-xl text-[12px] leading-relaxed text-muted">
+                {t("tiktokBody", { username: settings.tiktok.username ? `@${settings.tiktok.username}` : t("tiktokAnyAccount") })}
+              </p>
+            </div>
+            {tiktokMissing.length === 0 ? (
+              // eslint-disable-next-line @next/next/no-html-link-for-pages -- an API route that redirects to TikTok
+              <a href="/api/admin/social/tiktok/connect" className="inline-flex h-8 items-center rounded bg-[var(--gold)] px-3 text-[12.5px] font-semibold text-[var(--background)] hover:bg-[var(--gold-bright)]">
+                {t(accounts.some((a) => a.platform === "tiktok") ? "reconnect" : "tiktokConnect")}
+              </a>
+            ) : (
+              <span className="text-[12px] font-semibold text-[var(--tone-warn)]">{t("notConfigured")}</span>
+            )}
+          </div>
+          <p className="mt-2 text-[11.5px] leading-relaxed text-muted">
+            {t(settings.tiktok.draft ? "tiktokModeDraft" : settings.tiktok.public ? "tiktokModePublic" : "tiktokModePrivate")}{" "}
+            <Link href={"/admin/settings?g=social" as never} className="font-semibold text-foreground hover:text-[var(--gold)]">
+              {t("tiktokSettings")}
+            </Link>
+          </p>
+          <div className="mt-3 rounded-xl bg-surface-2 p-3 text-[12px] leading-relaxed text-foreground ring-1 ring-border">
+            <p className="font-semibold">{t(tiktokMissing.length ? "tiktokSetupTitle" : "tiktokVerifyTitle")}</p>
+            <ol className="mt-1 list-decimal space-y-0.5 ps-5 text-muted">
+              {tiktokMissing.length > 0 && <li>{t("tiktokSetup1")}</li>}
+              {tiktokMissing.length > 0 && (
+                <li>
+                  {t("tiktokSetup2")} <Ltr className="font-mono break-all text-foreground">{tiktokCallbackUrl(here)}</Ltr>
+                </li>
+              )}
+              <li>
+                {t("tiktokSetup3")} <Ltr className="font-mono break-all text-foreground">{`${socialOrigin()}/api/social/image/`}</Ltr>
+              </li>
+              {tiktokMissing.length > 0 && (
+                <li>
+                  {t("setup4")} <Ltr className="font-mono break-all text-foreground">{tiktokMissing.join(", ")}</Ltr>
+                </li>
+              )}
+              {tiktokMissing.length > 0 && <li>{t("tiktokSetup5")}</li>}
+            </ol>
+          </div>
         </section>
 
         {accounts.length === 0 ? (

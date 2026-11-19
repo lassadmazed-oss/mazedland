@@ -11,8 +11,11 @@ import { publishedGuides } from "@/lib/guides/server";
 import { HomeMap } from "@/components/landing/HomeMap";
 import { isRtl } from "@/lib/i18n";
 import { getHomeFeed } from "@/lib/home/feed";
+import { describePending } from "@/lib/home/pending";
 import { homeRailOptions, planHomeRails, splitAtMiddle, type HomeRail } from "@/lib/home/rails";
 import { getSettings } from "@/lib/settings/server";
+import { boardShown } from "@/lib/requests/board";
+import { loadOpenDemandes } from "@/lib/requests/boardServer";
 import { log } from "@/lib/log";
 import { PerfProbe } from "@/components/dev/PerfProbe";
 import { catalogueHrefForType } from "@/lib/catalog/browse";
@@ -75,13 +78,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
  */
 const HOME_DATA_BUDGET_MS = process.env.NODE_ENV === "production" ? 8000 : 2500;
 
-function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+function withTimeout<T>(p: Promise<T>, ms: number, describe?: () => string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   return Promise.race([
     p,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error("home_data_timeout")), ms),
-    ),
-  ]);
+    new Promise<T>((_, reject) => {
+      // The message starts with the name it always had; what follows says where it stood (see lib/home/pending.ts).
+      timer = setTimeout(() => reject(new Error(`home_data_timeout${describe ? ` — ${describe()}` : ""}`)), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
 }
 
 /**
@@ -131,6 +136,8 @@ export default async function LandingPage({
   // Perf instrumentation — logs to the server terminal under scope `home`.
   const perf = log.scope("home");
   const endData = perf.time("data-phase total");
+  // Where the data phase stands, for the error log if it runs out of time.
+  const where = { stage: "settings" };
   try {
     await withTimeout((async () => {
     // Bucketed to the day so the cache key is stable within a day — the
@@ -151,9 +158,11 @@ export default async function LandingPage({
     // The layout has already read the settings for this render, so this is
     // React's cache, not another round trip.
     const railOptions = homeRailOptions(await getSettings());
+    where.stage = "feed";
     const endFeed = perf.time("getHomeFeed (hit≈0ms, miss=one round of parallel queries)");
     const feed = await getHomeFeed(weekStart, railOptions);
     endFeed();
+    where.stage = "plan";
 
     const rows = feed?.published.rows ?? [];
     // eslint-disable-next-line react-hooks/immutability -- synchronising with an external system, which is what an effect is for.
@@ -174,7 +183,7 @@ export default async function LandingPage({
       rails: rails.map((r) => `${r.key}:${r.rows.length}`).join(" "),
       explore: explore?.rows.length ?? 0,
     });
-    })(), HOME_DATA_BUDGET_MS);
+    })(), HOME_DATA_BUDGET_MS, () => `after ${HOME_DATA_BUDGET_MS} ms, at « ${where.stage} »; waiting on: ${describePending()}`);
   } catch (err) {
     perf.warn("data-phase aborted (timeout or error)", err);
     // In production this render is an ISR REGENERATION, and nobody is waiting
@@ -208,11 +217,15 @@ export default async function LandingPage({
   // cache hands GuidesStrip the same answer), so no part of the tree waits on
   // the database any more and the page comes out the same, byte for byte,
   // until its data changes.
-  const [topBanners, middleBanners] = await Promise.all([
+  const [topBanners, middleBanners, , openDemandes] = await Promise.all([
     slotBanners("home_top"),
     slotBanners("home_middle"),
     publishedGuides(),
+    // How many are asking right now, for the demande card (« Ce que les gens
+    // cherchent »): read here with the rest, so the tree waits on nothing.
+    settings.feature_requests && settings.requests_board ? loadOpenDemandes() : Promise.resolve([]),
   ]);
+  const demandeCount = boardShown(openDemandes.length, settings.requests_board_min) ? openDemandes.length : null;
   const siteLd = [
     websiteLd(origin, locale, "Mazed Immo"),
     organizationLd(origin, "Mazed Immo", { whatsapp: settings.contact_whatsapp, email: settings.contact_email }),
@@ -288,19 +301,40 @@ export default async function LandingPage({
       </div>
 
       {/* Looking for something the site does not have yet: say it once, be
-          told when it comes (0168). One quiet line, counted as `via=home`. */}
+          told when it comes, and let the agencies offer theirs (0168). A card
+          right under the search since 2026-11-15 (the owner: « everyone looking
+          wants something of their own »), with how many are asking now and the
+          way to « Ce que les gens cherchent ». Counted as `via=home`. */}
       {settings.feature_requests && settings.requests_cta_home && (
-        <div className="mt-3 px-4 lg:px-8 xl:px-12">
-          <Link
-            href={"/demandes/nouvelle?via=home" as never}
-            data-track="demande_cta"
-            data-track-via="home"
-            className="tap-target inline-flex items-center gap-1.5 text-[13px] font-semibold text-foreground underline-offset-4 hover:underline"
-          >
-            <BellRing className="size-4" strokeWidth={2.2} aria-hidden />
-            {t("home.demandeLine")}
-            <ChevronEnd className="size-3.5 text-muted" aria-hidden />
-          </Link>
+        <div className="mt-4 px-4 lg:mt-6 lg:px-8 xl:px-12">
+          <div className="mazed-band-warm flex flex-col gap-3 rounded-[var(--radius-2xl)] p-4 ring-1 ring-border sm:flex-row sm:items-center sm:gap-4 lg:p-5">
+            <span aria-hidden className="hidden size-11 shrink-0 place-items-center rounded-full bg-foreground text-[var(--background)] sm:grid">
+              <BellRing className="size-5" strokeWidth={2.2} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className={`text-[15px] font-extrabold leading-snug text-foreground lg:text-[16px] ${arabic}`}>{t("home.demandeLine")}</p>
+              <p className={`mt-0.5 text-[12.5px] leading-relaxed text-muted lg:text-[13px] ${arabic}`}>{t("home.demandeCardBody")}</p>
+              {demandeCount !== null && (
+                <Link
+                  href={"/demandes" as never}
+                  className="mt-1.5 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-foreground underline-offset-4 hover:underline"
+                >
+                  <span aria-hidden className="size-1.5 rounded-full bg-[var(--accent)]" />
+                  {t("home.demandeCardCount", { count: demandeCount })} · {t("home.demandeCardSee")}
+                  <ChevronEnd className="size-3.5 text-muted" aria-hidden />
+                </Link>
+              )}
+            </div>
+            <Link
+              href={"/demandes/nouvelle?via=home" as never}
+              data-track="demande_cta"
+              data-track-via="home"
+              className="mazed-btn-luxe tap-target inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full px-5 text-[14px]"
+            >
+              <BellRing className="size-4 sm:hidden" strokeWidth={2.2} aria-hidden />
+              {t("home.demandeCardCta")}
+            </Link>
+          </div>
         </div>
       )}
 

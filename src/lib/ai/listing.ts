@@ -35,6 +35,10 @@ export type ListingDraft = {
   rooms: number | null;
   bathrooms: number | null;
   floor: number | null;
+  /** How many levels (src/lib/listings/levels.ts): a duplex is 2, a triplex 3. */
+  levels: number | null;
+  /** One floor of a house or a villa offered on its own, not the whole of it. */
+  floorOnly: boolean;
   furnished: Furnished | null;
   deposit: number | null;
   charges: number | null;
@@ -73,6 +77,9 @@ Dictated text:
 Reading the property:
 - deal_type: "sale" for selling (نبيع، بيع، à vendre, for sale), "rent" for renting out (نكري، للكراء، à louer, for rent). If it cannot be told, use "sale" and ask.
 - "S+2", "S+3"… means that many rooms besides the living room: rooms = 2, 3…
+- floor: the floor a flat, an office or a shop is on, 0 for the ground floor (RDC, rez-de-chaussée, الطابق الأرضي، أرضي). For a house or a villa, only when one floor of it is offered on its own ("étage de villa", "طابق من دار", "الطابق الأول من فيلا"), with floor_only true. Never for a whole house or villa.
+- levels: how many levels the property spans, only when the seller said it: duplex / دوبلكس / دوبليكس = 2, triplex / تريبلكس / تريبليكس = 3; for a house, "plain-pied" / "طابق واحد" = 1, "R+1" / "deux niveaux" / "زوز طوابق" = 2, "R+2" / "trois niveaux" = 3. Otherwise null.
+- floor_only: true only when one floor of a house or a villa is offered, not the whole of it; otherwise false.
 - category_slug must be one of these slugs, or null:
 ${cats}
   دار / houch / maison / house → maisons; فيلا → villas; شقة / appartement / flat → appartements; أرض / مقسم / lot / terrain / land → terrain; ضيعة / هنشير / ferme / farm → fermes; حانوت / محل / local / shop → locaux-commerciaux; مكتب / bureau / office → bureaux; مخزن / دبو / dépôt / warehouse → depots.
@@ -155,7 +162,7 @@ export const LISTING_DRAFT_SCHEMA = {
   additionalProperties: false,
   required: [
     "language", "deal_type", "category_slug", "governorate", "delegation", "price_tnd", "price_unclear",
-    "area_sqm", "rooms", "bathrooms", "floor", "furnished", "deposit_tnd", "charges_tnd", "available_from",
+    "area_sqm", "rooms", "bathrooms", "floor", "levels", "floor_only", "furnished", "deposit_tnd", "charges_tnd", "available_from",
     "min_lease_months", "legal_claims", "title", "description", "questions",
   ],
   properties: {
@@ -170,6 +177,8 @@ export const LISTING_DRAFT_SCHEMA = {
     rooms: nullable({ type: "integer" }),
     bathrooms: nullable({ type: "integer" }),
     floor: nullable({ type: "integer" }),
+    levels: nullable({ type: "integer" }),
+    floor_only: { type: "boolean" },
     furnished: nullable({ type: "string", enum: ["furnished", "semi", "unfurnished"] }),
     deposit_tnd: nullable({ type: "number" }),
     charges_tnd: nullable({ type: "number" }),
@@ -286,6 +295,8 @@ export function normalizeListingDraft(
     rooms: inRange(r.rooms, 1, 30, true),
     bathrooms: inRange(r.bathrooms, 1, 20, true),
     floor: inRange(r.floor, 0, 80, true),
+    levels: inRange(r.levels, 1, 10, true),
+    floorOnly: r.floor_only === true,
     furnished: rent && (FURNISHED as readonly unknown[]).includes(r.furnished) ? (r.furnished as Furnished) : null,
     deposit: rent ? inRange(r.deposit_tnd, 0, 1_000_000) : null,
     charges: rent ? inRange(r.charges_tnd, 0, 100_000) : null,

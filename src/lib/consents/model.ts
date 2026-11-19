@@ -15,7 +15,8 @@ export type ConsentKind = (typeof CONSENT_KINDS)[number];
 /** The two that make an account: accepted at signup, and again when they change. */
 export const LEGAL_KINDS = ["terms", "privacy"] as const satisfies readonly ConsentKind[];
 
-export const CONSENT_SOURCES = ["signup", "banner", "settings"] as const;
+// "team": the owner said yes to the Mazed team, who recorded it (Prospection, 0218).
+export const CONSENT_SOURCES = ["signup", "banner", "settings", "team"] as const;
 export type ConsentSource = (typeof CONSENT_SOURCES)[number];
 
 export type ConsentRow = {

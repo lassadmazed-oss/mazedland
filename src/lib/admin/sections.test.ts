@@ -83,3 +83,15 @@ describe("scopesFromRow", () => {
     expect(scopesFromRow(["gone"])).toEqual([]);
   });
 });
+
+describe("the prospection section", () => {
+  it("is a section of its own (0218), and the preset of the team that writes to the owners opens it alone", () => {
+    expect(ADMIN_SECTIONS).toContain("prospection");
+    expect(ROLE_PRESETS.prospection).toEqual(["prospection"]);
+    expect(canOpen(ROLE_PRESETS.prospection, "prospection")).toBe(true);
+    expect(canOpen(ROLE_PRESETS.prospection, "annonces")).toBe(false);
+    expect(canOpen(ROLE_PRESETS.prospection, "paiements")).toBe(false);
+    expect(canOpen(ROLE_PRESETS.finance, "prospection")).toBe(false);
+    expect(presetOf(["prospection"])).toBe("prospection");
+  });
+});

@@ -95,7 +95,7 @@ export function requestFormFromSearch(
  * and counted twice: the tap (`demande_cta`) and the demande saved
  * (`demande_create`), so the console shows which place brings demandes.
  */
-export const DEMANDE_VIA = ["top", "card", "empty", "bottom", "map", "listing", "home"] as const;
+export const DEMANDE_VIA = ["top", "card", "empty", "bottom", "map", "listing", "home", "board"] as const;
 export type DemandeVia = (typeof DEMANDE_VIA)[number];
 
 /** A `via=` value as the form may count it; anything else is no place at all. */

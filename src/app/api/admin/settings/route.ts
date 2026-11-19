@@ -7,6 +7,7 @@ import { fail } from "@/lib/http/errors";
 import { checkSetting, rangeOf } from "@/lib/settings/define";
 import { SETTINGS, isSettingKey } from "@/lib/settings/registry";
 import { apiTranslator } from "@/lib/i18n/server";
+import { revalidateSite } from "@/lib/revalidatePublic";
 
 /**
  * PUT /api/admin/settings — admin-only. `{ key: value, … }` for any setting
@@ -70,6 +71,9 @@ export async function PUT(req: NextRequest) {
     const { error } = await admin.from("app_settings").delete().in("key", reset);
     if (error) return fail("settings_update_failed", 500, error);
   }
+
+  // The pages that come from the CDN show it from the next visit.
+  revalidateSite();
 
   // Bank details are logged as changed, never with their value.
   logAction(req, user, "settings.update", { keys: rows.map((r) => r.key), reset });

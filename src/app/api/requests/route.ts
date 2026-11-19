@@ -5,8 +5,7 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { isSameOrigin } from "@/lib/sameOrigin";
 import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
-import { apiTranslator } from "@/lib/i18n/server";
-import { parseRequestInput, requestExpiresAt } from "@/lib/requests/model";
+import { insertRequest, readRequestBody } from "@/lib/requests/create";
 import { featureOff } from "@/lib/settings/gate";
 import { getSettings } from "@/lib/settings/server";
 
@@ -19,8 +18,10 @@ import { getSettings } from "@/lib/settings/server";
  * The owner is always the caller. Categories are kept only if they exist and
  * are leaves, like an annonce's. A person keeps at most `requests_max_active`
  * live demandes: past that, alerts stop meaning "this is what I want". A new
- * one lives `requests_days`. Switched off, nothing is created or edited; the
- * demandes already there can still be paused or deleted (/api/requests/:id).
+ * one lives `requests_days` (src/lib/requests/create.ts, shared with the
+ * visitor's route, /api/requests/guest). Switched off, nothing is created or
+ * edited; the demandes already there can still be paused or deleted
+ * (/api/requests/:id).
  */
 export async function POST(req: NextRequest) {
   if (!isSameOrigin(req)) {
@@ -37,25 +38,9 @@ export async function POST(req: NextRequest) {
   if (!admin) return fail("server_misconfigured", 500);
 
   const body = await jsonObject(req);
-  const parsed = parseRequestInput(body);
-  if (!parsed.ok) {
-    const t = await apiTranslator(req, "requestsApi");
-    return NextResponse.json(
-      { error: parsed.error, detail: t(parsed.error === "budget_required" ? "budgetRequired" : "budgetOrder") },
-      { status: 400 },
-    );
-  }
-  const value = parsed.value;
-
-  if (value.category_ids.length > 0) {
-    const { data: cats } = await admin
-      .from("categories")
-      .select("id")
-      .in("id", value.category_ids)
-      .eq("is_active", true)
-      .not("parent_id", "is", null);
-    value.category_ids = (cats ?? []).map((c) => c.id as string);
-  }
+  const read = await readRequestBody(req, admin, body);
+  if (!read.ok) return read.response;
+  const value = read.value;
 
   const id = typeof body.id === "string" ? body.id : null;
   if (id) {
@@ -73,27 +58,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, id });
   }
 
-  const { count } = await admin
-    .from("property_requests")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .gt("expires_at", new Date().toISOString());
-  if ((count ?? 0) >= settings.requests_max_active) {
-    const t = await apiTranslator(req, "requestsApi");
-    return NextResponse.json(
-      { error: "too_many", detail: t("tooMany", { max: settings.requests_max_active }) },
-      { status: 409 },
-    );
-  }
-
-  const { data: created, error } = await admin
-    .from("property_requests")
-    // The table's own default is 60 days; the console's length wins.
-    .insert({ ...value, user_id: user.id, expires_at: requestExpiresAt(settings.requests_days) })
-    .select("id")
-    .single();
-  if (error || !created) return fail("request_create_failed", 500, error);
-  logAction(req, user, "request.create", { id: created.id, deal: value.deal_type });
-  return NextResponse.json({ ok: true, id: created.id });
+  return insertRequest(req, admin, user, value, settings);
 }

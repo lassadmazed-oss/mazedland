@@ -1,26 +1,32 @@
 /**
  * The publishing engine: takes due jobs from the queue (claim_social_jobs,
  * 0170) and does them — post, say « vendu », take down — on the Facebook
- * page and Instagram.
+ * pages, Instagram and TikTok.
  *
  * Never twice. A job can be taken again after a timeout or a dead run, so
  * before posting on any attempt after the first, the engine looks for a post
  * carrying the request's reference (« MZ-1A2B3C ») and adopts it if it is
  * there. On Instagram the container is stored the moment it is made, and a
- * retry publishes that container instead of making another.
+ * retry publishes that container instead of making another; on TikTok the
+ * same goes for the publish_id (kept in container_id).
  *
  * Never without the rules. A job runs only while its request is approved and
  * its annonce online; otherwise it is cancelled. Each account posts at most
- * `social_daily_limit` times a day.
+ * `social_daily_limit` times a day (TikTok: `social_tiktok_daily_limit`).
  *
  * Every attempt leaves a row in social_publication_results.
  */
 import type { getServiceSupabase } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
 import { isPageChannel, type JobAction, type JobStatus, type SocialChannel, type SocialLanguage } from "./channels";
-import { closedNotice, referenceCode } from "./content";
+import { closedNotice, referenceCode, tiktokCaption } from "./content";
 import { openToken } from "./crypto";
 import { requeueWaitingJobs } from "./connect";
+import {
+  classifyTiktokError, initTiktokPhotoPost, isUnauditedRefusal, pickPrivacy, tiktokClient, tiktokCreatorInfo, TiktokError,
+  tiktokPostUrl, tiktokPublishStatus, type TiktokClient, type TiktokPrivacy,
+} from "./tiktok";
+import { tiktokAccessToken } from "./tiktokConnect";
 import {
   createIgContainer, deletePagePost, editPagePost, findIgMedia, findPagePost, graphClient, GraphError,
   igContainerStatus, igPermalink, igPublishingLimit, publishIgContainer, publishPagePost,
@@ -232,7 +238,9 @@ export async function runSocialJob(admin: Admin, job: JobRow, deps: EngineDeps =
         })
         .eq("id", job.id);
       await logResult(admin, job, step.status === "failed" ? "failed" : "retry", {
-        code: err instanceof GraphError ? `${err.kind}:${err.code ?? ""}:${err.subcode ?? ""}` : "error",
+        code: err instanceof TiktokError
+          ? `${err.kind}:${err.tiktokCode ?? ""}`
+          : err instanceof GraphError ? `${err.kind}:${err.code ?? ""}:${err.subcode ?? ""}` : "error",
         message,
       });
       if (step.status === "failed") await refreshRequestStatus(admin, job.request_id);
@@ -252,8 +260,8 @@ async function run(admin: Admin, job: JobRow, deps: EngineDeps): Promise<Outcome
     return "failed";
   }
   // Groups are shared by a person; nothing for the engine to do.
-  if (job.channel === "facebook_groups" || job.channel === "tiktok") {
-    await toManual(admin, job, job.channel === "facebook_groups" ? "groups_manual" : "not_supported", "manual channel");
+  if (job.channel === "facebook_groups") {
+    await toManual(admin, job, "groups_manual", "manual channel");
     return "manual";
   }
 
@@ -279,6 +287,7 @@ async function run(admin: Admin, job: JobRow, deps: EngineDeps): Promise<Outcome
     await toManual(admin, job, "no_account", "no connected account");
     return "manual";
   }
+  if (job.channel === "tiktok") return runTiktok(admin, job, job.account_id, deps);
   const client = await clientFor(admin, job.account_id, deps);
   if ("error" in client) {
     await toManual(admin, job, client.error === "missing" ? "no_account" : "account_expired", `account ${client.error}`);
@@ -398,6 +407,208 @@ async function run(admin: Admin, job: JobRow, deps: EngineDeps): Promise<Outcome
   return "retry";
 }
 
+// ── TikTok ────────────────────────────────────────────────────────────────
+
+/**
+ * Posts that left for this TikTok account in the last 24 hours — published,
+ * or sent as a draft (TikTok holds at most 5 drafts waiting in the app, and
+ * about 15 posts a day, all apps together).
+ */
+async function tiktokSentToday(admin: Admin, accountId: string): Promise<number> {
+  const { count } = await admin
+    .from("social_publication_jobs")
+    .select("id", { count: "exact", head: true })
+    .eq("account_id", accountId)
+    .eq("channel", "tiktok")
+    .eq("action", "publish")
+    .in("status", ["published", "manual_action_required", "done"])
+    .gte("published_at", new Date(Date.now() - 86_400_000).toISOString());
+  return count ?? 0;
+}
+
+/** The draft is in the TikTok app's inbox: a person adds the music, posts it, and pastes its link here. */
+async function toTiktokDraft(admin: Admin, job: JobRow, ref: string): Promise<void> {
+  await admin
+    .from("social_publication_jobs")
+    .update({
+      status: "manual_action_required",
+      manual_reason: "tiktok_draft",
+      last_error: null,
+      locked_at: null,
+      // Counted against TikTok's daily ceiling (tiktokSentToday).
+      published_at: new Date().toISOString(),
+    })
+    .eq("id", job.id);
+  await logResult(admin, job, "manual", { code: "tiktok_draft", message: "draft sent to the TikTok app's inbox" });
+  await refreshRequestStatus(admin, job.request_id);
+  await notifyAdmins(admin, "Brouillon TikTok à publier", `${referenceCode(ref)} : ouvrez l'appli TikTok (boîte de réception) et publiez-le.`);
+}
+
+/**
+ * Where the post TikTok is making stands: online (the job is published),
+ * a draft in the app (a person finishes it), refused (the publish_id is
+ * forgotten so a retry starts a new post, and the error goes to the policy),
+ * or still downloading the photos — looked at again on the next run.
+ */
+async function followTiktok(
+  admin: Admin,
+  job: JobRow,
+  c: TiktokClient,
+  ctx: { ref: string; username: string | null; adopted: boolean },
+  deps: EngineDeps,
+): Promise<Outcome> {
+  const publishId = job.container_id as string;
+  for (let i = 0; i < 5; i++) {
+    const st = await tiktokPublishStatus(c, publishId);
+    if (st.status === "PUBLISH_COMPLETE") {
+      // A private post has no public id, and so no link.
+      const postId = st.postIds[0] ?? null;
+      await succeed(admin, job, { id: postId ?? publishId, url: tiktokPostUrl(ctx.username, postId) }, ctx.adopted ? "adopted" : "published");
+      return ctx.adopted ? "adopted" : "published";
+    }
+    if (st.status === "SEND_TO_USER_INBOX") {
+      await toTiktokDraft(admin, job, ctx.ref);
+      return "manual";
+    }
+    if (st.status === "FAILED") {
+      await admin.from("social_publication_jobs").update({ container_id: null }).eq("id", job.id);
+      job.container_id = null;
+      const reason = st.failReason ?? "failed";
+      throw new TiktokError(`TikTok: ${reason}`, classifyTiktokError(200, reason), reason);
+    }
+    await sleep(deps.pollMs ?? 3000);
+  }
+  await later(admin, job, 2, "tiktok_processing");
+  return "retry";
+}
+
+/**
+ * A TikTok job: a Photo Mode post of the annonce's photos, or a draft sent
+ * to the TikTok app (social_tiktok_draft). The photos are pulled by TikTok
+ * from /api/social/image on the site's domain (the one verified in the
+ * TikTok app). The publish_id is stored the moment TikTok gives it, and an
+ * attempt that finds one follows that post instead of starting another.
+ * TikTok's API can neither edit nor delete a post: « vendu » and take-downs
+ * are a task for a person.
+ */
+async function runTiktok(admin: Admin, job: JobRow, accountId: string, deps: EngineDeps): Promise<Outcome> {
+  if (job.action !== "publish") {
+    await toManual(admin, job, "not_supported", "TikTok's API cannot edit or remove a post");
+    return "manual";
+  }
+  const fresh = await tiktokAccessToken(admin, accountId, { fetch: deps.fetch });
+  if (!fresh.ok) {
+    const reason = fresh.error === "missing" || fresh.error === "not_configured" ? "no_account" : "account_expired";
+    await toManual(admin, job, reason, `tiktok account ${fresh.error}`);
+    if (reason === "account_expired") await notifyAdmins(admin, "Compte à reconnecter", "Le compte TikTok doit être reconnecté.");
+    return "manual";
+  }
+  const c = tiktokClient(fresh.token, { fetch: deps.fetch });
+  const { data: req } = await admin.from("social_publication_requests").select("ref").eq("id", job.request_id).maybeSingle();
+  const ref = (req?.ref as string | undefined) ?? "";
+  const ctx = { ref, username: fresh.account.username, adopted: false };
+
+  // Started on an attempt that did not see the end of it: follow that post.
+  if (job.container_id) return followTiktok(admin, job, c, { ...ctx, adopted: true }, deps);
+
+  const settings = (await socialSettings(admin)).tiktok;
+  if ((await tiktokSentToday(admin, accountId)) >= settings.dailyLimit) {
+    await later(admin, job, 60, "daily_limit");
+    return "retry";
+  }
+
+  const { data: variant } = await admin
+    .from("social_content_variants")
+    .select("body, photo_paths")
+    .eq("request_id", job.request_id)
+    .eq("channel", job.channel)
+    .maybeSingle();
+  if (!variant) {
+    await cancel(admin, job, "no_variant");
+    return "cancelled";
+  }
+  const photos = (variant.photo_paths as string[] | null) ?? [];
+  if (photos.length === 0) {
+    await toManual(admin, job, "media_rejected", "a TikTok photo post needs at least one photo");
+    return "manual";
+  }
+  const origin = socialOrigin(deps.origin);
+  const imageUrls = photos.map((_, i) => `${origin}/api/social/image/${job.request_id}/${i}?c=tiktok`);
+  const { title, description } = tiktokCaption(variant.body as string);
+
+  // A direct post asks TikTok first who it posts as and how (TikTok's rule);
+  // a draft is finished in the app, where the person chooses all that.
+  let privacy: TiktokPrivacy | undefined;
+  let disableComment = !settings.comments;
+  if (!settings.draft) {
+    const creator = await tiktokCreatorInfo(c);
+    privacy = pickPrivacy(creator.privacyOptions, settings.public) ?? undefined;
+    if (creator.commentDisabled) disableComment = true;
+    if (creator.username) ctx.username = creator.username;
+  }
+
+  let publishId: string;
+  try {
+    publishId = await initTiktokPhotoPost(c, {
+      title,
+      description,
+      imageUrls,
+      draft: settings.draft,
+      privacy,
+      disableComment,
+      autoAddMusic: settings.autoMusic,
+    });
+  } catch (err) {
+    // Before TikTok's audit a direct post needs a private account. Not a
+    // failure to retry: a person switches to drafts (or posts it by hand).
+    if (isUnauditedRefusal(err)) {
+      await toManual(admin, job, "tiktok_unaudited", err instanceof Error ? err.message : String(err));
+      await notifyAdmins(
+        admin,
+        "TikTok : application pas encore validée",
+        "TikTok n'accepte encore que les comptes privés. Passez TikTok en brouillon dans les réglages, puis « Réessayer ».",
+      );
+      return "manual";
+    }
+    throw err;
+  }
+  await admin.from("social_publication_jobs").update({ container_id: publishId }).eq("id", job.id);
+  job.container_id = publishId;
+  return followTiktok(admin, job, c, ctx, deps);
+}
+
+/** « Tester la connexion » on the TikTok account: a fresh token, and who it posts as. Nothing is posted. */
+async function checkTiktokAccount(
+  admin: Admin,
+  accountId: string,
+  deps: EngineDeps,
+): Promise<{ ok: true; name: string; quota: null; tiktok: { privacy: TiktokPrivacy[] } } | { ok: false; error: string }> {
+  const fresh = await tiktokAccessToken(admin, accountId, { fetch: deps.fetch });
+  if (!fresh.ok) return { ok: false, error: fresh.error };
+  const now = new Date().toISOString();
+  try {
+    const info = await tiktokCreatorInfo(tiktokClient(fresh.token, { fetch: deps.fetch }));
+    await admin
+      .from("social_accounts")
+      .update({
+        last_checked_at: now,
+        last_error: null,
+        ...(info.username ? { username: info.username } : {}),
+        ...(info.nickname ? { name: info.nickname.slice(0, 200) } : {}),
+      })
+      .eq("id", accountId);
+    return { ok: true, name: info.username ? `@${info.username}` : (info.nickname ?? fresh.account.external_id), quota: null, tiktok: { privacy: info.privacyOptions } };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const expired = err instanceof GraphError && err.kind === "auth";
+    await admin
+      .from("social_accounts")
+      .update({ last_checked_at: now, last_error: message.slice(0, 500), ...(expired ? { status: "expired" } : {}) })
+      .eq("id", accountId);
+    return { ok: false, error: expired ? "expired" : "failed" };
+  }
+}
+
 /**
  * « Tester la connexion »: read-only calls with the stored token — the page's
  * name, or the Instagram account and its 24 h quota. Nothing is posted. A
@@ -408,7 +619,13 @@ export async function checkSocialAccount(
   accountId: string,
   deps: EngineDeps = {},
 ): Promise<
-  | { ok: true; name: string; quota: { used: number; total: number } | null; instagram?: { username: string | null; added: boolean } }
+  | {
+      ok: true;
+      name: string;
+      quota: { used: number; total: number } | null;
+      instagram?: { username: string | null; added: boolean };
+      tiktok?: { privacy: TiktokPrivacy[] };
+    }
   | { ok: false; error: string }
 > {
   const { data: acc } = await admin
@@ -417,6 +634,7 @@ export async function checkSocialAccount(
     .eq("id", accountId)
     .maybeSingle();
   if (!acc) return { ok: false, error: "missing" };
+  if (acc.platform === "tiktok") return checkTiktokAccount(admin, accountId, deps);
   const client = await clientFor(admin, accountId, deps);
   if ("error" in client) return { ok: false, error: client.error };
   const now = new Date().toISOString();

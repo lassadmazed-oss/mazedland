@@ -21,6 +21,7 @@ import { StickyContact } from "./StickyContact";
 import { ReportListing } from "./ReportListing";
 import { VisitRequest } from "./VisitRequest";
 import { PriceOffer, type OpenOffer } from "./PriceOffer";
+import { PriceQuestion, type OpenQuestion } from "./PriceQuestion";
 import { FeatureOnPages, type OpenFeature, type SellerPromotion } from "./FeatureOnPages";
 import { getAdminSession } from "@/lib/admin/session";
 import { canOpen } from "@/lib/admin/sections";
@@ -58,11 +59,13 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  Eye,
   FileCheck,
   Flame,
   Hammer,
   Hash,
   Home,
+  Layers,
   MapPin,
   PencilLine,
   Plug,
@@ -73,6 +76,8 @@ import {
   Trees,
   Waves,
 } from "lucide-react";
+import { langOf, levelsFact } from "@/lib/listings/levels";
+import { viewsShown } from "@/lib/listings/views";
 import type { Metadata } from "next";
 import { jsonLdSafe } from "@/lib/jsonld";
 import { breadcrumbLd, listingDescription } from "@/lib/seo";
@@ -125,6 +130,10 @@ type Row = {
   location_exact: boolean | null;
   shop_id: string | null;
   review_flags: string[] | null;
+  /** The Mazed team confirmed this annonce with its owner (Prospection, 0218). */
+  team_confirmed_at: string | null;
+  /** Distinct visitors, the seller left out (0152): shown from `listing_views_public_min` on. */
+  view_count: number | null;
 };
 
 const SELECT = `
@@ -132,7 +141,7 @@ const SELECT = `
   governorate, delegation, address, attributes, contact_name, show_phone, status,
   published_at, expires_at, seller_id, reference, rejection_reason, review_flags,
   deal_type, deposit_amount, charges_amount, furnished, available_from,
-  min_lease_months, availability, shop_id, lat, lng, location_exact,
+  min_lease_months, availability, shop_id, lat, lng, location_exact, team_confirmed_at, view_count,
   category:categories (id, slug, label_fr, label_ar, kind),
   photos:listing_photos (storage_path, sort_order)
 `;
@@ -153,6 +162,7 @@ const FACT_ICONS: Record<string, React.ComponentType<{ className?: string; strok
   rooms: BedDouble,
   bathrooms: Bath,
   floor: Building2,
+  levels: Layers,
   year_built: CalendarDays,
   buildable: Hammer,
   titled: FileCheck,
@@ -308,8 +318,10 @@ export default async function AnnoncePage({
   // « Proposer un prix » (0211): the buyer's offer still open (or agreed) here, and how many they made.
   let openOffer: OpenOffer | null = null;
   let offersMade = 0;
+  // « Demander le prix » (0222): the buyer's question here that waits, or the price it got.
+  let openQuestion: OpenQuestion | null = null;
   if (user && !isOwner && !isPreview && admin) {
-    const [{ data: me }, { data: v }, { data: offers }] = await Promise.all([
+    const [{ data: me }, { data: v }, { data: offers }, { data: question }] = await Promise.all([
       admin.from("profiles").select("full_name, phone").eq("id", user.id).maybeSingle(),
       admin
         .from("visit_requests")
@@ -325,7 +337,23 @@ export default async function AnnoncePage({
         .eq("buyer_id", user.id)
         .order("created_at", { ascending: false })
         .limit(10),
+      l.price_on_request
+        ? admin
+            .from("price_questions")
+            .select("status, answer_price")
+            .eq("listing_id", l.id)
+            .eq("buyer_id", user.id)
+            .in("status", ["open", "answered"])
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
+    if (question?.status === "answered" && Number(question.answer_price) > 0) {
+      openQuestion = { status: "answered", price: Number(question.answer_price) };
+    } else if (question?.status === "open") {
+      openQuestion = { status: "open" };
+    }
     offersMade = offers?.length ?? 0;
     const last = offers?.[0];
     const lastStatus = last ? shownStatus({ status: last.status as OfferStatus, expires_at: last.expires_at as string }) : null;
@@ -383,11 +411,22 @@ export default async function AnnoncePage({
   // `attributes.<field_key>` message when there is one (the stored label is
   // French), and the stored label for anything an admin added since.
   const attrs = (l.attributes ?? {}) as Record<string, unknown>;
-  const specs = ((attrDefs ?? []) as {
+  const defList = (attrDefs ?? []) as {
     field_key: string; label: string; unit: string | null;
     options: { value: string; label: string }[] | null;
-  }[])
+  }[];
+  const defKeys = defList.map((d) => d.field_key);
+  const specs = defList
     .map((d) => {
+      // The floor and the levels in words: « طابق أرضي », « الطابق الثالث
+      // والرابع » beside « دوبلكس », a villa's « زوز طوابق · دوبلكس » — and
+      // never an old « 0 » floor on a whole villa (src/lib/listings/levels.ts).
+      const fact = levelsFact(d.field_key, attrs, defKeys, langOf(locale), category?.slug);
+      if (fact !== undefined) {
+        if (fact === null) return null;
+        const label = tRoot.has(`attributes.${d.field_key}`) ? tRoot(`attributes.${d.field_key}`) : d.label;
+        return { key: d.field_key, label, value: fact };
+      }
       const raw = attrs[d.field_key];
       if (raw == null || raw === "" || raw === false) return null;
       const unit = d.unit === "m²" ? tRoot("common.sqm") : d.unit;
@@ -542,6 +581,8 @@ export default async function AnnoncePage({
   // unless an admin has switched editing off.
   const settings = await getSettings();
   const editOn = settings.feature_listing_edit;
+  const views = l.view_count ?? 0;
+  const showViews = !isPreview && viewsShown(views, settings.listing_views_public_min);
 
   // « Publier sur nos pages » (0214): an admin who runs the social pages, on any annonce online.
   let feature: {
@@ -572,7 +613,12 @@ export default async function AnnoncePage({
         open: mazed ? { ref: mazed.ref, status: mazed.status } : null,
         sellerPromotion: sellers ? { ref: sellers.ref, status: sellers.status, channels: sellers.channels } : null,
         sellerTerms: isOwner || termsCoverFeaturing(currentConsents(history).terms),
-        connected: { facebook_mazed: !!accounts.facebook_mazed, facebook_page: !!accounts.facebook_page, instagram: !!accounts.instagram },
+        connected: {
+          facebook_mazed: !!accounts.facebook_mazed,
+          facebook_page: !!accounts.facebook_page,
+          instagram: !!accounts.instagram,
+          tiktok: !!accounts.tiktok,
+        },
       };
     }
   }
@@ -677,6 +723,18 @@ export default async function AnnoncePage({
 
       <div className="mt-4">
         <ContactReveal listingId={l.id} showPhone={l.show_phone} />
+        {/* « Demander le prix » (0222): where the price is « sur demande », asking it is one tap. */}
+        {!isOwner && !isPreview && l.price_on_request && (
+          <PriceQuestion
+            listingId={l.id}
+            reference={(l.reference as string | null) ?? null}
+            rent={rent}
+            loggedIn={!!user}
+            defaultName={visitDefaults.name}
+            defaultPhone={visitDefaults.phone}
+            open={openQuestion}
+          />
+        )}
         {!isOwner && !isPreview && (
           <VisitRequest listingId={l.id} loggedIn={!!user} defaultName={visitDefaults.name} defaultPhone={visitDefaults.phone} open={openVisit} />
         )}
@@ -822,6 +880,11 @@ export default async function AnnoncePage({
                 <BadgeCheck className="size-3.5" strokeWidth={2.4} aria-hidden /> {t("verifiedSeller")}
               </span>
             )}
+            {l.team_confirmed_at && settings.prospect_show_badge && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface-2 px-2.5 py-1 text-[11px] font-extrabold text-foreground ring-1 ring-border">
+                <BadgeCheck className="size-3.5" strokeWidth={2.4} aria-hidden /> {t("teamConfirmed")}
+              </span>
+            )}
           </div>
 
           {/* break-words: a title can arrive as one unbroken string. */}
@@ -839,6 +902,14 @@ export default async function AnnoncePage({
               <span className="inline-flex items-center gap-1">
                 <Clock className="size-3.5" aria-hidden />
                 {t("publishedOn", { date: formatDate(l.published_at, locale, "short") })}
+              </span>
+            )}
+            {/* How many looked, once it is a number that says « people look here »:
+                below the console's threshold, « 3 vues » would say the opposite. */}
+            {showViews && (
+              <span className="mazed-tabular inline-flex items-center gap-1" title={t("viewsTitle")}>
+                <Eye className="size-3.5" aria-hidden />
+                {t("viewsPublic", { count: views })}
               </span>
             )}
             {/* Printed where a buyer will find it when they call: "je vous

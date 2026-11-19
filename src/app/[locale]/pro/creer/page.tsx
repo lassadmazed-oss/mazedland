@@ -73,6 +73,7 @@ export default async function CreateShopPage() {
     hours: "",
     legal_name: "",
     legal_id: "",
+    licence_number: "",
     logo_path: null,
     cover_path: null,
   };

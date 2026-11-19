@@ -11,8 +11,9 @@ import { loadSettings } from "@/lib/settings/server";
 import { PRODUCTION_ORIGIN, siteUrl } from "@/lib/siteUrl";
 import { coverPhoto } from "@/lib/listingCover";
 import { asDealType, type DealType } from "@/lib/listings/deal";
+import { isoDayIn } from "@/lib/listings/choices";
 import {
-  FEATURED_CHANNELS, MAX_PHOTOS, OFFERED_CHANNELS, OPEN_REQUEST_STATUSES, isApiChannel, isPageChannel, laneRoom, requestStatusFrom,
+  FEATURED_CHANNELS, MAX_PHOTOS, OFFERED_CHANNELS, OPEN_REQUEST_STATUSES, isApiChannel, isPageChannel, laneRoom, needsPhoto, requestStatusFrom,
   type JobAction, type JobStatus, type LaneAsk, type RequestStatus, type SocialChannel, type SocialLanguage,
 } from "./channels";
 import { generatePost, socialListingFrom, type SocialListing } from "./content";
@@ -32,7 +33,23 @@ export const CONSENT_VERSION = "2026-10-social-v1";
  */
 export const SOCIAL_TERMS_SINCE = "2026-11-05";
 
-export type SocialSettings = { enabled: boolean; priceTnd: number; autoApprove: boolean; dailyLimit: number; mazedPage: string };
+export type TiktokSettings = {
+  draft: boolean;
+  public: boolean;
+  dailyLimit: number;
+  autoMusic: boolean;
+  comments: boolean;
+  username: string;
+};
+
+export type SocialSettings = {
+  enabled: boolean;
+  priceTnd: number;
+  autoApprove: boolean;
+  dailyLimit: number;
+  mazedPage: string;
+  tiktok: TiktokSettings;
+};
 
 export async function socialSettings(admin: Admin): Promise<SocialSettings> {
   const s = await loadSettings(admin);
@@ -42,6 +59,14 @@ export async function socialSettings(admin: Admin): Promise<SocialSettings> {
     autoApprove: s.social_auto_approve,
     dailyLimit: s.social_daily_limit,
     mazedPage: s.social_mazed_page.trim().replace(/^@/, ""),
+    tiktok: {
+      draft: s.social_tiktok_draft,
+      public: s.social_tiktok_public,
+      dailyLimit: s.social_tiktok_daily_limit,
+      autoMusic: s.social_tiktok_auto_music,
+      comments: s.social_tiktok_comments,
+      username: s.social_tiktok_username.trim().replace(/^@/, ""),
+    },
   };
 }
 
@@ -75,7 +100,8 @@ export function dueNow(): string {
 
 /** Today in Tunis, as YYYY-MM-DD. */
 export function tunisToday(now: Date = new Date()): string {
-  return now.toLocaleDateString("en-CA", { timeZone: "Africa/Tunis" });
+  // From the parts (isoDayIn), never from en-CA text: see the visit request crash of 2026-11-14.
+  return isoDayIn(now, "Africa/Tunis");
 }
 
 const LISTING_SELECT = `id, seller_id, status, title, deal_type, price, price_on_request, governorate, delegation,
@@ -223,7 +249,7 @@ export async function createSocialRequest(
   const room = laneRoom(await liveAsks(admin, row.id), "seller", wanted);
   if (room.taken || room.left.length === 0) return { ok: false, error: "already_open" };
   const channels = room.left;
-  if (channels.includes("instagram") && row.photos.length === 0) return { ok: false, error: "no_photo" };
+  if (channels.some(needsPhoto) && row.photos.length === 0) return { ok: false, error: "no_photo" };
 
   const { data: created, error } = await admin
     .from("social_publication_requests")
@@ -313,7 +339,7 @@ export async function createFeaturedRequest(
   if (room.taken) return { ok: false, error: "already_open", id: room.taken.id };
   if (room.left.length === 0) return { ok: false, error: "already_open", id: live[0].id };
   const channels = room.left;
-  if (channels.includes("instagram") && row.photos.length === 0) return { ok: false, error: "no_photo" };
+  if (channels.some(needsPhoto) && row.photos.length === 0) return { ok: false, error: "no_photo" };
 
   let consentAt = new Date().toISOString();
   let consentVersion = CONSENT_VERSION;
@@ -371,7 +397,7 @@ export type AccountRow = {
   id: string; platform: string; external_id: string; username: string | null; status: string; token_expires_at: string | null;
 };
 
-export type ApiChannel = "facebook_page" | "facebook_mazed" | "instagram";
+export type ApiChannel = "facebook_page" | "facebook_mazed" | "instagram" | "tiktok";
 
 /**
  * The account each API channel posts through, from the connected ones (most
@@ -385,8 +411,9 @@ export function accountsByChannel(rows: AccountRow[], mazedPage: string, now: nu
     if (a.token_expires_at && new Date(a.token_expires_at).getTime() <= now) continue;
     const channel: ApiChannel | null =
       a.platform === "instagram" ? "instagram"
-        : a.platform === "facebook_page" ? (isMazedPage(a, mazedPage) ? "facebook_mazed" : "facebook_page")
-          : null;
+        : a.platform === "tiktok" ? "tiktok"
+          : a.platform === "facebook_page" ? (isMazedPage(a, mazedPage) ? "facebook_mazed" : "facebook_page")
+            : null;
     if (channel && !out[channel]) out[channel] = a;
   }
   return out;
@@ -410,13 +437,18 @@ export async function connectedAccounts(admin: Admin, mazedPage?: string): Promi
  * engine when their account is connected, and to a person otherwise; each
  * Facebook group that fits the annonce gets its own manual job. Safe to call
  * twice — the jobs' unique key keeps a second call from adding any.
+ *
+ * `only`: the channels the admin kept ticked (« Mazed » yes, TikTok not this
+ * one). The others leave the ask — its channels and their texts — before any
+ * job is made, and the site does not propose them again for this annonce.
  */
 export async function approveSocialRequest(
   admin: Admin,
   requestId: string,
   adminId: string | null,
   scheduledFor?: Date | null,
-): Promise<{ ok: true; jobs: number } | { ok: false; error: "not_found" | "not_pending" | "not_online" | "db" }> {
+  only?: readonly SocialChannel[] | null,
+): Promise<{ ok: true; jobs: number } | { ok: false; error: "not_found" | "not_pending" | "not_online" | "no_channel" | "db" }> {
   const { data: req } = await admin
     .from("social_publication_requests")
     .select("id, listing_id, channels, status")
@@ -427,10 +459,27 @@ export async function approveSocialRequest(
   const row = await loadSocialListing(admin, req.listing_id as string);
   if (!row || row.status !== "published") return { ok: false, error: "not_online" };
 
+  let channels = req.channels as SocialChannel[];
+  if (only) {
+    const keep = channels.filter((c) => only.includes(c));
+    if (keep.length === 0) return { ok: false, error: "no_channel" };
+    if (keep.length < channels.length) {
+      const dropped = channels.filter((c) => !keep.includes(c));
+      const { error } = await admin
+        .from("social_publication_requests")
+        .update({ channels: keep })
+        .eq("id", requestId)
+        .eq("status", "pending_approval");
+      if (error) return { ok: false, error: "db" };
+      await admin.from("social_content_variants").delete().eq("request_id", requestId).in("channel", dropped);
+      channels = keep;
+    }
+  }
+
   const accounts = await connectedAccounts(admin);
   const runAfter = scheduledFor && scheduledFor.getTime() > Date.now() ? scheduledFor.toISOString() : dueNow();
   const jobs: Record<string, unknown>[] = [];
-  for (const channel of req.channels as SocialChannel[]) {
+  for (const channel of channels) {
     if (isApiChannel(channel)) {
       const account = accounts[channel];
       jobs.push({

@@ -8,11 +8,12 @@ import { fail } from "@/lib/http/errors";
 import { apiTranslator } from "@/lib/i18n/server";
 import { listingFields, listingPhotos, titleTooShort, type ListingBody } from "@/lib/listings/input";
 import { dropEdit, editWaiting, isEditable, proposeEdit } from "@/lib/listings/edit";
-import { missingObjects } from "@/lib/listings/storage";
+import { missingObjects, refusedPhotoPaths } from "@/lib/listings/storage";
 import { ensurePhotoSizes } from "@/lib/photoSizes.server";
 import { suspendedResponse } from "@/lib/moderation/ban";
 import { featureOff } from "@/lib/settings/gate";
 import { getSettings } from "@/lib/settings/server";
+import { asDealType } from "@/lib/listings/deal";
 
 /**
  * POST /api/annonces/:id/edit — the seller's new version of an annonce that is
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const { data: listing } = await admin
     .from("listings")
-    .select("id, seller_id, status, review_flags, pending_edit_at")
+    .select("id, seller_id, status, review_flags, pending_edit_at, price_on_request, deal_type")
     .eq("id", id)
     .maybeSingle();
   if (!listing || listing.seller_id !== user.id) return NextResponse.json({ error: "not_owner" }, { status: 403 });
@@ -77,6 +78,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const body = (await jsonObject(req)) as ListingBody;
   const fields = listingFields(body);
   const photos = listingPhotos(body, settings.listing_max_photos);
+  // Only this seller's files (src/lib/listings/input.ts).
+  if (photos && (await refusedPhotoPaths(admin, { photos, ownerId: user.id, listingId: id })).length > 0) {
+    return NextResponse.json({ error: "photo_path_invalid" }, { status: 400 });
+  }
 
   // What a live annonce cannot lose: a title, a place, a price (or « sur
   // demande »), a way to call, a photo.
@@ -90,6 +95,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
   if ("price" in fields && fields.price == null && fields.price_on_request !== true) {
     return NextResponse.json({ error: "price_required", detail: t("priceRequired") }, { status: 400 });
+  }
+  // Hiding a price that shows needs « Prix sur demande » offered for this deal
+  // (0222); an annonce that already says it keeps it.
+  if (fields.price_on_request === true && listing.price_on_request !== true) {
+    const rentDeal = asDealType((fields.deal_type ?? listing.deal_type) as string | null) === "rent";
+    if (!(rentDeal ? settings.price_on_request_rent : settings.price_on_request_sale)) {
+      return NextResponse.json({ error: "price_on_request_off", detail: t("priceOnRequestOff") }, { status: 400 });
+    }
   }
   if ("contact_phone" in body && !fields.contact_phone) {
     return NextResponse.json({ error: "contact_required", detail: t("contactRequired") }, { status: 400 });

@@ -60,6 +60,9 @@ export const SMS_KINDS = new Set<string>([
   // and an offer run out of time stay in the site: nothing to do about them.
   "offer_received", "offer_accepted", "offer_declined", "offer_countered",
   "offer_counter_accepted", "offer_counter_declined",
+  // « Demander le prix » (0222) — the question waits on the seller, the
+  // price is what the buyer asked for.
+  "price_question", "price_answered",
 ]);
 
 // The kinds the per-user daily cap (`sms_daily_cap` in the console) never
@@ -86,6 +89,8 @@ export const UNCAPPED_KINDS = new Set<string>([
   "visit_confirmed",
   // A price both sides agreed on: each must now call the other.
   "offer_accepted", "offer_counter_accepted",
+  // The price the buyer asked for (0222), once per question.
+  "price_answered",
   // Retired with the auction product and the identity checks; a row of one
   // of these, should any remain, still bypasses the cap as it always did.
   "kyc_verified", "kyc_rejected",
@@ -140,7 +145,9 @@ export function forSms<T extends SmsSource>(row: T, visitor: string): T {
       return vars
         ? { ...row, payload: { ...payload, vars: { ...vars, name: visitor } } }
         : { ...row, body: null };
-    // An offer carries the buyer's name the same way (0211).
+    // An offer carries the buyer's name the same way (0211), and so does a
+    // question on the price (0222).
+    case "price_question":
     case "offer_received":
     case "offer_counter_accepted":
     case "offer_counter_declined":

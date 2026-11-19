@@ -1,0 +1,47 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin/guard";
+import { getServiceSupabase } from "@/lib/supabase/admin";
+import { featureOff } from "@/lib/settings/gate";
+import { getSettings } from "@/lib/settings/server";
+import { fail } from "@/lib/http/errors";
+import { jsonObject } from "@/lib/http/body";
+import { logAction } from "@/lib/activity";
+import { loadOwnLead, publishLead } from "@/lib/prospection/server";
+
+/**
+ * POST /api/admin/prospection/leads/:id/publish  { photosChecked: true }
+ *
+ * « Publier »: the annonce of a lead that said yes goes through a free place
+ * (the team publishes past the owner's places unless « prospect_team_unlimited » is off) and the moderation rules (src/lib/prospection/server.ts publishLead). It
+ * needs the site's minimum of photos, and the member's word that they looked
+ * at each one — no phone number written on it, no other agency's mark. When
+ * it is online the owner gets the SMS with their private link.
+ */
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const gate = await requireAdmin(req, "prospection");
+  if (gate instanceof NextResponse) return gate;
+  const off = await featureOff("feature_prospection");
+  if (off) return off;
+  const admin = getServiceSupabase();
+  if (!admin) return fail("server_misconfigured", 500);
+  const { id } = await params;
+  // A member publishes their own leads only.
+  if (!(await loadOwnLead(admin, id, { scopes: gate.scopes, userId: gate.user.id }))) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  const body = await jsonObject(req);
+  const out = await publishLead(admin, {
+    leadId: id,
+    actorId: gate.user.id,
+    photosChecked: body.photosChecked === true,
+    origin: req.nextUrl.origin,
+    // The whole-console admin is not held to the owner's places; a member of the team is only when
+    // « prospect_team_unlimited » is switched off (on: the team is staff, not a seller).
+    unlimited: gate.scopes === null || (await getSettings()).prospect_team_unlimited,
+  });
+  if (!out.ok) {
+    const status = out.error === "not_found" ? 404 : out.error === "failed" ? 500 : out.error === "free_limit_reached" ? 402 : 409;
+    return NextResponse.json({ error: out.error, blockers: out.blockers, fields: out.fields }, { status });
+  }
+  logAction(req, gate.user, "prospect.publish", { id, outcome: out.outcome });
+  return NextResponse.json({ ok: true, outcome: out.outcome, sms: out.sms });
+}

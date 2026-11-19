@@ -99,4 +99,20 @@ describe("pickSlot and the pipeline", () => {
   it("reads today in Tunisia", () => {
     expect(tunisDay(new Date("2026-10-26T23:30:00Z"))).toBe("2026-10-27");
   });
+
+  it("always writes YYYY-MM-DD, padded, whatever the engine's habits for a locale", () => {
+    expect(tunisDay(new Date("2026-01-05T10:00:00Z"))).toBe("2026-01-05");
+    expect(tunisDay(new Date("2026-12-31T23:30:00Z"))).toBe("2027-01-01");
+    expect(tunisDay()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("is built from the parts, never from a formatted string (an engine may write en-CA as 11/15/2026)", () => {
+    const original = Object.getOwnPropertyDescriptor(Intl.DateTimeFormat.prototype, "format")!;
+    Object.defineProperty(Intl.DateTimeFormat.prototype, "format", { ...original, get: () => () => "11/15/2026" });
+    try {
+      expect(tunisDay(new Date("2026-11-15T10:00:00Z"))).toBe("2026-11-15");
+    } finally {
+      Object.defineProperty(Intl.DateTimeFormat.prototype, "format", original);
+    }
+  });
 });

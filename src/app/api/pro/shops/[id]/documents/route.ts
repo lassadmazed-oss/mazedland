@@ -13,7 +13,7 @@ import { proGate } from "@/lib/pro/api";
  *   POST { step: "url", ext }                      → a signed upload URL and its path
  *   POST { step: "save", path, kind, fileName }    → the document recorded
  */
-const KINDS = ["rne", "patente", "identity", "other"] as const;
+const KINDS = ["rne", "patente", "identity", "licence", "other"] as const;
 const EXT = /^(pdf|jpg|jpeg|png|webp)$/;
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
