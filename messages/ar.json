@@ -1559,6 +1559,20 @@
       "title": "الزيارة تلغات",
       "body": "{name} ألغى زيارتو لـ « {title} »."
     },
+    "visit_proposed": {
+      "plain": {
+        "title": "البائع اقترح عليك وقت آخر",
+        "body": "البائع يقترح زيارة « {title} »: {when}. جاوبو من زياراتي."
+      },
+      "with_note": {
+        "title": "البائع اقترح عليك وقت آخر",
+        "body": "البائع يقترح زيارة « {title} »: {when}. البائع: {note}"
+      }
+    },
+    "visit_accepted": {
+      "title": "المشتري قبل الوقت",
+      "body": "{name} قبل الوقت المقترح لزيارة « {title} »: {when}."
+    },
     "request_suggestion": {
       "title": "وكالة تقترحلك عقار",
       "body": "{shop} تشوف إلّي « {title} » يناسب طلبك."
@@ -3707,6 +3721,8 @@
     "visit_decline": "زيارة مرفوضة",
     "visit_done": "زيارة تعملت",
     "visit_cancel": "زيارة ملغاة",
+    "visit_propose": "وقت آخر مقترح لزيارة",
+    "visit_accept": "المشتري قبل وقت مقترح",
     "price_question_ask": "سؤال على السوم",
     "price_question_answer": "السوم تبعث للشاري",
     "price_question_done": "طلب السوم تسكّر",
@@ -5294,6 +5310,7 @@
     },
     "status": {
       "requested": "في الانتظار",
+      "proposed": "وقت آخر مقترح",
       "confirmed": "مأكّدة",
       "declined": "ما تقبلتش",
       "cancelled": "ملغاة",
@@ -5317,6 +5334,8 @@
       "failed": "الطلب ما تبعثش. عاود جرّب.",
       "sentTitle": "طلبت زيارة",
       "confirmedTitle": "الزيارة مأكّدة",
+      "proposedTitle": "البائع اقترح عليك وقت آخر",
+      "proposedBody": "شوف الاقتراح وجاوب في زياراتي.",
       "sentBody": "البائع باش يجاوبك هنا وبـ SMS.",
       "follow": "تابعها في زياراتي",
       "slotsLabel": "الأوقات متاعك",
@@ -5357,16 +5376,38 @@
         "slots": "حتى وقت من هالأوقات ما يناسبني.",
         "unavailable": "العقار ما عادش متوفّر."
       },
-      "proposeLabel": "اقترح وقت آخر (اختياري)",
       "proposePhrase": "نجّم نستقبلك نهار {day}، {part}.",
       "declineSend": "ابعث الرفض",
-      "back": "رجوع"
+      "back": "رجوع",
+      "propose": "اقترح وقت آخر",
+      "proposeTitle": "أنهو وقت يناسبك؟",
+      "proposeWhy": "علاش؟",
+      "proposeReasons": {
+        "travelling": "أنا مسافر.",
+        "busy": "عندي أشغال هالأسبوع.",
+        "tenant": "العقار مسكون ولازم نتفاهم مع الساكن.",
+        "keys": "المفاتيح موش عندي توّا.",
+        "works": "فما أشغال في العقار.",
+        "other": "عندي ظرف من جهتي."
+      },
+      "proposeNote": "كلمة للمشتري",
+      "proposeMissing": "اختار النهار والوقت والسبب.",
+      "proposeSend": "ابعث الاقتراح",
+      "proposed": "الاقتراح تبعث، المشتري باش يجاوبك.",
+      "reviseProposal": "بدّل الاقتراح",
+      "proposalWaiting": "تستنّى جواب المشتري.",
+      "accept": "نقبل الوقت هذا",
+      "acceptToast": "الزيارة تأكّدت.",
+      "refuseProposal": "ما يناسبنيش",
+      "otherTimes": "تنجّم تعاود تطلب زيارة بأوقات أخرى من الإعلان."
     },
     "card": {
       "asked": "مطلوبة نهار {date}",
       "listingGone": "إعلان تفسخ",
       "yourNote": "كلمتك:",
-      "sellerNote": "البائع:"
+      "sellerNote": "البائع:",
+      "proposalFromSeller": "البائع يقترح:",
+      "yourProposal": "اقتراحك:"
     },
     "page": {
       "title": "زياراتي",
@@ -5398,6 +5439,7 @@
     "own": "هذا إعلانك.",
     "alreadyOpen": "عندك طلب ماشي على الإعلان هذا.",
     "transition": "الزيارة هذي تبدّلت حالتها. عاود حلّ الصفحة.",
+    "reason": "اختار علاش تقترح وقت آخر.",
     "slot": "اختار وقت من الأوقات المقترحة."
   },
   "priceQuestionsApi": {

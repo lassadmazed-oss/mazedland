@@ -55,7 +55,8 @@ export const SMS_KINDS = new Set<string>([
   // Mazed Immo Pro (0173) — the verdict on a shop; joining a team stays in-app.
   "shop_approved", "shop_rejected",
   // Visits (0174) — each one moves a date in somebody's diary, so each goes out.
-  "visit_requested", "visit_confirmed", "visit_declined", "visit_cancelled",
+  // 0231: another moment proposed (the buyer must answer), and accepted (a date in the seller's diary).
+  "visit_requested", "visit_confirmed", "visit_declined", "visit_cancelled", "visit_proposed", "visit_accepted",
   // Price offers (0211) — each answer waits on the other side. A withdrawal
   // and an offer run out of time stay in the site: nothing to do about them.
   "offer_received", "offer_accepted", "offer_declined", "offer_countered",
@@ -85,8 +86,9 @@ export const UNCAPPED_KINDS = new Set<string>([
   "listing_rejected", "listing_payment_rejected",
   "shop_approved", "shop_rejected",
   "plan_expiring",
-  // The buyer must turn up: the day and half-day of a visit.
-  "visit_confirmed",
+  // The buyer must turn up: the day and half-day of a visit; a moment proposed waits on the buyer's answer,
+  // and one accepted is a date in the seller's diary.
+  "visit_confirmed", "visit_proposed", "visit_accepted",
   // A price both sides agreed on: each must now call the other.
   "offer_accepted", "offer_counter_accepted",
   // The price the buyer asked for (0222), once per question.
@@ -142,6 +144,7 @@ export function forSms<T extends SmsSource>(row: T, visitor: string): T {
   switch (row.kind) {
     case "visit_requested":
     case "visit_cancelled":
+    case "visit_accepted":
       return vars
         ? { ...row, payload: { ...payload, vars: { ...vars, name: visitor } } }
         : { ...row, body: null };
@@ -157,6 +160,7 @@ export function forSms<T extends SmsSource>(row: T, visitor: string): T {
         : { ...row, body: null };
     case "visit_confirmed":
     case "visit_declined":
+    case "visit_proposed":
     case "offer_accepted":
     case "offer_declined":
     case "offer_countered":

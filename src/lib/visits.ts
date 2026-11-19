@@ -1,6 +1,7 @@
 /**
  * Visit requests (0174): a buyer proposes a few half-days, the seller's
- * side confirms one, declines, or marks the visit done; the buyer can cancel.
+ * side confirms one, proposes another one (0231), declines, or marks the visit
+ * done; the buyer accepts a proposal or cancels.
  *
  * Pure — the slots, the moves allowed from each status, the client stages —
  * so the rules are tested once and the routes only apply them.
@@ -11,11 +12,20 @@ export const VISIT_PARTS = ["morning", "afternoon", "evening"] as const;
 export type VisitPart = (typeof VISIT_PARTS)[number];
 export type VisitSlot = { day: string; part: VisitPart };
 
-export const VISIT_STATUSES = ["requested", "confirmed", "declined", "cancelled", "done"] as const;
+export const VISIT_STATUSES = ["requested", "proposed", "confirmed", "declined", "cancelled", "done"] as const;
 export type VisitStatus = (typeof VISIT_STATUSES)[number];
 
 /** Still waiting on someone: the ones a buyer cannot open twice. */
-export const OPEN_VISIT_STATUSES: readonly VisitStatus[] = ["requested", "confirmed"];
+export const OPEN_VISIT_STATUSES: readonly VisitStatus[] = ["requested", "proposed", "confirmed"];
+
+/** Why a seller proposes another moment: the choices of the form (words: `visits.actions.proposeReasons.<key>`). */
+export const PROPOSAL_REASONS = ["travelling", "busy", "tenant", "keys", "works", "other"] as const;
+export type ProposalReason = (typeof PROPOSAL_REASONS)[number];
+export function isProposalReason(v: unknown): v is ProposalReason {
+  return typeof v === "string" && (PROPOSAL_REASONS as readonly string[]).includes(v);
+}
+/** The word a seller adds to a proposal. */
+export const PROPOSAL_NOTE_MAX = 200;
 
 /**
  * How many half-days a buyer may propose, and how far ahead: set in the
@@ -82,19 +92,23 @@ export function parseSlots(
   return out;
 }
 
-export type VisitAction = "confirm" | "decline" | "done" | "cancel";
+export type VisitAction = "confirm" | "propose" | "accept" | "decline" | "done" | "cancel";
 export type VisitSide = "seller" | "buyer";
 
 /**
  * Where an action leads, for this side, from this status — or null when it
- * may not. The seller's side answers and closes; the buyer can only call it off.
+ * may not. The seller's side answers, proposes another moment and closes; the
+ * buyer accepts a proposal or calls the visit off.
  */
 export function nextStatus(status: VisitStatus, action: VisitAction, side: VisitSide): VisitStatus | null {
   if (side === "buyer") {
-    return action === "cancel" && (status === "requested" || status === "confirmed") ? "cancelled" : null;
+    if (action === "accept") return status === "proposed" ? "confirmed" : null;
+    return action === "cancel" && (status === "requested" || status === "proposed" || status === "confirmed") ? "cancelled" : null;
   }
-  if (status === "requested") {
+  // A proposal waits on the buyer: the seller may revise it, take one of the buyer's own moments after all, or refuse.
+  if (status === "requested" || status === "proposed") {
     if (action === "confirm") return "confirmed";
+    if (action === "propose") return "proposed";
     if (action === "decline" || action === "cancel") return "declined";
     return null;
   }
@@ -103,6 +117,15 @@ export function nextStatus(status: VisitStatus, action: VisitAction, side: Visit
     if (action === "cancel" || action === "decline") return "cancelled";
   }
   return null;
+}
+
+/**
+ * The moment a seller proposes: one real half-day inside the same window as the
+ * buyer's own (today to `horizonDays` out), or null.
+ */
+export function parseProposal(raw: unknown, today: string = tunisDay(), horizonDays: number = DEFAULT_SLOT_RULES.horizonDays): VisitSlot | null {
+  const one = parseSlots([raw], today, { maxSlots: 1, horizonDays });
+  return one ? one[0] : null;
 }
 
 /** The slot the seller picked, which must be one the buyer proposed. */

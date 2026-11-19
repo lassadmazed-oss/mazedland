@@ -10,6 +10,7 @@ import { VisitActions } from "./VisitActions";
 
 const TONE: Record<string, string> = {
   requested: "mazed-tone-warn",
+  proposed: "mazed-tone-warn",
   confirmed: "mazed-tone-ok",
   done: "mazed-tone-ok",
   declined: "mazed-tone-bad",
@@ -53,6 +54,15 @@ export async function VisitCard({ visit, side, locale, highlight = false }: { vi
       </div>
 
       <div className="mt-3 space-y-1.5 text-[12.5px]">
+        {visit.status === "proposed" && visit.proposed_slot ? (
+          <p className="flex items-start gap-2 font-bold text-foreground">
+            <CalendarDays className="mt-0.5 size-4 shrink-0 text-foreground" />
+            <span>
+              <span className="font-normal text-muted">{t(side === "seller" ? "yourProposal" : "proposalFromSeller")} </span>
+              {say(visit.proposed_slot)}
+            </span>
+          </p>
+        ) : null}
         {visit.status === "confirmed" || visit.status === "done" ? (
           <p className="flex items-start gap-2 font-bold text-foreground">
             <CalendarDays className="mt-0.5 size-4 shrink-0 text-foreground" />
@@ -89,7 +99,13 @@ export async function VisitCard({ visit, side, locale, highlight = false }: { vi
             <span className="whitespace-pre-line" dir="auto">{visit.message}</span>
           </p>
         )}
-        {visit.seller_note && (
+        {visit.status === "proposed" && visit.proposal_note && (
+          <p className="mazed-band-warm rounded-xl px-3 py-2 text-foreground ring-1 ring-border" dir="auto">
+            <span className="font-bold">{t(side === "seller" ? "yourNote" : "sellerNote")} </span>
+            {visit.proposal_note}
+          </p>
+        )}
+        {visit.seller_note && visit.status !== "proposed" && (
           <p className="mazed-band-warm rounded-xl px-3 py-2 text-foreground ring-1 ring-border" dir="auto">
             <span className="font-bold">{t(side === "seller" ? "yourNote" : "sellerNote")} </span>
             {visit.seller_note}

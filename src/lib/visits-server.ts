@@ -10,7 +10,7 @@ import { stageAfterVisit, type LeadStage, type VisitSide, type VisitSlot, type V
 type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
 export const VISIT_COLUMNS =
-  "id, listing_id, buyer_id, seller_id, shop_id, slots, buyer_name, buyer_phone, message, status, confirmed_slot, seller_note, decided_at, created_at";
+  "id, listing_id, buyer_id, seller_id, shop_id, slots, buyer_name, buyer_phone, message, status, confirmed_slot, seller_note, decided_at, created_at, proposed_slot, proposal_reason, proposal_note";
 
 export type VisitRow = {
   id: string;
@@ -27,6 +27,10 @@ export type VisitRow = {
   seller_note: string | null;
   decided_at: string | null;
   created_at: string;
+  /** The other moment the seller proposed (status « proposed »), why, and the word with it (0231). */
+  proposed_slot: VisitSlot | null;
+  proposal_reason: string | null;
+  proposal_note: string | null;
 };
 
 /**

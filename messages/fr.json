@@ -1559,6 +1559,20 @@
       "title": "Visite annulée",
       "body": "{name} a annulé sa visite de « {title} »."
     },
+    "visit_proposed": {
+      "plain": {
+        "title": "Un autre moment vous est proposé",
+        "body": "Le vendeur propose une visite de « {title} » : {when}. Répondez depuis Mes visites."
+      },
+      "with_note": {
+        "title": "Un autre moment vous est proposé",
+        "body": "Le vendeur propose une visite de « {title} » : {when}. Le vendeur : {note}"
+      }
+    },
+    "visit_accepted": {
+      "title": "Moment accepté",
+      "body": "{name} a accepté le moment proposé pour la visite de « {title} » : {when}."
+    },
     "request_suggestion": {
       "title": "Une agence vous propose un bien",
       "body": "{shop} pense que « {title} » correspond à votre demande."
@@ -3707,6 +3721,8 @@
     "visit_decline": "Visite refusée",
     "visit_done": "Visite faite",
     "visit_cancel": "Visite annulée",
+    "visit_propose": "Autre moment proposé pour une visite",
+    "visit_accept": "Moment proposé accepté",
     "price_question_ask": "Prix demandé",
     "price_question_answer": "Prix donné à l'acheteur",
     "price_question_done": "Demande de prix traitée",
@@ -5294,6 +5310,7 @@
     },
     "status": {
       "requested": "En attente",
+      "proposed": "Autre moment proposé",
       "confirmed": "Confirmée",
       "declined": "Non retenue",
       "cancelled": "Annulée",
@@ -5317,6 +5334,8 @@
       "failed": "La demande n'a pas pu être envoyée. Réessayez.",
       "sentTitle": "Visite demandée",
       "confirmedTitle": "Visite confirmée",
+      "proposedTitle": "Le vendeur propose un autre moment",
+      "proposedBody": "Voyez la proposition et répondez dans Mes visites.",
       "sentBody": "Le vendeur vous répondra ici et par SMS.",
       "follow": "Suivre dans Mes visites",
       "slotsLabel": "Vos moments",
@@ -5357,16 +5376,38 @@
         "slots": "Aucun de ces moments ne me convient.",
         "unavailable": "Le bien n'est plus disponible."
       },
-      "proposeLabel": "Proposer un autre moment (facultatif)",
       "proposePhrase": "Je peux vous recevoir {day}, {part}.",
       "declineSend": "Envoyer le refus",
-      "back": "Retour"
+      "back": "Retour",
+      "propose": "Proposer un autre moment",
+      "proposeTitle": "Quel moment vous convient ?",
+      "proposeWhy": "Pourquoi ?",
+      "proposeReasons": {
+        "travelling": "Je suis en déplacement.",
+        "busy": "Je suis pris cette semaine.",
+        "tenant": "Le bien est occupé : je dois m'arranger avec l'occupant.",
+        "keys": "Je n'ai pas les clés pour l'instant.",
+        "works": "Des travaux sont en cours dans le bien.",
+        "other": "J'ai une contrainte de mon côté."
+      },
+      "proposeNote": "Un mot pour l'acheteur",
+      "proposeMissing": "Choisissez le jour, le moment et la raison.",
+      "proposeSend": "Envoyer la proposition",
+      "proposed": "Proposition envoyée : l'acheteur répond ici.",
+      "reviseProposal": "Modifier la proposition",
+      "proposalWaiting": "En attente de la réponse de l'acheteur.",
+      "accept": "Accepter ce moment",
+      "acceptToast": "Visite confirmée.",
+      "refuseProposal": "Cela ne me convient pas",
+      "otherTimes": "Vous pouvez redemander une visite à d'autres moments depuis l'annonce."
     },
     "card": {
       "asked": "Demandée le {date}",
       "listingGone": "Annonce supprimée",
       "yourNote": "Votre mot :",
-      "sellerNote": "Le vendeur :"
+      "sellerNote": "Le vendeur :",
+      "proposalFromSeller": "Le vendeur propose :",
+      "yourProposal": "Votre proposition :"
     },
     "page": {
       "title": "Mes visites",
@@ -5398,6 +5439,7 @@
     "own": "C'est votre annonce.",
     "alreadyOpen": "Vous avez déjà une demande en cours pour cette annonce.",
     "transition": "Cette visite a déjà changé d'état. Rechargez la page.",
+    "reason": "Choisissez pourquoi vous proposez un autre moment.",
     "slot": "Choisissez un des moments proposés."
   },
   "priceQuestionsApi": {

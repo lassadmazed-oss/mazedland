@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { nextStatus, parseSlots, personName, pickSlot, stageAfterVisit, tunisDay } from "./visits";
+import { isProposalReason, nextStatus, OPEN_VISIT_STATUSES, parseProposal, parseSlots, personName, pickSlot, PROPOSAL_REASONS, stageAfterVisit, tunisDay } from "./visits";
 
 const TODAY = "2026-10-26";
 
@@ -79,6 +79,53 @@ describe("nextStatus", () => {
     expect(nextStatus("confirmed", "cancel", "buyer")).toBe("cancelled");
     expect(nextStatus("requested", "confirm", "buyer")).toBeNull();
     expect(nextStatus("done", "cancel", "buyer")).toBeNull();
+  });
+});
+
+describe("a seller's proposal of another moment (0231)", () => {
+  it("lets the seller propose from a request, revise a proposal, or take a buyer's slot after all", () => {
+    expect(nextStatus("requested", "propose", "seller")).toBe("proposed");
+    expect(nextStatus("proposed", "propose", "seller")).toBe("proposed");
+    expect(nextStatus("proposed", "confirm", "seller")).toBe("confirmed");
+    expect(nextStatus("proposed", "decline", "seller")).toBe("declined");
+    expect(nextStatus("proposed", "cancel", "seller")).toBe("declined");
+    // A confirmed visit is not renegotiated by a proposal; a closed one is closed.
+    expect(nextStatus("confirmed", "propose", "seller")).toBeNull();
+    expect(nextStatus("declined", "propose", "seller")).toBeNull();
+    expect(nextStatus("done", "propose", "seller")).toBeNull();
+    expect(nextStatus("proposed", "done", "seller")).toBeNull();
+  });
+
+  it("lets the buyer accept only a proposal, and refuse it by calling the visit off", () => {
+    expect(nextStatus("proposed", "accept", "buyer")).toBe("confirmed");
+    expect(nextStatus("requested", "accept", "buyer")).toBeNull();
+    expect(nextStatus("confirmed", "accept", "buyer")).toBeNull();
+    expect(nextStatus("proposed", "cancel", "buyer")).toBe("cancelled");
+    expect(nextStatus("proposed", "propose", "buyer")).toBeNull();
+    // The seller's side cannot accept in the buyer's name.
+    expect(nextStatus("proposed", "accept", "seller")).toBeNull();
+  });
+
+  it("counts a proposed visit as open: one open request per buyer and annonce", () => {
+    expect(OPEN_VISIT_STATUSES).toContain("proposed");
+  });
+
+  it("keeps one real half-day inside the window, nothing else", () => {
+    expect(parseProposal({ day: "2026-10-30", part: "afternoon" }, TODAY)).toEqual({ day: "2026-10-30", part: "afternoon" });
+    // Several, a past day, a day beyond the window, a made-up part, nothing.
+    expect(parseProposal([{ day: "2026-10-30", part: "afternoon" }], TODAY)).toBeNull();
+    expect(parseProposal({ day: "2026-10-25", part: "morning" }, TODAY)).toBeNull();
+    expect(parseProposal({ day: "2026-12-30", part: "morning" }, TODAY, 30)).toBeNull();
+    expect(parseProposal({ day: "2026-10-30", part: "midnight" }, TODAY)).toBeNull();
+    expect(parseProposal(undefined, TODAY)).toBeNull();
+    expect(parseProposal("2026-10-30", TODAY)).toBeNull();
+  });
+
+  it("knows the reasons a seller can give, and refuses any other", () => {
+    for (const r of PROPOSAL_REASONS) expect(isProposalReason(r)).toBe(true);
+    expect(isProposalReason("because")).toBe(false);
+    expect(isProposalReason(null)).toBe(false);
+    expect(isProposalReason(undefined)).toBe(false);
   });
 });
 

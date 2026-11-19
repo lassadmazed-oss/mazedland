@@ -63,8 +63,9 @@ export const NOTIFICATION_KINDS = [
   "shop_approved", "shop_rejected", "shop_member_added", "admin_shop_pending",
   // An agence's plan enters its renewal days (0186)
   "plan_expiring",
-  // Visits (0174): the seller hears the request and a cancellation, the buyer the answer
-  "visit_requested", "visit_confirmed", "visit_declined", "visit_cancelled",
+  // Visits (0174): the seller hears the request and a cancellation, the buyer the answer;
+  // 0231: the buyer hears another moment proposed, the seller hears it accepted
+  "visit_requested", "visit_confirmed", "visit_declined", "visit_cancelled", "visit_proposed", "visit_accepted",
   // Price offers (0211): the seller hears the offer and the buyer's answers, the
   // buyer the seller's; an offer nobody answered expires (expire_price_offers)
   "offer_received", "offer_accepted", "offer_declined", "offer_countered",
@@ -220,6 +221,8 @@ export const KIND_FALLBACK: Record<NotificationKind, FallbackRoute> = {
   visit_confirmed: "/account/visites",
   visit_declined: "/account/visites",
   visit_cancelled: "/account/visites",
+  visit_proposed: "/account/visites",
+  visit_accepted: "/account/visites",
   offer_received: "/account/offres",
   offer_accepted: "/account/offres",
   offer_declined: "/account/offres",
@@ -316,7 +319,7 @@ const FALLBACK_SUPPORTS_FOCUS: Record<NotificationKind, boolean> = {
   listing_archived: false,
   shop_approved: false, shop_rejected: false, shop_member_added: false, admin_shop_pending: false,
   plan_expiring: false,
-  visit_requested: false, visit_confirmed: false, visit_declined: false, visit_cancelled: false,
+  visit_requested: false, visit_confirmed: false, visit_declined: false, visit_cancelled: false, visit_proposed: false, visit_accepted: false,
   offer_received: false, offer_accepted: false, offer_declined: false, offer_countered: false,
   offer_counter_accepted: false, offer_counter_declined: false, offer_withdrawn: false, offer_expired: false,
   price_question: false, price_answered: false,

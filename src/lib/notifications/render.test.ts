@@ -144,6 +144,22 @@ describe("renderNotification", () => {
     expect(renderNotification(n, tr("ar"), "ar").body).toContain("الصباح");
   });
 
+  it("says a proposed moment, with or without the seller's word, and its acceptance (0231)", () => {
+    const base = { title: "x", body: "x" };
+    const plain = { ...base, kind: "visit_proposed", payload: { vars: { title: "S+2 La Marsa", visit_day: "2026-11-27", visit_part: "afternoon", note: "", variant: "plain" } } };
+    const withNote = { ...plain, payload: { vars: { ...plain.payload.vars, note: "Je voyage jusqu'à jeudi", variant: "with_note" } } };
+    const fr = renderNotification(plain, tr("fr"), "fr").body;
+    expect(fr).toContain("S+2 La Marsa");
+    expect(fr).toContain("vendredi 27 novembre");
+    expect(fr).not.toContain("Je voyage");
+    expect(renderNotification(withNote, tr("fr"), "fr").body).toContain("Je voyage jusqu'à jeudi");
+    expect(renderNotification(plain, tr("ar"), "ar").body).toContain("S+2 La Marsa");
+    const accepted = { ...base, kind: "visit_accepted", payload: { vars: { title: "S+2 La Marsa", name: "Karim", visit_day: "2026-11-27", visit_part: "afternoon" } } };
+    const acc = renderNotification(accepted, tr("fr"), "fr").body;
+    expect(acc).toContain("Karim");
+    expect(acc).toContain("vendredi 27 novembre");
+  });
+
   it("says the three figures of a price offer (0211) in the reader's language", () => {
     const received = {
       kind: "offer_received",

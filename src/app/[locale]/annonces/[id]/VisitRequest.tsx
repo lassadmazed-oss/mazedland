@@ -68,9 +68,11 @@ export function VisitRequest({
     return (
       <div className="mt-3 rounded-xl bg-surface-2 px-3 py-2.5 text-[12.5px] leading-snug text-foreground ring-1 ring-border">
         <p className="flex items-center gap-1.5 font-bold">
-          <CalendarCheck className="size-4 text-gold" /> {t(sent.status === "confirmed" ? "confirmedTitle" : "sentTitle")}
+          <CalendarCheck className="size-4 text-gold" /> {t(sent.status === "confirmed" ? "confirmedTitle" : sent.status === "proposed" ? "proposedTitle" : "sentTitle")}
         </p>
-        <p className="mt-0.5 text-muted">{sent.status === "confirmed" && sent.when ? sent.when : t("sentBody")}</p>
+        <p className="mt-0.5 text-muted">
+          {sent.status === "confirmed" && sent.when ? sent.when : sent.status === "proposed" ? [sent.when, t("proposedBody")].filter(Boolean).join(" · ") : t("sentBody")}
+        </p>
         <Link href="/account/visites?tab=sent" className="mt-1 inline-block font-bold text-gold hover:underline">
           {t("follow")}
         </Link>

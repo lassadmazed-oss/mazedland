@@ -60,6 +60,8 @@ describe("SMS_KINDS", () => {
       "payment_rejected", "deposit_refunded", "kyc_verified", "kyc_rejected",
       "payout_paid", "final_payment_due_soon", "final_payment_overdue",
       "listing_rejected", "shop_approved", "shop_rejected", "plan_expiring", "visit_confirmed",
+      // The buyer's answer to a proposal is as time-bound as the confirmation itself.
+      "visit_proposed", "visit_accepted",
     ];
     for (const k of critical) expect(CAPPED_KINDS.has(k)).toBe(false);
   });
@@ -111,6 +113,29 @@ describe("forSms", () => {
     expect(out.vars.visit_day).toBe("2026-11-02");
     const declined = { ...confirmed, kind: "visit_declined" };
     expect((forSms(declined, visitor).payload as { vars: Record<string, string> }).vars.variant).toBe("plain");
+  });
+
+  it("keeps the seller's word out of a proposal, and the buyer's name out of an acceptance (0231)", () => {
+    const proposed = {
+      kind: "visit_proposed",
+      title: "Autre moment proposé",
+      body: "x",
+      payload: { vars: { title: "Villa", visit_day: "2026-11-27", visit_part: "afternoon", note: "Je voyage jusqu'à jeudi", variant: "with_note" } },
+    };
+    const out = forSms(proposed, visitor).payload as { vars: Record<string, string> };
+    expect(out.vars.variant).toBe("plain");
+    expect(out.vars.note).toBe("");
+    expect(out.vars.visit_day).toBe("2026-11-27");
+    const accepted = {
+      kind: "visit_accepted",
+      title: "Moment accepté",
+      body: "Karim a accepté.",
+      payload: { vars: { title: "Villa", name: "Karim Ben Salah", visit_day: "2026-11-27", visit_part: "afternoon" } },
+    };
+    const acc = forSms(accepted, visitor);
+    expect((acc.payload as { vars: Record<string, string> }).vars.name).toBe(visitor);
+    // An old row with no vars keeps its name only in the stored body: that goes.
+    expect(forSms({ ...accepted, payload: {} }, visitor).body).toBeNull();
   });
 
   it("does the same for a price offer (0211)", () => {
