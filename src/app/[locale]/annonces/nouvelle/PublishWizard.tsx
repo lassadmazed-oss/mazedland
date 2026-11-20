@@ -20,7 +20,7 @@ import { canonicalDelegation, delegationLabel, delegationsOf } from "@/lib/deleg
 import {
   Check, Tag, Camera, Wallet, Phone, ClipboardList, ClipboardCheck, Loader2, MapPin,
   Gift, Ticket, ImageOff, Home, ArrowLeft, ArrowRight, Lightbulb, CheckCircle2, AlertTriangle, Pencil,
-  KeyRound, Sparkles, Store, User, WandSparkles, RotateCcw,
+  KeyRound, Sparkles, Store, User, WandSparkles, RotateCcw, Plus, Minus, X,
 } from "lucide-react";
 import {
   hasContactInText,
@@ -31,6 +31,7 @@ import {
   FURNISHED,
   appliesTo,
   asDealType,
+  categoryAllowsDeal,
   firstMonthCost,
   type DealType,
   type Furnished,
@@ -89,6 +90,23 @@ import {
   levelsWords,
   type LevelsStyle,
 } from "@/lib/listings/levels";
+import {
+  BUILDING_SLUG,
+  MAX_UNIT_AREA,
+  MAX_UNIT_COUNT,
+  MAX_UNIT_LINES,
+  UNITS_KEY,
+  UNIT_STATUSES,
+  UNIT_TYPES,
+  addUnit,
+  homesSummary,
+  parseUnits,
+  serializeUnits,
+  unitStatusWords,
+  unitTypeWords,
+  unitsSummary,
+  type BuildingUnit,
+} from "@/lib/listings/units";
 
 /**
  * Publier une annonce — the sell-or-let flow.
@@ -540,6 +558,8 @@ export function PublishWizard({
     if (next === deal) return;
     setDeal(next);
     setPrice("");
+    // A whole building is sold, not let (src/lib/listings/deal.ts): its category goes, the seller picks another.
+    if (category && !categoryAllowsDeal(category.slug, next)) setCategoryId(null);
   }
 
   /** The price, and a deposit given in months along with it: « 2 mois » stays two months of the new rent. */
@@ -733,10 +753,12 @@ export function PublishWizard({
     const kind = [thing, rooms].filter(Boolean).join(" ");
     const where = delegation ? delegationLabel(delegation, locale) : governorateLabel(governorate, locale);
     const what = rent ? t("titleForRent", { category: kind }) : kind;
-    return [what, area ? t("suggestedArea", { area }) : null, where]
+    // « Immeuble · 6 appartements · 333 m² · Monastir »
+    const homes = category.slug === BUILDING_SLUG ? homesSummary(parseUnits(attrs.units), langOf(locale)) : "";
+    return [what, homes || null, area ? t("suggestedArea", { area }) : null, where]
       .filter(Boolean)
       .join(" · ");
-  }, [category, defs, attrs.area_sqm, attrs.rooms, attrs.floor_only, delegation, governorate, locale, t, rent]);
+  }, [category, defs, attrs.area_sqm, attrs.rooms, attrs.floor_only, attrs.units, delegation, governorate, locale, t, rent]);
 
   const title = titleTouched ? typedTitle : suggestedTitle;
   const setTitle = (v: string) => { setTitleTouched(true); setTypedTitle(v); };
@@ -772,6 +794,8 @@ export function PublishWizard({
       },
       levelsStyle: style,
       floorOnly: levels.floorOnly,
+      units: category?.slug === BUILDING_SLUG ? parseUnits(attrs[UNITS_KEY]) : undefined,
+      rentIncome: numberOf("rent_income"),
       yes: defs
         .filter((def) => def.data_type === "boolean" && (attrs[def.field_key] === "true" || attrs[def.field_key] === "1"))
         .map((def) => ({ key: def.field_key, label: def.label })),
@@ -1461,6 +1485,10 @@ export function PublishWizard({
       if (fact !== undefined) return fact === null ? null : `${def.label} : ${fact}`;
       const raw = attrs[def.field_key];
       if (raw == null || String(raw).trim() === "") return null;
+      if (def.field_key === UNITS_KEY) {
+        const said = unitsSummary(parseUnits(raw), langOf(locale));
+        return said ? `${def.label} : ${said}` : null;
+      }
       const value =
         def.data_type === "boolean"
           ? raw === "true" || raw === "1"
@@ -1780,7 +1808,7 @@ export function PublishWizard({
                     className="mt-2.5 flex flex-wrap gap-1.5 focus:outline-none"
                   >
                     {categories
-                      .filter((c) => c.groupId === groupId)
+                      .filter((c) => c.groupId === groupId && categoryAllowsDeal(c.slug, deal))
                       .map((c) => {
                         const active = categoryId === c.id;
                         return (
@@ -2229,13 +2257,23 @@ export function PublishWizard({
                       const fid = attributeFieldId(def.field_key);
                       // « Niveaux » asks a flat's duplex, or a whole house's levels (src/lib/listings/levels.ts).
                       const levels = def.field_key === LEVELS_KEY && def.data_type === "number" ? levelsStyle(defKeys) : null;
+                      // « Appartements et locaux » of an immeuble (src/lib/listings/units.ts).
+                      const isUnits = def.field_key === UNITS_KEY && def.data_type === "text";
                       return (
                         <div
                           key={def.field_key}
                           id={fid}
-                          className={`scroll-mt-24 rounded-xl${levels === "building" ? " sm:col-span-2" : ""}${flagCls(fid)}`}
+                          className={`scroll-mt-24 rounded-xl${levels === "building" || isUnits ? " sm:col-span-2" : ""}${flagCls(fid)}`}
                         >
-                          {levels ? (
+                          {isUnits ? (
+                            <UnitsField
+                              def={def}
+                              value={attrs[def.field_key] ?? ""}
+                              onChange={(v) => setAttrs((s) => ({ ...s, [def.field_key]: v }))}
+                              error={errorFor(fid)}
+                              locale={locale}
+                            />
+                          ) : levels ? (
                             <LevelsField
                               def={def}
                               style={levels}
@@ -2962,6 +3000,124 @@ function AttributeField({
 }
 
 /**
+ * « Appartements et locaux » of an immeuble (src/lib/listings/units.ts): tap a
+ * kind to add one, tap it again for another; each line then has its count and,
+ * if the seller wants, the surface of one and whether they are rented. The
+ * answer is the short string the lines make, so it travels like any other.
+ */
+function UnitsField({
+  def, value, onChange, error, locale,
+}: {
+  def: AttributeDef;
+  value: string;
+  onChange: (v: string) => void;
+  error?: string | null;
+  locale: string;
+}) {
+  const t = useTranslations("publish");
+  const id = useId();
+  const errorId = `${id}-error`;
+  const lang = langOf(locale);
+  const units = parseUnits(value);
+  const total = unitsSummary(units, lang);
+  const set = (next: BuildingUnit[]) => onChange(serializeUnits(next));
+  const patch = (i: number, p: Partial<BuildingUnit>) => set(units.map((u, k) => (k === i ? { ...u, ...p } : u)));
+  const full = units.length >= MAX_UNIT_LINES;
+  const stepper = "tap-target grid size-9 place-items-center rounded-full bg-surface text-foreground ring-1 ring-border transition hover:ring-foreground/30 disabled:opacity-40";
+  return (
+    <div>
+      <Label id={`${id}-label`}>{def.label} {def.required && <Req />}</Label>
+      <p className="mt-1 text-[12px] leading-snug text-muted">{t("units.hint")}</p>
+      <div
+        role="group"
+        aria-labelledby={`${id}-label`}
+        aria-describedby={error ? errorId : undefined}
+        className="mt-2 flex flex-wrap gap-2"
+      >
+        {UNIT_TYPES.map((type) => (
+          <button
+            key={type}
+            type="button"
+            // A kind already on a line with nothing else said grows by one; a new line needs room.
+            disabled={full && !units.some((u) => u.type === type && u.area === null && u.status === null)}
+            onClick={() => set(addUnit(units, type))}
+            className={chipClass(false)}
+          >
+            <Plus className="size-3.5" aria-hidden />
+            {unitTypeWords(type, lang)}
+          </button>
+        ))}
+      </div>
+      {units.length > 0 && (
+        <ul className="mt-3 space-y-2">
+          {units.map((u, i) => (
+            <li key={i} className="rounded-xl bg-surface-2 p-3 ring-1 ring-border">
+              <div className="flex items-center gap-2">
+                <span className="min-w-0 flex-1 text-[13.5px] font-extrabold text-foreground">{unitTypeWords(u.type, lang)}</span>
+                <button
+                  type="button"
+                  aria-label={t("units.less")}
+                  disabled={u.count <= 1}
+                  onClick={() => patch(i, { count: u.count - 1 })}
+                  className={stepper}
+                >
+                  <Minus className="size-4" aria-hidden />
+                </button>
+                <span className="mazed-tabular min-w-7 text-center text-[15px] font-extrabold text-foreground" aria-live="polite">{u.count}</span>
+                <button
+                  type="button"
+                  aria-label={t("units.more")}
+                  disabled={u.count >= MAX_UNIT_COUNT}
+                  onClick={() => patch(i, { count: u.count + 1 })}
+                  className={stepper}
+                >
+                  <Plus className="size-4" aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  aria-label={t("units.remove")}
+                  onClick={() => set(units.filter((_, k) => k !== i))}
+                  className="tap-target grid size-9 place-items-center rounded-full text-muted transition hover:text-danger"
+                >
+                  <X className="size-4" aria-hidden />
+                </button>
+              </div>
+              <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-2">
+                <div className="w-36">
+                  <Field
+                    label={t("units.areaEach")}
+                    type="number"
+                    compact
+                    suffix={lang === "ar" ? "م²" : "m²"}
+                    value={u.area == null ? "" : String(u.area)}
+                    onChange={(v) => {
+                      const n = Math.floor(Number(v));
+                      patch(i, { area: v.trim() === "" || !Number.isFinite(n) || n < 1 ? null : Math.min(n, MAX_UNIT_AREA) });
+                    }}
+                  />
+                </div>
+                <div role="radiogroup" aria-label={t("units.statusLabel")} className="flex flex-wrap gap-2 pb-0.5">
+                  {UNIT_STATUSES.map((s) => {
+                    const on = u.status === s;
+                    return (
+                      <Chip key={s} on={on} onClick={() => patch(i, { status: on ? null : s })}>
+                        {unitStatusWords(s, lang)}
+                      </Chip>
+                    );
+                  })}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {total && <p aria-live="polite" className="mt-2.5 text-[13px] font-extrabold text-foreground">{t("units.total", { summary: total })}</p>}
+      {error && <FieldError id={errorId}>{error}</FieldError>}
+    </div>
+  );
+}
+
+/**
  * A count as chips — 1 · 2 · 3 · 4 · 5 · « 6 et + » — storing the plain
  * number. The last chip writes its number and opens the box for a bigger
  * one; an answer no chip holds (a basement, -1) shows in the box as typed.
@@ -3089,7 +3245,7 @@ function LevelsField({
     );
   }
 
-  const floorOnly = attrs[FLOOR_ONLY_KEY] === "true";
+  const floorOnly = categorySlug !== BUILDING_SLUG && attrs[FLOOR_ONLY_KEY] === "true";
   const picked = floorOnly ? null : countChipOf(BUILDING_LEVELS, value);
   const moreOn = !floorOnly && (typing || picked === "more");
   const showBox = moreOn || (!floorOnly && value.trim() !== "" && picked === null);
@@ -3125,16 +3281,18 @@ function LevelsField({
         >
           {t("chips.orMore", { count: BUILDING_LEVELS.orMore })}
         </Chip>
-        <Chip
-          on={floorOnly}
-          onClick={() => {
-            setTyping(false);
-            // One floor of the house spans one level; which floor is asked under it.
-            onPatch(floorOnly ? { [FLOOR_ONLY_KEY]: "", [LEVELS_KEY]: "" } : { [FLOOR_ONLY_KEY]: "true", [LEVELS_KEY]: "1" });
-          }}
-        >
-          {floorOnlyWords(lang)}
-        </Chip>
+        {categorySlug !== BUILDING_SLUG && (
+          <Chip
+            on={floorOnly}
+            onClick={() => {
+              setTyping(false);
+              // One floor of the house spans one level; which floor is asked under it.
+              onPatch(floorOnly ? { [FLOOR_ONLY_KEY]: "", [LEVELS_KEY]: "" } : { [FLOOR_ONLY_KEY]: "true", [LEVELS_KEY]: "1" });
+            }}
+          >
+            {floorOnlyWords(lang)}
+          </Chip>
+        )}
       </div>
       {showBox && (
         <div className="mt-2 max-w-40">

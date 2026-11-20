@@ -12,7 +12,7 @@ import { placeRefusal, planFullResponse } from "@/lib/places/refusal";
 import { attributeOutOfBounds } from "@/lib/listings/input";
 import { missingPhotos } from "@/lib/listings/storage";
 import { can, roleIn } from "@/lib/pro/shops";
-import { asDealType } from "@/lib/listings/deal";
+import { asDealType, categoryAllowsDeal } from "@/lib/listings/deal";
 import { getSettings } from "@/lib/settings/server";
 
 /**
@@ -105,6 +105,15 @@ export async function POST(
       { error: "not_submittable", detail: t("notSubmittable", { status: label }) },
       { status: 409 },
     );
+  }
+
+  // A whole building is sold, not let (src/lib/listings/deal.ts): said first, before anything else is asked.
+  if (asDealType(listing.deal_type as string | null) === "rent") {
+    const { data: filed } = await admin.from("categories").select("slug").eq("id", listing.category_id).maybeSingle();
+    if (!categoryAllowsDeal((filed as { slug: string } | null)?.slug, "rent")) {
+      const t = await apiTranslator(req, "publishApi");
+      return NextResponse.json({ error: "category_sale_only", detail: t("categorySaleOnly") }, { status: 400 });
+    }
   }
 
   // Two things a listing cannot go live without, checked before any money moves.

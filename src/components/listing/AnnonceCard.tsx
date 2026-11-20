@@ -2,7 +2,7 @@ import { SafeImage } from "@/components/media/SafeImage";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { formatNumber, formatTND } from "@/lib/utils";
-import { Bath, BedDouble, Camera, Home, MapPin, Ruler, Store } from "lucide-react";
+import { Bath, BedDouble, Building2, Camera, Home, MapPin, Ruler, Store } from "lucide-react";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { IMAGE_BLUR_MAP } from "@/lib/imageBlurMap";
 import { coverPhoto } from "@/lib/listingCover";
@@ -13,6 +13,8 @@ import { categoryLabel } from "@/lib/i18n";
 import { governorateLabel } from "@/lib/tunisia";
 import { shownDelegation } from "@/lib/delegations";
 import { asDealType } from "@/lib/listings/deal";
+import { homesSummary, parseUnits, UNITS_KEY } from "@/lib/listings/units";
+import { langOf } from "@/lib/listings/levels";
 
 /**
  * One annonce, as a card — the same card on the home rails, in the
@@ -95,6 +97,8 @@ export async function AnnonceCard({
   const area = Number(attrs.area_sqm);
   const rooms = Number(attrs.rooms);
   const baths = Number(attrs.bathrooms);
+  // An immeuble says how many flats it holds instead of rooms.
+  const homes = homesSummary(parseUnits(attrs[UNITS_KEY]), langOf(locale));
   const where = shownDelegation(listing.governorate, listing.delegation, locale) ?? governorateLabel(listing.governorate, locale);
   const rent = asDealType(listing.deal_type) === "rent";
   const promoted = Boolean(listing.promo_home_featured || listing.promo_banner || listing.promo_top_listed);
@@ -203,6 +207,12 @@ export async function AnnonceCard({
             <span className="mazed-tabular inline-flex items-center gap-1">
               <Bath className="size-3" strokeWidth={2} aria-hidden />
               {t("catalogue.specBathrooms", { count: baths })}
+            </span>
+          )}
+          {homes && (
+            <span className="mazed-tabular inline-flex items-center gap-1">
+              <Building2 className="size-3" strokeWidth={2} aria-hidden />
+              {homes}
             </span>
           )}
         </p>

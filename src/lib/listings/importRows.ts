@@ -1,5 +1,5 @@
 import { TUNISIAN_GOVERNORATES, governorateLabel } from "@/lib/tunisia";
-import { asDealType, appliesTo, isoDay, type DealType } from "./deal";
+import { asDealType, appliesTo, categoryAllowsDeal, isoDay, type DealType } from "./deal";
 import { attributeOutOfBounds, num, phone, titleTooShort, type ListingBody } from "./input";
 import { LEVELS_KEY, levelsInWords } from "./levels";
 
@@ -245,6 +245,7 @@ const TYPE_WORDS: { slug: string; words: string[] }[] = [
   { slug: "terrain", words: ["terrain", "lot", "lotissement", "land", "أرض"] },
   { slug: "bureaux", words: ["bureau", "plateau", "office", "مكتب"] },
   { slug: "depots", words: ["depot", "entrepot", "hangar", "مستودع", "مخزن"] },
+  { slug: "immeubles", words: ["immeuble", "عمارة", "عمارات"] },
   // Last: « Villa duplex » is a villa on two levels; a « Duplex » alone is a flat.
   { slug: "appartements", words: ["duplex", "triplex", "دوبلكس", "تريبلكس"] },
 ];
@@ -377,6 +378,7 @@ export function interpretLine(
   const category = typeRaw === "" ? null : categoryOf(typeRaw, ctx.leaves);
   if (typeRaw === "") errors.push({ code: "type_missing" });
   else if (!category) errors.push({ code: "type_unknown", value: typeRaw });
+  else if (!categoryAllowsDeal(category.slug, deal)) errors.push({ code: "category_sale_only", value: typeRaw });
 
   const govRaw = get("governorate");
   let governorate = ctx.defaultGovernorate;

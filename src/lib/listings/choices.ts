@@ -57,6 +57,7 @@ const AREA_CHIPS: Record<string, readonly number[]> = {
   appartements: [60, 80, 100, 120, 150],
   villas: [150, 200, 300, 400],
   maisons: [150, 200, 300, 400],
+  immeubles: [200, 300, 400, 600, 1000],
   terrain: [200, 300, 500, 1000, 5000],
   fermes: [HECTARE, 2 * HECTARE, 5 * HECTARE, 10 * HECTARE],
   bureaux: [30, 50, 100, 200],

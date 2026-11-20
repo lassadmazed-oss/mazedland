@@ -309,6 +309,7 @@ export function parseArticleInput(body: Record<string, unknown>, { partial }: { 
 /** The guide tag a category's slug speaks to. */
 export const TAG_FOR_CATEGORY: Readonly<Record<string, ArticleTag>> = {
   appartements: "appartement",
+  immeubles: "appartement",
   maisons: "maison",
   villas: "maison",
   terrain: "terrain",

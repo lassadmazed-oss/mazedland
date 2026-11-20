@@ -75,8 +75,10 @@ import {
   Store,
   Trees,
   Waves,
+  Wallet,
 } from "lucide-react";
 import { langOf, levelsFact } from "@/lib/listings/levels";
+import { homesSummary, parseUnits, UNITS_KEY, unitStatusWords, unitTypeWords, unitsSummary } from "@/lib/listings/units";
 import { viewsShown } from "@/lib/listings/views";
 import type { Metadata } from "next";
 import { jsonLdSafe } from "@/lib/jsonld";
@@ -170,6 +172,7 @@ const FACT_ICONS: Record<string, React.ComponentType<{ className?: string; strok
   air_conditioning: Snowflake,
   heating: Flame,
   elevator: ArrowUpDown,
+  rent_income: Wallet,
   parking: Car,
   garden: Trees,
   pool: Waves,
@@ -419,6 +422,8 @@ export default async function AnnoncePage({
   const defKeys = defList.map((d) => d.field_key);
   const specs = defList
     .map((d) => {
+      // An immeuble's flats have their own table below.
+      if (d.field_key === UNITS_KEY) return null;
       // The floor and the levels in words: « طابق أرضي », « الطابق الثالث
       // والرابع » beside « دوبلكس », a villa's « زوز طوابق · دوبلكس » — and
       // never an old « 0 » floor on a whole villa (src/lib/listings/levels.ts).
@@ -453,6 +458,8 @@ export default async function AnnoncePage({
   const area = Number(attrs.area_sqm);
   const rooms = Number(attrs.rooms);
   const baths = Number(attrs.bathrooms);
+  const buildingUnits = parseUnits(attrs[UNITS_KEY]);
+  const homes = homesSummary(buildingUnits, langOf(locale));
   const keyFacts: { key: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; text: React.ReactNode }[] = [
     ...(Number.isFinite(area) && area > 0
       ? [{ key: "area", Icon: Ruler, text: t("areaValue", { area: formatNumber(area, locale) }) }]
@@ -461,6 +468,7 @@ export default async function AnnoncePage({
     ...(Number.isFinite(baths) && baths > 0
       ? [{ key: "baths", Icon: Bath, text: tRoot("catalogue.specBathrooms", { count: baths }) }]
       : []),
+    ...(homes ? [{ key: "units", Icon: Building2, text: homes }] : []),
   ];
 
   // Structured data. A plain Offer, not the auction-shaped Product with bidding
@@ -967,6 +975,36 @@ export default async function AnnoncePage({
                   );
                 })}
               </dl>
+            </section>
+          )}
+
+          {/* An immeuble: how many flats of which size, the shops, which are rented (0232). */}
+          {buildingUnits.length > 0 && (
+            <section className="mt-8">
+              <h2 className="mazed-h2 text-[18px] text-foreground">{t("buildingTitle")}</h2>
+              <p className="mt-1 text-[13px] text-muted">{unitsSummary(buildingUnits, langOf(locale))}</p>
+              <div className="mt-3 overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+                <table className="w-full text-start text-[14px]">
+                  <thead className="bg-surface-2 text-[11px] uppercase tracking-[0.08em] text-muted">
+                    <tr>
+                      <th scope="col" className="px-3 py-2 text-start font-bold">{t("buildingKind")}</th>
+                      <th scope="col" className="px-3 py-2 text-start font-bold">{t("buildingCount")}</th>
+                      <th scope="col" className="px-3 py-2 text-start font-bold">{t("buildingArea")}</th>
+                      <th scope="col" className="px-3 py-2 text-start font-bold">{t("buildingStatus")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {buildingUnits.map((u, i) => (
+                      <tr key={i} className="border-t border-border">
+                        <th scope="row" className="px-3 py-2.5 text-start font-bold text-foreground">{unitTypeWords(u.type, langOf(locale))}</th>
+                        <td className="mazed-tabular px-3 py-2.5 font-bold text-foreground">{u.count}</td>
+                        <td className="mazed-tabular px-3 py-2.5 text-muted">{u.area != null ? t("areaValue", { area: formatNumber(u.area, locale) }) : "—"}</td>
+                        <td className="px-3 py-2.5 text-muted">{u.status ? unitStatusWords(u.status, langOf(locale)) : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </section>
           )}
 

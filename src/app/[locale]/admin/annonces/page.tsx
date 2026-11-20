@@ -16,6 +16,7 @@ import { ListingDetail, type PanelListing } from "./ListingDetail";
 import { formatDate, formatTND } from "@/lib/utils";
 import { asDealType, firstMonthCost } from "@/lib/listings/deal";
 import { langOf, levelsFact } from "@/lib/listings/levels";
+import { unitsFact } from "@/lib/listings/units";
 import { categoryLabel } from "@/lib/i18n";
 import { governorateLabel, TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
 import { Inbox, Plus } from "lucide-react";
@@ -546,7 +547,8 @@ async function loadPanel(
   const attributes = defs
     .map((d) => {
       // The floor and the levels read as the annonce shows them (src/lib/listings/levels.ts).
-      const fact = levelsFact(d.field_key, r.attributes ?? {}, defKeys, langOf(locale));
+      const levels = levelsFact(d.field_key, r.attributes ?? {}, defKeys, langOf(locale));
+      const fact = levels !== undefined ? levels : unitsFact(d.field_key, r.attributes ?? {}, langOf(locale));
       if (fact !== undefined) {
         const key = `attributes.${d.field_key}`;
         return fact === null ? null : { label: tRoot.has(key) ? tRoot(key) : d.label, value: fact };

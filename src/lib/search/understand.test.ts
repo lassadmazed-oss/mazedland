@@ -179,3 +179,14 @@ describe("understand — rooms and rent periods", () => {
     expect(understand("villa 400 mlyoun").max).toBe(400_000);
   });
 });
+
+describe("understand — immeubles (0232)", () => {
+  it("reads « immeuble » and « عمارة » as the category", () => {
+    expect(understand("immeuble sfax")).toMatchObject({ cat: "immeubles", gov: "Sfax" });
+    expect(understand("عمارة للبيع في صفاقس")).toMatchObject({ cat: "immeubles", deal: "sale" });
+  });
+
+  it("keeps a flat in a building a flat", () => {
+    expect(understand("appartement dans un immeuble sousse")).toMatchObject({ cat: "appartements" });
+  });
+});

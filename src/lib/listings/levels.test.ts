@@ -162,3 +162,14 @@ describe("levelsInWords", () => {
     expect(levelsInWords("")).toBeNull();
   });
 });
+
+describe("an immeuble's levels (0232)", () => {
+  it("counts floors, with no duplex or triplex words", () => {
+    expect(levelsWords(3, "building", "fr", "immeubles")).toBe("3 niveaux");
+    expect(levelsWords(3, "building", "ar", "immeubles")).toBe("3 طوابق");
+    expect(levelsWords(2, "building", "ar", "immeubles")).toBe("زوز طوابق");
+    expect(levelsWords(1, "building", "fr", "immeubles")).toBe("Un niveau");
+    // A villa keeps its words.
+    expect(levelsWords(3, "building", "ar", "villas")).toBe("3 طوابق · تريبلكس");
+  });
+});

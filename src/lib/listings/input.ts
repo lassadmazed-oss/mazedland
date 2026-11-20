@@ -1,5 +1,6 @@
 import { asDealType, NO_RENT_FACTS, parseRentFacts } from "./deal";
 import { canonicalDelegation, governorateOfDelegation } from "@/lib/delegations";
+import { normalizeUnits, UNITS_KEY } from "./units";
 
 /**
  * What the publish wizard sends, read the way the server trusts it — shared by
@@ -183,6 +184,8 @@ const ATTRIBUTE_BOUNDS: Record<string, [min: number, max: number]> = {
   // How many levels it spans (src/lib/listings/levels.ts): 2 is a duplex.
   levels: [1, 20],
   year_built: [1850, new Date().getFullYear() + 3],
+  // What the rented flats of an immeuble bring in a month, in dinars (0232).
+  rent_income: [1, 1_000_000],
 };
 
 /**
@@ -205,6 +208,12 @@ export function saneAttributes(attrs: Record<string, unknown>): Record<string, u
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(attrs).slice(0, MAX_ATTRIBUTE_KEYS)) {
     if (k.length > 64) continue;
+    // A building's flats and shops: the lines that read, written canonically, or nothing (src/lib/listings/units.ts).
+    if (k === UNITS_KEY) {
+      const units = normalizeUnits(v);
+      if (units) out[k] = units;
+      continue;
+    }
     // Only what a form field holds: a number, a yes/no, a short text.
     if (!(typeof v === "number" || typeof v === "boolean" || typeof v === "string" || v === null)) continue;
     if (typeof v === "string" && v.length > MAX_ATTRIBUTE_TEXT) continue;

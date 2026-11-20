@@ -97,6 +97,8 @@ export function levelsWords(levels: number, style: LevelsStyle, lang: Lang, slug
     if (levels === 3) return lang === "ar" ? "تريبلكس" : "Triplex";
     return lang === "ar" ? arLevelCount(levels) : `${levels} niveaux`;
   }
+  // An immeuble counts its floors: « duplex » says nothing of a building of flats.
+  if (slug === "immeubles") return lang === "ar" ? arLevelCount(levels) : levels === 1 ? "Un niveau" : `${levels} niveaux`;
   if (lang === "ar") {
     if (levels === 2) return "زوز طوابق · دوبلكس";
     if (levels === 3) return "3 طوابق · تريبلكس";
