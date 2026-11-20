@@ -1063,6 +1063,11 @@
     "viewsPublic": "{count, plural, zero {حتى مشاهدة} one {مشاهدة وحدة} two {زوز مشاهدات} few {# مشاهدات} many {# مشاهدة} other {# مشاهدة}}",
     "viewsTitle": "زوار مختلفين من نهار تنشر",
     "specsTitle": "المواصفات",
+    "buildingTitle": "تفاصيل العمارة",
+    "buildingKind": "النوع",
+    "buildingCount": "العدد",
+    "buildingArea": "مساحة الواحد",
+    "buildingStatus": "الحالة",
     "descriptionTitle": "الوصف",
     "backToCatalogue": "→ كل الإعلانات",
     "yes": "نعم",
@@ -1283,7 +1288,9 @@
     "elevator": "مصعد",
     "parking": "مأوى سيارة",
     "garden": "جنينة",
-    "pool": "مسبح"
+    "pool": "مسبح",
+    "units": "الشقق والمحلات",
+    "rent_income": "مداخيل الكراء في الشهر"
   },
   "apiErrors": {
     "auth": "انتهت صلاحية الجلسة. سجّل دخولك من جديد للمواصلة.",
@@ -1849,6 +1856,15 @@
       "unitQuestion": "{kind, select, flat {الشقة على قدّاش من طابق؟} other {على قدّاش من طابق؟}}",
       "whichFloor": "أما طابق؟"
     },
+    "units": {
+      "hint": "كبس على النوع باش تزيدو، وعاود كبس عليه باش تزيد واحد آخر.",
+      "less": "نقّص واحد",
+      "more": "زيد واحد",
+      "remove": "امسح السطر هذا",
+      "areaEach": "مساحة الواحد (اختياري)",
+      "statusLabel": "الحالة",
+      "total": "المجموع: {summary}"
+    },
     "rentTitle": "العنوان والكراء",
     "rentHint": "نقترح العنوان حسب ما أدخلته. الكراء هو المبلغ في الشهر؛ والباقي عمّر اللي تعرفو.",
     "rentLabel": "الكراء في الشهر",
@@ -1992,7 +2008,8 @@
       "fermes": "ضيعة",
       "locaux-commerciaux": "محل تجاري",
       "bureaux": "مكتب",
-      "depots": "مخزن"
+      "depots": "مخزن",
+      "immeubles": "عمارة"
     },
     "publishForMePlanHint": "{count, plural, zero {شخصي · الاشتراك كامل} one {شخصي · بلاصة وحدة في الاشتراك} two {شخصي · زوز بلايص في الاشتراك} few {شخصي · # بلايص في الاشتراك} many {شخصي · # بلاصة في الاشتراك} other {شخصي · # بلاصة في الاشتراك}}",
     "ownPlanExplain": "الإعلان الشخصي متاعك يتحسب في اشتراك « {name} »، كيف إعلانات الوكالة. {count, plural, zero {ما بقى حتى إعلان.} one {بقى إعلان واحد.} two {بقاو زوز إعلانات.} few {بقاو # إعلانات.} many {بقى # إعلانًا.} other {بقى # إعلان.}}",
@@ -2083,6 +2100,7 @@
   "publishApi": {
     "incomplete": "الصنف والعنوان والولاية مطلوبة.",
     "categoryNotLeaf": "اختر صنفًا فرعيًا.",
+    "categorySaleOnly": "العمارة تتباع موش تتكرى: اختار «للبيع».",
     "priceRequired": "اكتب السوم، أو اختار « السوم عند الطلب ».",
     "priceOnRequestOff": "« السوم عند الطلب » ما عادش موجود للنوع هذا من الإعلانات: اكتب السوم.",
     "notEditable": "هذا الإعلان قيد المعالجة حاليًا.",
@@ -5040,7 +5058,8 @@
       "issue": {
         "deal_unknown": "المعاملة ما تعرفتش: «{value}» (Vente ولا Location).",
         "type_missing": "نوع العقار ناقص.",
-        "type_unknown": "النوع ما تعرفش: «{value}» (Appartement, Villa, Maison, Terrain, Ferme, Local commercial, Bureau, Dépôt).",
+        "type_unknown": "النوع ما تعرفش: «{value}» (Appartement, Villa, Maison, Immeuble, Terrain, Ferme, Local commercial, Bureau, Dépôt).",
+        "category_sale_only": "«{value}» ما يتكراش: العمارة تتباع برك.",
         "governorate_unknown": "الولاية ما تعرفتش: «{value}».",
         "price_missing": "السوم ناقص (ولا اكتب « عند الطلب »).",
         "price_invalid": "السعر ما يتقراش: «{value}».",

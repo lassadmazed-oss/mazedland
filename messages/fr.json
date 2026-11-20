@@ -1063,6 +1063,11 @@
     "viewsPublic": "{count, plural, one {# vue} other {# vues}}",
     "viewsTitle": "Visiteurs différents depuis la publication",
     "specsTitle": "Caractéristiques",
+    "buildingTitle": "Détail de l'immeuble",
+    "buildingKind": "Type",
+    "buildingCount": "Nombre",
+    "buildingArea": "Surface de chacun",
+    "buildingStatus": "Occupation",
     "descriptionTitle": "Description",
     "backToCatalogue": "← Toutes les annonces",
     "yes": "Oui",
@@ -1283,7 +1288,9 @@
     "elevator": "Ascenseur",
     "parking": "Parking / garage",
     "garden": "Jardin",
-    "pool": "Piscine"
+    "pool": "Piscine",
+    "units": "Appartements et locaux",
+    "rent_income": "Loyers perçus par mois"
   },
   "apiErrors": {
     "auth": "Votre session a expiré. Reconnectez-vous pour continuer.",
@@ -1849,6 +1856,15 @@
       "unitQuestion": "{kind, select, flat {L'appartement est sur combien de niveaux ?} other {Sur combien de niveaux ?}}",
       "whichFloor": "Quel étage ?"
     },
+    "units": {
+      "hint": "Touchez un type pour l'ajouter, touchez-le encore pour en ajouter un autre.",
+      "less": "Un de moins",
+      "more": "Un de plus",
+      "remove": "Retirer cette ligne",
+      "areaEach": "Surface de chacun (facultatif)",
+      "statusLabel": "Occupation",
+      "total": "Total : {summary}"
+    },
     "rentTitle": "Titre et loyer",
     "rentHint": "Le titre est proposé d'après ce que vous avez saisi. Le loyer est le montant par mois ; le reste, remplissez ce que vous savez.",
     "rentLabel": "Loyer mensuel",
@@ -1992,7 +2008,8 @@
       "fermes": "Ferme",
       "locaux-commerciaux": "Local commercial",
       "bureaux": "Bureau",
-      "depots": "Dépôt"
+      "depots": "Dépôt",
+      "immeubles": "Immeuble"
     },
     "publishForMePlanHint": "{count, plural, =0 {Personnelle · abonnement complet} one {Personnelle · # place dans l'abonnement} other {Personnelle · # places dans l'abonnement}}",
     "ownPlanExplain": "Votre annonce personnelle compte dans l'abonnement de « {name} », comme celles de l'agence. {count, plural, one {Il reste # annonce.} other {Il reste # annonces.}}",
@@ -2083,6 +2100,7 @@
   "publishApi": {
     "incomplete": "Catégorie, titre et gouvernorat sont requis.",
     "categoryNotLeaf": "Choisissez une sous-catégorie.",
+    "categorySaleOnly": "Un immeuble se vend, il ne se loue pas : choisissez « À vendre ».",
     "priceRequired": "Écrivez le prix, ou choisissez « Prix sur demande ».",
     "priceOnRequestOff": "« Prix sur demande » n'est plus proposé pour ce type d'annonce : écrivez le prix.",
     "notEditable": "Cette annonce est déjà en cours de traitement.",
@@ -5040,7 +5058,8 @@
       "issue": {
         "deal_unknown": "Transaction non reconnue : « {value} » (Vente ou Location).",
         "type_missing": "Type de bien manquant.",
-        "type_unknown": "Type non reconnu : « {value} » (Appartement, Villa, Maison, Terrain, Ferme, Local commercial, Bureau, Dépôt).",
+        "type_unknown": "Type non reconnu : « {value} » (Appartement, Villa, Maison, Immeuble, Terrain, Ferme, Local commercial, Bureau, Dépôt).",
+        "category_sale_only": "« {value} » ne se loue pas : un immeuble se vend seulement.",
         "governorate_unknown": "Gouvernorat non reconnu : « {value} ».",
         "price_missing": "Prix manquant (ou écrivez « sur demande »).",
         "price_invalid": "Prix illisible : « {value} ».",

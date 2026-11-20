@@ -128,6 +128,7 @@ export function readTracking(params: { utm_source?: string | null; utm_medium?: 
 /** Category labels are plural (« Maisons »); a post is about one. */
 const SINGULAR: Record<string, { fr: string; ar: string }> = {
   maisons: { fr: "Maison", ar: "دار" },
+  immeubles: { fr: "Immeuble", ar: "عمارة" },
   villas: { fr: "Villa", ar: "فيلا" },
   appartements: { fr: "Appartement", ar: "شقة" },
   terrain: { fr: "Terrain", ar: "أرض" },

@@ -82,7 +82,7 @@ Reading the property:
 - floor_only: true only when one floor of a house or a villa is offered, not the whole of it; otherwise false.
 - category_slug must be one of these slugs, or null:
 ${cats}
-  دار / houch / maison / house → maisons; فيلا → villas; شقة / appartement / flat → appartements; أرض / مقسم / lot / terrain / land → terrain; ضيعة / هنشير / ferme / farm → fermes; حانوت / محل / local / shop → locaux-commerciaux; مكتب / bureau / office → bureaux; مخزن / دبو / dépôt / warehouse → depots.
+  دار / houch / maison / house → maisons; عمارة / immeuble (a whole building of flats) → immeubles; فيلا → villas; شقة / appartement / flat → appartements; أرض / مقسم / lot / terrain / land → terrain; ضيعة / هنشير / ferme / farm → fermes; حانوت / محل / local / shop → locaux-commerciaux; مكتب / bureau / office → bureaux; مخزن / دبو / dépôt / warehouse → depots.
 - governorate must be exactly one of: ${govs} — or null. Write the French name (صفاقس → Sfax, سوسة → Sousse, نابل → Nabeul, تونس العاصمة → Tunis).
 - delegation is the town, delegation or neighbourhood as the seller named it (keep it short), or null.
 - furnished: "furnished" (مفروش / meublé), "semi" (نص مفروش), "unfurnished" (فارغ / vide), or null. Rent only.

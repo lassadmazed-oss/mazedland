@@ -105,6 +105,18 @@ export function firstMonthCost(f: {
   return parts.reduce((a, b) => a + b, 0);
 }
 
+/**
+ * Categories that are only ever sold: a whole building is not a rental (0232,
+ * the owner's choice 2026-11-20). The form hides them under « À louer », and
+ * the submit refuses a rental filed under one.
+ */
+export const SALE_ONLY_CATEGORIES: readonly string[] = ["immeubles"];
+
+/** Whether a category (by slug) is offered for this deal. */
+export function categoryAllowsDeal(slug: string | null | undefined, deal: DealType): boolean {
+  return !(deal === "rent" && slug != null && SALE_ONLY_CATEGORIES.includes(slug));
+}
+
 /** Whether a catalogue question is asked for this deal (null = both). */
 export function appliesTo(dealTypes: readonly string[] | null | undefined, deal: DealType): boolean {
   return !dealTypes || dealTypes.length === 0 || dealTypes.includes(deal);

@@ -69,6 +69,8 @@ const CATEGORY_WORDS: [string, string[]][] = [
   ["locaux-commerciaux", ["local", "locaux", "commerce", "commercial", "magasin", "محل", "محلات", "حانوت"]],
   ["bureaux", ["bureau", "bureaux", "مكتب", "مكاتب"]],
   ["depots", ["depot", "depots", "entrepot", "hangar", "مستودع", "مخزن", "هنقار"]],
+  // Last: « un appartement dans un immeuble » is a flat, the first word that matches wins.
+  ["immeubles", ["immeuble", "immeubles", "عمارة", "عمارات"]],
 ];
 // A rent period (« 700 dt par mois », « في الشهر ») says « to rent » as well as the verb does.
 const RENT_WORDS = [

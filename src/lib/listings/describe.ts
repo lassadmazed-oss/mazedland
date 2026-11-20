@@ -18,6 +18,7 @@
 import type { DealType, Furnished } from "./deal";
 import { arLevelCount, arOrdinal, frOrdinal, type LevelsStyle } from "./levels";
 import { listOfFields } from "./wizard";
+import { unitLineWords, unitsSummary, type BuildingUnit } from "./units";
 import { delegationLabel } from "@/lib/delegations";
 import { governorateLabel } from "@/lib/tunisia";
 import { formatDate, formatNumber } from "@/lib/utils";
@@ -31,6 +32,7 @@ const NOUNS: Record<string, Record<Lang, { word: string; g: Gender }>> = {
   appartements: { fr: { word: "Appartement", g: "m" }, ar: { word: "شقة", g: "f" } },
   villas: { fr: { word: "Villa", g: "f" }, ar: { word: "فيلا", g: "f" } },
   maisons: { fr: { word: "Maison", g: "f" }, ar: { word: "دار", g: "f" } },
+  immeubles: { fr: { word: "Immeuble", g: "m" }, ar: { word: "عمارة", g: "f" } },
   terrain: { fr: { word: "Terrain", g: "m" }, ar: { word: "أرض", g: "f" } },
   fermes: { fr: { word: "Ferme", g: "f" }, ar: { word: "ضيعة", g: "f" } },
   "locaux-commerciaux": { fr: { word: "Local commercial", g: "m" }, ar: { word: "محل تجاري", g: "m" } },
@@ -68,6 +70,10 @@ export type DescribeInput = {
   levelsStyle?: LevelsStyle | null;
   /** A house or a villa of which one floor only is offered: « Étage de villa ». */
   floorOnly?: boolean;
+  /** An immeuble's flats and shops (src/lib/listings/units.ts): « 6 appartements : 4 × S+2 … ». */
+  units?: readonly BuildingUnit[];
+  /** What the rented flats of an immeuble bring in a month, in dinars. */
+  rentIncome?: number | null;
   /** The yes/no questions answered yes, with the label the form shows for each. */
   yes: { key: string; label: string }[];
   governorate: string | null;
@@ -195,6 +201,17 @@ export function describeListing(input: DescribeInput): string {
     sizes.push(floorText(floor, lang));
   }
   if (sizes.length > 0) lines.push(`${capitalize(sizes.join(fr ? ", " : "، "))}.`);
+
+  // An immeuble: how many flats and shops, of which size, then what it brings in.
+  const units = input.units ?? [];
+  if (units.length > 0) {
+    const summary = unitsSummary(units, lang);
+    const detail = units.map((u) => unitLineWords(u, lang)).join(fr ? ", " : "، ");
+    lines.push(fr ? `Il comprend ${summary} : ${detail}.` : `${g === "f" ? "فيها" : "فيه"} ${summary}: ${detail}.`);
+  }
+  if (input.rentIncome != null && input.rentIncome > 0 && !rent) {
+    lines.push(fr ? `Loyers perçus : ${num(input.rentIncome, lang)} DT par mois.` : `مداخيل الكراء: ${num(input.rentIncome, lang)} د.ت في الشهر.`);
+  }
 
   // The year: « neuf » when it is this one.
   if (n.year_built != null && n.year_built > 0) {

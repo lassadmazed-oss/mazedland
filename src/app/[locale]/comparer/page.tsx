@@ -10,6 +10,7 @@ import { shownDelegation } from "@/lib/delegations";
 import { formatDate, formatNumber, formatTND } from "@/lib/utils";
 import { asDealType } from "@/lib/listings/deal";
 import { langOf, levelsFact } from "@/lib/listings/levels";
+import { unitsFact } from "@/lib/listings/units";
 import { bestOf, comparable, parseCompareIds, pricePerSqm } from "@/lib/compare";
 import { getSettings } from "@/lib/settings/server";
 import { Ltr } from "@/components/ui/Ltr";
@@ -115,6 +116,8 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
   const attrValue = (r: Row, key: string): string => {
     const fact = levelsFact(key, r.attributes ?? {}, keysOf.get(one(r.category)?.id ?? "") ?? [], langOf(locale));
     if (fact !== undefined) return fact ?? "—";
+    const inside = unitsFact(key, r.attributes ?? {}, langOf(locale));
+    if (inside !== undefined) return inside ?? "—";
     const raw = (r.attributes ?? {})[key];
     if (raw == null || raw === "" || raw === false) return "—";
     if (raw === true) return tRoot("listing.yes");

@@ -335,3 +335,49 @@ describe("writing the description into the box", () => {
     expect(appendDescription("Très lumineux.\n", generated)).toBe(`Très lumineux.\n\n${generated}`);
   });
 });
+
+describe("describeListing — an immeuble (0232)", () => {
+  const building: DescribeInput = {
+    locale: "fr",
+    deal: "sale",
+    categorySlug: "immeubles",
+    categoryLabel: "Immeubles",
+    numbers: { area_sqm: 333, levels: 3, year_built: 2012 },
+    levelsStyle: "building",
+    units: [
+      { type: "s2", count: 4, area: 95, status: "rented" },
+      { type: "s3", count: 2, area: null, status: null },
+      { type: "shop", count: 1, area: 40, status: null },
+    ],
+    rentIncome: 2400,
+    yes: [{ key: "elevator", label: "Ascenseur" }],
+    governorate: "Monastir",
+    delegation: null,
+    quartier: null,
+    furnished: null,
+    availableFrom: null,
+    today: "2026-11-20",
+  };
+
+  it("says how many flats and shops, of which size, and what the rents bring in", () => {
+    const text = describeListing(building);
+    expect(text).toContain("Immeuble à vendre à Monastir.");
+    expect(text).toContain("Surface de 333 m², sur 3 niveaux.");
+    expect(text).toContain("Il comprend 6 appartements · 1 local commercial : 4 × \u2066S+2\u2069 · 95 m² · Loué, 2 × \u2066S+3\u2069, 1 × Local commercial · 40 m².");
+    expect(text).toMatch(/Loyers perçus : 2\s400 DT par mois\./);
+  });
+
+  it("says it in Arabic, the building being feminine", () => {
+    const text = describeListing({ ...building, locale: "ar" });
+    expect(text).toContain("عمارة للبيع");
+    expect(text).toContain("فيها 6 شقق · محل: 4 × \u2066S+2\u2069 · 95 م² · مكرية، 2 × \u2066S+3\u2069، 1 × محل · 40 م².");
+    expect(text).toContain("مداخيل الكراء:");
+  });
+
+  it("says nothing of flats or rents when none were given, and never the rents of a rental", () => {
+    const bare = describeListing({ ...building, units: [], rentIncome: null });
+    expect(bare).not.toContain("comprend");
+    expect(bare).not.toContain("Loyers");
+    expect(describeListing({ ...building, deal: "rent" })).not.toContain("Loyers");
+  });
+});

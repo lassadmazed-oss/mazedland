@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   appliesTo,
   asDealType,
+  categoryAllowsDeal,
   closedStatus,
   dealLabelKey,
   firstMonthCost,
@@ -93,5 +94,21 @@ describe("appliesTo", () => {
     expect(appliesTo([], "sale")).toBe(true);
     expect(appliesTo(["sale"], "rent")).toBe(false);
     expect(appliesTo(["sale"], "sale")).toBe(true);
+  });
+});
+
+describe("categoryAllowsDeal (0232)", () => {
+  it("sells a whole building and never lets it", () => {
+    expect(categoryAllowsDeal("immeubles", "sale")).toBe(true);
+    expect(categoryAllowsDeal("immeubles", "rent")).toBe(false);
+  });
+
+  it("lets every other category be sold or let, and knows nothing of no category", () => {
+    for (const slug of ["appartements", "maisons", "villas", "terrain", "bureaux", "locaux-commerciaux", "depots", "fermes"]) {
+      expect(categoryAllowsDeal(slug, "rent")).toBe(true);
+      expect(categoryAllowsDeal(slug, "sale")).toBe(true);
+    }
+    expect(categoryAllowsDeal(null, "rent")).toBe(true);
+    expect(categoryAllowsDeal(undefined, "rent")).toBe(true);
   });
 });
