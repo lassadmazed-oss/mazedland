@@ -8741,6 +8741,7 @@
         "no_phone": "le téléphone",
         "do_not_contact": "ce numéro est sur la liste « ne pas contacter »",
         "no_category": "la catégorie",
+        "category_sale_only": "un immeuble se vend, il ne se loue pas : changez la transaction ou la catégorie",
         "no_governorate": "le gouvernorat",
         "no_title": "le titre",
         "no_reply": "sa réponse",

@@ -128,6 +128,12 @@ describe("draftToListingBody", () => {
     expect(fields.price_on_request).toBe(true);
   });
 
+  it("asks an immeuble neither pieces nor bathrooms: its flats are told by units (0232)", () => {
+    const building = readDraft({ ...draft, categorySlug: "immeubles", rooms: 4, bathrooms: 2, levels: 4 });
+    const fields = listingFields(draftToListingBody(building, { categoryId: "c", contactName: null, contactPhone: "+21658415521" }));
+    expect(fields.attributes).toEqual({ area_sqm: 180, levels: 4, titled: true });
+  });
+
   it("carries the rent facts only for a rent", () => {
     const rent = readDraft({ ...draft, deal: "rent", price: 900, deposit: 1800, furnished: "furnished" });
     const f = listingFields(draftToListingBody(rent, { categoryId: "c", contactName: null, contactPhone: "+21658415521" }));
@@ -156,6 +162,14 @@ describe("confirmBlockers", () => {
 
   it("asks for what the annonce cannot do without", () => {
     expect(confirmBlockers({ ...ok, draft: readDraft({}) })).toEqual(["no_category", "no_governorate", "no_title"]);
+  });
+
+  it("does not let a building be let: it is sold (0232)", () => {
+    const building = readDraft({ categorySlug: "immeubles", governorate: "Sfax", title: "عمارة", deal: "sale" });
+    expect(confirmBlockers({ ...ok, draft: building })).toEqual([]);
+    expect(confirmBlockers({ ...ok, draft: { ...building, deal: "rent" } })).toEqual(["category_sale_only"]);
+    // Every other category may be let.
+    expect(confirmBlockers({ ...ok, draft: { ...draft, deal: "rent" } })).toEqual([]);
   });
 
   it("is only for a lead that has not said yes already", () => {

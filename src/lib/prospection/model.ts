@@ -21,6 +21,8 @@ import type { AdminScopes } from "@/lib/admin/sections";
 import type { ListingDraft } from "@/lib/ai/listing";
 import type { ListingBody } from "@/lib/listings/input";
 import { latinDigits } from "@/lib/moderation/rules";
+import { categoryAllowsDeal } from "@/lib/listings/deal";
+import { BUILDING_SLUG } from "@/lib/listings/units";
 
 /**
  * Whose leads a console member may open. The whole-console admin (the owner)
@@ -171,8 +173,10 @@ export function draftToListingBody(
 ): ListingBody {
   const attributes: Record<string, number | boolean> = {};
   if (d.areaSqm != null) attributes.area_sqm = d.areaSqm;
-  if (d.rooms != null) attributes.rooms = d.rooms;
-  if (d.bathrooms != null) attributes.bathrooms = d.bathrooms;
+  // « Pièces » and « salles de bain » are not questions of an immeuble (0232): its flats are told by `units`, and a stray S+4 on a building misleads.
+  const building = d.categorySlug === BUILDING_SLUG;
+  if (d.rooms != null && !building) attributes.rooms = d.rooms;
+  if (d.bathrooms != null && !building) attributes.bathrooms = d.bathrooms;
   if (d.floor != null) attributes.floor = d.floor;
   if (d.levels != null) attributes.levels = d.levels;
   if (d.floorOnly) {
@@ -211,7 +215,7 @@ export function draftToListingBody(
 // ── What stands in the way ──────────────────────────────────────────────────
 
 export type ConfirmBlocker =
-  | "wrong_step" | "is_agency" | "no_phone" | "do_not_contact" | "no_category" | "no_governorate" | "no_title" | "no_reply" | "no_channel";
+  | "wrong_step" | "is_agency" | "no_phone" | "do_not_contact" | "no_category" | "category_sale_only" | "no_governorate" | "no_title" | "no_reply" | "no_channel";
 
 /**
  * Why a lead cannot be marked « the owner said yes » yet. The reply is what
@@ -233,6 +237,8 @@ export function confirmBlockers(input: {
   if (!input.phone) out.push("no_phone");
   if (input.doNotContact) out.push("do_not_contact");
   if (!input.draft.categorySlug) out.push("no_category");
+  // A whole building is sold, never let (src/lib/listings/deal.ts).
+  else if (!categoryAllowsDeal(input.draft.categorySlug, input.draft.deal)) out.push("category_sale_only");
   if (!input.draft.governorate) out.push("no_governorate");
   if (!input.draft.title) out.push("no_title");
   if (input.reply.trim().length < 2) out.push("no_reply");

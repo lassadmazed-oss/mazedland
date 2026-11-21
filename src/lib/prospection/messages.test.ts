@@ -66,7 +66,7 @@ describe("Prospection messages", () => {
       ["adminProspection.work.outcome", ["no_answer", "thinking", "interested", "refused", "wrong_number"]],
       ["adminProspection.work.channel", ["whatsapp", "sms", "call", "messenger", "other"]],
       ["adminProspection.work.event", ["created", "contacted", "no_answer", "thinking", "interested", "refused", "wrong_number", "confirmed", "published", "sms", "note", "assigned", "broker"]],
-      ["adminProspection.work.confirmBlockers", ["wrong_step", "is_agency", "no_phone", "do_not_contact", "no_category", "no_governorate", "no_title", "no_reply", "no_channel"]],
+      ["adminProspection.work.confirmBlockers", ["wrong_step", "is_agency", "no_phone", "do_not_contact", "no_category", "category_sale_only", "no_governorate", "no_title", "no_reply", "no_channel"]],
       ["adminProspection.work.publishBlockers", ["wrong_step", "no_listing", "photos", "photos_not_checked", "no_price"]],
       ["adminProspection.new.errors", ["too_short", "do_not_contact", "rate_limited", "failed"]],
       ["adminProspection.agencies.stage", ["to_call", "contacted", "interested", "signed_up", "posted", "declined"]],
