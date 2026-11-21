@@ -24,7 +24,8 @@ export const UNITS_KEY = "units";
 /** The category that asks it, and that is sold, never let (a whole building is not a rental). */
 export const BUILDING_SLUG = "immeubles";
 
-export const HOME_UNIT_TYPES = ["studio", "s1", "s2", "s3", "s4"] as const;
+// « flat »: a dwelling whose size the seller did not say (« Immeuble de 40 appartements »): counted as a flat, with no S+n.
+export const HOME_UNIT_TYPES = ["studio", "s1", "s2", "s3", "s4", "flat"] as const;
 export const OTHER_UNIT_TYPES = ["shop", "office", "garage"] as const;
 export const UNIT_TYPES = [...HOME_UNIT_TYPES, ...OTHER_UNIT_TYPES] as const;
 export type UnitType = (typeof UNIT_TYPES)[number];
@@ -131,11 +132,12 @@ export function unitTotals(units: readonly BuildingUnit[]): UnitTotals {
 /** « S+2 » is written in Latin in both languages, isolated so right-to-left does not turn it into « 2+S ». */
 const LTR = (s: string) => `⁦${s}⁩`;
 
-const SIZE_WORDS: Record<UnitHome, string> = { studio: "", s1: "S+1", s2: "S+2", s3: "S+3", s4: "S+4" };
+const SIZE_WORDS: Record<UnitHome, string> = { studio: "", flat: "", s1: "S+1", s2: "S+2", s3: "S+3", s4: "S+4" };
 
 /** The kind of one unit, as a line of the table names it: « S+2 », « ستوديو », « محل ». */
 export function unitTypeWords(type: UnitType, lang: Lang): string {
   if (type === "s4") return `${LTR("S+4")} ${lang === "ar" ? "وأكثر" : "et plus"}`;
+  if (type === "flat") return lang === "ar" ? "شقة (النوع ما تحدّدش)" : "Appartement (type non précisé)";
   if (isHomeType(type) && type !== "studio") return LTR(SIZE_WORDS[type]);
   if (type === "studio") return lang === "ar" ? "ستوديو" : "Studio";
   if (type === "shop") return lang === "ar" ? "محل" : "Local commercial";
