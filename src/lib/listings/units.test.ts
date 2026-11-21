@@ -112,6 +112,16 @@ describe("unitTotals and the words", () => {
     expect(homesSummary([u("shop", 2)], "ar")).toBe("");
   });
 
+  it("counts a dwelling of no stated size as a flat (« 40 appartements »)", () => {
+    expect(parseUnits("flat:40")).toEqual([u("flat", 40)]);
+    expect(unitTotals([u("flat", 40), u("s2", 2)]).homes).toBe(42);
+    expect(unitsSummary([u("flat", 40)], "ar")).toBe("40 شقة");
+    expect(unitsSummary([u("flat", 40)], "fr")).toBe("40 appartements");
+    expect(unitTypeWords("flat", "ar")).toBe("شقة (النوع ما تحدّدش)");
+    expect(unitTypeWords("flat", "fr")).toBe("Appartement (type non précisé)");
+    expect(addUnit([u("flat", 1)], "flat")).toEqual([u("flat", 2)]);
+  });
+
   it("writes S+n in Latin, isolated, in both languages", () => {
     expect(unitTypeWords("s2", "ar")).toBe("⁦S+2⁩");
     expect(unitTypeWords("s2", "fr")).toBe("⁦S+2⁩");
