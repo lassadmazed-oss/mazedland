@@ -10,8 +10,9 @@ import { settleUpload, trackUpload } from "@/lib/uploadsInFlight";
 import { useToast } from "@/components/ui/Toast";
 import { useSetting } from "@/components/settings/SettingsProvider";
 import { trackEvent } from "@/lib/analytics/events";
+import { swapPhoto } from "@/lib/listings/photoSwap";
 import {
-  ArrowLeft, ArrowRight, Camera, CircleAlert, Loader2, RotateCw, Star, Trash2, X,
+  ArrowLeft, ArrowRight, Camera, CircleAlert, Loader2, RefreshCw, RotateCw, Star, Trash2, X,
 } from "lucide-react";
 
 /**
@@ -99,6 +100,12 @@ export function PhotoUploader({
   const max = useSetting("listing_max_photos");
   const watermark = useSetting("feature_watermark");
   const fileRef = useRef<HTMLInputElement>(null);
+  // « Changer »: one photo taken in the place of another. The tile being
+  // replaced stays where it is (with a spinner) until the new one has landed.
+  const replaceRef = useRef<HTMLInputElement>(null);
+  const replaceTarget = useRef<string | null>(null);
+  /** The pending upload's id → the path of the photo it will take the place of. */
+  const replacing = useRef(new Map<string, string>());
   const [pending, setPending] = useState<Pending[]>([]);
   const [dragOver, setDragOver] = useState(false);
 
@@ -114,6 +121,7 @@ export function PhotoUploader({
     cancelled.current.add(id);
     controllers.current.get(id)?.abort();
     controllers.current.delete(id);
+    replacing.current.delete(id);
     setPending((p) => p.filter((x) => x.id !== id));
     URL.revokeObjectURL(id);
   }, []);
@@ -152,7 +160,11 @@ export function PhotoUploader({
       if (!path) return;
       setPending((p) => p.filter((x) => x.id !== id));
       URL.revokeObjectURL(id);
-      onChange((prev) => [...prev, { path }]);
+      // A replacement takes the old photo's place (same position, so the same
+      // cover); any other photo joins the end.
+      const old = replacing.current.get(id);
+      replacing.current.delete(id);
+      onChange((prev) => (old ? swapPhoto(prev, old, path, (p) => ({ path: p })) : [...prev, { path }]));
     },
     [onChange],
   );
@@ -163,7 +175,8 @@ export function PhotoUploader({
   // still going: this component is unmounted then, its photos are not, and a
   // count kept here froze at its last value and held « Publier » for good.
 
-  const room = max - photos.length - pending.length;
+  // A photo going up to replace another takes no room of its own.
+  const room = max - photos.length - pending.filter((p) => !replacing.current.has(p.id)).length;
 
   /**
    * Compress and stamp, take a signed URL, PUT the bytes. Returns the stored
@@ -358,6 +371,37 @@ export function PhotoUploader({
     [disabled, room, max, toast, send, settle, mint, t, onPendingChange],
   );
 
+  /** One photo, sent to take the place of the one at `oldPath`. */
+  const replaceOne = useCallback(
+    async (oldPath: string, file: File) => {
+      if (disabled) return;
+      const looksLikeImage = (f: File) => f.type.startsWith("image/") || /\.(hei[cf]|jpe?g|png|webp|avif|gif)$/i.test(f.name);
+      if (!looksLikeImage(file)) {
+        toast(t("filesIgnored", { count: 1 }), "warning");
+        return;
+      }
+      if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
+        toast(t("tooBig", { name: file.name, mb: MAX_PHOTO_MB }), "error");
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      replacing.current.set(url, oldPath);
+      setPending((p) => [...p, { id: url, file, preview: url, phase: "preparing" as const }]);
+      const report = onPendingChange;
+      trackUpload(report, url);
+      const reservation = mint(["webp"]).then(
+        (urls) => { reserved.current.push(...urls); },
+        () => {},
+      );
+      try {
+        settle(url, await send(file, url, reservation));
+      } finally {
+        settleUpload(report, url);
+      }
+    },
+    [disabled, toast, t, send, settle, mint, onPendingChange],
+  );
+
   function retry(id: string) {
     const item = pending.find((p) => p.id === id);
     if (!item) return;
@@ -403,6 +447,9 @@ export function PhotoUploader({
     });
   }
 
+  const replacingPaths = new Set(
+    pending.filter((p) => p.phase !== "failed" && replacing.current.has(p.id)).map((p) => replacing.current.get(p.id) as string),
+  );
   const sending = pending.filter((p) => p.phase !== "failed").length;
   const failed = pending.filter((p) => p.phase === "failed").length;
 
@@ -449,6 +496,20 @@ export function PhotoUploader({
         }}
       />
 
+      <input
+        ref={replaceRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          const target = replaceTarget.current;
+          e.target.value = "";
+          replaceTarget.current = null;
+          if (file && target) void replaceOne(target, file);
+        }}
+      />
+
       {/* What is happening right now — said once, above the grid. */}
       {sending > 0 && (
         <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-surface-2 px-3 py-2 text-[12.5px] font-semibold text-foreground">
@@ -486,6 +547,27 @@ export function PhotoUploader({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={propertyPhotoUrl(p.path)} alt="" className="size-full object-contain" />
+
+              {replacingPaths.has(p.path) ? (
+                <div className="absolute inset-0 z-[3] grid place-items-center gap-1 bg-background/70">
+                  <Loader2 className="size-5 animate-spin text-foreground" />
+                  <span className="text-[10px] font-extrabold text-foreground">{t("replacing")}</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => {
+                    replaceTarget.current = p.path;
+                    replaceRef.current?.click();
+                  }}
+                  aria-label={t("replacePhoto")}
+                  className="absolute end-1.5 top-1.5 z-[2] inline-flex items-center gap-1 rounded-full bg-black/75 px-2.5 py-1.5 text-[11px] font-bold text-white ring-1 ring-white/25 transition hover:bg-black disabled:opacity-40"
+                >
+                  <RefreshCw className="size-3.5" aria-hidden />
+                  {t("replace")}
+                </button>
+              )}
 
               {i === 0 && (
                 <span className="mazed-chip-photo mazed-chip-photo-ink absolute start-1.5 top-1.5 z-[2]">
@@ -546,7 +628,7 @@ export function PhotoUploader({
             </li>
           ))}
 
-          {pending.map((p) => (
+          {pending.filter((p) => !replacing.current.has(p.id) || p.phase === "failed").map((p) => (
             <li
               key={p.id}
               className={
@@ -569,6 +651,7 @@ export function PhotoUploader({
                   <button
                     type="button"
                     onClick={() => {
+                      replacing.current.delete(p.id);
                       setPending((s) => s.filter((x) => x.id !== p.id));
                       URL.revokeObjectURL(p.id);
                     }}
