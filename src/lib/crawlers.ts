@@ -36,9 +36,39 @@ export const BLOCKED_CRAWLERS = [
   "DataForSeoBot",
   "PetalBot", // Huawei
   "Barkrowler",
-  "meta-externalagent", // Meta's AI-training / indexing crawler (NOT facebookexternalhit, the link preview)
   "Reflectionbot", // Reflection AI's crawler
 ] as const;
+
+/**
+ * Crawlers let in through a small door (the owner, 2026-11-25): Meta's AI
+ * crawler may read the pages that matter — an annonce, an agence, a guide, the
+ * home — but never an address with a query string (the catalogue's filter
+ * combinations were 90 % of its 43 000 visits a day), and only so many pages a
+ * day (`crawler_meta_daily_budget`, 3 000 by default: enough to read every
+ * annonce daily; 0 closes the door). Meta AI may then quote our annonces when
+ * someone asks it in WhatsApp or Messenger. Its link previews
+ * (facebookexternalhit) are not concerned.
+ */
+export const LIMITED_CRAWLERS = [{ name: "meta-externalagent", budget: "crawler_meta_daily_budget" }] as const;
+export type LimitedCrawler = (typeof LIMITED_CRAWLERS)[number];
+
+/** The limited crawler this User-Agent is, or null. */
+export function limitedCrawler(userAgent: string | null | undefined): LimitedCrawler | null {
+  if (!userAgent) return null;
+  const ua = userAgent.toLowerCase();
+  return LIMITED_CRAWLERS.find((c) => ua.includes(c.name.toLowerCase())) ?? null;
+}
+
+/**
+ * What the door answers: `allow`, `query` (an address with a query string: 403),
+ * `closed` (budget 0: 403) or `over` (today's pages read: 429). `over` is the
+ * budget counter's answer, asked only when the rest let the request through.
+ */
+export function doorVerdict(input: { hasQuery: boolean; budget: number; over: boolean | null }): "allow" | "query" | "closed" | "over" {
+  if (input.budget <= 0) return "closed";
+  if (input.hasQuery) return "query";
+  return input.over ? "over" : "allow";
+}
 
 /** True when this User-Agent is one of the crawlers above. */
 export function isBlockedCrawler(userAgent: string | null | undefined): boolean {

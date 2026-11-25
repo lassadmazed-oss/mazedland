@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/siteUrl";
 import { routing } from "@/i18n/routing";
-import { BLOCKED_CRAWLERS } from "@/lib/crawlers";
+import { BLOCKED_CRAWLERS, LIMITED_CRAWLERS } from "@/lib/crawlers";
 
 const SITE_URL = siteUrl();
 
@@ -20,19 +20,22 @@ const PRIVATE = [
  * admin or account URLs surfacing in search). Points at the dynamic sitemap.
  */
 export default function robots(): MetadataRoute.Robots {
+  const base = ["/api/", ...routing.locales.flatMap((l) => PRIVATE.map((p) => `/${l}${p}`))];
   return {
     rules: [
       {
         userAgent: "*",
         allow: "/",
         disallow: [
-          "/api/",
-          ...routing.locales.flatMap((l) => PRIVATE.map((p) => `/${l}${p}`)),
+          ...base,
           // A search of the catalogue is drawn on each visit and is never a page to index.
           "/*?q=",
           "/*&q=",
         ],
       },
+      // The small door (src/lib/crawlers.ts): a crawler follows the group that names it, so it
+      // gets every private path again, plus any address with a query string (the filters).
+      { userAgent: LIMITED_CRAWLERS.map((c) => c.name), allow: "/", disallow: [...base, "/*?"] },
       // The crawlers that cost us and send nobody (src/lib/crawlers.ts); the proxy refuses the ones that ignore this.
       { userAgent: [...BLOCKED_CRAWLERS], disallow: "/" },
     ],
