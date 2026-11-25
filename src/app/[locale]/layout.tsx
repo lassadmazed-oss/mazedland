@@ -12,6 +12,7 @@ import { isRtl } from "@/lib/i18n";
 import { jakarta, cairo } from "../fonts";
 import { MobileShell } from "@/components/layout/MobileShell";
 import { CardIconSprite } from "@/components/icons/CardIcons";
+import { DOM_GUARD_SCRIPT } from "@/lib/domGuard";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { NetworkStatus } from "@/components/layout/NetworkStatus";
 import { PWARegister } from "@/components/layout/PWARegister";
@@ -140,6 +141,9 @@ export default async function LocaleLayout({
       style={{ background: "#ffffff" }}
     >
       <head>
+        {/* First, before React starts: a page rewritten by the browser's translation
+            (or an extension) no longer breaks into the error page (src/lib/domGuard.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: DOM_GUARD_SCRIPT }} />
         {/*
           Warm TCP + TLS + HTTP/2 connections to origins we hit early
           on every page so the first auth/db/storage call saves the
