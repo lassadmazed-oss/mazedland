@@ -6111,6 +6111,14 @@
       "label": "Identifiant de mesure",
       "hint": "Dans Google Analytics : Administration → Flux de données → votre site → « ID de mesure ». Il commence par G- (par exemple ⁦G-AB12CD34EF⁩) ; collez-le tel quel. Vide : rien de Google ne se charge."
     },
+    "seo_google_verification": {
+      "label": "Code Google Search Console",
+      "hint": "Dans Search Console : ajouter la propriété https://www.mazed.immo → méthode « Balise HTML » → copiez seulement le code entre content=\"…\". Vide : pas de balise."
+    },
+    "seo_bing_verification": {
+      "label": "Code Bing Webmaster Tools",
+      "hint": "Dans Bing Webmaster Tools : ajouter le site → méthode « Balise meta » → copiez seulement le code entre content=\"…\" (ou importez le site depuis Search Console, sans code). Vide : pas de balise."
+    },
     "analytics_ask_consent": {
       "label": "Demander l'accord des visiteurs",
       "hint": "En marche, une barre demande « Accepter / Refuser » et Google ne se charge qu'après « Accepter » : moins de visiteurs comptés, mais rien sans accord. Coupé, Google se charge pour tous ; un visiteur peut toujours refuser depuis la page Confidentialité. La publicité reste refusée dans les deux cas."

@@ -22,6 +22,7 @@ import { catalogueHrefForType } from "@/lib/catalog/browse";
 import { jsonLdSafe } from "@/lib/jsonld";
 import { siteUrl, PRODUCTION_ORIGIN } from "@/lib/siteUrl";
 import { organizationLd, pageAlternates, websiteLd } from "@/lib/seo";
+import { mazedLinks } from "@/lib/contact";
 import type { Metadata } from "next";
 import {
   ArrowUpRight,
@@ -228,7 +229,11 @@ export default async function LandingPage({
   const demandeCount = boardShown(openDemandes.length, settings.requests_board_min) ? openDemandes.length : null;
   const siteLd = [
     websiteLd(origin, locale, "Mazed Immo"),
-    organizationLd(origin, "Mazed Immo", { whatsapp: settings.contact_whatsapp, email: settings.contact_email }),
+    organizationLd(origin, "Mazed Immo", {
+      whatsapp: settings.contact_whatsapp,
+      email: settings.contact_email,
+      sameAs: mazedLinks(settings).filter((l) => l.key !== "email").map((l) => l.href),
+    }),
   ];
   // « 14 annonces en ligne » — or, with nothing online yet, what the site is.
   const eyebrow = liveCount > 0 ? t("home.heroBrandEyebrow", { count: liveCount }) : t("home.heroKicker");

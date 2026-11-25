@@ -428,6 +428,11 @@ export const SETTINGS = {
   analytics_ga_enabled: { group: "analytics", type: "bool", default: true, client: true },
   // The property's measurement ID, as GA4 shows it: « G-XXXXXXXXXX ».
   analytics_ga_id: { group: "analytics", type: "text", default: "", max: 20, ltr: true, upper: true, pattern: GA_ID_PATTERN, client: true },
+  // Proof that the site is the owner's, for Google Search Console and Bing Webmaster
+  // Tools (2026-11-25): the code each one gives for the « balise HTML » method, written
+  // into every page's <head>. Empty: no tag.
+  seo_google_verification: { group: "analytics", type: "text", default: "", max: 100, ltr: true, pattern: /^[A-Za-z0-9_-]{10,100}$/ },
+  seo_bing_verification: { group: "analytics", type: "text", default: "", max: 100, ltr: true, pattern: /^[A-Za-z0-9_-]{10,100}$/ },
   // On: Google loads only once the visitor said yes to the bar (and never
   // after a no). Off: it loads for everyone, with advertising signals denied.
   analytics_ask_consent: { group: "analytics", type: "bool", default: true, client: true },

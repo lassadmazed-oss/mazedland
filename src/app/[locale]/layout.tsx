@@ -53,6 +53,12 @@ export async function generateMetadata({
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "brand" });
   const title = `${t("name")} — ${t("titleSuffix")}`;
+  // Search Console and Bing Webmaster Tools: the owner's codes, set in Réglages → Statistiques.
+  const settings = await getSettings();
+  const verification = {
+    ...(settings.seo_google_verification ? { google: settings.seo_google_verification } : {}),
+    ...(settings.seo_bing_verification ? { other: { "msvalidate.01": settings.seo_bing_verification } } : {}),
+  };
   // `title.absolute`, not `title.default`.
   //
   // A child segment's `default` still has the PARENT's `template` applied to
@@ -68,6 +74,7 @@ export async function generateMetadata({
   return {
     title: { absolute: title },
     description: t("tagline"),
+    ...(Object.keys(verification).length > 0 ? { verification } : {}),
     openGraph: {
       title,
       description: t("tagline"),

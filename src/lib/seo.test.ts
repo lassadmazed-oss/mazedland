@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { articleLd, catalogueIndexing, catalogueLandings, clip, itemListLd, listingDescription, organizationLd, pageAlternates, websiteLd } from "./seo";
+import { articleLd, catalogueIndexing, catalogueLandings, clip, itemListLd, listingDescription, listingSeoTitle, organizationLd, pageAlternates, placeWords, seoText, websiteLd } from "./seo";
 import { jsonLdSafe } from "./jsonld";
 
 describe("seo", () => {
@@ -74,13 +74,14 @@ describe("seo", () => {
     expect(c).not.toMatch(/ …$/);
   });
 
-  it("lets the facts lead when the seller wrote one word", () => {
+  it("lets the facts lead, whatever the seller wrote", () => {
     expect(listingDescription("ممتاز", "Appartement · 208 m² · S+4 · Sfax · Prix sur demande")).toBe(
       "Appartement · 208 m² · S+4 · Sfax · Prix sur demande. ممتاز",
     );
     expect(listingDescription(null, "Terrain · Sfax.")).toBe("Terrain · Sfax.");
     const real = "Bel appartement lumineux au 3e étage, cuisine équipée, deux salles d'eau, proche des écoles et du centre.";
-    expect(listingDescription(real, "facts")).toBe(real);
+    // Since 2026-11-25 the facts lead every snippet, a long description too: one place for them in every result.
+    expect(listingDescription(real, "Appartement · Sfax")).toBe(`Appartement · Sfax. ${real}`);
   });
 
   it("offers Google the site's search, and how to reach the company", () => {
@@ -96,5 +97,43 @@ describe("seo", () => {
     const out = jsonLdSafe({ name: "</script><script>alert(1)</script>" });
     expect(out).not.toContain("</script>");
     expect(JSON.parse(out).name).toBe("</script><script>alert(1)</script>");
+  });
+});
+
+describe("an annonce for search engines (2026-11-25)", () => {
+  it("takes emoji and phone numbers out of the seller's words, and keeps prices, surfaces and years", () => {
+    expect(seoText("📍Situé au 1er étage 🌟 vue mer")).toBe("Situé au 1er étage vue mer");
+    expect(seoText("📞 Contact : 99804057")).toBe("Contact :");
+    expect(seoText("Tél 98 124 111 ou +216 22 132 278, WhatsApp 22.13.22.78")).toBe("Tél ou, WhatsApp");
+    expect(seoText("Prix : 12 000 000 DT, terrain 1 150 m², construit en 2012")).toBe("Prix : 12 000 000 DT, terrain 1 150 m², construit en 2012");
+    expect(seoText("السوم 25000000 د.ت")).toBe("السوم 25000000 د.ت");
+    expect(seoText(null)).toBe("");
+  });
+
+  it("leads the snippet with the facts, then the cleaned words, under 160 characters", () => {
+    const d = listingDescription("🏡 À LOUER – Appartement 📞 99804057 très lumineux", "Appartement · 80 m² · Ben Arous · 850 TND / mois");
+    expect(d.startsWith("Appartement · 80 m² · Ben Arous · 850 TND / mois. À LOUER")).toBe(true);
+    expect(d).not.toContain("99804057");
+    expect(listingDescription("x".repeat(400), "Villa")).toHaveLength(160);
+  });
+
+  it("writes the title from the facts, in both languages, the seller's title only when there are none", () => {
+    expect(listingSeoTitle("fr", { what: "Appartement S+1", deal: "rent", place: "El Mourouj 6 (Ben Arous)", price: "850 TND / mois", fallback: "x" })).toBe(
+      "Appartement S+1 à louer à El Mourouj 6 (Ben Arous) · 850 TND / mois",
+    );
+    expect(listingSeoTitle("ar", { what: "شقة S+2", deal: "sale", place: "صفاقس", price: "250 000 د.ت", fallback: "x" })).toBe("شقة S+2 للبيع في صفاقس · 250 000 د.ت");
+    expect(listingSeoTitle("fr", { what: "", deal: "sale", place: "", price: "Prix sur demande", fallback: "🏡 BELLE VILLA 📞 98124111" })).toBe("BELLE VILLA à vendre · Prix sur demande");
+  });
+
+  it("names the place once when the délégation is the governorate", () => {
+    expect(placeWords("El Mourouj", "Ben Arous")).toBe("El Mourouj (Ben Arous)");
+    expect(placeWords("Sfax", "Sfax")).toBe("Sfax");
+    expect(placeWords(null, "Sousse")).toBe("Sousse");
+    expect(placeWords("", "")).toBe("");
+  });
+
+  it("ties the organisation to its social accounts", () => {
+    expect(organizationLd("https://www.mazed.immo", "Mazed Immo", { sameAs: ["https://www.facebook.com/mazedonline"] })).toMatchObject({ sameAs: ["https://www.facebook.com/mazedonline"] });
+    expect(organizationLd("https://www.mazed.immo", "Mazed Immo", {})).not.toHaveProperty("sameAs");
   });
 });
