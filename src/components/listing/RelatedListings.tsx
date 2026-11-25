@@ -9,7 +9,8 @@ import { formatTND } from "@/lib/utils";
 import type { DealType } from "@/lib/listings/deal";
 import { categoryLabel } from "@/lib/i18n";
 import { governorateLabel } from "@/lib/tunisia";
-import { ArrowRight, BadgeCheck, ImageOff, MapPin } from "lucide-react";
+import { ArrowRight, BadgeCheck, ImageOff } from "lucide-react";
+import { CardIcon } from "@/components/icons/CardIcons";
 import { LinkBusy } from "@/components/ui/LinkBusy";
 import { catalogueHrefFor } from "@/lib/catalog/browse";
 
@@ -282,7 +283,7 @@ async function Card({
         <p className="mt-1 flex items-center gap-1 text-[12px] text-muted">
           <span>{categoryLabel(cat, locale)}</span>
           <span aria-hidden>·</span>
-          <MapPin className="size-3" aria-hidden /> {governorateLabel(listing.governorate, locale)}
+          <CardIcon name="pin" className="size-3" /> {governorateLabel(listing.governorate, locale)}
         </p>
       </div>
     </Link>

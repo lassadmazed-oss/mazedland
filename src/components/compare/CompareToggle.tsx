@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Scale } from "lucide-react";
+import { CardIcon } from "@/components/icons/CardIcons";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 import { useSetting } from "@/components/settings/SettingsProvider";
@@ -56,7 +57,8 @@ export function CompareToggle({ listingId, variant = "chip" }: { listingId: stri
         on ? "bg-foreground text-[var(--background)]" : "bg-white/95 text-foreground hover:bg-white",
       )}
     >
-      <Scale className="size-4" strokeWidth={2.2} />
+      {/* On every card: the sprite's drawing, not a copy (src/components/icons/CardIcons.tsx). */}
+      <CardIcon name="scale" className="size-4" />
     </button>
   );
 }

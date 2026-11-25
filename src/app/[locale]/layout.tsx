@@ -1,7 +1,7 @@
 import { CompareBar } from "@/components/compare/CompareBar";
 import { Optional } from "@/components/ui/Optional";
 import { NextIntlClientProvider } from "next-intl";
-import { publicMessages } from "@/lib/i18n/publicMessages";
+import { clientMessages } from "@/lib/i18n/publicMessages";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
@@ -11,6 +11,7 @@ import { routing } from "@/i18n/routing";
 import { isRtl } from "@/lib/i18n";
 import { jakarta, cairo } from "../fonts";
 import { MobileShell } from "@/components/layout/MobileShell";
+import { CardIconSprite } from "@/components/icons/CardIcons";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { NetworkStatus } from "@/components/layout/NetworkStatus";
 import { PWARegister } from "@/components/layout/PWARegister";
@@ -109,8 +110,9 @@ export default async function LocaleLayout({
   // home page's `revalidate`). Without this, next-intl reads request headers
   // and forces every route dynamic. Must run before getMessages/getTranslations.
   setRequestLocale(locale);
-  // The console's texts stay out of public pages (src/lib/i18n/publicMessages.ts).
-  const messages = publicMessages(await getMessages());
+  // What a browser can ask for on any page — not the console's texts, not the
+  // server's, not a route's own (its layout adds them): src/lib/i18n/publicMessages.ts.
+  const messages = clientMessages(await getMessages());
   const t = await getTranslations("shell");
   const settings = clientSettings(await getSettings());
   // « Guides » in the desktop nav, once there is one to read (the footer's
@@ -164,6 +166,8 @@ export default async function LocaleLayout({
         >
           {t("skipToContent")}
         </a>
+        {/* The annonce cards' icons, drawn once for the whole page. */}
+        <CardIconSprite />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SettingsProvider value={settings}>
           {/* Google Analytics 4 (Réglages → Statistiques): nothing on the
