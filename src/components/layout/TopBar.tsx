@@ -9,8 +9,9 @@ import { BrandLogo } from "./BrandLogo";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { InstallButton } from "./InstallButton";
 
-// The install sheet, loaded on the phone only when it may be needed (src/components/layout/InstallSheet.tsx).
-const InstallSheet = dynamic(() => import("./InstallSheet"), { ssr: false });
+// The install guide (open-in-browser, then install, in pictures), loaded on the client only
+// (src/components/layout/install/InstallGuide.tsx).
+const InstallGuide = dynamic(() => import("./install/InstallGuide"), { ssr: false });
 import { useSetting } from "@/components/settings/SettingsProvider";
 
 // Lazy-loaded: the bell pulls in ~40 lucide icons, opens a realtime socket,
@@ -76,6 +77,7 @@ export function TopBar() {
   const t = useTranslations();
   const installOn = useSetting("feature_install_button");
   const sheetOn = useSetting("install_sheet_enabled");
+  const openBrowserOn = useSetting("install_open_browser_enabled");
   const locale = useLocale();
   const isRTL = locale === "ar";
   const pathname = usePathname();
@@ -130,7 +132,7 @@ export function TopBar() {
         {/* TRAILING — install the app, notifications bell, locale switcher */}
         <div className="flex items-center gap-1">
           {installOn && <InstallButton scope="site" variant="icon" />}
-          {sheetOn && <InstallSheet />}
+          {(sheetOn || openBrowserOn) && <InstallGuide />}
           <Optional name="bell" fallback={<span className="inline-block h-9 w-9" />}>
             <NotificationBell />
           </Optional>

@@ -6076,8 +6076,16 @@
       "hint": "Dans l'en-tête du site : installe Mazed Immo comme une app sur le téléphone ou l'ordinateur. Caché une fois l'app installée."
     },
     "install_sheet_enabled": {
-      "label": "Proposer d'installer l'app (feuille)",
-      "hint": "Sur le téléphone, une feuille propose d'installer Mazed avec les étapes de ce téléphone et de ce navigateur (iPhone, Android, et l'ouverture hors de Facebook ou Instagram)."
+      "label": "Proposer d'installer l'app (fenêtre)",
+      "hint": "Sur le téléphone, une fenêtre au milieu de l'écran montre en images, étape par étape, comment installer Mazed sur ce téléphone et ce navigateur (iPhone, Android), avec un cercle rouge sur ce qu'il faut toucher."
+    },
+    "install_open_browser_enabled": {
+      "label": "Demander d'ouvrir le navigateur (Facebook, Instagram)",
+      "hint": "Dans la fenêtre de Facebook, Instagram, Messenger ou TikTok, l'app ne peut pas s'installer : une fenêtre demande d'abord d'ouvrir la page dans Chrome ou Safari (sur Android d'une touche), toujours avec « Plus tard »."
+    },
+    "install_open_browser_max_week": {
+      "label": "Combien de fois par semaine au plus",
+      "hint": "Une fois par visite au plus, et ce nombre de fois en 7 jours : assez pour être vue, pas assez pour agacer."
     },
     "install_sheet_all_phones": {
       "label": "La proposer à tous les téléphones",
@@ -6085,7 +6093,7 @@
     },
     "install_sheet_delay_seconds": {
       "label": "Après combien de secondes",
-      "hint": "Le temps de voir la page avant que la feuille monte."
+      "hint": "Le temps de voir la page avant que la fenêtre s'ouvre (aussi pour « Ouvrir dans le navigateur »)."
     },
     "install_sheet_max_shows": {
       "label": "Combien de fois au plus",
@@ -7021,34 +7029,64 @@
     "copied": "Lien copié.",
     "copyFailed": "Impossible de copier le lien."
   },
-  "installSheet": {
-    "title": "Installez l'app Mazed",
-    "installed": "C'est fait : Mazed est sur votre écran d'accueil",
-    "subtitle": "Sans store, en quelques secondes",
-    "benefit1": "S'ouvre d'une touche depuis l'écran d'accueil",
-    "benefit2": "En plein écran, sans la barre du navigateur",
-    "benefit3": "Vos favoris et vos annonces toujours à portée de main",
-    "install": "Installer l'app",
-    "openChrome": "Ouvrir dans Chrome pour l'installer",
-    "orByHand": "Ou à la main :",
-    "howTitle": "Comment faire :",
-    "iosSafari1": "Touchez ••• à côté de l'adresse (ou le bouton Partager s'il est visible)",
-    "iosSafari2": "Choisissez « Partager »",
-    "iosSafari3": "Faites défiler et touchez « Sur l'écran d'accueil »",
-    "iosSafari4": "Laissez l'option « app web » activée, puis touchez « Ajouter »",
-    "iosOlder": "iOS 18 ou plus ancien : le bouton Partager est en bas de l'écran, puis « Sur l'écran d'accueil ».",
-    "iosOther1": "Touchez le bouton Partager dans la barre d'adresse",
-    "iosOther2": "Choisissez « Sur l'écran d'accueil »",
-    "iosOther3": "Touchez « Ajouter »",
-    "inAppIos1": "Touchez ••• en haut ou en bas à droite",
-    "inAppIos2": "Choisissez « Ouvrir dans le navigateur » (Safari)",
-    "inAppIos3": "Dans Safari, cette fenêtre revient avec les étapes pour l'installer",
-    "inAppAndroid1": "Touchez ⋮ en haut à droite, puis « Ouvrir dans Chrome » ou « Ouvrir dans le navigateur »",
-    "androidMenu1": "Touchez ⋮ en haut à droite (sur Samsung Internet : ☰ en bas)",
-    "androidMenu2": "Choisissez « Installer l'application » ou « Ajouter à l'écran d'accueil »",
+  "installGuide": {
+    "openTitle": "Ouvrez Mazed dans votre navigateur",
+    "openWhy": "Ici, dans {app}, l'app Mazed ne s'installe pas et le site marche moins bien.",
+    "openChrome": "Ouvrir dans Chrome",
+    "openNotWorking": "Ça ne s'ouvre pas ? Voir comment faire",
     "copyLink": "Copier le lien",
-    "copied": "Lien copié : collez-le dans Safari",
-    "later": "Plus tard"
+    "copied": "Lien copié : collez-le dans Safari",
+    "installTitle": "Installez l'app Mazed",
+    "installSub": "Gratuite, sans store, en quelques secondes : Mazed s'ouvre ensuite d'une touche depuis votre écran d'accueil.",
+    "installNow": "Installer l'app",
+    "inBrowserOk": "Vous êtes dans votre navigateur",
+    "installed": "C'est fait : Mazed est sur votre écran d'accueil",
+    "stepOf": "Étape {n} sur {total}",
+    "prev": "Étape précédente",
+    "next": "Étape suivante",
+    "older": "iPhone plus ancien (iOS 18 ou avant) ?",
+    "newer": "iPhone récent (iOS 26) ?",
+    "later": "Plus tard",
+    "steps": {
+      "inappIos1": "Touchez <dots></dots> en haut à droite (ou en bas)",
+      "inappIos2": "Touchez « Ouvrir dans le navigateur » (ou « Ouvrir dans Safari »)",
+      "inappAndroid1": "Touchez <kebab></kebab> en haut à droite",
+      "inappAndroid2": "Touchez « Ouvrir dans Chrome » (ou « Ouvrir dans le navigateur »)",
+      "safari1": "Touchez <dots></dots> à côté de l'adresse, en bas",
+      "safari2": "Touchez « Partager »",
+      "share3": "Descendez un peu et touchez « Sur l'écran d'accueil »",
+      "add4": "Laissez « Ouvrir comme app web » activé et touchez « Ajouter »",
+      "safariOld1": "Touchez <share></share> en bas, au milieu",
+      "iosOther1": "Touchez <share></share> dans la barre d'adresse",
+      "chrome1": "Touchez <kebab></kebab> en haut à droite",
+      "chrome2": "Touchez « Installer l'application » (ou « Ajouter à l'écran d'accueil »)",
+      "chrome3": "Touchez « Installer »",
+      "samsung1": "Touchez <burger></burger> en bas à droite",
+      "samsung2": "Touchez « Ajouter la page à », puis « Écran d'accueil »",
+      "prompt1": "Une fenêtre s'ouvre : touchez « Installer »"
+    },
+    "scene": {
+      "share": "Partager",
+      "addFavorite": "Ajouter aux favoris",
+      "newTab": "Nouvel onglet",
+      "copy": "Copier",
+      "readingList": "Liste de lecture",
+      "addHome": "Sur l'écran d'accueil",
+      "add": "Ajouter",
+      "cancel": "Annuler",
+      "webApp": "Ouvrir comme app web",
+      "install": "Installer",
+      "installApp": "Installer l'appli",
+      "history": "Historique",
+      "downloads": "Téléchargements",
+      "settings": "Paramètres",
+      "openBrowser": "Ouvrir dans le navigateur",
+      "openChrome": "Ouvrir dans Chrome",
+      "refresh": "Actualiser",
+      "copyLink": "Copier le lien",
+      "addPageTo": "Ajouter la page à",
+      "appName": "Mazed Immo"
+    }
   },
   "install": {
     "label": "Installer l'app",

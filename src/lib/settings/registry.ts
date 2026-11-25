@@ -70,6 +70,10 @@ export const SETTINGS = {
   // for the visitors who came from an ad or a social post, or every phone when switched on;
   // after so many seconds, once a day at most, so many times in all.
   install_sheet_enabled: { group: "features", type: "bool", default: true, client: true },
+  // Inside Facebook / Instagram / Messenger / TikTok: « open it in your browser » first
+  // (src/components/layout/install/InstallGuide.tsx), once a visit, this many times a week.
+  install_open_browser_enabled: { group: "features", type: "bool", default: true, client: true },
+  install_open_browser_max_week: { group: "features", type: "int", default: 2, min: 1, max: 14, choices: [1, 2, 3, 5, 7], client: true },
   install_sheet_all_phones: { group: "features", type: "bool", default: false, client: true },
   install_sheet_delay_seconds: { group: "features", type: "int", default: 3, min: 0, max: 30, unit: "seconds", choices: [0, 3, 6, 10, 20], client: true },
   install_sheet_max_shows: { group: "features", type: "int", default: 3, min: 1, max: 20, choices: [1, 2, 3, 5, 10], client: true },
