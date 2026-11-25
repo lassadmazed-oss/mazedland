@@ -127,3 +127,33 @@ export async function featuredShops(opts: FeaturedOpts): Promise<FeaturedShop[]>
     return [];
   }
 }
+
+type CountFilter = { deal: string | null; categoryId: string | null; governorate: string | null; delegation: string | null };
+
+const sharedCount = shared(
+  async (f: CountFilter): Promise<number> => {
+    let c = db().from("listings").select("id", { count: "exact", head: true }).eq("status", "published");
+    if (f.deal) c = c.eq("deal_type", f.deal);
+    if (f.categoryId) c = c.eq("category_id", f.categoryId);
+    if (f.governorate) c = c.eq("governorate", f.governorate);
+    if (f.delegation) c = c.eq("delegation", f.delegation);
+    const { count, error } = await c;
+    if (error || count === null) throw new Error(error?.message ?? "count: none");
+    return count;
+  },
+  "catalogue-landing-count-v1",
+  120,
+);
+
+/**
+ * How many annonces a landing page holds — the number in its description and
+ * the « past the last page » check, which Next waits for before the first byte
+ * of /annonces (htmlLimitedBots). Two minutes old at most; null when unknown.
+ */
+export async function landingCount(f: CountFilter): Promise<number | null> {
+  try {
+    return await sharedCount(f);
+  } catch {
+    return null;
+  }
+}

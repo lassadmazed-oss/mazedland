@@ -202,13 +202,17 @@ export async function proxy(req: NextRequest) {
       },
     });
 
-    const endAuth = mwLog.time(`auth.getUser ${pathname}`);
+    const endAuth = mwLog.time(`auth.getClaims ${pathname}`);
     try {
-      // Refresh the token if needed. We also keep the user id so the KYC
-      // gate below doesn't have to round-trip to getUser() again.
-      const { data } = await supabase.auth.getUser();
-      authUserId = data.user?.id ?? null;
-      authUserEmail = data.user?.email ?? null;
+      // Refresh the token if needed, and read who it is. getClaims() checks the
+      // token's signature HERE, against the project's public key (ES256, its
+      // JWKS fetched once and kept), where getUser() asked the Auth server on
+      // every page and every move between pages of a signed-in visitor
+      // (2026-11-25, the speed plan). An expired token is still refreshed
+      // (setAll above). The pages that act for the user check again.
+      const { data } = await supabase.auth.getClaims();
+      authUserId = (data?.claims?.sub as string | undefined) ?? null;
+      authUserEmail = (data?.claims?.email as string | undefined) ?? null;
       if (adminMatch && authUserId) {
         const { data: profile } = await supabase.from("profiles").select("role").eq("id", authUserId).maybeSingle();
         isAdmin = profile?.role === "admin";
