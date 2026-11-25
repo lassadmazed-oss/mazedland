@@ -54,6 +54,14 @@ self.addEventListener("activate", (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k)));
+      // The page request starts while the worker boots (navigations only).
+      if (self.registration.navigationPreload) {
+        try {
+          await self.registration.navigationPreload.enable();
+        } catch {
+          /* not offered: the worker fetches it itself */
+        }
+      }
       await self.clients.claim();
     })(),
   );
@@ -90,19 +98,36 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (isFlightRequest(request, url)) return;
-  if (url.pathname.startsWith("/api/")) return;
 
   // HTML navigations — network-first; the cache is only an offline fallback.
+  //
+  // The page goes to the browser AS IT ARRIVES (2026-11-25). The copy for the
+  // offline fallback used to be written with `await cache.put(…)` before the
+  // page was handed over — and cache.put reads the whole body first, so the
+  // phone painted nothing until the last byte of a 1.5 MB page had arrived:
+  // the streamed skeleton and the first screen waited for the end. The copy is
+  // now written beside, while the page streams. The request itself starts
+  // with the navigation (navigation preload), not after this worker wakes up.
+  //
+  // Every navigation is answered here, /api/* ones too (a sign-in link, a file):
+  // with navigation preload on, a navigation the worker left alone could be
+  // requested a second time, and a one-time link must be used once. Those are
+  // passed through, never stored.
   if (request.mode === "navigate") {
+    const storable = !url.pathname.startsWith("/api/") && !PRIVATE_PREFIX.test(url.pathname);
     event.respondWith(
       (async () => {
         try {
-          const fresh = await fetch(request);
-          if (fresh.ok && fresh.type === "basic" && !fresh.redirected && !PRIVATE_PREFIX.test(url.pathname)) {
-            const cache = await caches.open(RUNTIME_CACHE);
-            await cache.put(request, fresh.clone());
-            event.waitUntil(trim(RUNTIME_CACHE, MAX_PAGE_ENTRIES));
+          const fresh = (await event.preloadResponse) || (await fetch(request));
+          if (storable && fresh.ok && fresh.type === "basic" && !fresh.redirected) {
+            const copy = fresh.clone();
+            event.waitUntil(
+              caches
+                .open(RUNTIME_CACHE)
+                .then((cache) => cache.put(request, copy))
+                .then(() => trim(RUNTIME_CACHE, MAX_PAGE_ENTRIES))
+                .catch(() => {}),
+            );
           }
           return fresh;
         } catch {
@@ -116,6 +141,9 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
+
+  if (isFlightRequest(request, url)) return;
+  if (url.pathname.startsWith("/api/")) return;
 
   // Hashed build assets — cache-first; a URL's content never changes.
   if (url.pathname.startsWith("/_next/static/")) {

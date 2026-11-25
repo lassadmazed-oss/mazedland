@@ -8,6 +8,8 @@ import { checkSetting, rangeOf } from "@/lib/settings/define";
 import { SETTINGS, isSettingKey } from "@/lib/settings/registry";
 import { apiTranslator } from "@/lib/i18n/server";
 import { revalidateSite } from "@/lib/revalidatePublic";
+import { revalidateTag } from "next/cache";
+import { SETTINGS_TAG } from "@/lib/settings/server";
 
 /**
  * PUT /api/admin/settings — admin-only. `{ key: value, … }` for any setting
@@ -72,8 +74,10 @@ export async function PUT(req: NextRequest) {
     if (error) return fail("settings_update_failed", 500, error);
   }
 
-  // The pages that come from the CDN show it from the next visit.
+  // The pages that come from the CDN show it from the next visit, and every
+  // page and route reads the new values at once (src/lib/settings/server.ts).
   revalidateSite();
+  revalidateTag(SETTINGS_TAG, { expire: 0 });
 
   // Bank details are logged as changed, never with their value.
   logAction(req, user, "settings.update", { keys: rows.map((r) => r.key), reset });

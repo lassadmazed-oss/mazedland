@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { Fragment } from "react";
+import { Fragment, Suspense } from "react";
+// The filter forms navigate inside the app (2026-11-25): a plain GET form
+// reloaded the whole site — every script and every text — for each budget,
+// filter or search. Without JavaScript it is still a plain GET form.
+import Form from "next/form";
 import { Link } from "@/i18n/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getServiceSupabase } from "@/lib/supabase/admin";
@@ -34,7 +38,7 @@ import { Sparkles } from "lucide-react";
 import { getSettings } from "@/lib/settings/server";
 import { usableRange } from "@/lib/range";
 import { BudgetFields } from "./BudgetFields";
-import { AdSlot } from "@/components/ads/AdSlot";
+import { AdBanners, slotBanners } from "@/components/ads/AdSlot";
 import { VoiceSearchButton } from "@/components/search/VoiceSearchButton";
 import { jsonLdSafe } from "@/lib/jsonld";
 import { absoluteUrl } from "@/lib/siteUrl";
@@ -43,7 +47,7 @@ import { TrackEvent } from "@/components/analytics/TrackEvent";
 import { Impressions } from "@/components/analytics/Impressions";
 import { FeaturedAgencies } from "@/components/agency/FeaturedAgencies";
 import { GuidesStrip } from "@/components/guides/GuidesStrip";
-import { loadFeaturedShops } from "@/lib/pro/featured";
+import { catalogueCategories, featuredShops, publishedDelegations, publishedGovernorates } from "@/lib/catalog/shared";
 import { reactiveRules } from "@/lib/pro/reactivity";
 import { cleanSearchTerm } from "@/lib/analytics/ga";
 import { governorateSlug } from "@/lib/market/stats";
@@ -187,14 +191,10 @@ export async function generateMetadata({
   const sp = firstValues(rawSp);
   const t = await getTranslations({ locale, namespace: "catalogue" });
   const admin = getServiceSupabase();
-  const settings = await getSettings();
-
   // The categories, once: the title reads the one asked by its slug, the
-  // redirects below need the live ones — what the page filters on.
-  const { data: catRows } = admin
-    ? await admin.from("categories").select("id, slug, label_fr, label_ar, kind, parent_id, is_active").order("sort_order")
-    : { data: null };
-  const allCats = (catRows ?? []) as (Cat & { is_active: boolean })[];
+  // redirects below need the live ones — what the page filters on. Both from
+  // the copies kept between requests (src/lib/catalog/shared.ts), in parallel.
+  const [settings, allCats] = await Promise.all([getSettings(), catalogueCategories()]);
   const leaves = allCats.filter((c) => c.is_active && c.parent_id);
 
   // Where this address goes instead — the search box's marker, a search typed
@@ -328,12 +328,28 @@ export default async function AnnoncesPage({
     );
   }
 
-  const { data: catRows } = await admin
-    .from("categories")
-    .select("id, slug, label_fr, label_ar, kind, parent_id")
-    .eq("is_active", true)
-    .order("sort_order");
-  const cats = (catRows ?? []) as Cat[];
+  // What the page shows beside its results starts now, all at once, and is
+  // read from the copies kept between requests (src/lib/catalog/shared.ts):
+  // these used to run one after another after the search (2026-11-25).
+  const govsP = publishedGovernorates();
+  // The banner across the grid, read beside the search rather than after it.
+  const adsP = slotBanners("catalogue");
+  const delsP = sp.gov ? publishedDelegations(sp.gov) : Promise.resolve([] as string[]);
+  // « Agences recommandées »: the first page only, narrowed to the governorate
+  // when one is chosen (no agence there, no strip).
+  const featuredP =
+    settings.feature_agency_strip && requestedPage === 1
+      ? featuredShops({
+          minQuota: settings.agency_strip_min_quota,
+          max: settings.agency_strip_max,
+          governorate: sp.gov ?? null,
+          reactive: settings.feature_agency_reactive
+            ? { rules: reactiveRules(settings), first: settings.agency_strip_reactive_first }
+            : null,
+        })
+      : Promise.resolve([]);
+
+  const cats = (await catalogueCategories()).filter((c) => c.is_active) as Cat[];
   const leaves = cats.filter((c) => c.parent_id);
   // The search box's marker, a search typed the way people talk, a category
   // named by its id: settled in generateMetadata before the first byte
@@ -501,36 +517,15 @@ export default async function AnnoncesPage({
   // A search for one governorate opens on it; otherwise around its points.
   const mapStart = sp.gov && GOVERNORATE_CENTER[sp.gov] ? { center: GOVERNORATE_CENTER[sp.gov], zoom: 10.5 } : null;
 
-  const { data: govRows } = await admin
-    .from("listings")
-    .select("governorate")
-    .eq("status", "published");
-  const govs = [...new Set((govRows ?? []).map((g) => g.governorate as string))].sort();
-
-  // « Agences recommandées »: the first page only, narrowed to the governorate
-  // when one is chosen (no agence there, no strip).
-  const featured = settings.feature_agency_strip && page === 1
-    ? await loadFeaturedShops(admin, {
-        minQuota: settings.agency_strip_min_quota,
-        max: settings.agency_strip_max,
-        governorate: sp.gov ?? null,
-        reactive: settings.feature_agency_reactive
-          ? { rules: reactiveRules(settings), first: settings.agency_strip_reactive_first }
-          : null,
-      })
-    : [];
+  const [govs, delRows, featuredRows, adBanners] = await Promise.all([govsP, delsP, featuredP, adsP]);
+  // A page past the end falls back to page 1, which has the strip too.
+  const featured = page === 1 ? featuredRows : [];
 
   // The chosen governorate's délégations that have annonces online, in the
   // reader's alphabet — plus the one asked, even with nothing left in it.
   const dels: string[] = [];
   if (sp.gov) {
-    const { data: delRows } = await admin
-      .from("listings")
-      .select("delegation")
-      .eq("status", "published")
-      .eq("governorate", sp.gov)
-      .not("delegation", "is", null);
-    const found = new Set((delRows ?? []).map((r) => canonicalDelegation(sp.gov, r.delegation as string)).filter((d): d is string => !!d));
+    const found = new Set(delRows.map((d) => canonicalDelegation(sp.gov, d)).filter((d): d is string => !!d));
     if (del) found.add(del);
     dels.push(...[...found].sort((a, b) => delegationLabel(a, locale).localeCompare(delegationLabel(b, locale), locale)));
   }
@@ -699,9 +694,8 @@ export default async function AnnoncesPage({
       </div>
 
       {/* An exact bracket, for someone whose budget is not one of four. */}
-      <form
+      <Form
         action={`/${locale}/annonces`}
-        method="get"
         className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3"
       >
         {carried(["min", "max"])}
@@ -720,7 +714,7 @@ export default async function AnnoncesPage({
         <button type="submit" className="mazed-btn-luxe tap-target h-11 shrink-0 px-4 text-[12.5px]">
           {t("apply")}
         </button>
-      </form>
+      </Form>
     </>
   );
 
@@ -763,9 +757,8 @@ export default async function AnnoncesPage({
   );
 
   const moreBody = (
-    <form
+    <Form
       action={`/${locale}/annonces`}
-      method="get"
       className="grid gap-3 sm:grid-cols-2"
     >
       {carried(["surface", "rooms", "furnished", "avail"])}
@@ -838,7 +831,7 @@ export default async function AnnoncesPage({
           </Link>
         )}
       </div>
-    </form>
+    </Form>
   );
 
   const moreMenu = (where: "phone" | "desktop") => (
@@ -962,7 +955,7 @@ export default async function AnnoncesPage({
       {/* Keyword search for phones. The header search is desktop-only, so a
           phone could reach the catalogue but never search it. A plain GET form:
           it works before hydration and carries the active filters along. */}
-      <form action={`/${locale}/annonces`} method="get" role="search" className="relative lg:hidden">
+      <Form action={`/${locale}/annonces`} role="search" className="relative lg:hidden">
         <input type="hidden" name="via" value="search" />
         {carried(["q"])}
         <Search
@@ -986,7 +979,7 @@ export default async function AnnoncesPage({
         />
         {/* Say it instead: the words fill the box and the form is sent. */}
         <VoiceSearchButton className="absolute end-1 top-1/2 -translate-y-1/2" />
-      </form>
+      </Form>
 
       {/* ── Toolbar ── Buy or rent first: the one question that changes every
           other filter (a rent is per month, its budget is in hundreds).
@@ -1227,8 +1220,10 @@ export default async function AnnoncesPage({
               <li>
                 <AnnonceCard
                   listing={r}
-                  priority={i < 4}
-                  sizes="(min-width: 1280px) 300px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 92vw"
+                  // The first row only: on a phone that is one or two photos, and four
+                  // high-priority downloads competed with the first one (2026-11-25).
+                  priority={i < (settings.catalogue_phone_columns === 2 ? 2 : 1)}
+                  sizes={`(min-width: 1280px) 300px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, ${settings.catalogue_phone_columns === 2 ? "46vw" : "92vw"}`}
                   // Kept in by the « libre avant » filter because the owner gave
                   // no date: say so, rather than let it pass as a match.
                   note={availBy && r.deal_type === "rent" && !r.available_from ? t("availUnconfirmed") : null}
@@ -1238,7 +1233,7 @@ export default async function AnnoncesPage({
                   cards — or after the last when there are fewer. Nothing when
                   no campaign runs. */}
               {i === Math.min(3, rows.length - 1) && (
-                <AdSlot placement="catalogue" as="li" className="col-span-full" />
+                <AdBanners banners={adBanners} as="li" className="col-span-full" />
               )}
               {cardAfter > 0 && i === cardAfter - 1 && rows.length > cardAfter && (
                 <li>
@@ -1308,7 +1303,9 @@ export default async function AnnoncesPage({
 
       {/* « Guides utiles » (0208): how to buy or rent, under what is for sale
           or for rent here. Nothing while no guide is online. */}
-      <GuidesStrip deal={deal} categorySlug={active?.slug ?? null} via="catalogue" />
+      <Suspense fallback={null}>
+        <GuidesStrip deal={deal} categorySlug={active?.slug ?? null} via="catalogue" />
+      </Suspense>
     </main>
   );
 }

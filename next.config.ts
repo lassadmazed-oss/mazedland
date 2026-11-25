@@ -38,6 +38,11 @@ const nextConfig: NextConfig = {
   // compile. Safe, zero-behaviour-change.
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    // The router keeps a page it has shown (2026-11-25): coming back to the
+    // catalogue or to an annonce within 30 s is instant instead of a new server
+    // render (Next's default for dynamic pages is 0 s). After an action, the
+    // code's router.refresh() clears it as before.
+    staleTimes: { dynamic: 30, static: 300 },
     // Turbopack's on-disk build cache served a stale globals.css (2026-10-28):
     // the print rules were changed, the build (locally and on Vercel, which
     // restores .next/cache) kept emitting the old ones, and only a build with

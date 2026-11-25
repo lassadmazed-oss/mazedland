@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cache, Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
@@ -307,8 +307,41 @@ export default async function AnnoncePage({
 
   const admin = getServiceSupabase();
 
+  // What depends only on the annonce starts now, beside the visitor check,
+  // instead of after it (2026-11-25, the speed plan): the settings, the
+  // seller's badge, the category's fields, the agence, and its « réactive » badge.
+  const settingsP = getSettings();
+  const sidesP = Promise.all([
+    admin
+      ? admin.rpc("has_verified_badge", { p_seller: l.seller_id })
+      : Promise.resolve({ data: false }),
+    admin && category
+      ? admin
+          .from("category_attributes")
+          .select("field_key, label, unit, options, sort_order")
+          .eq("category_id", category.id)
+          .order("sort_order")
+      : Promise.resolve({ data: [] }),
+    // Published for a shop (0173): its card replaces the private seller's, while the shop is open.
+    admin && l.shop_id
+      ? admin.from("shops").select("slug, name, logo_path, verified_at").eq("id", l.shop_id).eq("status", "approved").maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  // « Agence réactive »: the agence of this annonce answers its visit requests fast.
+  const reactivityP = Promise.all([sidesP, settingsP])
+    .then(([[, , { data: openShop }], s]) =>
+      openShop && admin && l.shop_id && s.feature_agency_reactive
+        ? loadReactivity(admin, [l.shop_id as string], reactiveRules(s)).then((m) => m.get(l.shop_id as string))
+        : undefined,
+    )
+    .catch(() => undefined);
+
   const userClient = await getServerSupabase();
   const { data: { user } } = await userClient.auth.getUser();
+  // Whether the visitor keeps it in « Favoris », beside the rest.
+  const savedP = user
+    ? userClient.from("watchlist").select("id").eq("user_id", user.id).eq("listing_id", l.id).maybeSingle()
+    : Promise.resolve({ data: null });
 
   // An unpublished annonce stays visible to its seller, and to an admin. Every
   // link in « Mes annonces » — the title, the thumbnail, « Voir » — points here
@@ -393,33 +426,9 @@ export default async function AnnoncePage({
     }
   }
 
-  let saved = false;
-  if (user) {
-    const { data: w } = await userClient
-      .from("watchlist")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("listing_id", l.id)
-      .maybeSingle();
-    saved = !!w;
-  }
+  const saved = !!(await savedP).data;
 
-  const [{ data: badge }, { data: attrDefs }, { data: shopRow }] = await Promise.all([
-    admin
-      ? admin.rpc("has_verified_badge", { p_seller: l.seller_id })
-      : Promise.resolve({ data: false }),
-    admin && category
-      ? admin
-          .from("category_attributes")
-          .select("field_key, label, unit, options, sort_order")
-          .eq("category_id", category.id)
-          .order("sort_order")
-      : Promise.resolve({ data: [] }),
-    // Published for a shop (0173): its card replaces the private seller's, while the shop is open.
-    admin && l.shop_id
-      ? admin.from("shops").select("slug, name, logo_path, verified_at").eq("id", l.shop_id).eq("status", "approved").maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
+  const [{ data: badge }, { data: attrDefs }, { data: shopRow }] = await sidesP;
   const shop = shopRow as { slug: string; name: string; logo_path: string | null; verified_at: string | null } | null;
 
   // Only the attributes the seller actually filled, labelled the way the
@@ -620,7 +629,7 @@ export default async function AnnoncePage({
 
   // Its seller sees the way to correct it, not « call » and « visit » (0172) —
   // unless an admin has switched editing off.
-  const settings = await getSettings();
+  const settings = await settingsP;
   const editOn = settings.feature_listing_edit;
   const views = l.view_count ?? 0;
   const showViews = !isPreview && viewsShown(views, settings.listing_views_public_min);
@@ -673,11 +682,7 @@ export default async function AnnoncePage({
       hasPhotos={photos.length > 0}
     />
   ) : null;
-  // « Agence réactive »: the agence of this annonce answers its visit requests fast.
-  const reactivity =
-    shop && admin && l.shop_id && settings.feature_agency_reactive
-      ? (await loadReactivity(admin, [l.shop_id as string], reactiveRules(settings))).get(l.shop_id as string)
-      : undefined;
+  const reactivity = await reactivityP;
   // « Simulez votre crédit »: a sale with a price, above the minimum worth a loan.
   const creditOn =
     settings.feature_credit_simulator &&
@@ -1082,7 +1087,9 @@ export default async function AnnoncePage({
               description, never in the seller's card. Not on a seller's own
               preview — nobody the advertiser pays to reach sees it. */}
           {!isPreview && (
-            <AdSlot placement="listing" className="mt-8" sizes="(min-width: 1024px) 760px, 100vw" />
+            <Suspense fallback={null}>
+              <AdSlot placement="listing" className="mt-8" sizes="(min-width: 1024px) 760px, 100vw" />
+            </Suspense>
           )}
 
           <div className="mt-8 lg:hidden">{safetyNote}</div>
@@ -1111,16 +1118,19 @@ export default async function AnnoncePage({
 
       {/* Below both columns, full width: reaching the end of an annonce used to
           be a dead end, with the back link as the only way on. */}
-      <RelatedListings
-        listingId={l.id}
-        categoryId={category?.id ?? null}
-        categoryKind={category?.kind ?? null}
-        governorate={l.governorate}
-        price={l.price == null ? null : Number(l.price)}
-        attributes={l.attributes}
-        dealType={asDealType(l.deal_type)}
-        locale={locale}
-      />
+      {/* Streamed: the annonce shows without waiting for its neighbours (2026-11-25). */}
+      <Suspense fallback={null}>
+        <RelatedListings
+          listingId={l.id}
+          categoryId={category?.id ?? null}
+          categoryKind={category?.kind ?? null}
+          governorate={l.governorate}
+          price={l.price == null ? null : Number(l.price)}
+          attributes={l.attributes}
+          dealType={asDealType(l.deal_type)}
+          locale={locale}
+        />
+      </Suspense>
 
       {/* Not quite it? A demande like this annonce — its deal, type, place and
           a budget a little above its price — and the next one comes to you. */}
@@ -1147,7 +1157,9 @@ export default async function AnnoncePage({
       {/* « Guides utiles » (0208): how to buy or rent this kind of property,
           picked by the deal and the category. Nothing while no guide is online. */}
       <div className="px-4 lg:px-0">
-        <GuidesStrip deal={asDealType(l.deal_type)} categorySlug={category?.slug ?? null} via="annonce" />
+        <Suspense fallback={null}>
+          <GuidesStrip deal={asDealType(l.deal_type)} categorySlug={category?.slug ?? null} via="annonce" />
+        </Suspense>
       </div>
 
       {/* On a phone the seller card sits under the photo, the title and the

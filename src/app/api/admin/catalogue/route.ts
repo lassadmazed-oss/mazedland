@@ -5,6 +5,13 @@ import { requireAdmin } from "@/lib/admin/guard";
 import { logAction } from "@/lib/activity";
 import { fail } from "@/lib/http/errors";
 import { apiTranslator, requestLocale } from "@/lib/i18n/server";
+import { revalidateTag } from "next/cache";
+import { CATEGORIES_TAG } from "@/lib/catalog/shared";
+
+/** The catalogue reads the categories from a copy kept between requests: a change shows at once. */
+function dropCategories() {
+  revalidateTag(CATEGORIES_TAG, { expire: 0 });
+}
 
 /**
  * Categories and their attributes — the shape of an annonce.
@@ -90,6 +97,7 @@ export async function POST(req: NextRequest) {
       const { error } = await admin.from("categories").update(patch).eq("id", id);
       if (error) return fail("category_update_failed", 500, error);
       logAction(req, user, "admin.category.update", { id });
+      dropCategories();
       return NextResponse.json({ ok: true, id });
     }
 
@@ -108,6 +116,7 @@ export async function POST(req: NextRequest) {
       return fail("category_create_failed", 500, error);
     }
     logAction(req, user, "admin.category.create", { id: data.id, label });
+    dropCategories();
     return NextResponse.json({ ok: true, id: data.id });
   }
 
@@ -139,6 +148,7 @@ export async function POST(req: NextRequest) {
     if (error) return fail("category_toggle_failed", 500, error);
 
     logAction(req, user, "admin.category.toggle", { id, isActive });
+    dropCategories();
     return NextResponse.json({ ok: true });
   }
 
@@ -197,6 +207,7 @@ export async function POST(req: NextRequest) {
       const { error } = await admin.from("category_attributes").update(patch).eq("id", id);
       if (error) return fail("attribute_update_failed", 500, error);
       logAction(req, user, "admin.attribute.update", { id });
+      dropCategories();
       return NextResponse.json({ ok: true, id });
     }
 
@@ -220,6 +231,7 @@ export async function POST(req: NextRequest) {
       return fail("attribute_create_failed", 500, error);
     }
     logAction(req, user, "admin.attribute.create", { id: data.id, fieldKey });
+    dropCategories();
     return NextResponse.json({ ok: true, id: data.id });
   }
 
@@ -264,6 +276,7 @@ export async function POST(req: NextRequest) {
     if (error) return fail("attribute_delete_failed", 500, error);
 
     logAction(req, user, "admin.attribute.delete", { id, fieldKey: attr.field_key });
+    dropCategories();
     return NextResponse.json({ ok: true });
   }
 

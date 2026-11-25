@@ -4,6 +4,7 @@
  * one request-scoped list of what is published.
  */
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { getSettings } from "@/lib/settings/server";
 import { log } from "@/lib/log";
@@ -14,21 +15,39 @@ const gLog = log.scope("guides");
 export const SUMMARY_SELECT =
   "id, slug, status, published_at, updated_at, cover_path, title_fr, title_ar, excerpt_fr, excerpt_ar, tags";
 
-/** Every published guide, newest first — at most a couple of hundred, read once per request. */
-export const publishedGuides = cache(async (): Promise<ArticleSummary[]> => {
+/** Cleared when a guide is saved in the console (/api/admin/content/[id]). */
+export const GUIDES_TAG = "published-guides";
+
+async function readPublished(): Promise<ArticleSummary[]> {
   const admin = getServiceSupabase();
-  if (!admin) return [];
+  if (!admin) throw new Error("guides: no database client");
   const { data, error } = await admin
     .from("articles")
     .select(SUMMARY_SELECT)
     .eq("status", "published")
     .order("published_at", { ascending: false, nullsFirst: false })
     .limit(200);
-  if (error) {
-    gLog.error("published guides query failed", { msg: error.message });
-    return [];
-  }
+  if (error) throw new Error(error.message);
   return (data ?? []) as ArticleSummary[];
+}
+
+// Shared between requests for five minutes (2026-11-25, the speed plan): every
+// dynamic page read up to 200 rows here only to know whether to show « Guides ».
+const sharedPublished = unstable_cache(readPublished, ["published-guides-v1"], { revalidate: 300, tags: [GUIDES_TAG] });
+
+/** Every published guide, newest first — at most a couple of hundred, once per request, from the shared copy. */
+export const publishedGuides = cache(async (): Promise<ArticleSummary[]> => {
+  try {
+    return await sharedPublished();
+  } catch {
+    // No shared cache (a script) or a failed read, which is never kept: read on our own.
+    try {
+      return await readPublished();
+    } catch (e) {
+      gLog.error("published guides query failed", { msg: e instanceof Error ? e.message : String(e) });
+      return [];
+    }
+  }
 });
 
 /**
