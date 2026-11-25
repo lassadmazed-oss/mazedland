@@ -6,7 +6,8 @@ import { log } from "./lib/log";
 import { isSupabaseAuthCookie } from "./lib/supabase/session-cookie";
 import { logActivity } from "./lib/activity";
 import { trustedIp } from "./lib/clientIp";
-import { doorVerdict, isBlockedCrawler, limitedCrawler } from "./lib/crawlers";
+import { annoncePath, doorVerdict, isBlockedCrawler, isSearchCrawler, limitedCrawler } from "./lib/crawlers";
+import { annonceExists } from "./lib/annonceExists.server";
 import { crawlerBudget, crawlerOverBudget } from "./lib/crawlerBudget.server";
 import { pageViewRate } from "./lib/pageViewSample";
 import { publicPathOfTwin, queryViewPath } from "./lib/queryViews";
@@ -87,6 +88,17 @@ export async function proxy(req: NextRequest) {
         },
       );
     }
+  }
+
+  // A missing annonce is a real 404 for the search engines (2026-11-25). The [locale]
+  // loading boundary streams every page with a 200 before the page's notFound() can
+  // change it — a « soft 404 » they keep crawling and report. An unmatched route is a
+  // true 404, so the address is rewritten to one. Checked for their crawlers only (one
+  // small REST call); a person still gets « Annonce introuvable ». A malformed id is a
+  // 404 for everyone, without asking the database.
+  const annonce = annoncePath(pathname);
+  if (annonce && (!annonce.wellFormed || (isSearchCrawler(req.headers.get("user-agent")) && (await annonceExists(annonce.id)) === false))) {
+    return NextResponse.rewrite(new URL(`/${annonce.locale}/__introuvable`, req.url));
   }
 
   // Legacy /en/* → /fr/* (preserve querystring + hash).

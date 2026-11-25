@@ -112,3 +112,20 @@ describe("the small door (Meta's AI crawler, 2026-11-25)", () => {
     expect(LIMITED_CRAWLERS.every((c) => !(BLOCKED_CRAWLERS as readonly string[]).includes(c.name))).toBe(true);
   });
 });
+
+describe("a missing annonce for the search engines (2026-11-25)", () => {
+  it("knows the crawlers of search and answer engines, not people or link previews", async () => {
+    const { isSearchCrawler } = await import("./crawlers");
+    for (const ua of ["Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", "Mozilla/5.0 (compatible; bingbot/2.0)", "Mozilla/5.0 (compatible; OAI-SearchBot/1.0)", "meta-externalagent/1.1"]) expect(isSearchCrawler(ua), ua).toBe(true);
+    for (const ua of ["Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) Safari/604.1", "facebookexternalhit/1.1", "WhatsApp/2.23", null]) expect(isSearchCrawler(ua), String(ua)).toBe(false);
+  });
+
+  it("reads an annonce's address, and whether its id can be one", async () => {
+    const { annoncePath } = await import("./crawlers");
+    expect(annoncePath("/fr/annonces/0470203d-6473-4059-9c98-7f9778f98cdc")).toEqual({ locale: "fr", id: "0470203d-6473-4059-9c98-7f9778f98cdc", wellFormed: true });
+    expect(annoncePath("/ar/annonces/abc/")).toEqual({ locale: "ar", id: "abc", wellFormed: false });
+    expect(annoncePath("/fr/annonces/nouvelle")).toBeNull();
+    expect(annoncePath("/fr/annonces")).toBeNull();
+    expect(annoncePath("/fr/annonces/0470203d-6473-4059-9c98-7f9778f98cdc/mise-en-avant")).toBeNull();
+  });
+});

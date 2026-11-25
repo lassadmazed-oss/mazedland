@@ -442,6 +442,10 @@ export const SETTINGS = {
   // into every page's <head>. Empty: no tag.
   seo_google_verification: { group: "analytics", type: "text", default: "", max: 100, ltr: true, pattern: /^[A-Za-z0-9_-]{10,100}$/ },
   seo_bing_verification: { group: "analytics", type: "text", default: "", max: 100, ltr: true, pattern: /^[A-Za-z0-9_-]{10,100}$/ },
+  // IndexNow (src/lib/indexnow.ts): the annonces changed each hour are sent to Bing and the
+  // engines that share its feed; the key is published at /indexnow.txt (public by design).
+  seo_indexnow_enabled: { group: "analytics", type: "bool", default: true },
+  seo_indexnow_key: { group: "analytics", type: "text", default: "4c881cab12039e664829d0e93c53ec9f", max: 128, ltr: true, pattern: /^[A-Za-z0-9-]{8,128}$/ },
   // On: Google loads only once the visitor said yes to the bar (and never
   // after a no). Off: it loads for everyone, with advertising signals denied.
   analytics_ask_consent: { group: "analytics", type: "bool", default: true, client: true },

@@ -9,6 +9,9 @@ import { ArrowUpRight, BadgeCheck, Store } from "lucide-react";
 import { getSettings } from "@/lib/settings/server";
 import { loadReactivity, reactiveRules } from "@/lib/pro/reactivity";
 import { ReactiveBadge } from "@/components/agency/ReactiveBadge";
+import { itemListLd } from "@/lib/seo";
+import { jsonLdSafe } from "@/lib/jsonld";
+import { siteUrl } from "@/lib/siteUrl";
 
 // The same list for every visitor, so it comes from the CDN and is rebuilt at
 // most five minutes after an agence publishes (its count of annonces), and at
@@ -63,6 +66,13 @@ export default async function ShopsPage({ params }: { params: Promise<{ locale: 
 
   return (
     <main className="mx-auto max-w-[var(--max-w-wide)] px-4 py-6 lg:px-8 lg:py-10">
+      {/* The agences, in order, for search and answer engines (2026-11-25). */}
+      {shops.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdSafe(itemListLd(shops.map((s) => `${siteUrl() ?? "https://www.mazed.immo"}/${locale}/agences/${s.slug}`))) }}
+        />
+      )}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="mazed-h2 text-[26px] text-foreground lg:text-[34px]">{t("title")}</h1>
