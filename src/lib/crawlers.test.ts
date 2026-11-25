@@ -11,6 +11,9 @@ const SEEN_AND_BLOCKED = [
   "Mozilla/5.0 (compatible; SERankingBacklinksBot/1.0; +https://seranking.com/backlinks-crawler)",
   "Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)",
   "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)",
+  // Seen in the page-view log on 2026-11-18…25, ~43 000 and ~7 000 visits a day.
+  "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)",
+  "Mozilla/5.0 (compatible; Reflectionbot/1.0; +https://reflection.ai/bot)",
 ];
 const MUST_PASS = [
   "Mozilla/5.0 (Linux; Android 14; SM-A546B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
@@ -18,8 +21,9 @@ const MUST_PASS = [
   "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
   "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)",
-  "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)",
+  // Link previews of our Facebook posts, and a person asking Meta AI about a link: not the AI crawler.
   "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+  "meta-externalfetcher/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)",
   "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; OAI-SearchBot/1.0; +https://openai.com/searchbot)",
   "WhatsApp/2.23.20.0",
 ];
