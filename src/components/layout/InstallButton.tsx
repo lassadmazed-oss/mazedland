@@ -66,6 +66,23 @@ function subscribe(l: () => void) {
   return () => listeners.delete(l);
 }
 
+/** The install state, shared by every button and the install sheet. */
+export function useInstallState(): InstallState {
+  return useSyncExternalStore(subscribe, readState, () => "hidden" as InstallState);
+}
+
+/** The browser's own install prompt; « unavailable » when it has not offered one. */
+export async function promptInstall(): Promise<"accepted" | "dismissed" | "unavailable"> {
+  const e = deferred;
+  if (!e) return "unavailable";
+  await e.prompt();
+  const { outcome } = await e.userChoice;
+  // The event can be used once; a dismissed prompt comes back on a later visit.
+  deferred = null;
+  emit();
+  return outcome;
+}
+
 export function InstallButton({
   scope,
   variant = "row",
@@ -79,7 +96,7 @@ export function InstallButton({
   const ta = useTranslations("admin.install");
   const ts = useTranslations("install");
   const t = (k: "label" | "installed" | "iosHint" | "manualHint") => (scope === "admin" ? ta(k) : ts(k));
-  const state = useSyncExternalStore(subscribe, readState, () => "hidden" as InstallState);
+  const state = useInstallState();
   const [hint, setHint] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -99,17 +116,11 @@ export function InstallButton({
       setHint((h) => !h);
       return;
     }
-    const e = deferred;
-    if (!e) return;
-    await e.prompt();
-    const { outcome } = await e.userChoice;
-    // The event can be used once; a dismissed prompt comes back on a later visit.
-    deferred = null;
+    const outcome = await promptInstall();
     if (outcome === "accepted") {
       setDone(true);
       if (scope === "site") trackEvent("install_done");
     }
-    emit();
   }
 
   const label = done ? t("installed") : t("label");
