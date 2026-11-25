@@ -2,6 +2,47 @@ import { unstable_cache } from "next/cache";
 import { track } from "./pending";
 import { getServiceSupabase } from "@/lib/supabase/admin";
 import { log } from "@/lib/log";
+import { catalogueCategories } from "@/lib/catalog/shared";
+
+/**
+ * At most this many of the feed's queries in flight at once (2026-11-25).
+ *
+ * The home page asked its eleven questions all together. Twice (18 Nov 14:59,
+ * 23 Nov 14:11 UTC) the database was busy for a minute: each new visitor's
+ * rebuild of the page added eleven more requests to the queue, the last one —
+ * the « terrain » rail, last of the list, never slow in the database itself
+ * (pg_stat_statements: max 0.57 s) — was still queued at 8 s, and the error log
+ * filled with seven « home_data_timeout ». The page is rebuilt in the
+ * background (visitors keep the previous one), so a few hundred milliseconds
+ * more for a calmer database is the right trade.
+ */
+const FEED_CONCURRENCY = 4;
+
+/** A queue that runs at most `n` tasks at a time, in order. */
+export function gate(n: number) {
+  let active = 0;
+  const waiting: (() => void)[] = [];
+  const next = () => {
+    if (active >= n) return;
+    const run = waiting.shift();
+    if (!run) return;
+    active++;
+    run();
+  };
+  return <T,>(task: () => PromiseLike<T>): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      waiting.push(() => {
+        Promise.resolve()
+          .then(task)
+          .then(resolve, reject)
+          .finally(() => {
+            active--;
+            next();
+          });
+      });
+      next();
+    });
+}
 import { DEFAULT_RAIL_OPTIONS, HOME_TYPE_RAILS, type HomeRailKey, type HomeRailOptions, type HomeTypeSlug } from "@/lib/home/rails";
 
 /**
@@ -127,12 +168,21 @@ export const getHomeFeed = unstable_cache(
     // published, newThisWeek and govs always run; each rail query only when on.
     const queried: HomeRailKey[] = ["nouveautes", "mostViewed", "rent", ...HOME_TYPE_RAILS];
     const queries = 3 + queried.filter((k) => on.has(k)).length;
-    const endTotal = fperf.time(`MISS — ran ${queries} parallel queries`);
-    const timed = <T,>(label: string, p: PromiseLike<T>): Promise<T> => {
-      const end = fperf.time(label);
-      // Listed as pending until it answers: a timeout of the page names what was still waiting (./pending.ts).
-      return track(label, p).then((r) => { end(); return r; });
-    };
+    const endTotal = fperf.time(`MISS — ran ${queries} queries, ${FEED_CONCURRENCY} at a time`);
+    const slot = gate(FEED_CONCURRENCY);
+    // A query builder is only sent when awaited: here, when its turn comes.
+    const timed = <T,>(label: string, p: PromiseLike<T>): Promise<T> =>
+      slot(() => {
+        const end = fperf.time(label);
+        // Listed as pending until it answers: a timeout of the page names what was still waiting (./pending.ts).
+        return track(label, p).then((r) => { end(); return r; });
+      });
+    // The type rails by the category's id (the shared copy of the categories,
+    // src/lib/catalog/shared.ts): a plain indexed filter instead of a join on
+    // its slug. Unknown id (no copy yet): the join, as before.
+    const typeIds = new Map(
+      (await catalogueCategories()).filter((c) => (HOME_TYPE_RAILS as readonly string[]).includes(c.slug)).map((c) => [c.slug, c.id]),
+    );
     // The published slice feeds the hero, « À la une », « Bonnes affaires » and
     // « À découvrir »: at least two rails' worth.
     const publishedLimit = Math.max(24, size * 2);
@@ -217,13 +267,21 @@ export const getHomeFeed = unstable_cache(
           on.has(slug)
             ? timed(
                 `q7 type:${slug}(${size})`,
-                sb
-                  .from("listings")
-                  .select(HOME_TYPE_SELECT)
-                  .eq("status", "published")
-                  .eq("category.slug", slug)
-                  .order("published_at", { ascending: false, nullsFirst: false })
-                  .limit(size),
+                typeIds.has(slug)
+                  ? sb
+                      .from("listings")
+                      .select(HOME_LISTING_SELECT)
+                      .eq("status", "published")
+                      .eq("category_id", typeIds.get(slug) as string)
+                      .order("published_at", { ascending: false, nullsFirst: false })
+                      .limit(size)
+                  : sb
+                      .from("listings")
+                      .select(HOME_TYPE_SELECT)
+                      .eq("status", "published")
+                      .eq("category.slug", slug)
+                      .order("published_at", { ascending: false, nullsFirst: false })
+                      .limit(size),
               )
             : OFF,
         ),
