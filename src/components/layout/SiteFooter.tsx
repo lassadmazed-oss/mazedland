@@ -117,6 +117,10 @@ export async function SiteFooter() {
                   <li key={l.href}>
                     <Link
                       href={l.href as never}
+                      // Not fetched ahead (2026-11-25): on every page the footer's
+                      // links pulled whole pages in the background (« Le marché »
+                      // alone 330 KB) for the few who scroll down and tap one.
+                      prefetch={false}
                       className="text-[13.5px] font-semibold text-foreground/80 transition-colors hover:text-foreground"
                     >
                       {l.label}

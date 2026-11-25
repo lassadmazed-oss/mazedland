@@ -2,7 +2,9 @@ import { SafeImage } from "@/components/media/SafeImage";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { formatNumber, formatTND } from "@/lib/utils";
-import { Bath, BedDouble, Building2, Camera, Home, MapPin, Ruler, Store } from "lucide-react";
+import { Home, Store } from "lucide-react";
+// The card icons point at one sprite in the layout (src/components/icons/CardIcons.tsx).
+import { CardIcon } from "@/components/icons/CardIcons";
 import { propertyPhotoUrl } from "@/lib/imageUrl";
 import { IMAGE_BLUR_MAP } from "@/lib/imageBlurMap";
 import { coverPhoto } from "@/lib/listingCover";
@@ -149,7 +151,7 @@ export async function AnnonceCard({
             card before opening it. */}
         {photos.length > 1 && (
           <span className="mazed-chip-photo mazed-chip-photo-ink pointer-events-none absolute bottom-2.5 end-2.5 z-[2]">
-            <Camera className="size-3" strokeWidth={2.4} aria-hidden />
+            <CardIcon name="camera" className="size-3" />
             <span className="mazed-tabular">{photos.length}</span>
             <span className="sr-only">{t("listing.gallery.photos", { count: photos.length })}</span>
           </span>
@@ -191,13 +193,13 @@ export async function AnnonceCard({
           {category && <span>{categoryLabel(category, locale)}</span>}
           {Number.isFinite(area) && area > 0 && (
             <span className="mazed-tabular inline-flex items-center gap-1">
-              <Ruler className="size-3" strokeWidth={2} aria-hidden />
+              <CardIcon name="ruler" className="size-3" />
               {t("listing.areaValue", { area: formatNumber(area, locale) })}
             </span>
           )}
           {Number.isFinite(rooms) && rooms > 0 && (
             <span className="mazed-tabular inline-flex items-center gap-1">
-              <BedDouble className="size-3" strokeWidth={2} aria-hidden />
+              <CardIcon name="bed" className="size-3" />
               {/* Tunisian shorthand, written in Latin in both languages.
                   Isolated so RTL does not turn "S+3" into "3+S". */}
               <Ltr>S+{rooms}</Ltr>
@@ -205,19 +207,19 @@ export async function AnnonceCard({
           )}
           {Number.isFinite(baths) && baths > 0 && (
             <span className="mazed-tabular inline-flex items-center gap-1">
-              <Bath className="size-3" strokeWidth={2} aria-hidden />
+              <CardIcon name="bath" className="size-3" />
               {t("catalogue.specBathrooms", { count: baths })}
             </span>
           )}
           {homes && (
             <span className="mazed-tabular inline-flex items-center gap-1">
-              <Building2 className="size-3" strokeWidth={2} aria-hidden />
+              <CardIcon name="building" className="size-3" />
               {homes}
             </span>
           )}
         </p>
         <p className="mt-0.5 flex items-center gap-1 text-[12px] text-muted">
-          <MapPin className="size-3 shrink-0" strokeWidth={2} aria-hidden />
+          <CardIcon name="pin" className="size-3 shrink-0" />
           <span className="truncate">{where}</span>
         </p>
         {note && <p className="mt-1 text-[11px] font-semibold text-amber-600">{note}</p>}

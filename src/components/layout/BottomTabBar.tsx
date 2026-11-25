@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useSessionCookie } from "@/lib/useSessionCookie";
 import { Home, Search, Plus, Heart, User } from "lucide-react";
 
 /**
@@ -93,6 +94,8 @@ export function BottomTabBar() {
   const t = useTranslations("shell.tabs");
   const ts = useTranslations("shell");
   const pathname = usePathname();
+  // A session cookie: someone is signed in (no network call to know it).
+  const signedIn = useSessionCookie() === true;
 
   return (
     <nav
@@ -141,7 +144,9 @@ export function BottomTabBar() {
             href={tab.href}
             // Favoris and Compte are behind sign-in: for a guest, prefetching
             // them on every page fetches nothing but the redirect to /login.
-            prefetch={tab.href.startsWith("/account") ? false : undefined}
+            // Signed in (a session cookie), they are prefetched like the others
+            // (2026-11-25): they opened on a blank wait for the server.
+            prefetch={tab.href.startsWith("/account") && !signedIn ? false : undefined}
             className={`relative flex h-full min-w-0 flex-col items-center justify-center gap-1 px-1 transition-colors ${
               active
                 ? "text-foreground"
