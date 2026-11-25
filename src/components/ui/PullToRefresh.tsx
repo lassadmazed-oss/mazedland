@@ -95,6 +95,15 @@ export function PullToRefresh({
         return;
       }
       startY.current = e.touches[0].clientY;
+      // Only now does a move have to be blockable (2026-11-25): a touchmove
+      // listener that may cancel makes the phone wait for JavaScript before
+      // EVERY scroll, which stutters while a page is still starting up.
+      document.addEventListener("touchmove", onTouchMove, { passive: false });
+    }
+
+    function disarm() {
+      startY.current = null;
+      document.removeEventListener("touchmove", onTouchMove);
     }
 
     function onTouchMove(e: TouchEvent) {
@@ -102,7 +111,7 @@ export function PullToRefresh({
       const delta = e.touches[0].clientY - startY.current;
       if (delta <= 0) {
         // Upward drag — let the page scroll normally.
-        startY.current = null;
+        disarm();
         reset();
         return;
       }
@@ -118,7 +127,7 @@ export function PullToRefresh({
       if (startY.current === null || refreshing) return;
       const lastY = e.changedTouches[0].clientY;
       const delta = (lastY - startY.current) * RUBBERBAND_FACTOR;
-      startY.current = null;
+      disarm();
       if (delta >= TRIGGER_THRESHOLD_PX) {
         // Snap to "loading" position and commit.
         setOffset(TRIGGER_THRESHOLD_PX);
@@ -137,7 +146,6 @@ export function PullToRefresh({
     }
 
     document.addEventListener("touchstart", onTouchStart, { passive: true });
-    document.addEventListener("touchmove", onTouchMove, { passive: false });
     document.addEventListener("touchend", onTouchEnd, { passive: true });
     document.addEventListener("touchcancel", onTouchEnd, { passive: true });
     return () => {

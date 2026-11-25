@@ -28,6 +28,9 @@ import { ModalPopup } from "./ModalPopup";
 
 const SESSION_KEY = "mazed_popup_session";        // sessionStorage — once_per_session cache
 const ANON_DISMISS_KEY = "mazed_popup_anon_dismissed"; // localStorage — anon dismissals
+// The server's answer per page, for this visit (the dismissal rules above still apply).
+const MATCH_TTL_MS = 5 * 60_000;
+const matchCache = new Map<string, { at: number; items: Popup[] }>();
 
 /**
  * Strip the leading /:locale segment from a Next-internal path so the
@@ -74,14 +77,24 @@ export function PopupManager() {
 
     (async () => {
       try {
-        const res = await fetch("/api/popups/match", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path, locale, device }),
-          cache: "no-store",
-        });
-        if (!res.ok) return;
-        const data = (await res.json()) as { items?: Popup[] };
+        // One question per page per visit (2026-11-25): coming back to a page
+        // asks the server again only after a few minutes.
+        const cacheKey = `${locale}|${path}|${device}`;
+        const hit = matchCache.get(cacheKey);
+        let data: { items?: Popup[] };
+        if (hit && Date.now() - hit.at < MATCH_TTL_MS) {
+          data = { items: hit.items };
+        } else {
+          const res = await fetch("/api/popups/match", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path, locale, device }),
+            cache: "no-store",
+          });
+          if (!res.ok) return;
+          data = (await res.json()) as { items?: Popup[] };
+          matchCache.set(cacheKey, { at: Date.now(), items: data.items ?? [] });
+        }
         if (cancelled) return;
 
         const candidates = (data.items ?? []).filter((p) => {
