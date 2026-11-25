@@ -6075,6 +6075,22 @@
       "label": "Bouton « Installer l'app »",
       "hint": "Dans l'en-tête du site : installe Mazed Immo comme une app sur le téléphone ou l'ordinateur. Caché une fois l'app installée."
     },
+    "install_sheet_enabled": {
+      "label": "Proposer d'installer l'app (feuille)",
+      "hint": "Sur le téléphone, une feuille propose d'installer Mazed avec les étapes de ce téléphone et de ce navigateur (iPhone, Android, et l'ouverture hors de Facebook ou Instagram)."
+    },
+    "install_sheet_all_phones": {
+      "label": "La proposer à tous les téléphones",
+      "hint": "Coupé : seulement aux visiteurs venus d'une publicité ou d'une publication (Facebook, Instagram, TikTok, Google Ads), retenus une semaine."
+    },
+    "install_sheet_delay_seconds": {
+      "label": "Après combien de secondes",
+      "hint": "Le temps de voir la page avant que la feuille monte."
+    },
+    "install_sheet_max_shows": {
+      "label": "Combien de fois au plus",
+      "hint": "Par téléphone, une fois par jour au plus ; plus jamais une fois l'app installée."
+    },
     "feature_share": {
       "label": "Bouton « Partager »",
       "hint": "Sur chaque annonce : le menu de partage du téléphone, sinon WhatsApp, Facebook et « Copier le lien »."
@@ -6996,6 +7012,35 @@
     "copy": "Copier le lien",
     "copied": "Lien copié.",
     "copyFailed": "Impossible de copier le lien."
+  },
+  "installSheet": {
+    "title": "Installez l'app Mazed",
+    "installed": "C'est fait : Mazed est sur votre écran d'accueil",
+    "subtitle": "Sans store, en quelques secondes",
+    "benefit1": "S'ouvre d'une touche depuis l'écran d'accueil",
+    "benefit2": "En plein écran, sans la barre du navigateur",
+    "benefit3": "Vos favoris et vos annonces toujours à portée de main",
+    "install": "Installer l'app",
+    "openChrome": "Ouvrir dans Chrome pour l'installer",
+    "orByHand": "Ou à la main :",
+    "howTitle": "Comment faire :",
+    "iosSafari1": "Touchez ••• à côté de l'adresse (ou le bouton Partager s'il est visible)",
+    "iosSafari2": "Choisissez « Partager »",
+    "iosSafari3": "Faites défiler et touchez « Sur l'écran d'accueil »",
+    "iosSafari4": "Laissez l'option « app web » activée, puis touchez « Ajouter »",
+    "iosOlder": "iOS 18 ou plus ancien : le bouton Partager est en bas de l'écran, puis « Sur l'écran d'accueil ».",
+    "iosOther1": "Touchez le bouton Partager dans la barre d'adresse",
+    "iosOther2": "Choisissez « Sur l'écran d'accueil »",
+    "iosOther3": "Touchez « Ajouter »",
+    "inAppIos1": "Touchez ••• en haut ou en bas à droite",
+    "inAppIos2": "Choisissez « Ouvrir dans le navigateur » (Safari)",
+    "inAppIos3": "Dans Safari, cette fenêtre revient avec les étapes pour l'installer",
+    "inAppAndroid1": "Touchez ⋮ en haut à droite, puis « Ouvrir dans Chrome » ou « Ouvrir dans le navigateur »",
+    "androidMenu1": "Touchez ⋮ en haut à droite (sur Samsung Internet : ☰ en bas)",
+    "androidMenu2": "Choisissez « Installer l'application » ou « Ajouter à l'écran d'accueil »",
+    "copyLink": "Copier le lien",
+    "copied": "Lien copié : collez-le dans Safari",
+    "later": "Plus tard"
   },
   "install": {
     "label": "Installer l'app",

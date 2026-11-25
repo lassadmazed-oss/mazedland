@@ -66,6 +66,13 @@ export const SETTINGS = {
   feature_voice_search: { group: "features", type: "bool", default: true, client: true },
   // « Installer l'app » in the public header (the console always has its own).
   feature_install_button: { group: "features", type: "bool", default: true, client: true },
+  // « Installez l'app Mazed », a sheet with the steps of the visitor's phone (2026-11-25):
+  // for the visitors who came from an ad or a social post, or every phone when switched on;
+  // after so many seconds, once a day at most, so many times in all.
+  install_sheet_enabled: { group: "features", type: "bool", default: true, client: true },
+  install_sheet_all_phones: { group: "features", type: "bool", default: false, client: true },
+  install_sheet_delay_seconds: { group: "features", type: "int", default: 3, min: 0, max: 30, unit: "seconds", choices: [0, 3, 6, 10, 20], client: true },
+  install_sheet_max_shows: { group: "features", type: "int", default: 3, min: 1, max: 20, choices: [1, 2, 3, 5, 10], client: true },
   // « Partager » on every annonce: the phone's share sheet, else WhatsApp, Facebook, copy.
   feature_share: { group: "features", type: "bool", default: true, client: true },
   feature_arabic_redirect: { group: "features", type: "bool", default: true, client: true },
