@@ -33,7 +33,7 @@ import {
 import { FURNISHED, isoDay, type Furnished } from "@/lib/listings/deal";
 import { redirect } from "next/navigation";
 import { catalogueRedirect, pastEndRedirect } from "@/lib/catalog/redirects";
-import { pageNumber } from "@/lib/paging";
+import { pageNumber, pageNumbers } from "@/lib/paging";
 import { Sparkles } from "lucide-react";
 import { getSettings } from "@/lib/settings/server";
 import { usableRange } from "@/lib/range";
@@ -1248,6 +1248,56 @@ export default async function AnnoncesPage({
         </>
       )}
 
+      {/* The way to the next page (2026-11-25, the owner from his phone: « I don't
+          like the place of the next page, make it clearer »): right under the
+          last annonce, before the demande box — it used to come after it, a
+          small button pushed to one side — with where you are in words and
+          two big buttons; the page numbers from a tablet up. */}
+      {lastPage > 1 && !mapView && (
+        <nav className="mt-8 rounded-3xl border border-border bg-surface p-4 lg:p-5" aria-label={t("pagination")}>
+          <p className="mazed-tabular text-center text-[13px] font-semibold text-muted">
+            {t("pageOf", { page: formatNumber(page, locale), pages: formatNumber(lastPage, locale) })}
+          </p>
+          <div className="mt-3 flex gap-2">
+            {page > 1 && (
+              <Link
+                href={qs({ page: page - 1 > 1 ? String(page - 1) : undefined }) as never}
+                className="mazed-btn-quiet tap-target h-12 flex-1 items-center justify-center gap-1.5 text-[14px] font-bold"
+              >
+                <ChevronLeft className="size-5 rtl:-scale-x-100" aria-hidden /> {t("previousPage")}
+              </Link>
+            )}
+            {page < lastPage && (
+              <Link
+                href={qs({ page: String(page + 1) }) as never}
+                className="mazed-btn-luxe tap-target h-12 flex-1 items-center justify-center gap-1.5 text-[14px] font-bold text-[var(--background)]"
+              >
+                {t("nextPage")} <ChevronRight className="size-5 rtl:-scale-x-100" aria-hidden />
+              </Link>
+            )}
+          </div>
+          <div className="mt-3 hidden flex-wrap items-center justify-center gap-1.5 sm:flex">
+            {pageNumbers(page, lastPage).map((n, i) =>
+              n === null ? (
+                <span key={`gap-${i}`} aria-hidden className="px-1 text-muted">…</span>
+              ) : n === page ? (
+                <span key={n} aria-current="page" className="mazed-tabular grid size-9 place-items-center rounded-full bg-foreground text-[13px] font-bold text-[var(--background)]">
+                  {formatNumber(n, locale)}
+                </span>
+              ) : (
+                <Link
+                  key={n}
+                  href={qs({ page: n > 1 ? String(n) : undefined }) as never}
+                  className="mazed-tabular grid size-9 place-items-center rounded-full text-[13px] font-bold text-foreground ring-1 ring-border transition hover:ring-foreground/40"
+                >
+                  {formatNumber(n, locale)}
+                </Link>
+              ),
+            )}
+          </div>
+        </nav>
+      )}
+
       {/* Nothing here, or nothing right: keep the search as a demande and be
           told when it is answered (0168). Same filters, nothing to retype —
           the words too: the form keeps them in « Autres souhaits » and says
@@ -1268,34 +1318,6 @@ export default async function AnnoncesPage({
             <BellRing className="size-4" aria-hidden /> {t("requestCta")}
           </Link>
         </section>
-      )}
-
-      {lastPage > 1 && !mapView && (
-        <nav className="mt-8 flex items-center justify-center gap-2" aria-label={t("pagination")}>
-          {page > 1 ? (
-            <Link
-              href={qs({ page: page - 1 > 1 ? String(page - 1) : undefined }) as never}
-              className="tap-target inline-flex items-center gap-1 rounded-full bg-surface px-4 py-2 text-[12.5px] font-bold text-foreground ring-1 ring-border transition hover:ring-foreground/40"
-            >
-              <ChevronLeft className="size-4 rtl:-scale-x-100" aria-hidden /> {t("previous")}
-            </Link>
-          ) : (
-            <span aria-hidden className="w-[108px]" />
-          )}
-          <span className="mazed-tabular px-2 text-[12.5px] font-semibold text-muted">
-            {page} / {lastPage}
-          </span>
-          {page < lastPage ? (
-            <Link
-              href={qs({ page: String(page + 1) }) as never}
-              className="tap-target inline-flex items-center gap-1 rounded-full bg-surface px-4 py-2 text-[12.5px] font-bold text-foreground ring-1 ring-border transition hover:ring-foreground/40"
-            >
-              {t("next")} <ChevronRight className="size-4 rtl:-scale-x-100" aria-hidden />
-            </Link>
-          ) : (
-            <span aria-hidden className="w-[108px]" />
-          )}
-        </nav>
       )}
 
       {/* « Guides utiles » (0208): how to buy or rent, under what is for sale

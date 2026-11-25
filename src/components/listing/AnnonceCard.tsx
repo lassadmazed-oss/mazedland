@@ -108,7 +108,9 @@ export async function AnnonceCard({
   const onRequest = listing.price_on_request || listing.price == null;
 
   return (
-    <article className="group relative">
+    // A container: a card two-per-line on a phone (~170 px) lays out tighter
+    // than one alone (2026-11-25, catalogue_phone_columns = 2).
+    <article className="group @container relative">
       <div className="mazed-photo-frame aspect-[4/3]">
         {cover ? (
           <SafeImage
@@ -131,7 +133,9 @@ export async function AnnonceCard({
         {/* What is read before the price: a paid placement, a rental, a
             reservation. Top-start, where the eye lands first. */}
         {(promoted || rent || reserved || listing.shop_id) && (
-          <div className="pointer-events-none absolute start-2.5 top-2.5 z-[2] flex flex-wrap gap-1">
+          // Never under the heart and the compare button: on a narrow card the
+          // labels stack instead of sliding beneath them.
+          <div className="pointer-events-none absolute start-2.5 top-2.5 z-[2] flex max-w-[calc(100%-5.75rem)] flex-col items-start gap-1 @[260px]:max-w-[calc(100%-6rem)] @[260px]:flex-row @[260px]:flex-wrap">
             {promoted && <span className="mazed-chip-photo">{t("listing.promoted")}</span>}
             {rent && <span className="mazed-chip-photo mazed-chip-photo-ink">{t("listing.forRent")}</span>}
             {listing.shop_id && !promoted && (
@@ -205,8 +209,9 @@ export async function AnnonceCard({
               <Ltr>S+{rooms}</Ltr>
             </span>
           )}
+          {/* Left out on a narrow card, where it pushed the line onto two. */}
           {Number.isFinite(baths) && baths > 0 && (
-            <span className="mazed-tabular inline-flex items-center gap-1">
+            <span className="mazed-tabular hidden items-center gap-1 @[230px]:inline-flex">
               <CardIcon name="bath" className="size-3" />
               {t("catalogue.specBathrooms", { count: baths })}
             </span>

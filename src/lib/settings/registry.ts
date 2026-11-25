@@ -177,7 +177,9 @@ export const SETTINGS = {
   // How many annonces side by side on a phone's catalogue: one, with big
   // photos (Idealista, Rightmove), or two, denser (Tayara). Tablets and up
   // always lay out three or four.
-  catalogue_phone_columns: { group: "publication", type: "int", default: 1, min: 1, max: 2, choices: [1, 2] },
+  // Two annonces per line on a phone (the owner, 2026-11-25, from his phone: « 2 boxes per line
+  // not one »): the catalogue, the favourites and an agence page. 1 brings back one big photo.
+  catalogue_phone_columns: { group: "publication", type: "int", default: 2, min: 1, max: 2, choices: [1, 2] },
   // « Position approximative » (the default): visitors see a circle of this
   // radius, which holds the house without pointing at it (src/lib/geo).
   // On the catalogue map, an annonce without a pin stands in its délégation,
