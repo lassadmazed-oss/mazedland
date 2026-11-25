@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { BLOCKED_CRAWLERS, isBlockedCrawler } from "./crawlers";
+import { BLOCKED_CRAWLERS, doorVerdict, isBlockedCrawler, LIMITED_CRAWLERS, limitedCrawler } from "./crawlers";
 import robots from "@/app/robots";
 
 /** The User-Agents seen in the page-view log on 2026-11-13/14. */
@@ -11,8 +11,7 @@ const SEEN_AND_BLOCKED = [
   "Mozilla/5.0 (compatible; SERankingBacklinksBot/1.0; +https://seranking.com/backlinks-crawler)",
   "Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)",
   "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)",
-  // Seen in the page-view log on 2026-11-18…25, ~43 000 and ~7 000 visits a day.
-  "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)",
+  // Seen in the page-view log on 2026-11-18…25, ~7 000 visits a day.
   "Mozilla/5.0 (compatible; Reflectionbot/1.0; +https://reflection.ai/bot)",
 ];
 const MUST_PASS = [
@@ -81,5 +80,35 @@ describe("the proxy", () => {
     const literal = /matcher:\s*\["((?:[^"\\]|\\.)*)"\]/.exec(src)?.[1] ?? "";
     expect(literal).toContain("txt");
     expect(literal).toContain("xml");
+  });
+});
+
+describe("the small door (Meta's AI crawler, 2026-11-25)", () => {
+  const META = "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)";
+
+  it("knows Meta's AI crawler as limited, not blocked, and nothing else as limited", () => {
+    expect(isBlockedCrawler(META)).toBe(false);
+    expect(limitedCrawler(META)?.name).toBe("meta-externalagent");
+    for (const ua of ["facebookexternalhit/1.1", "meta-externalfetcher/1.1", "Mozilla/5.0 (compatible; Googlebot/2.1)", null, ""]) expect(limitedCrawler(ua), String(ua)).toBeNull();
+  });
+
+  it("answers by budget, then by the address, then by the day's count", () => {
+    expect(doorVerdict({ hasQuery: false, budget: 0, over: null })).toBe("closed");
+    expect(doorVerdict({ hasQuery: true, budget: 3000, over: null })).toBe("query");
+    expect(doorVerdict({ hasQuery: false, budget: 3000, over: true })).toBe("over");
+    expect(doorVerdict({ hasQuery: false, budget: 3000, over: false })).toBe("allow");
+    // The counter could not be asked: let it through (a brake, not a lock).
+    expect(doorVerdict({ hasQuery: false, budget: 3000, over: null })).toBe("allow");
+  });
+
+  it("gives it its own robots group: every private path, plus any query string", () => {
+    const rules = (Array.isArray(robots().rules) ? robots().rules : [robots().rules]) as { userAgent?: string | string[]; disallow?: string | string[] }[];
+    const door = rules.find((r) => Array.isArray(r.userAgent) && r.userAgent.includes("meta-externalagent"));
+    const dis = door?.disallow as string[];
+    expect(dis).toContain("/*?");
+    expect(dis).toContain("/fr/admin");
+    expect(dis).toContain("/api/");
+    expect(dis).not.toContain("/");
+    expect(LIMITED_CRAWLERS.every((c) => !(BLOCKED_CRAWLERS as readonly string[]).includes(c.name))).toBe(true);
   });
 });

@@ -379,6 +379,8 @@ export const SETTINGS = {
 
   // ── Abuse limits: how often one person may do a thing.
   limit_visits_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
+  // Meta's AI crawler, let in through a small door (src/lib/crawlers.ts): pages a day, 0 = closed.
+  crawler_meta_daily_budget: { group: "limits", type: "int", default: 3000, min: 0, max: 50000, unit: "per_day", choices: [0, 1000, 3000, 10000, 50000] },
   limit_offers_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
   limit_price_questions_per_day: { group: "limits", type: "int", default: 10, min: 1, max: 200, unit: "per_day" },
   limit_drafts_per_account: { group: "limits", type: "int", default: 30, min: 1, max: 500 },

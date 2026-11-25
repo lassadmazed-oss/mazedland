@@ -6,7 +6,8 @@ import { log } from "./lib/log";
 import { isSupabaseAuthCookie } from "./lib/supabase/session-cookie";
 import { logActivity } from "./lib/activity";
 import { trustedIp } from "./lib/clientIp";
-import { isBlockedCrawler } from "./lib/crawlers";
+import { doorVerdict, isBlockedCrawler, limitedCrawler } from "./lib/crawlers";
+import { crawlerBudget, crawlerOverBudget } from "./lib/crawlerBudget.server";
 import { pageViewRate } from "./lib/pageViewSample";
 import { publicPathOfTwin, queryViewPath } from "./lib/queryViews";
 
@@ -66,6 +67,26 @@ export async function proxy(req: NextRequest) {
       status: 403,
       headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" },
     });
+  }
+
+  // A crawler let in through the small door (src/lib/crawlers.ts): no query string, so many pages a day.
+  const limited = limitedCrawler(req.headers.get("user-agent"));
+  if (limited) {
+    const budget = await crawlerBudget(limited);
+    const hasQuery = search.length > 1;
+    const verdict = doorVerdict({ hasQuery, budget, over: budget > 0 && !hasQuery ? await crawlerOverBudget(limited, budget) : null });
+    if (verdict !== "allow") {
+      return new NextResponse(
+        verdict === "over" ? "Daily crawl budget reached: come back tomorrow." : "Only pages without a query string, see /robots.txt",
+        {
+          status: verdict === "over" ? 429 : 403,
+          headers: {
+            "content-type": "text/plain; charset=utf-8",
+            ...(verdict === "over" ? { "retry-after": "21600" } : { "cache-control": "public, max-age=3600" }),
+          },
+        },
+      );
+    }
   }
 
   // Legacy /en/* → /fr/* (preserve querystring + hash).

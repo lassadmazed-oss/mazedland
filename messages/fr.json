@@ -5865,6 +5865,10 @@
       "label": "Demandes de visite par acheteur",
       "hint": "Au-delà, il attend le lendemain."
     },
+    "crawler_meta_daily_budget": {
+      "label": "Pages lues par le robot IA de Meta",
+      "hint": "Par 24 heures. Il lit les annonces, les agences et les guides, jamais le catalogue filtré ; au-delà il est refusé jusqu'au lendemain. 0 : refusé partout. Les aperçus des liens Facebook ne sont pas concernés."
+    },
     "limit_drafts_per_account": {
       "label": "Brouillons par compte",
       "hint": "Au-delà, il faut en publier ou en supprimer avant d'en créer un autre."
