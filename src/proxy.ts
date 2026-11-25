@@ -7,6 +7,7 @@ import { isSupabaseAuthCookie } from "./lib/supabase/session-cookie";
 import { logActivity } from "./lib/activity";
 import { trustedIp } from "./lib/clientIp";
 import { isBlockedCrawler } from "./lib/crawlers";
+import { pageViewRate } from "./lib/pageViewSample";
 import { publicPathOfTwin, queryViewPath } from "./lib/queryViews";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -50,6 +51,8 @@ const clamp01 = (v: unknown, fb: number) => {
 };
 const PAGEVIEW_AUTH_SAMPLE = clamp01(process.env.ACTIVITY_PAGEVIEW_AUTH_SAMPLE, 1);
 const PAGEVIEW_ANON_SAMPLE = clamp01(process.env.ACTIVITY_PAGEVIEW_ANON_SAMPLE, 0.1);
+// The team moving about the console: one view in ten (src/lib/pageViewSample.ts).
+const PAGEVIEW_CONSOLE_SAMPLE = clamp01(process.env.ACTIVITY_PAGEVIEW_CONSOLE_SAMPLE, 0.1);
 
 export async function proxy(req: NextRequest) {
   const t0 = performance.now();
@@ -251,7 +254,11 @@ export async function proxy(req: NextRequest) {
   // but SAMPLE anonymous views — those are the unbounded bulk and Vercel
   // Analytics already covers anonymous traffic. Cuts the write amplification
   // by ~an order of magnitude at scale.
-  const pvSample = authUserId !== null ? PAGEVIEW_AUTH_SAMPLE : PAGEVIEW_ANON_SAMPLE;
+  const pvSample = pageViewRate(decodedPath, authUserId !== null, {
+    signedIn: PAGEVIEW_AUTH_SAMPLE,
+    anonymous: PAGEVIEW_ANON_SAMPLE,
+    console: PAGEVIEW_CONSOLE_SAMPLE,
+  });
   if (req.method === "GET" && Math.random() < pvSample) {
     logActivity({
       type: "page_view",

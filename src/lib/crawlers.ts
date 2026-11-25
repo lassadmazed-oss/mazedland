@@ -10,6 +10,14 @@
  * index nothing that sends a visitor. The search engines (Google, Bing, Apple),
  * Meta's link previews and the answer engines that send people are not here.
  *
+ * 2026-11-25: from the page-view log (anonymous views are kept at 10 %), about
+ * 85 % of the anonymous visits were robots — people were about 12 000 a day —
+ * and Meta's AI crawler (`meta-externalagent`) alone was about 43 000 a day,
+ * nearly all on /annonces. Meta says it is its AI-training / indexing crawler;
+ * the link previews of our Facebook posts are `facebookexternalhit`, which is
+ * not here, and neither is `meta-externalfetcher` (a person asking Meta AI
+ * about a link).
+ *
  * Asked politely in /robots.txt, and refused at once by the proxy (a 403 is a
  * few milliseconds; the page is a render) for the ones that do not read it.
  *
@@ -28,6 +36,8 @@ export const BLOCKED_CRAWLERS = [
   "DataForSeoBot",
   "PetalBot", // Huawei
   "Barkrowler",
+  "meta-externalagent", // Meta's AI-training / indexing crawler (NOT facebookexternalhit, the link preview)
+  "Reflectionbot", // Reflection AI's crawler
 ] as const;
 
 /** True when this User-Agent is one of the crawlers above. */
