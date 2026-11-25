@@ -589,6 +589,17 @@ export default async function AnnoncesPage({
     return `/annonces${s ? `?${s}` : ""}`;
   };
 
+  // The h1 a crawler reads: the landing page this is, as its <title> says it
+  // (« Appartements à Sfax »), not one heading for every city and type.
+  const headingWhat = active
+    ? categoryLabel(active, locale)
+    : t(deal === "rent" ? "metaTitleRent" : deal === "sale" ? "metaTitleSale" : "metaTitleDefault");
+  const landingHeading = (
+    sp.gov
+      ? t("metaTitleIn", { what: headingWhat, governorate: governorateLabel(sp.gov, locale) })
+      : t("metaTitleTunisia", { what: headingWhat })
+  ).replace(/ — Mazed Immo$/, "");
+
   // What a crawler reads besides the cards: where this page sits, and the
   // annonces it lists, in order.
   const crumbs = [
@@ -922,7 +933,7 @@ export default async function AnnoncesPage({
       )}
       {/* No visible title. The filters and the first row of results are the
           heading; the h1 stays for assistive tech and search engines. */}
-      <h1 className="sr-only">{t("heading")}</h1>
+      <h1 className="sr-only">{landingHeading}</h1>
       {/* GA's « search », from whichever box sent it (header, home, this page,
           the microphone): the words as typed — before a natural search turned
           them into filters — with what looks like a phone or an e-mail taken out. */}

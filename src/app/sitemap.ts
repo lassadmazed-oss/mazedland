@@ -6,6 +6,7 @@ import { routing } from "@/i18n/routing";
 import { projectsShown } from "@/lib/pro/projectsServer";
 import { catalogueLandings } from "@/lib/seo";
 import { loadSettings } from "@/lib/settings/server";
+import { annoncePhotoUrl } from "@/lib/imageUrl";
 
 const SITE_URL = siteUrl();
 
@@ -70,34 +71,52 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // error and returned only the static routes — so since that migration, not
     // one annonce has been in the sitemap. Silent, and exactly the shape of
     // failure a try/catch around a whole query produces.
-    const { data, error } = await sb
-      .from("listings")
-      .select("id, updated_at, created_at, published_at, deal_type, governorate, category:categories (slug)")
-      .eq("status", "published")
-      .order("published_at", { ascending: false, nullsFirst: false })
-      .limit(5000);
-
-    // Logged rather than swallowed. A sitemap that quietly shrinks to six
-    // static URLs is worse than one that fails loudly, because nothing
-    // downstream notices for weeks.
-    if (error) {
-      log.scope("sitemap").error("listing query failed", { msg: error.message });
-      return staticRoutes;
+    // Page by page: the database API hands out at most 1 000 rows a request, so a
+    // single `.limit(5000)` listed the 1 000 newest annonces and silently left the
+    // rest out (1 670 online on 2026-11-25, 670 of them in no sitemap).
+    const PAGE = 1000;
+    const data: Record<string, unknown>[] = [];
+    for (let from = 0; from < 50_000; from += PAGE) {
+      const { data: rows, error } = await sb
+        .from("listings")
+        .select("id, updated_at, created_at, published_at, deal_type, governorate, category:categories (slug), photos:listing_photos (storage_path, sort_order)")
+        .eq("status", "published")
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .order("id")
+        .range(from, from + PAGE - 1);
+      // Logged rather than swallowed. A sitemap that quietly shrinks to six
+      // static URLs is worse than one that fails loudly, because nothing
+      // downstream notices for weeks.
+      if (error) {
+        log.scope("sitemap").error("listing query failed", { msg: error.message, from });
+        if (data.length === 0) return staticRoutes;
+        break;
+      }
+      data.push(...((rows ?? []) as Record<string, unknown>[]));
+      if (!rows || rows.length < PAGE) break;
     }
 
-    const listingRoutes: MetadataRoute.Sitemap = (data ?? []).flatMap((row) => {
+    const listingRoutes: MetadataRoute.Sitemap = data.flatMap((row) => {
       const r = row as {
         id: string;
         updated_at: string | null;
         created_at: string | null;
         published_at: string | null;
+        photos: { storage_path: string; sort_order: number }[] | null;
       };
+      // Its photos, for Google Images: the cover first, four at most, in the size made in advance.
+      const images = (r.photos ?? [])
+        .slice()
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .slice(0, 4)
+        .map((p) => annoncePhotoUrl(p.storage_path, 1080));
       return localized(base, `/annonces/${r.id}`, {
         lastModified: r.updated_at ?? r.published_at ?? r.created_at ?? undefined,
         // A fixed price does not tick. Daily is honest for a catalogue where a
         // seller edits a price or takes an annonce down.
         changeFrequency: "daily" as const,
         priority: 0.7,
+        ...(images.length > 0 ? { images } : {}),
       });
     });
 
@@ -128,7 +147,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // for sale or for rent — the searches people type (« appartement à louer
     // Sfax »). The same addresses the catalogue names as canonical.
     const landingRoutes: MetadataRoute.Sitemap = catalogueLandings(
-      ((data ?? []) as unknown as { deal_type: string | null; governorate: string | null; category: { slug: string } | { slug: string }[] | null }[]).map((r) => ({
+      (data as unknown as { deal_type: string | null; governorate: string | null; category: { slug: string } | { slug: string }[] | null }[]).map((r) => ({
         deal: r.deal_type,
         gov: r.governorate,
         cat: Array.isArray(r.category) ? r.category[0]?.slug ?? null : r.category?.slug ?? null,

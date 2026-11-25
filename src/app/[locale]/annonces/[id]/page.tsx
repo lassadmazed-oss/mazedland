@@ -82,7 +82,7 @@ import { homesSummary, parseUnits, UNITS_KEY, unitStatusWords, unitTypeWords, un
 import { viewsShown } from "@/lib/listings/views";
 import type { Metadata } from "next";
 import { jsonLdSafe } from "@/lib/jsonld";
-import { breadcrumbLd, listingDescription } from "@/lib/seo";
+import { breadcrumbLd, clip, listingDescription, listingSeoTitle, placeWords, seoText } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -218,19 +218,32 @@ export async function generateMetadata({
           amount: formatNumber(Number(l.price), locale),
         })
       : t("priceOnRequest");
-  const title = `${l.title} · ${price}`;
   // The facts lead when the seller's words are few (« ممتاز »): what, how big,
   // where, how much — in the page's language.
   const cat = one(l.category);
   const facts = (l.attributes ?? {}) as Record<string, unknown>;
   const area = Number(facts.area_sqm);
   const rooms = String(facts.rooms ?? "");
+  // The title a search result shows, from the facts (src/lib/seo.ts): « Appartement S+1
+  // à louer à El Mourouj 6 (Ben Arous) · 850 TND / mois ». The seller's own title stays the h1.
+  const lang = langOf(locale);
+  const noun = cat ? (tRoot.has(`publish.titleNoun.${cat.slug}`) ? tRoot(`publish.titleNoun.${cat.slug}` as "publish.titleNoun.appartements") : categoryLabel(cat, locale)) : "";
+  const roomsWord = cat?.kind === "residential" && cat.slug !== "immeubles" && /^\d+$/.test(rooms) && Number(rooms) > 0 ? ` S+${rooms}` : "";
+  const flats = cat?.slug === "immeubles" ? homesSummary(parseUnits(facts[UNITS_KEY]), lang) : "";
+  const title = listingSeoTitle(lang, {
+    what: noun ? `${noun}${roomsWord}${flats ? ` (${flats})` : ""}` : "",
+    deal: asDealType(l.deal_type),
+    place: placeWords(shownDelegation(l.governorate, l.delegation, locale), governorateLabel(l.governorate, locale)),
+    price,
+    fallback: l.title,
+  });
   const description = listingDescription(
     l.description,
     [
       cat ? categoryLabel(cat, locale) : null,
-      Number.isFinite(area) && area > 0 ? `${formatNumber(area, locale)} ${tRoot("common.sqm")}` : null,
-      /^\d+$/.test(rooms) ? `S+${rooms}` : null,
+      // A surface under 10 m² is a placeholder (« 1 »), not a fact; S+n only for a home that has rooms.
+      Number.isFinite(area) && area >= 10 ? `${formatNumber(area, locale)} ${tRoot("common.sqm")}` : null,
+      roomsWord ? roomsWord.trim() : null,
       governorateLabel(l.governorate, locale),
       price,
     ].filter(Boolean).join(" · "),
@@ -480,8 +493,27 @@ export default async function AnnoncePage({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
-    name: l.title,
-    description: l.description ?? undefined,
+    // The seller's words without emoji or a phone number (src/lib/seo.ts): the number is behind
+    // « Afficher le numéro », and structured data is the first thing a scraper reads.
+    name: seoText(l.title) || l.title,
+    description: l.description ? clip(seoText(l.description), 500) : undefined,
+    url: absoluteUrl(`/${locale}/annonces/${l.id}`),
+    ...(l.published_at ? { datePosted: l.published_at } : {}),
+    inLanguage: locale,
+    // What is offered, where, how big: what an answer engine quotes. A home is an Accommodation
+    // (its rooms and surface are schema.org's), anything else a Place; the address is the
+    // délégation and the governorate, never the street.
+    about: {
+      "@type": category?.kind === "residential" ? "Accommodation" : "Place",
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: "TN",
+        addressRegion: governorateLabel(l.governorate, locale),
+        ...(shownDelegation(l.governorate, l.delegation, locale) ? { addressLocality: shownDelegation(l.governorate, l.delegation, locale) } : {}),
+      },
+      ...(category?.kind === "residential" && Number.isFinite(area) && area >= 10 ? { floorSize: { "@type": "QuantitativeValue", value: area, unitCode: "MTK" } } : {}),
+      ...(category?.kind === "residential" && category.slug !== "immeubles" && Number.isFinite(rooms) && rooms > 0 ? { numberOfRooms: rooms } : {}),
+    },
     image: photos.slice(0, 6).map((p) => absoluteUrl(propertyPhotoUrl(p.storage_path))),
     category: category ? categoryLabel(category, locale) : undefined,
     offers: {

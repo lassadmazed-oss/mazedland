@@ -87,15 +87,57 @@ export function clip(text: string, max = 160): string {
 }
 
 /**
- * An annonce's search snippet. A seller's text often says « ممتاز » and no
- * more; then the facts lead (what, where, how big, the price) and the words
- * follow. A real description stands on its own.
+ * A seller's words made fit for a search snippet or structured data: no emoji
+ * or pictograph (a snippet shows them as boxes, and « 📍💰🗒 » are a third of
+ * some descriptions), and no phone number — the number is behind « Afficher le
+ * numéro » on the page (logged, rate-limited); a crawler and the scrapers that
+ * read its output do not get it for free. A price, a surface or a year is kept:
+ * a Tunisian number is 8 digits starting 2–9, not followed by a currency or a unit.
+ */
+export function seoText(text: string | null | undefined): string {
+  return (text ?? "")
+    .replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{20E3}]/gu, " ")
+    .replace(/(?<![\d+])(?:\+?216[\s.-]?)?[2-9]\d(?:[\s.-]?\d){6}(?![\d])(?!\s*(?:dt|tnd|d\.t|د\.?ت|dinars?|m²|m2|م²|م2|mille|ألف|الف))/giu, " ")
+    .replace(/\s+/g, " ")
+    // A comma or a full stop left alone after a removed number; « : » keeps its French space.
+    .replace(/\s+([,.،])/g, "$1")
+    .trim();
+}
+
+/**
+ * An annonce's search snippet. The facts lead — what, how big, where, how
+ * much — in one line every annonce shares, so a reader (and an answer engine)
+ * finds them in the same place; the seller's own words follow, cleaned.
  */
 export function listingDescription(description: string | null | undefined, facts: string): string {
-  const own = (description ?? "").replace(/\s+/g, " ").trim();
-  if (own.length >= 80) return clip(own);
+  const own = seoText(description);
   const lead = facts.replace(/[.\s]+$/, "");
   return clip(own ? `${lead}. ${own}` : `${lead}.`);
+}
+
+/**
+ * An annonce's <title>, from its facts rather than the seller's title (which is
+ * often in capitals, with emoji, and 120 characters long): « Appartement S+1 à
+ * louer à El Mourouj 6 (Ben Arous) · 850 TND / mois ». The seller's title stays
+ * the page's h1. `what` is empty when the category is unknown: then the
+ * seller's title, cleaned and cut, is the what.
+ */
+export function listingSeoTitle(
+  lang: "fr" | "ar",
+  p: { what: string; deal: "sale" | "rent"; place: string; price: string; fallback: string },
+): string {
+  const what = p.what.trim() || clip(seoText(p.fallback), 50);
+  const deal = lang === "ar" ? (p.deal === "rent" ? "للكراء" : "للبيع") : p.deal === "rent" ? "à louer" : "à vendre";
+  const where = p.place ? (lang === "ar" ? ` في ${p.place}` : ` à ${p.place}`) : "";
+  return `${what} ${deal}${where} · ${p.price}`;
+}
+
+/** « El Mourouj 6 (Ben Arous) », or the governorate alone when the délégation says the same or nothing. */
+export function placeWords(delegation: string | null | undefined, governorate: string | null | undefined): string {
+  const del = (delegation ?? "").trim();
+  const gov = (governorate ?? "").trim();
+  if (del && gov && del.toLowerCase() !== gov.toLowerCase()) return `${del} (${gov})`;
+  return del || gov;
 }
 
 // ── Structured data (schema.org) ────────────────────────────────────────────
@@ -124,7 +166,7 @@ export function websiteLd(origin: string, locale: string, name: string) {
   };
 }
 
-export function organizationLd(origin: string, name: string, opts: { whatsapp?: string; email?: string }) {
+export function organizationLd(origin: string, name: string, opts: { whatsapp?: string; email?: string; sameAs?: readonly string[] }) {
   const phone = opts.whatsapp?.replace(/[^\d+]/g, "");
   return {
     "@context": "https://schema.org",
@@ -132,6 +174,8 @@ export function organizationLd(origin: string, name: string, opts: { whatsapp?: 
     name,
     url: origin,
     logo: `${origin}/logo-square.png`,
+    // The same Mazed on Facebook, Instagram, TikTok: one entity to a search or an answer engine, not four.
+    ...(opts.sameAs && opts.sameAs.length > 0 ? { sameAs: [...opts.sameAs] } : {}),
     ...(phone || opts.email
       ? { contactPoint: [{ "@type": "ContactPoint", contactType: "customer service", areaServed: "TN", availableLanguage: ["fr", "ar"], ...(phone ? { telephone: phone } : {}), ...(opts.email ? { email: opts.email } : {}) }] }
       : {}),

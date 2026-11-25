@@ -6111,6 +6111,14 @@
       "label": "معرّف القياس (Measurement ID)",
       "hint": "في Google Analytics: Admin ← Data streams ← السيت متاعك ← «Measurement ID». يبدا بـ G- (مثلًا ⁦G-AB12CD34EF⁩)؛ حطّو كيما هو. فارغ: حتى حاجة من Google ما تتحمّل."
     },
+    "seo_google_verification": {
+      "label": "كود Google Search Console",
+      "hint": "في Search Console: زيد الموقع https://www.mazed.immo ← طريقة «HTML tag» ← انسخ الكود اللي بين content=\"…\" برك. فارغ: ما فماش علامة."
+    },
+    "seo_bing_verification": {
+      "label": "كود Bing Webmaster Tools",
+      "hint": "في Bing Webmaster Tools: زيد الموقع ← طريقة «Meta tag» ← انسخ الكود اللي بين content=\"…\" برك (ولا استورد الموقع من Search Console بلا كود). فارغ: ما فماش علامة."
+    },
     "analytics_ask_consent": {
       "label": "نطلبو موافقة الزوار",
       "hint": "مشعول: تطلع بارة فيها «نقبل / نرفض» وGoogle ما يتحمّلش كان بعد «نقبل»: زوار أقل محسوبين، أما حتى حاجة من غير موافقة. مطفي: Google يتحمّل للكل، والزائر ينجم ديما يرفض من صفحة سياسة الخصوصية. الإشهار يقعد مرفوض في الحالتين."
