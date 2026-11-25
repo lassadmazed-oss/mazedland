@@ -15,6 +15,15 @@ export const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
 /** The protocol takes up to 10 000 addresses a request. */
 export const INDEXNOW_MAX_URLS = 10_000;
 
+/**
+ * The statuses whose annonce addresses the engines hear about: online, or gone
+ * after being online. Only values of the database's `listing_status`: the
+ * first version listed « removed » and « taken_down », which do not exist, so
+ * the hourly query failed every time and nothing was sent (found 2026-11-25).
+ * indexnow.test.ts checks this list against the migrations.
+ */
+export const INDEXNOW_STATUSES = ["published", "sold", "rented", "expired", "archived", "rejected"] as const;
+
 export type IndexNowBody = { host: string; key: string; keyLocation: string; urlList: string[] };
 
 export function indexNowBody(origin: string, key: string, urls: readonly string[]): IndexNowBody {

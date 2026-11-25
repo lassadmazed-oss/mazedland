@@ -4,7 +4,7 @@ import { getServiceSupabase } from "@/lib/supabase/admin";
 import { loadSettings } from "@/lib/settings/server";
 import { siteUrl } from "@/lib/siteUrl";
 import { routing } from "@/i18n/routing";
-import { annonceUrls, submitIndexNow } from "@/lib/indexnow";
+import { annonceUrls, INDEXNOW_STATUSES, submitIndexNow } from "@/lib/indexnow";
 import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ async function run(req: NextRequest) {
     .from("listings")
     .select("id")
     .gte("updated_at", since)
-    .in("status", ["published", "sold", "rented", "expired", "removed", "taken_down", "archived"])
+    .in("status", [...INDEXNOW_STATUSES])
     .limit(4000);
   if (error) {
     log.scope("indexnow").error("query failed", { msg: error.message });
