@@ -47,7 +47,7 @@ import { TrackEvent } from "@/components/analytics/TrackEvent";
 import { Impressions } from "@/components/analytics/Impressions";
 import { FeaturedAgencies } from "@/components/agency/FeaturedAgencies";
 import { GuidesStrip } from "@/components/guides/GuidesStrip";
-import { catalogueCategories, featuredShops, publishedDelegations, publishedGovernorates } from "@/lib/catalog/shared";
+import { catalogueCategories, featuredShops, landingCount, publishedDelegations, publishedGovernorates } from "@/lib/catalog/shared";
 import { reactiveRules } from "@/lib/pro/reactivity";
 import { cleanSearchTerm } from "@/lib/analytics/ga";
 import { governorateSlug } from "@/lib/market/stats";
@@ -226,13 +226,10 @@ export async function generateMetadata({
   // How many annonces it holds, for the snippet; an empty landing page stays out.
   let count: number | null = null;
   if (admin && !(sp.cat && !categoryId)) {
-    let c = admin.from("listings").select("id", { count: "exact", head: true }).eq("status", "published");
-    if (deal) c = c.eq("deal_type", deal);
-    if (categoryId) c = c.eq("category_id", categoryId);
-    if (gov) c = c.eq("governorate", gov);
+    // Kept two minutes between requests (src/lib/catalog/shared.ts): Next waits
+    // for this before the first byte, and it only words the description.
     const del = gov ? canonicalDelegation(gov, sp.del) : null;
-    if (del) c = c.eq("delegation", del);
-    count = (await c).count ?? null;
+    count = await landingCount({ deal, categoryId, governorate: gov ?? null, delegation: del });
     // A page past the last one is not an address of its own: it goes to the
     // first page, which is what the body shows for it anyway. Only where this
     // count is the page's — a landing page, filtered on the same category.

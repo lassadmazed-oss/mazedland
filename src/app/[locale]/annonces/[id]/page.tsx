@@ -87,6 +87,17 @@ import { breadcrumbLd, clip, listingDescription, listingSeoTitle, placeWords, se
 export const dynamic = "force-dynamic";
 
 /**
+ * Who is looking, from the session's token checked locally against the
+ * project's public key (getClaims, ES256) — not a call to the Auth server on
+ * every annonce opened (2026-11-25, the speed plan). Only the id is read here.
+ */
+async function viewer(client: Awaited<ReturnType<typeof getServerSupabase>>): Promise<{ id: string } | null> {
+  const { data } = await client.auth.getClaims();
+  const sub = data?.claims?.sub;
+  return typeof sub === "string" && sub ? { id: sub } : null;
+}
+
+/**
  * One annonce.
  *
  * Note what is NOT on this page: the seller's phone number. `contact_phone` is
@@ -203,7 +214,7 @@ export async function generateMetadata({
   // The title stays with them too: the page answered « introuvable » to
   // everyone else, but the <title> still carried the draft's own words.
   if (l.status !== "published") {
-    const { data: { user } } = await (await getServerSupabase()).auth.getUser();
+    const user = await viewer(await getServerSupabase());
     let theirs = !!user && user.id === l.seller_id;
     if (user && !theirs) {
       const admin = getServiceSupabase();
@@ -337,7 +348,7 @@ export default async function AnnoncePage({
     .catch(() => undefined);
 
   const userClient = await getServerSupabase();
-  const { data: { user } } = await userClient.auth.getUser();
+  const user = await viewer(userClient);
   // Whether the visitor keeps it in « Favoris », beside the rest.
   const savedP = user
     ? userClient.from("watchlist").select("id").eq("user_id", user.id).eq("listing_id", l.id).maybeSingle()
