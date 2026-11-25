@@ -6135,6 +6135,14 @@
       "label": "Code Google Search Console",
       "hint": "Dans Search Console : ajouter la propriété https://www.mazed.immo → méthode « Balise HTML » → copiez seulement le code entre content=\"…\". Vide : pas de balise."
     },
+    "seo_indexnow_enabled": {
+      "label": "IndexNow (Bing et les autres moteurs)",
+      "hint": "Chaque heure, les annonces mises en ligne, modifiées ou retirées sont signalées à Bing (et à Yandex, Seznam, Naver) : elles sont lues en quelques heures au lieu de quelques jours. ChatGPT et Copilot s'appuient sur l'index de Bing."
+    },
+    "seo_indexnow_key": {
+      "label": "Clé IndexNow",
+      "hint": "Publiée à /indexnow.txt ; les moteurs la lisent pour vérifier que les envois viennent du site. Ne la changez que si un moteur la refuse."
+    },
     "seo_bing_verification": {
       "label": "Code Bing Webmaster Tools",
       "hint": "Dans Bing Webmaster Tools : ajouter le site → méthode « Balise meta » → copiez seulement le code entre content=\"…\" (ou importez le site depuis Search Console, sans code). Vide : pas de balise."

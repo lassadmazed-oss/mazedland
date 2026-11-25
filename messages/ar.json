@@ -6135,6 +6135,14 @@
       "label": "كود Google Search Console",
       "hint": "في Search Console: زيد الموقع https://www.mazed.immo ← طريقة «HTML tag» ← انسخ الكود اللي بين content=\"…\" برك. فارغ: ما فماش علامة."
     },
+    "seo_indexnow_enabled": {
+      "label": "IndexNow (Bing والمحرّكات الأخرى)",
+      "hint": "كل ساعة، الإعلانات اللي تنشرت ولا تبدّلت ولا تنحّات نعلمو بيها Bing (وYandex وSeznam وNaver): تتقرا في سوايع عوض أيام. ChatGPT وCopilot يعتمدو على فهرس Bing."
+    },
+    "seo_indexnow_key": {
+      "label": "مفتاح IndexNow",
+      "hint": "منشور في /indexnow.txt؛ المحرّكات تقراه باش تتأكد إلّي الإرسال جاي من الموقع. ما تبدّلوش كان إذا محرّك رفضو."
+    },
     "seo_bing_verification": {
       "label": "كود Bing Webmaster Tools",
       "hint": "في Bing Webmaster Tools: زيد الموقع ← طريقة «Meta tag» ← انسخ الكود اللي بين content=\"…\" برك (ولا استورد الموقع من Search Console بلا كود). فارغ: ما فماش علامة."

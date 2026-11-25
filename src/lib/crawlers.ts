@@ -70,6 +70,24 @@ export function doorVerdict(input: { hasQuery: boolean; budget: number; over: bo
   return input.over ? "over" : "allow";
 }
 
+/**
+ * The crawlers of search and answer engines (2026-11-25): they get a real 404
+ * for an annonce that does not exist (src/proxy.ts), where a person still sees
+ * the page's « Annonce introuvable ».
+ */
+const SEARCH_CRAWLERS = /Googlebot|Google-InspectionTool|Storebot-Google|AdsBot-Google|bingbot|BingPreview|Applebot|DuckDuckBot|YandexBot|Baiduspider|OAI-SearchBot|PerplexityBot|meta-externalagent/i;
+
+export function isSearchCrawler(userAgent: string | null | undefined): boolean {
+  return !!userAgent && SEARCH_CRAWLERS.test(userAgent);
+}
+
+/** An annonce's address, one segment after /annonces/, and whether that segment can be an id. */
+export function annoncePath(pathname: string): { locale: string; id: string; wellFormed: boolean } | null {
+  const m = /^\/(fr|ar)\/annonces\/([^/]+)\/?$/.exec(pathname);
+  if (!m || m[2] === "nouvelle") return null;
+  return { locale: m[1], id: m[2], wellFormed: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(m[2]) };
+}
+
 /** True when this User-Agent is one of the crawlers above. */
 export function isBlockedCrawler(userAgent: string | null | undefined): boolean {
   if (!userAgent) return false;
