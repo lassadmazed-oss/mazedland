@@ -16,7 +16,7 @@ import { moderationSettings, publishOrQueue } from "@/lib/moderation/server";
 import { redactContacts } from "@/lib/moderation/rules";
 import { accountAllowance, takePlace, takePlaceBeyondLimit } from "@/lib/places/server";
 import { getSettings } from "@/lib/settings/server";
-import { governorateFromPlace } from "@/lib/geo/placeGovernorate";
+import { governorateFromPlace, textNamesGovernorate } from "@/lib/geo/placeGovernorate";
 import {
   confirmBlockers, countFigures, dealWord, draftToListingBody, FIGURE_KINDS, fillTemplate, photoPathOf, propertyLine, publishBlockers, readDraft, startOfTunisiaDay, statusAfter,
   type Channel, type ConfirmBlocker, type MemberFigures, type PublishBlocker,
@@ -151,10 +151,13 @@ export async function readPost(
   const draft = normalizeListingDraft(out.data, { categories, sourceText: source });
   // The neighbourhood's governorate from the site's own lists, when one governorate
   // alone knows the name (src/lib/geo/placeGovernorate.ts): it fills an empty one
-  // (« Menzah 5 » with no governorate) and wins over the model's guess (Haiku put
-  // Menzah 5 in Tunis; it is in Ariana). A name the lists do not settle leaves the model's.
-  const fromPlace = governorateFromPlace(draft.delegation);
-  if (fromPlace) draft.governorate = fromPlace;
+  // (« Menzah 5 » with no governorate) and corrects the model's guess (Haiku put
+  // Menzah 5 in Tunis; it is in Ariana) — but never a governorate the post writes
+  // itself: « Bhira, Bizerte » stays Bizerte though the lists know a Bhira in Médenine.
+  if (!textNamesGovernorate(source, draft.governorate)) {
+    const fromPlace = governorateFromPlace(draft.delegation);
+    if (fromPlace) draft.governorate = fromPlace;
+  }
   return { ok: true, draft, language };
 }
 
