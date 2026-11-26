@@ -16,7 +16,8 @@ import { moderationSettings, publishOrQueue } from "@/lib/moderation/server";
 import { redactContacts } from "@/lib/moderation/rules";
 import { accountAllowance, takePlace, takePlaceBeyondLimit } from "@/lib/places/server";
 import { getSettings } from "@/lib/settings/server";
-import { governorateFromPlace, textNamesGovernorate } from "@/lib/geo/placeGovernorate";
+import { settleGovernorate } from "@/lib/geo/placeGovernorate";
+import type { TunisianGovernorate } from "@/lib/tunisia";
 import {
   confirmBlockers, countFigures, dealWord, draftToListingBody, FIGURE_KINDS, fillTemplate, photoPathOf, propertyLine, publishBlockers, readDraft, startOfTunisiaDay, statusAfter,
   type Channel, type ConfirmBlocker, type MemberFigures, type PublishBlocker,
@@ -149,15 +150,10 @@ export async function readPost(
   if (!out.ok) return { ok: false, reason: out.reason };
   const language = (out.data as { language?: unknown } | null)?.language === "fr" ? "fr" : "ar";
   const draft = normalizeListingDraft(out.data, { categories, sourceText: source });
-  // The neighbourhood's governorate from the site's own lists, when one governorate
-  // alone knows the name (src/lib/geo/placeGovernorate.ts): it fills an empty one
-  // (« Menzah 5 » with no governorate) and corrects the model's guess (Haiku put
-  // Menzah 5 in Tunis; it is in Ariana) — but never a governorate the post writes
-  // itself: « Bhira, Bizerte » stays Bizerte though the lists know a Bhira in Médenine.
-  if (!textNamesGovernorate(source, draft.governorate)) {
-    const fromPlace = governorateFromPlace(draft.delegation);
-    if (fromPlace) draft.governorate = fromPlace;
-  }
+  // The governorate, settled from the model's reading, the site's place lists and
+  // the governorates the post writes itself, any spelling (src/lib/geo/placeGovernorate.ts):
+  // « Menzah 5 » → Ariana, « Bhira, Bizerte » → Bizerte, « à Qibli – route de Gabès » → Kebili.
+  draft.governorate = settleGovernorate({ model: draft.governorate as TunisianGovernorate | null, place: draft.delegation, text: source });
   return { ok: true, draft, language };
 }
 

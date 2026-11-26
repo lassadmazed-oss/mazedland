@@ -15,7 +15,8 @@
 import { DELEGATIONS, governorateOfDelegation } from "@/lib/delegations";
 import { core } from "@/lib/geo/quartier";
 import { QUARTIERS } from "@/lib/geo/quartiers";
-import { governorateLabel, TUNISIAN_GOVERNORATES, type TunisianGovernorate } from "@/lib/tunisia";
+import { TUNISIAN_GOVERNORATES, type TunisianGovernorate } from "@/lib/tunisia";
+import { governoratesNamedIn } from "@/lib/geo/governorateAliases";
 
 /** Shorter than this, a name is inside too many others to mean anything. */
 const MIN_NAME = 4;
@@ -86,9 +87,33 @@ export function governorateFromPlace(place: string | null | undefined): Tunisian
  */
 export function textNamesGovernorate(text: string | null | undefined, governorate: string | null | undefined): boolean {
   if (!text || !governorate) return false;
-  const words = ` ${core(text)} `;
-  return [governorate, governorateLabel(governorate, "ar")].some((n) => {
-    const key = core(n);
-    return key.length >= 3 && words.includes(` ${key} `);
-  });
+  // Any spelling of it, as a word, not as a road (« route de Gabès »): src/lib/geo/governorateAliases.ts.
+  return (governoratesNamedIn(text) as string[]).includes(governorate);
+}
+
+/**
+ * The governorate of a post, settled from three witnesses (2026-11-26): the
+ * model's reading, the place it read (the délégation / quartier lists), and the
+ * governorates the post writes itself (any spelling, roads left out).
+ *
+ *   1. The model and the lists agree: that is it (« agence à Tunis, villa à
+ *      Hammamet » stays Nabeul).
+ *   2. The post writes one governorate: that one (« à Qibli – route de Gabès »
+ *      is Kebili though the model said Tozeur; « Bhira, Bizerte » is Bizerte
+ *      though the lists know a Bhira in Médenine only).
+ *   3. The lists know the place and the post does not write the model's
+ *      governorate: the lists' (« Menzah 5 » → Ariana, the model said Tunis).
+ *   4. Otherwise the model's, or nothing.
+ */
+export function settleGovernorate(input: {
+  model: TunisianGovernorate | null;
+  place: string | null;
+  text: string;
+}): TunisianGovernorate | null {
+  const fromPlace = governorateFromPlace(input.place);
+  if (fromPlace && fromPlace === input.model) return fromPlace;
+  const named = governoratesNamedIn(input.text);
+  if (named.length === 1) return named[0];
+  if (fromPlace && !textNamesGovernorate(input.text, input.model)) return fromPlace;
+  return input.model;
 }

@@ -18,6 +18,7 @@
  * by the code that already does it, never by the model.
  */
 import { TUNISIAN_GOVERNORATES } from "@/lib/tunisia";
+import { governorateFromName } from "@/lib/geo/governorateAliases";
 import { FURNISHED, isoDay, type DealType, type Furnished } from "@/lib/listings/deal";
 import { hasContactInText, latinDigits, normalizeText } from "@/lib/moderation/rules";
 
@@ -260,7 +261,10 @@ export function normalizeListingDraft(
   const categorySlug = ctx.categories.some((c) => c.slug === slug) ? slug : null;
 
   const govRaw = typeof r.governorate === "string" ? r.governorate.trim().toLowerCase() : "";
-  const governorate = TUNISIAN_GOVERNORATES.find((g) => g.toLowerCase() === govRaw) ?? null;
+  // The site's spelling, or another way of writing it (« Kébili », « Qibli », « بنزرت »: src/lib/geo/governorateAliases.ts).
+  const governorate =
+    TUNISIAN_GOVERNORATES.find((g) => g.toLowerCase() === govRaw) ??
+    (typeof r.governorate === "string" ? governorateFromName(r.governorate) : null);
 
   // A sale under 1 000 TND or a rent over 200 000 is a misreading of the
   // amount, not a price: ask rather than fill the box with it.
