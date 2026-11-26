@@ -382,6 +382,9 @@ export const SETTINGS = {
   // Prospection reads the pasted posts with Haiku instead of Opus (src/lib/prospection/server.ts,
   // 2026-11-26): about 40 times cheaper, so the team's daily share covers the whole day.
   ai_prospect_fast_model: { group: "social", type: "bool", default: true },
+  // « Vérifier les photos » with Haiku too (src/lib/prospection/photoCheck.server.ts, 2026-11-26):
+  // on Opus each check cost about 2.4 cents, and twenty of them used a member's whole daily share.
+  ai_photo_check_fast_model: { group: "social", type: "bool", default: true },
   // One account's share of it: at about 4 cents a call, half a dollar is a dozen conversations.
   ai_user_daily_budget_usd: { group: "social", type: "number", default: 0.5, min: 0, max: 100, step: 0.1 },
 

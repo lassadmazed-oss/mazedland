@@ -5840,6 +5840,10 @@
       "label": "Prospection : lire les posts avec le modèle rapide (Haiku)",
       "hint": "Coupé : le modèle principal (Opus), environ 1 centime par post — chaque compte arrive à sa part du jour vers 45 posts. Allumé : Haiku, environ 40 fois moins cher, pour toute la journée de l'équipe."
     },
+    "ai_photo_check_fast_model": {
+      "label": "Prospection : vérifier les photos avec le modèle rapide (Haiku)",
+      "hint": "Coupé : le modèle principal (Opus), environ 2,4 centimes par vérification — vingt vérifications épuisent la part du jour d'un compte. Allumé : Haiku, environ 40 fois moins cher."
+    },
     "ai_user_daily_budget_usd": {
       "label": "Budget IA par jour et par compte (USD)",
       "hint": "Un seul compte ne peut pas dépenser tout le budget du jour : au-delà, l'assistant lui répond « indisponible » jusqu'au lendemain."
