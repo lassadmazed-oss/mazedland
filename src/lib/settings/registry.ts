@@ -375,7 +375,7 @@ export const SETTINGS = {
   ai_daily_budget_usd: { group: "social", type: "number", default: 2, min: 0, max: 100, step: 0.5 },
   // Prospection reads the pasted posts with Haiku instead of Opus (src/lib/prospection/server.ts,
   // 2026-11-26): about 40 times cheaper, so the team's daily share covers the whole day.
-  ai_prospect_fast_model: { group: "social", type: "bool", default: false },
+  ai_prospect_fast_model: { group: "social", type: "bool", default: true },
   // One account's share of it: at about 4 cents a call, half a dollar is a dozen conversations.
   ai_user_daily_budget_usd: { group: "social", type: "number", default: 0.5, min: 0, max: 100, step: 0.1 },
 
