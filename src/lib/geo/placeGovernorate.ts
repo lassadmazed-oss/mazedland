@@ -15,7 +15,7 @@
 import { DELEGATIONS, governorateOfDelegation } from "@/lib/delegations";
 import { core } from "@/lib/geo/quartier";
 import { QUARTIERS } from "@/lib/geo/quartiers";
-import { TUNISIAN_GOVERNORATES, type TunisianGovernorate } from "@/lib/tunisia";
+import { governorateLabel, TUNISIAN_GOVERNORATES, type TunisianGovernorate } from "@/lib/tunisia";
 
 /** Shorter than this, a name is inside too many others to mean anything. */
 const MIN_NAME = 4;
@@ -76,4 +76,19 @@ export function governorateFromPlace(place: string | null | undefined): Tunisian
     if (hits.length > 1) return null;
   }
   return null;
+}
+
+/**
+ * Whether a text writes this governorate's name, French or Arabic, as a word
+ * (« Tunis » is not in « Tunisie »). The post's own words outrank the lists:
+ * « Bhira, Bizerte » is Bizerte even though the quartier list knows a Bhira in
+ * Médenine only (2026-11-26).
+ */
+export function textNamesGovernorate(text: string | null | undefined, governorate: string | null | undefined): boolean {
+  if (!text || !governorate) return false;
+  const words = ` ${core(text)} `;
+  return [governorate, governorateLabel(governorate, "ar")].some((n) => {
+    const key = core(n);
+    return key.length >= 3 && words.includes(` ${key} `);
+  });
 }
