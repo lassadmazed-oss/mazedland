@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import type { getServiceSupabase } from "@/lib/supabase/admin";
-import { callJson } from "@/lib/ai/server";
+import { callJson, type AiModel } from "@/lib/ai/server";
+import { getSettings } from "@/lib/settings/server";
 import { log } from "@/lib/log";
 import { SAFE_DECODE, isPhoto } from "@/lib/imageSafety";
 import { dhashOfImage, readPhoto, similarPhotos, storeHash } from "@/lib/photoHash.server";
@@ -34,7 +35,7 @@ export type PhotoCheckResult = {
 };
 
 /** A photo at a width the model can read cheaply, always as WebP and upright. */
-async function forTheModel(bytes: Buffer): Promise<string> {
+export async function forTheModel(bytes: Buffer): Promise<string> {
   if (!isPhoto(bytes)) throw new Error("not_a_photo");
   const out = await sharp(bytes, SAFE_DECODE).rotate().resize({ width: 640, withoutEnlargement: true }).webp({ quality: 72 }).toBuffer();
   return out.toString("base64");
@@ -46,6 +47,15 @@ async function forTheModel(bytes: Buffer): Promise<string> {
  * whether the picture is already on another annonce. Nothing is changed — the
  * member reads it, and the order it suggests is theirs to apply.
  */
+/**
+ * The model that looks at the photos — the console's switch (Réglages,
+ * ai_photo_check_fast_model): Haiku, about 40 times cheaper than Opus; off,
+ * the main model. Undefined means AI_MODEL.
+ */
+export async function photoCheckModel(): Promise<AiModel | undefined> {
+  return (await getSettings()).ai_photo_check_fast_model ? "claude-haiku-5-5" : undefined;
+}
+
 export async function checkLeadPhotos(
   admin: Admin,
   input: { lead: LeadRow; actorId: string },
@@ -95,6 +105,7 @@ export async function checkLeadPhotos(
     admin,
     userId: input.actorId,
     feature: "prospect_photos",
+    model: await photoCheckModel(),
     system: PHOTO_CHECK_SYSTEM,
     user: `Check the ${readable.length} photo(s) above and answer for each one, by its index.`,
     schema: PHOTO_CHECK_SCHEMA as unknown as Record<string, unknown>,
