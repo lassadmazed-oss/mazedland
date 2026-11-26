@@ -5824,6 +5824,10 @@
       "label": "Budget IA par jour (USD)",
       "hint": "Une fois dépensé, l'assistant s'arrête jusqu'au lendemain."
     },
+    "ai_prospect_fast_model": {
+      "label": "Prospection : lire les posts avec le modèle rapide (Haiku)",
+      "hint": "Coupé : le modèle principal (Opus), environ 1 centime par post — chaque compte arrive à sa part du jour vers 45 posts. Allumé : Haiku, environ 40 fois moins cher, pour toute la journée de l'équipe."
+    },
     "ai_user_daily_budget_usd": {
       "label": "Budget IA par jour et par compte (USD)",
       "hint": "Un seul compte ne peut pas dépenser tout le budget du jour : au-delà, l'assistant lui répond « indisponible » jusqu'au lendemain."
@@ -9017,7 +9021,9 @@
         "guess": "Ce post ressemble à celui d'une agence (commission, bureau…). À vous de confirmer."
       },
       "contactTitleAgency": "Écrire à l'agence",
-      "contactHintAgency": "Envoyez ce message tel quel : il présente l'offre des agences. Rien n'est publié pour elle, c'est elle qui ouvre son agence."
+      "contactHintAgency": "Envoyez ce message tel quel : il présente l'offre des agences. Rien n'est publié pour elle, c'est elle qui ouvre son agence.",
+      "assistantBudget": "L'assistant n'a pas lu ce post : la part d'IA du jour est épuisée. Remplissez à la main, ou demandez à l'administrateur d'activer « Haiku » (Réglages → Prospection : lire les posts avec le modèle rapide).",
+      "assistantFailed": "L'assistant n'a pas pu lire ce post. Remplissez à la main."
     },
     "range": {
       "1": "Aujourd'hui",

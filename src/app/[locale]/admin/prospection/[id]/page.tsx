@@ -70,6 +70,15 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   }));
 
   const draft = readDraft(lead.draft);
+  // The assistant's word on this post, from the lead's « created » event (« assistant: unavailable »
+  // is the day's AI share spent, or the AI off) — shown while the draft is still empty.
+  const createdNote = (eventRows ?? []).find((e) => e.kind === "created")?.note as string | null | undefined;
+  const assistantOut =
+    createdNote?.startsWith("assistant:") && !draft.categorySlug && draft.price == null
+      ? createdNote.includes("unavailable")
+        ? ("budget" as const)
+        : ("failed" as const)
+      : null;
   return (
     <div>
       <Link href="/admin/prospection" className="mb-3 inline-flex items-center gap-1 text-[12px] font-bold text-muted hover:text-foreground">
@@ -101,6 +110,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           createdAt: lead.created_at,
         }}
         draft={draft}
+        assistantOut={assistantOut}
         photos={(photoRows ?? []).map((p) => ({ path: p.storage_path as string }))}
         events={events}
         warnings={warnings}

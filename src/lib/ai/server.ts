@@ -18,10 +18,25 @@ type Admin = NonNullable<ReturnType<typeof getServiceSupabase>>;
 
 export const AI_MODEL = "claude-opus-5-5";
 
+/**
+ * The models a feature may be given instead of AI_MODEL (2026-11-26): the
+ * Prospection team pastes 150–250 posts a day, and at Opus prices each account
+ * ran out of its daily share by mid-morning. The console picks, per feature.
+ */
+export const AI_MODELS = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"] as const;
+export type AiModel = (typeof AI_MODELS)[number];
+
+/** Haiku has no server-side refusal fallback: the request is sent without it. */
+function takesFallbacks(model: string): boolean {
+  return model !== "claude-haiku-5-5";
+}
+
 /** USD per million tokens (Anthropic price list, as of 2026-10-06). A request
  *  served by a fallback model is priced at that model's rates. */
 const PRICES: Record<string, { input: number; output: number; cacheRead: number; cacheWrite: number }> = {
   "claude-opus-5-5": { input: 4, output: 20, cacheRead: 0.2, cacheWrite: 5 },
+  "claude-sonnet-5-5": { input: 2, output: 10, cacheRead: 0.1, cacheWrite: 2.5 },
+  "claude-haiku-5-5": { input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite: 0.125 },
   "claude-opus-5": { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
   "claude-opus-4-8": { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
 };
@@ -102,7 +117,10 @@ export async function callJson(opts: {
    * Pass them small (a 640 px WebP is about 400 tokens): the budget is charged by their number.
    */
   images?: { mediaType: "image/webp" | "image/jpeg" | "image/png"; data: string }[];
+  /** Another model than AI_MODEL for this call (one of AI_MODELS). */
+  model?: AiModel;
 }): Promise<{ ok: true; data: unknown } | { ok: false; reason: "unavailable" | "refused" | "failed" }> {
+  const model: string = opts.model ?? AI_MODEL;
   if (!hasAiKey()) return { ok: false, reason: "unavailable" };
   const s = await aiSettings(opts.admin);
   if (!s.enabled) return { ok: false, reason: "unavailable" };
@@ -115,10 +133,10 @@ export async function callJson(opts: {
   // the real figures once the answer is in; refused, it is removed.
   const started = Date.now();
   // A small photo is some 400 tokens, which the estimate counts as 1 000 characters.
-  const estimate = estimateCostUsd(AI_MODEL, opts.system.length + opts.user.length + (opts.images?.length ?? 0) * 1_000);
+  const estimate = estimateCostUsd(model, opts.system.length + opts.user.length + (opts.images?.length ?? 0) * 1_000);
   const { data: reserved } = await opts.admin
     .from("ai_calls")
-    .insert({ user_id: opts.userId, feature: opts.feature, model: AI_MODEL, cost_usd: estimate, ok: false, error: "pending" })
+    .insert({ user_id: opts.userId, feature: opts.feature, model, cost_usd: estimate, ok: false, error: "pending" })
     .select("id")
     .single();
   const reservation = (reserved as { id?: string } | null)?.id ?? null;
@@ -154,12 +172,11 @@ export async function callJson(opts: {
 
   try {
     const res = await client.beta.messages.create({
-      model: AI_MODEL,
+      model,
       max_tokens: opts.maxTokens ?? 4_000,
       // A classifier decline is re-run on the model Anthropic recommends for
-      // its category instead of coming back empty.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
+      // its category instead of coming back empty (not offered on Haiku).
+      ...(takesFallbacks(model) ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
       // Reading a sentence into fields: low effort holds the quality and the cost.
       output_config: { effort: "low", format: { type: "json_schema", schema: opts.schema } },
       system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
@@ -198,7 +215,7 @@ export async function callJson(opts: {
         : e instanceof SyntaxError
           ? "bad_json"
           : "network";
-    await settle({ model: AI_MODEL, ok: false, error });
+    await settle({ model, ok: false, error });
     return { ok: false, reason: "failed" };
   }
 }

@@ -16,6 +16,7 @@ import { moderationSettings, publishOrQueue } from "@/lib/moderation/server";
 import { redactContacts } from "@/lib/moderation/rules";
 import { accountAllowance, takePlace, takePlaceBeyondLimit } from "@/lib/places/server";
 import { getSettings } from "@/lib/settings/server";
+import { governorateFromPlace } from "@/lib/geo/placeGovernorate";
 import {
   confirmBlockers, countFigures, dealWord, draftToListingBody, FIGURE_KINDS, fillTemplate, photoPathOf, propertyLine, publishBlockers, readDraft, startOfTunisiaDay, statusAfter,
   type Channel, type ConfirmBlocker, type MemberFigures, type PublishBlocker,
@@ -133,18 +134,28 @@ export async function readPost(
   text: string,
 ): Promise<{ ok: true; draft: ListingDraft; language: "ar" | "fr" } | { ok: false; reason: "unavailable" | "refused" | "failed" }> {
   const source = text.trim().slice(0, 4000);
-  const categories = await draftCategories(admin);
+  const [categories, settings] = await Promise.all([draftCategories(admin), getSettings()]);
+  // The console's switch (Réglages, ai_prospect_fast_model): Haiku reads the post instead of Opus.
+  const model = settings.ai_prospect_fast_model ? ("claude-haiku-5-5" as const) : undefined;
   const out = await callJson({
     admin,
     userId: actorId,
     feature: "prospect_draft",
+    model,
     system: buildSystemPrompt(categories),
     user: redactContacts(source),
     schema: LISTING_DRAFT_SCHEMA as unknown as Record<string, unknown>,
   });
   if (!out.ok) return { ok: false, reason: out.reason };
   const language = (out.data as { language?: unknown } | null)?.language === "fr" ? "fr" : "ar";
-  return { ok: true, draft: normalizeListingDraft(out.data, { categories, sourceText: source }), language };
+  const draft = normalizeListingDraft(out.data, { categories, sourceText: source });
+  // The neighbourhood's governorate from the site's own lists, when one governorate
+  // alone knows the name (src/lib/geo/placeGovernorate.ts): it fills an empty one
+  // (« Menzah 5 » with no governorate) and wins over the model's guess (Haiku put
+  // Menzah 5 in Tunis; it is in Ariana). A name the lists do not settle leaves the model's.
+  const fromPlace = governorateFromPlace(draft.delegation);
+  if (fromPlace) draft.governorate = fromPlace;
+  return { ok: true, draft, language };
 }
 
 // ── The owner's yes ─────────────────────────────────────────────────────────
