@@ -32,7 +32,7 @@ import {
   igContainerStatus, igPermalink, igPublishingLimit, publishIgContainer, publishPagePost,
   type Fetch, type GraphClient, type PostedRef,
 } from "./meta";
-import { afterError } from "./policy";
+import { afterError, nextPostSlot } from "./policy";
 import { isMazedPage, refreshRequestStatus, socialOrigin, socialSettings } from "./server";
 import { asDealType } from "@/lib/listings/deal";
 
@@ -168,6 +168,41 @@ async function postedToday(admin: Admin, accountId: string): Promise<number> {
     .eq("status", "published")
     .gte("published_at", new Date(Date.now() - 86_400_000).toISOString());
   return count ?? 0;
+}
+
+/** When the account last put a post online (any page channel, or TikTok). */
+async function lastPostedAt(admin: Admin, accountId: string): Promise<Date | null> {
+  const { data } = await admin
+    .from("social_publication_jobs")
+    .select("published_at")
+    .eq("account_id", accountId)
+    .eq("action", "publish")
+    .in("status", ["published", "done"])
+    .gte("published_at", "2000-01-01T00:00:00Z")
+    .order("published_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data?.published_at ? new Date(data.published_at as string) : null;
+}
+
+/**
+ * The page's rhythm (2026-11-26): a post no sooner than `social_min_gap_minutes`
+ * after the last one, and only in the posting hours. Returns the minutes to wait,
+ * 0 when the job may post now. Before, a run posted the five jobs it took one
+ * after the other — two or three posts in the same second — until the day's
+ * limit stopped the page for the rest of the day.
+ */
+async function minutesToSlot(admin: Admin, accountId: string, settings: { minGapMinutes: number; hoursStart: number; hoursEnd: number }): Promise<number> {
+  const now = new Date();
+  const slot = nextPostSlot({
+    now,
+    lastPostedAt: await lastPostedAt(admin, accountId),
+    gapMinutes: settings.minGapMinutes,
+    startHour: settings.hoursStart,
+    endHour: settings.hoursEnd,
+  });
+  const ms = slot.getTime() - now.getTime();
+  return ms > 30_000 ? Math.ceil(ms / 60_000) : 0;
 }
 
 /**
@@ -345,6 +380,11 @@ async function run(admin: Admin, job: JobRow, deps: EngineDeps): Promise<Outcome
   }
 
   const settings = await socialSettings(admin);
+  const wait = await minutesToSlot(admin, job.account_id, settings);
+  if (wait > 0) {
+    await later(admin, job, wait, "spacing");
+    return "retry";
+  }
   if ((await postedToday(admin, job.account_id)) >= settings.dailyLimit) {
     await later(admin, job, 60, "daily_limit");
     return "retry";
@@ -511,7 +551,13 @@ async function runTiktok(admin: Admin, job: JobRow, accountId: string, deps: Eng
   // Started on an attempt that did not see the end of it: follow that post.
   if (job.container_id) return followTiktok(admin, job, c, { ...ctx, adopted: true }, deps);
 
-  const settings = (await socialSettings(admin)).tiktok;
+  const all = await socialSettings(admin);
+  const settings = all.tiktok;
+  const wait = await minutesToSlot(admin, accountId, all);
+  if (wait > 0) {
+    await later(admin, job, wait, "spacing");
+    return "retry";
+  }
   if ((await tiktokSentToday(admin, accountId)) >= settings.dailyLimit) {
     await later(admin, job, 60, "daily_limit");
     return "retry";

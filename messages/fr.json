@@ -5820,6 +5820,18 @@
       "label": "Publications sur les réseaux",
       "hint": "Au-delà, les suivantes attendent le lendemain."
     },
+    "social_min_gap_minutes": {
+      "label": "Minutes entre deux publications d'une page",
+      "hint": "Une page publie au plus une fois dans cet intervalle : les annonces approuvées partent l'une après l'autre au lieu de partir ensemble. 0 : pas d'intervalle."
+    },
+    "social_hours_start": {
+      "label": "Publier à partir de (heure de Tunis)",
+      "hint": "Avant cette heure, les publications attendent."
+    },
+    "social_hours_end": {
+      "label": "Publier jusqu'à (heure de Tunis)",
+      "hint": "À partir de cette heure, les publications attendent le lendemain matin. 24 : toute la nuit."
+    },
     "ai_daily_budget_usd": {
       "label": "Budget IA par jour (USD)",
       "hint": "Une fois dépensé, l'assistant s'arrête jusqu'au lendemain."

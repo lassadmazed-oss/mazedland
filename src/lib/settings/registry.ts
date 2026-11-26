@@ -297,6 +297,12 @@ export const SETTINGS = {
   social_price_tnd: { group: "social", type: "number", default: 0, min: 0, max: 1000, unit: "tnd" },
   social_auto_approve: { group: "social", type: "bool", default: false },
   social_daily_limit: { group: "social", type: "int", default: 10, min: 1, max: 100, unit: "per_day" },
+  // The rhythm of each page (2026-11-26, the owner: « one post every 20 minutes, from 8 in the
+  // morning to 11 at night »): at least this many minutes between two posts on a page, and only
+  // between these hours, Tunis time (src/lib/social/policy.ts nextPostSlot). 0 / 0–24: no rule.
+  social_min_gap_minutes: { group: "social", type: "int", default: 20, min: 0, max: 240, unit: "minutes", choices: [0, 10, 15, 20, 30, 60] },
+  social_hours_start: { group: "social", type: "int", default: 8, min: 0, max: 23, unit: "hour_of_day", choices: [0, 6, 7, 8, 9, 10] },
+  social_hours_end: { group: "social", type: "int", default: 23, min: 1, max: 24, unit: "hour_of_day", choices: [20, 21, 22, 23, 24] },
   // Which connected Facebook page is « Mazed » (channel facebook_mazed, 0214): its id
   // (Business Suite's asset_id) or its username. Every other page is Mazed Immo's.
   social_mazed_page: { group: "social", type: "text", default: "1390476427730991", max: 60, ltr: true },

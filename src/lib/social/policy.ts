@@ -84,3 +84,35 @@ export function instagramCrop(width: number, height: number): { left: number; to
   }
   return null;
 }
+
+/** Tunisia is UTC+1 all year (no summer time). */
+const TUNIS_OFFSET_MS = 3_600_000;
+
+/**
+ * The earliest moment a page may post next (2026-11-26, the owner: « one post
+ * every 20 minutes, from 8 in the morning to 11 at night »): no sooner than
+ * `gapMinutes` after its last post, and inside the posting hours, Tunis time
+ * (`startHour` included, `endHour` excluded — 8 and 23 allow 08:00 to 22:59).
+ * Before the window it is the window's opening that day; after it, the next
+ * day's. A gap of 0 or a window of the whole day (0–24) leaves that rule out.
+ */
+export function nextPostSlot(opts: {
+  now: Date;
+  lastPostedAt: Date | null;
+  gapMinutes: number;
+  startHour: number;
+  endHour: number;
+}): Date {
+  let t = opts.now.getTime();
+  if (opts.lastPostedAt && opts.gapMinutes > 0) t = Math.max(t, opts.lastPostedAt.getTime() + opts.gapMinutes * 60_000);
+  const start = Math.max(0, Math.min(23, Math.floor(opts.startHour)));
+  const end = Math.max(start + 1, Math.min(24, Math.floor(opts.endHour)));
+  if (start === 0 && end === 24) return new Date(t);
+  // Work in Tunis wall-clock time, then come back to UTC.
+  const local = new Date(t + TUNIS_OFFSET_MS);
+  const hour = local.getUTCHours();
+  const dayStart = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate());
+  if (hour < start) return new Date(dayStart + start * 3_600_000 - TUNIS_OFFSET_MS);
+  if (hour >= end) return new Date(dayStart + 86_400_000 + start * 3_600_000 - TUNIS_OFFSET_MS);
+  return new Date(t);
+}
