@@ -16,7 +16,7 @@ export type FoundQuartier = { delegation: string; fr: string; ar: string; at: La
  * question mark as word breaks (placeKey keeps the whole Arabic block), letter
  * variants folded, and without « El », « La », « Cité », « ال »…
  */
-function core(s: string): string {
+export function core(s: string): string {
   const key = placeKey(s.replace(/[،؛؟ـ]/g, " "));
   return ` ${key.replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي")} `
     .replace(/ (?:el|al|la|le|les|l|cite|hay|حي) /g, " ")

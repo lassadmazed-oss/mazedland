@@ -85,6 +85,12 @@ export function LeadWorkspace(props: {
   minPhotos: number;
   contactsLeft: number;
   meId: string;
+  /**
+   * The assistant did not read this post (2026-11-26): « budget » when the day's AI
+   * share was spent or the AI is off, « failed » otherwise; null when it read it,
+   * or once the team has filled the draft.
+   */
+  assistantOut?: "budget" | "failed" | null;
 }) {
   const { lead, draft, events, warnings, ask, members, categories, governorates, minPhotos } = props;
   const t = useTranslations("adminProspection");
@@ -354,6 +360,12 @@ export function LeadWorkspace(props: {
 
   return (
     <div className="mx-auto mt-5 w-full max-w-2xl pb-10">
+      {/* Said, not left to guess: an empty draft used to look like a slow assistant. */}
+      {props.assistantOut ? (
+        <p role="status" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-[13px] font-semibold leading-relaxed text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-200">
+          {t(props.assistantOut === "budget" ? "work.assistantBudget" : "work.assistantFailed")}
+        </p>
+      ) : null}
       {/* ── the four steps ── */}
       <nav aria-label={t("work.stepsLabel")} className="-mx-1 overflow-x-auto px-1 pb-1">
         <ol className="flex min-w-max gap-2">

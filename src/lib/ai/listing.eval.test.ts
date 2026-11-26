@@ -8,6 +8,9 @@
  *
  *   AI_EVAL=1 npx pnpm vitest run src/lib/ai/listing.eval.test.ts
  *
+ * AI_EVAL_MODEL=claude-haiku-5-5 (or claude-sonnet-5-5) runs it on another
+ * model than AI_MODEL, to compare before switching a feature (2026-11-26).
+ *
  * with ANTHROPIC_API_KEY in .env.local. Each call is logged in `ai_calls` like
  * any other, so the run shows in the AI spend. The bar is the cahier des
  * charges' acceptance criterion for task 1.10: deal, category, governorate,
@@ -16,7 +19,7 @@
 import { describe, it, expect } from "vitest";
 import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-import { callJson } from "./server";
+import { AI_MODELS, callJson, type AiModel } from "./server";
 import { buildSystemPrompt, LISTING_DRAFT_SCHEMA, normalizeListingDraft, type DraftCategory, type ListingDraft } from "./listing";
 import { redactContacts } from "@/lib/moderation/rules";
 
@@ -58,6 +61,7 @@ const CASES: [string, Expect][] = [
 ];
 
 const run = process.env.AI_EVAL === "1" && Boolean(process.env.ANTHROPIC_API_KEY);
+const evalModel = (AI_MODELS as readonly string[]).includes(process.env.AI_EVAL_MODEL ?? "") ? (process.env.AI_EVAL_MODEL as AiModel) : undefined;
 
 describe.runIf(run)("listing assistant — live evaluation", () => {
   it("reads at least 90 % of the asked fields right", async () => {
@@ -78,6 +82,7 @@ describe.runIf(run)("listing assistant — live evaluation", () => {
         admin: admin as never,
         userId: null,
         feature: "listing_draft_eval",
+        model: evalModel,
         system,
         user: redactContacts(sentence),
         schema: LISTING_DRAFT_SCHEMA as unknown as Record<string, unknown>,
@@ -91,7 +96,7 @@ describe.runIf(run)("listing assistant — live evaluation", () => {
       }
     }
     const score = right / asked;
-    console.log(`listing assistant: ${right}/${asked} fields right (${Math.round(score * 100)} %)`);
+    console.log(`listing assistant (${evalModel ?? "default model"}): ${right}/${asked} fields right (${Math.round(score * 100)} %)`);
     if (misses.length) console.log(misses.join("\n"));
     expect(score).toBeGreaterThanOrEqual(0.9);
   }, 600_000);
