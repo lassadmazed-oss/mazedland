@@ -48,6 +48,11 @@ export type SocialSettings = {
   autoApprove: boolean;
   dailyLimit: number;
   mazedPage: string;
+  /** At least this many minutes between two posts of a page (0: none). */
+  minGapMinutes: number;
+  /** Posting hours, Tunis time: from hoursStart (included) to hoursEnd (excluded). */
+  hoursStart: number;
+  hoursEnd: number;
   tiktok: TiktokSettings;
 };
 
@@ -58,6 +63,9 @@ export async function socialSettings(admin: Admin): Promise<SocialSettings> {
     priceTnd: s.social_price_tnd,
     autoApprove: s.social_auto_approve,
     dailyLimit: s.social_daily_limit,
+    minGapMinutes: s.social_min_gap_minutes,
+    hoursStart: s.social_hours_start,
+    hoursEnd: s.social_hours_end,
     mazedPage: s.social_mazed_page.trim().replace(/^@/, ""),
     tiktok: {
       draft: s.social_tiktok_draft,

@@ -160,7 +160,8 @@ function scene(opts: { settings?: Record<string, unknown>; job?: Partial<JobRow>
     ...opts.job,
   };
   const db = fakeDb({
-    app_settings: Object.entries({ social_tiktok_draft: false, social_tiktok_public: false, ...opts.settings }).map(([key, value]) => ({ key, value })),
+    // No rhythm rule by default (gap 0, all day): these tests are about TikTok, and run at any hour.
+    app_settings: Object.entries({ social_tiktok_draft: false, social_tiktok_public: false, social_min_gap_minutes: 0, social_hours_start: 0, social_hours_end: 24, ...opts.settings }).map(([key, value]) => ({ key, value })),
     social_accounts: [
       {
         id: "acc-tt",
@@ -351,6 +352,22 @@ describe("a TikTok job", () => {
     expect(await runSocialJob(s.admin, s.job, { fetch: t.fetch, pollMs: 0 })).toBe("retry");
     expect(t.calls).toHaveLength(0);
     expect(s.jobRow().last_error).toBe("daily_limit");
+  });
+
+  it("keeps the page's rhythm: nothing within 20 minutes of its last post (2026-11-26)", async () => {
+    const s = scene({ settings: { social_min_gap_minutes: 20 } });
+    s.tables.social_publication_jobs.push({
+      id: "job-prev", account_id: "acc-tt", channel: "tiktok", action: "publish", status: "published",
+      published_at: new Date(Date.now() - 5 * 60_000).toISOString(),
+    });
+    const t = fakeTiktok({});
+    expect(await runSocialJob(s.admin, s.job, { fetch: t.fetch, pollMs: 0 })).toBe("retry");
+    expect(t.calls).toHaveLength(0);
+    expect(s.jobRow().last_error).toBe("spacing");
+    // Back in the queue for the end of the 20 minutes: about 15 from now.
+    const wait = new Date(s.jobRow().run_after as string).getTime() - Date.now();
+    expect(wait).toBeGreaterThan(14 * 60_000);
+    expect(wait).toBeLessThan(16 * 60_000 + 1_000);
   });
 
   it("leaves « vendu » and take-downs to a person: TikTok's API cannot edit or delete", async () => {
