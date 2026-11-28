@@ -180,6 +180,12 @@ export const SETTINGS = {
   // Two annonces per line on a phone (the owner, 2026-11-25, from his phone: « 2 boxes per line
   // not one »): the catalogue, the favourites and an agence page. 1 brings back one big photo.
   catalogue_phone_columns: { group: "publication", type: "int", default: 2, min: 1, max: 2, choices: [1, 2] },
+  // The catalogue's order (2026-11-28, the owner: « each new annonce that goes up shows first, at the
+  // top of the list, and the next one, and the next »). On: the list is newest first and the annonces
+  // « à la une » (promo_top_listed: « Top de la recherche », sold or granted) get a strip of their own
+  // above it, up to catalogue_top_strip_max. Off: they lead the list itself, as before.
+  catalogue_top_strip: { group: "publication", type: "bool", default: true },
+  catalogue_top_strip_max: { group: "publication", type: "int", default: 4, min: 1, max: 12, choices: [2, 3, 4, 6, 8] },
   // « Position approximative » (the default): visitors see a circle of this
   // radius, which holds the house without pointing at it (src/lib/geo).
   // On the catalogue map, an annonce without a pin stands in its délégation,

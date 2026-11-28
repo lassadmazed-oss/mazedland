@@ -993,7 +993,8 @@
     "demandeBody": "On vous prévient dès qu'un bien correspond, et les agences peuvent vous proposer les leurs.",
     "demandeCardTitle": "Pas encore trouvé ?",
     "demandeCardTitleAny": "Vous cherchez quelque chose de précis ?",
-    "emptyBodyDemande": "Enregistrez cette recherche : on vous prévient dès qu'un bien correspond. Ou élargissez les critères."
+    "emptyBodyDemande": "Enregistrez cette recherche : on vous prévient dès qu'un bien correspond. Ou élargissez les critères.",
+    "topStripTitle": "À la une"
   },
   "catalogueMap": {
     "mapLabel": "Carte des annonces",
@@ -5605,6 +5606,14 @@
     "catalogue_phone_columns": {
       "label": "Colonnes du catalogue sur téléphone",
       "hint": "Une colonne : de grandes photos, comme Idealista. Deux : plus d'annonces par écran, comme Tayara."
+    },
+    "catalogue_top_strip": {
+      "label": "Annonces : les plus récentes en premier, « À la une » à part",
+      "hint": "Allumé : la liste commence toujours par la dernière annonce publiée, et les annonces « Top de la recherche » ont leur propre bande au-dessus. Coupé : elles passent en tête de la liste, comme avant."
+    },
+    "catalogue_top_strip_max": {
+      "label": "Annonces dans la bande « À la une »",
+      "hint": "Au plus ce nombre, les plus récentes d'abord. La bande suit les filtres de la recherche."
     },
     "groups": {
       "features": {
