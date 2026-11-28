@@ -404,20 +404,34 @@ export default async function AnnoncesPage({
     return f;
   };
 
-  let q = filtered(
-    `id, title, price, price_on_request, negotiable, governorate, delegation, attributes, published_at,
+  const cardColumns = `id, title, price, price_on_request, negotiable, governorate, delegation, attributes, published_at,
      deal_type, availability, available_from, shop_id,
      category:categories (label_fr, label_ar, kind),
      promo_top_listed,
-     photos:listing_photos (storage_path, sort_order)`,
-    { count: "exact" },
-  );
+     photos:listing_photos (storage_path, sort_order)`;
+  let q = filtered(cardColumns, { count: "exact" });
+
+  // The default order (2026-11-28, the owner: « each new annonce shows first »):
+  // newest first, and the « Top de la recherche » annonces (0156, sold or granted;
+  // the expiry job clears the flag when the period ends) in a strip of their own
+  // above the list, on the first page. With catalogue_top_strip off they lead the
+  // list itself, as before.
+  const topStrip = settings.catalogue_top_strip && sort === "recent" && !mapView;
+  const topRowsP: Promise<Row[]> =
+    topStrip && requestedPage === 1
+      ? Promise.resolve(
+          filtered(cardColumns)
+            .eq("promo_top_listed", true)
+            .order("published_at", { ascending: false })
+            .order("id", { ascending: true })
+            .limit(settings.catalogue_top_strip_max),
+        ).then(({ data }) => (data ?? []) as unknown as Row[])
+      : Promise.resolve([]);
 
   if (sort === "popular") q = q.order("view_count", { ascending: false, nullsFirst: false });
   else if (sort === "cheap") q = q.order("price", { ascending: true, nullsFirst: false });
   else if (sort === "dear") q = q.order("price", { ascending: false, nullsFirst: false });
-  // The default order puts the paid « Top de la recherche » first (0156); the
-  // expiry job clears the flag when the period ends.
+  else if (settings.catalogue_top_strip) q = q.order("published_at", { ascending: false });
   else q = q.order("promo_top_listed", { ascending: false }).order("published_at", { ascending: false });
   // A unique last key. Bulk approval stamps a whole batch with the same
   // published_at and prices tie, so without it the order was undefined between
@@ -514,9 +528,10 @@ export default async function AnnoncesPage({
   // A search for one governorate opens on it; otherwise around its points.
   const mapStart = sp.gov && GOVERNORATE_CENTER[sp.gov] ? { center: GOVERNORATE_CENTER[sp.gov], zoom: 10.5 } : null;
 
-  const [govs, delRows, featuredRows, adBanners] = await Promise.all([govsP, delsP, featuredP, adsP]);
+  const [govs, delRows, featuredRows, adBanners, topRowsAll] = await Promise.all([govsP, delsP, featuredP, adsP, topRowsP]);
   // A page past the end falls back to page 1, which has the strip too.
   const featured = page === 1 ? featuredRows : [];
+  const topRows = page === 1 ? topRowsAll : [];
 
   // The chosen governorate's délégations that have annonces online, in the
   // reader's alphabet — plus the one asked, even with nothing left in it.
@@ -1103,6 +1118,24 @@ export default async function AnnoncesPage({
       )}
 
       <FeaturedAgencies shops={featured} />
+
+      {/* « À la une »: the « Top de la recherche » annonces, above the list
+          rather than at its head, so the list itself opens on the newest one. */}
+      {topRows.length > 0 && rows.length > 0 && (
+        <section className="mt-6" aria-labelledby="top-strip-title">
+          <h2 id="top-strip-title" className="text-[15px] font-extrabold text-foreground">
+            {t("topStripTitle")}
+          </h2>
+          <Impressions ids={topRows.map((r) => r.id)} surface="catalogue_top" />
+          <ul className="-mx-4 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-x-3 sm:gap-y-7 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3 lg:gap-x-5 xl:grid-cols-4">
+            {topRows.map((r) => (
+              <li key={r.id} className="w-[46vw] max-w-[260px] shrink-0 snap-start sm:w-auto sm:max-w-none">
+                <AnnonceCard listing={r} sizes="(min-width: 1280px) 300px, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 46vw" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* The results' own heading: how many, of what, where. */}
       <div className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1">
