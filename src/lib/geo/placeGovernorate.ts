@@ -16,7 +16,8 @@ import { DELEGATIONS, governorateOfDelegation } from "@/lib/delegations";
 import { core } from "@/lib/geo/quartier";
 import { QUARTIERS } from "@/lib/geo/quartiers";
 import { TUNISIAN_GOVERNORATES, type TunisianGovernorate } from "@/lib/tunisia";
-import { governoratesNamedIn } from "@/lib/geo/governorateAliases";
+import { GOVERNORATE_BY_NAME, governoratesNamedIn, namesFoundAt } from "@/lib/geo/governorateAliases";
+import { TOWN_BY_NAME } from "@/lib/geo/townNames";
 
 /** Shorter than this, a name is inside too many others to mean anything. */
 const MIN_NAME = 4;
@@ -92,18 +93,34 @@ export function textNamesGovernorate(text: string | null | undefined, governorat
 }
 
 /**
+ * How much of a post's start is read for its place: the title and the first
+ * line, where a post says where the property is (2026-11-28).
+ */
+export const POST_HEAD_CHARS = 200;
+
+/** A post's start, where it says where the property is. */
+export function postHead(text: string): string {
+  return text.slice(0, POST_HEAD_CHARS);
+}
+
+/**
  * The governorate of a post, settled from three witnesses (2026-11-26): the
- * model's reading, the place it read (the délégation / quartier lists), and the
- * governorates the post writes itself (any spelling, roads left out).
+ * model's reading, the place it read (the délégation / quartier lists), and
+ * what the post's start writes itself: a governorate (any spelling) or a
+ * well-known town (src/lib/geo/townNames.ts), roads and « Aïn … » left out.
  *
  *   1. The model and the lists agree: that is it (« agence à Tunis, villa à
  *      Hammamet » stays Nabeul).
- *   2. The post writes one governorate: that one (« à Qibli – route de Gabès »
- *      is Kebili though the model said Tozeur; « Bhira, Bizerte » is Bizerte
- *      though the lists know a Bhira in Médenine only).
- *   3. The lists know the place and the post does not write the model's
- *      governorate: the lists' (« Menzah 5 » → Ariana, the model said Tunis).
- *   4. Otherwise the model's, or nothing.
+ *   2. Nothing written: the lists' if the post does not write the model's
+ *      governorate (« Menzah 5 » → Ariana, the model said Tunis), else the model's.
+ *   3. The lists' place among what is written: the lists'.
+ *   4. One governorate written: that one (« à Qibli – route de Gabès » is Kebili
+ *      though the model said Tozeur; « Bhira, Bizerte » is Bizerte though the
+ *      lists know a Bhira in Médenine only; « Zone touristique, Djerba » is
+ *      Médenine though the model said Nabeul). A town alone does not outrank the
+ *      lists' place.
+ *   5. Several written: the model's if it is one of them, else the first one
+ *      (« terrain à Hammamet Sud … agence Tunis First » is Nabeul).
  */
 export function settleGovernorate(input: {
   model: TunisianGovernorate | null;
@@ -112,8 +129,25 @@ export function settleGovernorate(input: {
 }): TunisianGovernorate | null {
   const fromPlace = governorateFromPlace(input.place);
   if (fromPlace && fromPlace === input.model) return fromPlace;
-  const named = governoratesNamedIn(input.text);
-  if (named.length === 1) return named[0];
-  if (fromPlace && !textNamesGovernorate(input.text, input.model)) return fromPlace;
-  return input.model;
+  // Where the property is, a post says at its start (its title, its first
+  // line). Further down come names that say nothing about it: « 30 min de
+  // Tunis », « proche de Monastir », the agency's own address (2026-11-28, read
+  // over the 2 413 posts of Prospection).
+  const head = postHead(input.text);
+  const names = namesFoundAt(head, GOVERNORATE_BY_NAME);
+  const towns = namesFoundAt(head, TOWN_BY_NAME);
+  const written: TunisianGovernorate[] = [];
+  for (const m of [...names, ...towns].sort((a, b) => a.at - b.at)) if (!written.includes(m.value)) written.push(m.value);
+
+  if (written.length === 0) return fromPlace && !textNamesGovernorate(input.text, input.model) ? fromPlace : input.model;
+  // The lists' place, confirmed by the post's words.
+  if (fromPlace && written.includes(fromPlace)) return fromPlace;
+  if (written.length === 1) {
+    // A town alone does not outrank the lists; a governorate the post writes does.
+    if (fromPlace && !names.some((n) => n.value === written[0])) return fromPlace;
+    return written[0];
+  }
+  // Several written (« villa à Hammamet … agence Tunis First »): the model's if it
+  // is one of them, else the first one written.
+  return input.model && written.includes(input.model) ? input.model : written[0];
 }
